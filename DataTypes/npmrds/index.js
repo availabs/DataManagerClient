@@ -7,10 +7,7 @@ const config = {
     name: "Create",
     component: CreateAllNpmrdsDataSources,
   },
-
   getIsAlreadyCreated,
-
-  pwrUsrOnly: false,
 };
 
 export default config;

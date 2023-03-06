@@ -1,10 +1,9 @@
-import deepFreeze from "deep-freeze-strict";
 import _ from "lodash";
 
 import { assign, cloneDeep } from "lodash";
 import RequestStatus from "../constants/RequestStatus";
 
-export const initialState = deepFreeze({
+export const initialState = {
   etlContextId: null,
 
   // The min/max dates available from RITIS.
@@ -21,7 +20,7 @@ export const initialState = deepFreeze({
 
   npmrdsDownloadName: null,
   etlProcessFinalEvent: null,
-});
+};
 
 export function init(config) {
   const clone = cloneDeep(initialState);

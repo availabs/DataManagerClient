@@ -5,7 +5,7 @@ import get from 'lodash.get'
 
 const Metadata = ({source}) => {
   const metadata = get(source,'metadata',[])
-  if (!metadata || metadata.length === 0) return <div> Metadata Not Available </div> 
+  if (!metadata || !metadata.map ||  metadata.length === 0) return <div> Metadata Not Available </div> 
   return (
     <div className="overflow-hidden">
       <div className="py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b-2">

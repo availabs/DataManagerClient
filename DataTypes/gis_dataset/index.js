@@ -1,6 +1,6 @@
 import React from "react";
 
-import GisDatasetLoader from "./tasks/main";
+
 import MapPage from "./pages/Map";
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
@@ -25,15 +25,6 @@ const GisDatasetConfig = {
     component: Table,
   },
   // This key is used to filter in src/pages/DataManager/Source/create.js
-  sourceCreate: {
-    name: "Create",
-    component: GisDatasetLoader,
-  },
-  gisDatasetUpdate: {
-    name: "Load New View",
-    path: "/gisDatasetUpdate",
-    component: GisDatasetLoader,
-  },
   pwrUsrOnly: false,
 };
 

@@ -1,25 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useFalcor,TopNav, withAuth /*, Input, Button*/ } from 'modules/avl-components/src'
+import { useFalcor,TopNav} from 'modules/avl-components/src'
 
 
 import get from 'lodash.get'
 import { useParams } from 'react-router-dom'
 import {Pages, DataTypes} from '../DataTypes'
 
-import SourcesLayout, { DataManagerHeader } from '../components/SourcesLayout'
+import SourcesLayout from '../components/SourcesLayout'
 
 import {SourceAttributes, ViewAttributes, getAttributes} from 'pages/DataManager/components/attributes'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 
-const Source = (props) => {
+const Source = ({user, baseUrl='datasources/'}) => {
   const {falcor, falcorCache} = useFalcor()
   const { sourceId, page } = useParams()
   const [ pages, setPages] = useState(Pages)
   const pgEnv = useSelector(selectPgEnv);
 
   const Page = useMemo(() => {
-    return page ? get(pages,`[${page}].component`,Pages['overview'].component)  : Pages['overview'].component
+    return page 
+      ? get(pages,`[${page}].component`,Pages['overview'].component)
+      : Pages['overview'].component
   },[page,pages])
 
   useEffect(() => {
@@ -72,7 +74,7 @@ const Source = (props) => {
 
   return (
     <div className='max-w-6xl mx-auto'>
-      <SourcesLayout>
+      <SourcesLayout baseUrl={baseUrl}>
         <div className='text-xl font-medium overflow-hidden p-2 border-b '>
           {source.display_name || source.name}
         </div>
@@ -81,13 +83,13 @@ const Source = (props) => {
             .map(d => {
               return {
                 name:d.name,
-                path: `/datasources/source/${sourceId}${d.path}`
+                path: `${baseUrl}/source/${sourceId}${d.path}`
               }
             })}
           themeOptions={{size:'inline'}}
         />
         <div className='w-full p-4 bg-white shadow mb-4'>
-          <Page source={source} views={views} user={props.user} />
+          <Page source={source} views={views} user={user} />
         </div>
       </SourcesLayout>
     </div>
@@ -96,44 +98,6 @@ const Source = (props) => {
 
 
 
-const config = [{
-  name:'View Source',
-  path: "/datasources/source/:sourceId",
-  exact: true,
-  auth: false,
-  mainNav: false,
-  title: <DataManagerHeader />,
-  sideNav: {
-    color: 'dark',
-    size: 'micro'
-  },
-  component: withAuth(Source)
-},
-{
-  name:'View Source',
-  path: "/datasources/source/:sourceId/:page",
-  exact: true,
-  auth: false,
-  mainNav: false,
-  title: <DataManagerHeader />,
-  sideNav: {
-    color: 'dark',
-    size: 'micro'
-  },
-  component: withAuth(Source)
-},{
-  name:'View Source',
-  path: "/datasources/source/:sourceId/view/:viewId",
-  exact: true,
-  auth: false,
-  mainNav: false,
-  title: <DataManagerHeader />,
-  sideNav: {
-    color: 'dark',
-    size: 'micro'
-  },
-  component: withAuth(Source)
-}
-]
 
-export default config;
+
+export default Source;

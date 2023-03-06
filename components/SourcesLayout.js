@@ -6,11 +6,11 @@ import { selectPgEnv } from "pages/DataManager/store"
 import Breadcrumbs from './Breadcrumbs'
 
 
-const SourcesLayout = ({children}) => {
+const SourcesLayout = ({children, baseUrl='/datasources'}) => {
   return (
-    <div>
+    <div className="max-w-6xl mx-auto">
       <div className=''>
-        <Breadcrumbs />
+        <Breadcrumbs baseUrl={baseUrl} />
       </div>
       <div className='flex'>
         <div className='flex-1 '>
@@ -21,7 +21,7 @@ const SourcesLayout = ({children}) => {
   )
 }
 
-export const DataManagerHeader = withAuth(({user}) => {
+export const DataManagerHeader = withAuth(({user, baseUrl='/datasources'}) => {
   const pgEnv = useSelector(selectPgEnv);
 
   return (
@@ -39,10 +39,10 @@ export const DataManagerHeader = withAuth(({user}) => {
             >
               <div className='p-1 bg-blue-500 text-base'>
                 <div className='py-1 '> 
-                    {Item('/datasources/create/source', 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
+                    {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
                 </div>
                 <div className='py-1 '> 
-                    {Item('/datasources/settings', 'fa fa-cog flex-shrink-0  pr-1', 'Datamanager Settings')}
+                    {Item(`${baseUrl}/settings`, 'fa fa-cog flex-shrink-0  pr-1', 'Datamanager Settings')}
                 </div>
               </div>          
             </Dropdown>

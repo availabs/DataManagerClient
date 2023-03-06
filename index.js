@@ -1,69 +1,147 @@
 import React from "react";
+import { withAuth } from 'modules/avl-components/src'
+
 import { DataManagerHeader } from "./components/SourcesLayout";
+
 import SourceList from "./Source/list";
 import SourceView from "./Source";
 import SourceCreate from "./Source/create";
-
 import Settings from "./Source/settings";
+import EtlContextEvents from "./EtlContext";
 
-import EtlContextEventsView from "./EtlContext";
 
-const DataManager = () => {
-  return (
-    <div className="max-w-6xl mx-auto">
-      <SourceList />
-    </div>
-  );
-};
 
-const SourcesList = [
-  {
-    name: "Data Sources",
-    path: "/datasources",
-    exact: true,
-    auth: false,
-    mainNav: false,
-    title: <DataManagerHeader />,
-    sideNav: {
-      color: "dark",
-      size: "micro",
+
+const DamaRoutes = (baseUrl='/datasources') => {
+  
+  const Header = <DataManagerHeader baseUrl={baseUrl} />
+  const SourceListComp = () => <SourceList baseUrl={baseUrl} />
+  const SourceViewComp = () => <SourceView baseUrl={baseUrl} />
+  return [
+    // Source List
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro",
+      },
+      component:SourceListComp ,
     },
-    component: DataManager,
-  },
-  {
-    name: "Data Sources",
-    path: "/datasources/cat/:cat1",
-    exact: true,
-    auth: false,
-    mainNav: false,
-    title: <DataManagerHeader />,
-    sideNav: {
-      color: "dark",
-      size: "micro",
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/cat/:cat1`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro",
+      },
+      component: SourceListComp,
     },
-    component: DataManager,
-  },
-  {
-    name: "Data Sources",
-    path: "/datasources/cat/:cat1/:cat2",
-    exact: true,
-    auth: false,
-    mainNav: false,
-    title: <DataManagerHeader />,
-    sideNav: {
-      color: "dark",
-      size: "micro",
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/cat/:cat1/:cat2`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro",
+      },
+      component: SourceListComp,
     },
-    component: DataManager,
-  },
-];
+    // -- Source View
+    {
+      name:'View Source',
+      path: `${baseUrl}/source/:sourceId`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: 'dark',
+        size: 'micro'
+      },
+      component: withAuth(SourceViewComp)
+    },
+    {
+      name:'View Source',
+      path: `${baseUrl}/source/:sourceId/:page`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: 'dark',
+        size: 'micro'
+      },
+      component: withAuth(SourceViewComp)
+    },{
+      name:'View Source',
+      path: `${baseUrl}/source/:sourceId/view/:viewId`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: 'dark',
+        size: 'micro'
+      },
+      component: withAuth(SourceViewComp)
+    },
+    // Source Create
+    {
+      name:'Create Source',
+      path: `${baseUrl}/create/source`,
+      exact: true,
+      auth: true,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: 'dark',
+        size: 'micro'
+      },
+      component: SourceCreate
+    },
+    //
+    {
+      name: "Settings",
+      path: `${baseUrl}/settings`,
+      exact: true,
+      auth: true,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro",
+      },
+      component: Settings,
+    },
+    {
+      name: "ETL Context View",
+      path: "/etl-context/:etlContextId",
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro",
+      },
+      component: EtlContextEvents,
+    }
+  ]
+}
 
-const config = [
-  ...SourcesList,
-  ...SourceView,
-  ...SourceCreate,
-  ...Settings,
-  ...EtlContextEventsView,
-];
+console.log('testing Dama Routes', DamaRoutes(''))
 
-export default config;
+
+export default DamaRoutes;

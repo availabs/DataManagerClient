@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 
 import { Select } from "modules/avl-components/src";
-import { LineGraph } from "modules/avl-graph/src";
+//import { LineGraph } from "modules/avl-graph/src";
 
 const availableStats = [
   "total_tmcs",
@@ -72,14 +72,17 @@ const Stats = ({ source }) => {
       />
 
       <div className="bg-white rounded relative" style={{ height: "30rem" }}>
-        <LineGraph
+        <pre>
+          {JSON.stringify(lineData)}
+        </pre>
+        {/*<LineGraph
           data={lineData}
           margin={{ right: 25 }}
           padding={0}
           axisLeft={true}
           axisBottom={true}
           hoverComp={{ yFormat: ",.2f" }}
-        />
+        />*/}
       </div>
     </div>
   );

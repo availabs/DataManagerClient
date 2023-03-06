@@ -3,11 +3,9 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { useFalcor } from "modules/avl-components/src";
 
-import { DataManagerHeader } from "../components/SourcesLayout";
-
 import get from 'lodash.get'
 
-import { queryPgEnvs, setPgEnv, selectPgEnv, selectPgEnvs } from "../store";
+import { queryPgEnvs, setPgEnv, selectPgEnv } from "../store";
 
 const Settings = () => {
   const { falcor, falcorCache } = useFalcor();
@@ -22,7 +20,7 @@ const Settings = () => {
     (async () => {
       falcor.get(queryPgEnvs());
     })();
-  }, []);
+  }, [falcor]);
 
   if (!pgEnvs) {
     return (
@@ -71,20 +69,6 @@ const Settings = () => {
   );
 };
 
-const config = [
-  {
-    name: "Settings",
-    path: "/datasources/settings",
-    exact: true,
-    auth: true,
-    mainNav: false,
-    title: <DataManagerHeader />,
-    sideNav: {
-      color: "dark",
-      size: "micro",
-    },
-    component: Settings,
-  },
-];
 
-export default config;
+
+export default Settings;

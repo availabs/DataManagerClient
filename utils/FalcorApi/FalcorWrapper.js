@@ -1,4 +1,4 @@
-import { falcorGraph } from "store/falcorGraph";
+import { falcorGraph } from "./falcorStore";
 import get from "lodash/get";
 
 class FalcorWrapper {
@@ -49,4 +49,5 @@ class FalcorWrapper {
   }
 }
 
-export default new FalcorWrapper();
+const fw =  new FalcorWrapper();
+export default fw

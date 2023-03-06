@@ -2,13 +2,11 @@ import React from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import ReactJson from "react-json-view";
-
 import { getEtlContext } from "pages/DataManager/utils/FalcorApi";
 
 import { selectPgEnv } from "pages/DataManager/store";
 
-export function EtlContextEventsView() {
+export function EtlContextEvents() {
   const history = useHistory();
 
   const [etlContext, setEtlContext] = React.useState(undefined);
@@ -16,7 +14,7 @@ export function EtlContextEventsView() {
   const pgEnv = useSelector(selectPgEnv);
   const { etlContextId } = useParams();
 
-  console.log({ pgEnv, etlContextId });
+  // console.log({ pgEnv, etlContextId });
 
   React.useEffect(() => {
     (async () => {
@@ -113,15 +111,18 @@ export function EtlContextEventsView() {
     </table>
   );
 
-  const eventsList = events.map((event) => (
-    <div style={{ marginLeft: "15%", marginRight: "15%", padding: "10px" }}>
-      <ReactJson
+  const eventsList = events.map((event,i) => (
+    <div key={i} style={{  padding: "10px" }}>
+      <pre className='bg-gray-800 text-gray-100'>
+        {JSON.stringify(event,null,3)}
+      </pre>
+      {/*<ReactJson
         src={event}
         name={false}
         collapsed={2}
         theme="monokai"
         collapseStringsAfterLength={80}
-      />
+      />*/}
     </div>
   ));
 
@@ -163,20 +164,5 @@ export function EtlContextEventsView() {
   );
 }
 
-const config = [
-  {
-    name: "ETL Context View",
-    path: "/etl-context/:etlContextId",
-    exact: true,
-    auth: false,
-    mainNav: false,
-    title: <div>ETL Context View</div>,
-    sideNav: {
-      color: "dark",
-      size: "micro",
-    },
-    component: EtlContextEventsView,
-  },
-];
 
-export default config;
+export default EtlContextEvents;

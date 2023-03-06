@@ -1,7 +1,6 @@
 import React, {useMemo, useEffect} from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useSelector } from "react-redux";
-
 import { useFalcor } from 'modules/avl-components/src'
 import get from 'lodash.get'
 
@@ -9,7 +8,7 @@ import { getAttributes } from './attributes'
 import { selectPgEnv } from "pages/DataManager/store"
 
 
-export default function BreadCrumbs () {
+export default function BreadCrumbs ({baseUrl='/datasources'}) {
   const { sourceId, cat1, cat2} = useParams()
   const {falcor,falcorCache} = useFalcor()
   const pgEnv = useSelector(selectPgEnv);
@@ -40,19 +39,19 @@ export default function BreadCrumbs () {
       : catList.map((d,i) => {
         return {
           name: d,
-          href: `/datasources/cat/${i > 0 ? catList[i-1] + '/' : ''}${d}`        }
+          href: `${baseUrl}/cat/${i > 0 ? catList[i-1] + '/' : ''}${d}`        }
       })
     cats.push({name:attr.display_name})
     return cats
 
-  },[falcorCache,sourceId,pgEnv, cat1, cat2])
+  },[falcorCache,sourceId,pgEnv, cat1, cat2, baseUrl])
 
   return (
     <nav className="border-b border-gray-200 flex " aria-label="Breadcrumb">
       <ol className="max-w-screen-xl w-full mx-auto px-4 flex space-x-4 sm:px-6 lg:px-8">
         <li className="flex">
           <div className="flex items-center">
-            <Link to='/datasources' className="text-blue-400 hover:text-blue-500">
+            <Link to={`${baseUrl}`} className="text-blue-400 hover:text-blue-500">
               <i className="fad fa-database flex-shrink-0 h-5 w-5" aria-hidden="true" />
               <span className="sr-only">Data Sources</span>
             </Link>

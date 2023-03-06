@@ -7,13 +7,13 @@ import get from 'lodash.get'
 // import { useParams } from 'react-router-dom'
 import { DataTypes } from '../DataTypes'
 
-import SourcesLayout, {DataManagerHeader}  from '../components/SourcesLayout'
+import SourcesLayout from '../components/SourcesLayout'
 
 import {SourceAttributes, /*ViewAttributes, getAttributes*/} from 'pages/DataManager/components/attributes'
     
 import { selectPgEnv, selectIsPwrUsr } from "pages/DataManager/store";
 
-const Source = () => {
+const SourceCreate = () => {
 // prettier canary
   //const {falcor, falcorCache} = useFalcor()
   const [ source, setSource ] = useState( 
@@ -150,18 +150,6 @@ const Source = () => {
 
 
 
-const config = [{
-  name:'Create Source',
-  path: "/datasources/create/source",
-  exact: true,
-  auth: true,
-  mainNav: false,
-  title: <DataManagerHeader />,
-  sideNav: {
-    color: 'dark',
-    size: 'micro'
-  },
-  component: Source
-}]
 
-export default config;
+
+export default SourceCreate;

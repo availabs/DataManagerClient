@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useFalcor, /*SideNav,*/ Dropdown, withAuth } from 'modules/avl-components/src'
+import { useFalcor,} from 'modules/avl-components/src'
 import { Link } from 'react-router-dom'
 import { useSelector } from "react-redux";
 
 import get from 'lodash.get'
-import SourcesLayout, {DataManagerHeader}  from '../components/SourcesLayout'
+import SourcesLayout  from '../components/SourcesLayout'
 import { useParams } from 'react-router-dom'
 
 
@@ -14,7 +14,7 @@ import {SourceAttributes, ViewAttributes, getAttributes} from '../components/att
 
 
 
-const SourceThumb = ({source}) => {
+const SourceThumb = ({source, baseUrl='/datasources'}) => {
   const {falcor} = useFalcor()
   const pgEnv = useSelector(selectPgEnv);
   
@@ -35,17 +35,17 @@ const SourceThumb = ({source}) => {
 
   return (
     <div className='w-full p-4 bg-white my-1 hover:bg-blue-50 block border shadow'>
-      <Link to={`/datasources/source/${source.source_id}`}  className='text-xl font-medium w-full block'>
+      <Link to={`${baseUrl}/source/${source.source_id}`}  className='text-xl font-medium w-full block'>
         <span>{source.display_name || source.name }</span>
       </Link>
       <div>
           {(get(source,'categories',[]) || [])
             .map(cat => cat.map((s,i) => (
-              <Link key={i} to={`/datasources/cat/${i > 0 ? cat[i-1] + '/' : ''}${s}`} className='text-xs p-1 px-2 bg-blue-200 text-blue-600 mr-2'>{s}</Link>
+              <Link key={i} to={`${baseUrl}/cat/${i > 0 ? cat[i-1] + '/' : ''}${s}`} className='text-xs p-1 px-2 bg-blue-200 text-blue-600 mr-2'>{s}</Link>
           )))
           }
       </div>
-      <Link to={`/datasources/source/${source.source_id}`} className='py-2 block'>
+      <Link to={`${baseUrl}/source/${source.source_id}`} className='py-2 block'>
         {source.description}
       </Link>
     </div>
@@ -53,7 +53,7 @@ const SourceThumb = ({source}) => {
 }
 
 
-const SourcesList = (props) => {
+const SourcesList = ({baseUrl='/datasources'}) => {
   const {falcor,falcorCache} = useFalcor()
   const [layerSearch, setLayerSearch] = useState('')
   const { cat1, cat2 } = useParams()
@@ -117,7 +117,8 @@ const SourcesList = (props) => {
 
 
   return (
-        <SourcesLayout>
+
+        <SourcesLayout baseUrl={baseUrl}>
           <div className='py-4'>
             <div>
               <input 
@@ -147,7 +148,7 @@ const SourcesList = (props) => {
                 let searchTerm = (source.display_name + ' ' + get(source, 'categories[0]',[]).join(' '))
                 return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase())
               })
-              .map((s,i) => <SourceThumb key={i} source={s} />)
+              .map((s,i) => <SourceThumb key={i} source={s} baseUrl={baseUrl}/>)
           }
         </SourcesLayout>
      
