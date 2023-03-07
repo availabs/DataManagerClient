@@ -2,6 +2,7 @@ import React from "react";
 
 
 import MapPage from "./pages/Map";
+import CreatePage from "./pages/Create";
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
@@ -9,9 +10,6 @@ const Table = (/*{ source }*/) => {
   return <div> Table View </div>;
 };
 
-const AddView = () => {
-  return <div className="w-full h-full">Add New View</div>;
-};
 
 const GisDatasetConfig = {
   map: {
@@ -25,6 +23,15 @@ const GisDatasetConfig = {
     component: Table,
   },
   // This key is used to filter in src/pages/DataManager/Source/create.js
+  sourceCreate: {
+    name: "Create",
+    component: CreatePage,
+  },
+  gisDatasetUpdate: {
+    name: "Load New View",
+    path: "/gisDatasetUpdate",
+    component: CreatePage,
+  },
   pwrUsrOnly: false,
 };
 

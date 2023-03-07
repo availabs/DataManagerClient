@@ -13,7 +13,7 @@ import {SourceAttributes, /*ViewAttributes, getAttributes*/} from 'pages/DataMan
     
 import { selectPgEnv, selectIsPwrUsr } from "pages/DataManager/store";
 
-const SourceCreate = () => {
+const SourceCreate = ({baseUrl}) => {
 // prettier canary
   //const {falcor, falcorCache} = useFalcor()
   const [ source, setSource ] = useState( 
@@ -56,7 +56,7 @@ const SourceCreate = () => {
         acc[dt] = DataTypes[dt];
         return acc;
       }, {});
-
+      console.log('testing',filteredDataTypes)
       setDataTypes(filteredDataTypes);
     })();
   }, [pgEnv, isPwrUsr]);
@@ -73,13 +73,13 @@ const SourceCreate = () => {
   // console.log('new source', CreateComp)
   
   return (
-    <div className='max-w-6xl mx-auto'>
-      <div className='fixed right-0 top-[170px] w-64 '>
+    <div>
+      {/*<div className='fixed right-0 top-[170px] w-64 '>
           <pre>
             {JSON.stringify(source,null,3)}
           </pre>
-      </div>
-      <SourcesLayout>
+      </div>*/}
+      <SourcesLayout baseUrl={baseUrl}>
         
       <div className='p-4 font-medium'> Create New Source </div>
       

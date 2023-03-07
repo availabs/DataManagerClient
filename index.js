@@ -10,13 +10,12 @@ import Settings from "./Source/settings";
 import EtlContextEvents from "./EtlContext";
 
 
-
-
 const DamaRoutes = (baseUrl='/datasources') => {
   
   const Header = <DataManagerHeader baseUrl={baseUrl} />
   const SourceListComp = () => <SourceList baseUrl={baseUrl} />
   const SourceViewComp = () => <SourceView baseUrl={baseUrl} />
+  const SourceCreateComp = () => <SourceCreate baseUrl={baseUrl} />
   return [
     // Source List
     {
@@ -109,7 +108,7 @@ const DamaRoutes = (baseUrl='/datasources') => {
         color: 'dark',
         size: 'micro'
       },
-      component: SourceCreate
+      component: SourceCreateComp
     },
     //
     {
@@ -141,7 +140,6 @@ const DamaRoutes = (baseUrl='/datasources') => {
   ]
 }
 
-console.log('testing Dama Routes', DamaRoutes(''))
 
 
 export default DamaRoutes;
