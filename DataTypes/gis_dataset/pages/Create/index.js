@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
+import { useHistory } from "react-router-dom";
 // import {  useParams } from "react-router-dom";
 
 import get from 'lodash/get'
@@ -19,6 +20,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
   const { name: damaSourceName, source_id: sourceId } = source;
   const userId = get(user,`id`, null)
   const pgEnv = useSelector(selectPgEnv);
+  const history = useHistory()
 
   const [state, dispatch] = useReducer(reducer,{
     damaSourceId: sourceId,
@@ -55,6 +57,12 @@ export default function UploadGisDataset({ source={}, user={} }) {
     dispatch({type:'update', payload: { damaSourceName }})
   }, [damaSourceName])
 
+  useEffect( () => {
+    if (state.publishStatus === 'PUBLISHED') {
+      history.push(`/sources/${state.damasourceId}`)
+    }
+  }, [state.publishStatus, state.damaSourceId, history]);
+
   useEffect(() => {
     // on page load get etl context
     // TODO :: probably want to move this to on file upload
@@ -66,9 +74,11 @@ export default function UploadGisDataset({ source={}, user={} }) {
     })();
   }, [pgEnv, state.damaServerPath]);
 
+  
   if (!sourceId && !damaSourceName) {
     return <div> Please enter a datasource name.</div>;
   }
+
 
   return (
     <div>

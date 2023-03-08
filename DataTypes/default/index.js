@@ -1,5 +1,6 @@
 import Overview from "./Overview";
 import Metadata from "./Metadata";
+import Versions from './Versions'
 
 const Pages = {
   overview: {
@@ -11,6 +12,11 @@ const Pages = {
     name: "Metadata",
     path: "/meta",
     component: Metadata,
+  },
+  versions: {
+    name: "Versions",
+    path: "/versions",
+    component: Versions,
   },
 };
 

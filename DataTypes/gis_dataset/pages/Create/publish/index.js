@@ -1,13 +1,5 @@
 import React, {useMemo} from 'react'
 import get from 'lodash/get'
-import {
-  // createDamaSource,
-  // stageLayerData,
-  // queueCreateDamaView,
-  // approveQA,
-  publishGisDatasetLayer,
-  // generateMbTiles
-} from './components'
 
 const buttonStates = {
     AWAITING: {
@@ -36,10 +28,12 @@ export default function PublishButton({ state, dispatch }) {
     uploadErrMsg,
     lyrAnlysErrMsg,
     tableDescriptor,
-    // damaSourceName,
-    // damaSourceId,
-    // damaServerPath,
-    // etlContextId
+    damaSourceName,
+    damaSourceId,
+    damaServerPath,
+    etlContextId,
+    gisUploadId,
+    userId
   } = state
 
   const { 
@@ -58,30 +52,41 @@ export default function PublishButton({ state, dispatch }) {
       try {
         dispatch({type: 'update', payload: { publishStatus : 'IN_PROGRESS' }})
 
-        // if there is no sourceId create a new source Id
-        // if (!damaSourceId) {
-          
-        //   //this may not return anything??
-        //   let damaCreateSourceResponse = createDamaSource(state)
-        //   console.log('damaCreateSourceResponse', damaCreateSourceResponse)
-        // } 
-        // await stageLayerData(state);
+        const publishData = {
+          source_id: damaSourceId || null,
+          source_values: {
+            name: damaSourceName,
+            type: 'gis_dataset'
+          },
+          user_id: userId,
+          tableDescriptor,
+          gisUploadId,
+          layerName,
+          etlContextId
+        };
 
-        // await queueCreateDamaView(state);
+        const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
+        {
+          method: "POST",
+          body: JSON.stringify(publishData),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        // await approveQA(state);
+        //await checkApiResponse(res);
 
-        const publishFinalEvent = await publishGisDatasetLayer(state);
+        const publishFinalEvent = await res.json();
+        console.log('publishFinalEvent', publishFinalEvent)
 
         const {
-          payload: { damaViewId },
+          payload: { damaViewId, damaSourceId: finalSourceId },
         } = publishFinalEvent;
 
         console.log('published view id', damaViewId)
 
-        // await generateMbTiles(state, damaViewId);
 
-        dispatch({type: 'update', payload: { publishStatus : 'PUBLISHED' }});
+        dispatch({type: 'update', payload: { publishStatus : 'PUBLISHED', damaViewId,  finalSourceId}});
       } catch (err) {
         dispatch({
           type: 'update', 

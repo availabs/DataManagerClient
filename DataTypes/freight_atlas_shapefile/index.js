@@ -11,6 +11,7 @@ import config from "config.json"
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
     
+
 const Map = ({layers}) => {
     
     const mapOptions =  {
@@ -50,8 +51,6 @@ const Map = ({layers}) => {
        
     )
 }
-
-
 
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   const { falcor } = useFalcor()

@@ -28,7 +28,7 @@ export function reducer(state, action) {
     return { ...state, tableDescriptor: newTblDscr };
   }
 
-  return state
+  return state;
 
 }
 
