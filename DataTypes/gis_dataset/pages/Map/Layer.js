@@ -24,14 +24,16 @@ class GISDatasetLayer extends LayerContainer {
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
       
-      let data = [feature.properties.id,  layerId ] 
+      let data = [
+        [feature.properties.id,  layerId ]
+      ]
       
       return data
     }
   };
 
   init(map, falcor) {
-    console.log('init freight atlas layer')
+    console.log('init freight atlas layer',)
     
   }
 

@@ -53,7 +53,7 @@ const ConstrainedColumnNameInput = ({ publishStatus, field, col, availableDbColN
         !hasAvailableDbColNames || publishStatus !== "AWAITING"
       }
     >
-      {availableDbColNames.map(col => <option value={col}>{col}</option>)}
+      {availableDbColNames.map((col,i) => <option key={i} value={col}>{col}</option>)}
     </select>
   );
 };

@@ -14,8 +14,9 @@ import { selectPgEnv } from "pages/DataManager/store"
 
 const Source = ({user, baseUrl='datasources/'}) => {
   const {falcor, falcorCache} = useFalcor()
-  const { sourceId, page } = useParams()
+  const { sourceId, page, viewId } = useParams()
   const [ pages, setPages] = useState(Pages)
+  const [ activeView, setActiveView ] = useState(null)
   const pgEnv = useSelector(selectPgEnv);
 
   const Page = useMemo(() => {
@@ -83,13 +84,18 @@ const Source = ({user, baseUrl='datasources/'}) => {
             .map(d => {
               return {
                 name:d.name,
-                path: `${baseUrl}/source/${sourceId}${d.path}`
+                path: `${baseUrl}/source/${sourceId}${d.path}` // ${viewId ? '/'+viewId : ''}
               }
             })}
           themeOptions={{size:'inline'}}
         />
         <div className='w-full p-4 bg-white shadow mb-4'>
-          <Page source={source} views={views} user={user} />
+          <Page 
+            source={source} 
+            views={views} 
+            user={user}
+            baseUrl={baseUrl}
+          />
         </div>
       </SourcesLayout>
     </div>

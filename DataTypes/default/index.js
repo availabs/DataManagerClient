@@ -8,11 +8,11 @@ const Pages = {
     path: "",
     component: Overview,
   },
-  meta: {
+  /*meta: {
     name: "Metadata",
     path: "/meta",
     component: Metadata,
-  },
+  },*/
   versions: {
     name: "Versions",
     path: "/versions",

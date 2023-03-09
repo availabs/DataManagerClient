@@ -4,6 +4,7 @@ import get from 'lodash.get'
 import { SourceAttributes } from 'pages/DataManager/components/attributes'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
+import Metadata from './Metadata'
 
 const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   const { falcor } = useFalcor()
@@ -117,6 +118,12 @@ const OverviewEdit = withAuth(({source, views, user}) => {
             </dd>
           </div>*/}
         </dl>
+        <div className='py-10 px-2'>
+          <span className='text-gray-500 py-4'>Metadata</span>
+          <div className=''>
+            <Metadata source={source} />
+          </div>
+        </div>
       </div>
     </div>
   )

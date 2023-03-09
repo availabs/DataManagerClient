@@ -2,6 +2,7 @@ import React, { useReducer, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 import { useHistory } from "react-router-dom";
+import { useFalcor } from "modules/avl-components/src"
 // import {  useParams } from "react-router-dom";
 
 import get from 'lodash/get'
@@ -21,6 +22,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
   const userId = get(user,`id`, null)
   const pgEnv = useSelector(selectPgEnv);
   const history = useHistory()
+  const { falcor } = useFalcor()
 
   const [state, dispatch] = useReducer(reducer,{
     damaSourceId: sourceId,
@@ -59,9 +61,10 @@ export default function UploadGisDataset({ source={}, user={} }) {
 
   useEffect( () => {
     if (state.publishStatus === 'PUBLISHED') {
-      history.push(`/sources/${state.damasourceId}`)
+      falcor.invalidate(["dama", pgEnv, "sources","byId",state.damaSourceId,"views","length"])
+      history.push(`/source/${state.damaSourceId}/versions`)
     }
-  }, [state.publishStatus, state.damaSourceId, history]);
+  }, [state.publishStatus, state.damaSourceId, pgEnv, history]);
 
   useEffect(() => {
     // on page load get etl context

@@ -1,79 +1,90 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
 import get from 'lodash.get'
-// import { useParams } from 'react-router-dom'
-import FreightAtlasLayer from './Layer'
+import { useParams, useHistory } from 'react-router-dom'
+import GISDatasetLayer from './Layer'
 import { AvlMap } from "modules/avl-map/src"
-import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
+import { useSelector } from "react-redux";
+import { selectPgEnv } from "pages/DataManager/store"
+// import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 
 import config from "config.json"
 
+const TILEHOST = 'http://localhost:3370'
+
+
+const ViewSelector = ({views}) => {
+  const { viewId, sourceId, page } = useParams()
+  const history = useHistory()
+  
+  return (
+    <div className='flex flex-1'>
+      <div className='py-3.5 px-2 text-sm text-gray-400'>Version : </div>
+      <div className='flex-1'>
+        <select  
+          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+          value={viewId}
+          onChange={(e) => history.push(`/source/${sourceId}/${page}/${e.target.value}`)}
+        >
+          {views
+            .sort((a,b) => b.view_id - a.view_id)
+            .map((v,i) => (
+            <option key={i} className="ml-2  truncate" value={v.view_id}>
+              {v.version ? v.version : v.view_id}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 const MapPage = ({source,views, user}) => {
-  // const { sourceId } = useParams()
+  const { /*sourceId,*/ viewId } = useParams()
+  
   const { falcor } = useFalcor()
   // console.log('user auth', user)
-  const [ activeView /*, setActiveView*/ ] = useState(0)
-  const [ mapData /*, setMapData*/ ] = useState(get(views,`[${activeView}].metadata.tiles`,{}))
+  
+  //const [ mapData /*, setMapData*/ ] = useState(get(activeView,`metadata.tiles`,{}))
   const [ editing, setEditing ] = React.useState(null)
-  const viewId = React.useMemo(() => get(views,`[${activeView}].id`,null), [views,activeView])
+  //React.useEffect({})
+  const activeView = React.useMemo(() => {
+    return get(views.filter(d => d.view_id === viewId),'[0]', views[0])
+  },[views,viewId])
+  const mapData = useMemo(() => {
+    let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
+    out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    return out
+  }, [activeView])
+  const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [activeView])
   const layer = React.useMemo(() => {
       return {
             name: source.name,
             source: source,
             views: views,
-            activeView: activeView,
+            activeViewId: activeViewId,
             sources: get(mapData,'sources',[]), 
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, [])
       }
   },[source, views, mapData, activeView])
 
-  // console.log('testing', mapData, activeView)
-  const save = async (attr, value) => {
-    console.log('click save', attr, value)
-    if(viewId) {
-      try{
-        let update = value
-        let val = get(views,`[${activeView}].metadata`,{tiles:{}}) || {tiles:{}}
-        val.tiles[attr] = update
-        let response = await falcor.set({
-            paths: [
-              ['datamanager','views','byId',viewId,'attributes', 'metadata' ]
-            ],
-            jsonGraph: {
-              datamanager:{
-                views: {
-                  byId:{
-                    [viewId] : {
-                        attributes : { 'metadata': JSON.stringify(val)}
-                    }
-                  }
-                }
-              }
-            }
-        })
-        console.log('set run', response)
-        // cancel()
-      } catch (error) {
-        // console.log('error stuff',error,value, parentData);
-      }
-    }
-  }
 
   return (
     <div> 
-      Map View {/*{get(activeView,'id','')}*/}
-
+      <div className='flex'>
+        <div className='flex-1 pl-3 pr-4 py-2'>Map View</div>{/*{get(activeView,'id','')}*/}
+        <ViewSelector views={views} />
+      </div>
       <div className='w-ful h-[700px]'>
         <Map layers={[layer]}/>
       </div>
       {user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-        <SymbologyControls 
+        {/*<SymbologyControls 
           layer={layer} 
           onChange={(v) => save('symbology',v)}
-        />
+        />*/}
         <dl className="sm:divide-y sm:divide-gray-200">
           {['sources','layers','symbology']
             .map((attr,i) => {
@@ -88,8 +99,8 @@ const MapPage = ({source,views, user}) => {
                           <Edit 
                             startValue={val} 
                             attr={attr}
-                            viewId={get(views,`[${activeView}].view_id`,null)}
-                            parentData={get(views,`[${activeView}].metadata`,{tiles:{}})}
+                            viewId={activeViewId}
+                            parentData={get(activeView,`metadata`,{tiles:{}})}
                             cancel={() => setEditing(null)}
                           />
                         </div> :  
@@ -138,7 +149,7 @@ const Map = ({layers}) => {
     
  
     const map_layers = useMemo(() => {
-      return layers.map(l => FreightAtlasLayer(l))
+      return layers.map(l => GISDatasetLayer(l))
     },[layers])
 
     console.log('map_layers',map_layers)
@@ -162,7 +173,7 @@ const Map = ({layers}) => {
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  /*const [loading, setLoading] = useState(false)*/
+  const pgEnv = useSelector(selectPgEnv);
   const inputEl = useRef(null);
 
   useEffect(() => {
@@ -176,34 +187,38 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   },[value])
 
   const save = async (attr, value) => {
-    console.log('click save', viewId, attr, value)
+    console.log('click save 222', attr, value)
     if(viewId) {
-      //try{
+      try{
         let update = JSON.parse(value)
         let val = parentData || {tiles:{}}
         val.tiles[attr] = update
-        console.log('testing',JSON.stringify(val), val)
+        console.log('out value', val)
         let response = await falcor.set({
             paths: [
-              ['datamanager','views','byId',viewId,'attributes', 'metadata' ]
+              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
             ],
             jsonGraph: {
-              datamanager:{
-                views: {
-                  byId:{
-                    [viewId] : {
-                        attributes : { 'metadata': JSON.stringify(val)}
+              dama:{
+                [pgEnv]:{
+                  views: {
+                    byId:{
+                      [viewId] : {
+                        attributes : { 
+                          metadata: JSON.stringify(val)
+                        }
+                      }
                     }
                   }
                 }
               }
             }
         })
-        console.log('set run', response)
+        console.log('set run response', response)
         cancel()
-      // } catch (error) {
-      //   console.log('error stuff',error,value, parentData);
-      // }
+      } catch (error) {
+        console.log('error stuff',error,value, parentData);
+      }
     }
   }
 
