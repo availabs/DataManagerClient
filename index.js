@@ -1,21 +1,23 @@
 import React from "react";
-import { withAuth } from 'modules/avl-components/src'
+import { withAuth } from "modules/avl-components/src";
 
 import { DataManagerHeader } from "./components/SourcesLayout";
 
 import SourceList from "./Source/list";
 import SourceView from "./Source";
 import SourceCreate from "./Source/create";
+import SourceDelete from "./Source/delete";
 import Settings from "./Source/settings";
 import EtlContextEvents from "./EtlContext";
 
+const DamaRoutes = (baseUrl = "/datasources") => {
 
-const DamaRoutes = (baseUrl='/datasources') => {
-  
-  const Header = <DataManagerHeader baseUrl={baseUrl} />
-  const SourceListComp = () => <SourceList baseUrl={baseUrl} />
-  const SourceViewComp = () => <SourceView baseUrl={baseUrl} />
-  const SourceCreateComp = () => <SourceCreate baseUrl={baseUrl} />
+  const Header = <DataManagerHeader baseUrl={baseUrl} />;
+  const SourceListComp = () => <SourceList baseUrl={baseUrl} />;
+  const SourceViewComp = () => <SourceView baseUrl={baseUrl} />;
+  const SourceCreateComp = () => <SourceCreate baseUrl={baseUrl} />;
+  const SourceDeleteComp = () => <SourceDelete baseUrl={baseUrl} />;
+
   return [
     // Source List
     {
@@ -27,9 +29,9 @@ const DamaRoutes = (baseUrl='/datasources') => {
       title: Header,
       sideNav: {
         color: "dark",
-        size: "micro",
+        size: "micro"
       },
-      component:SourceListComp ,
+      component: SourceListComp
     },
     {
       name: "Data Sources",
@@ -40,9 +42,9 @@ const DamaRoutes = (baseUrl='/datasources') => {
       title: Header,
       sideNav: {
         color: "dark",
-        size: "micro",
+        size: "micro"
       },
-      component: SourceListComp,
+      component: SourceListComp
     },
     {
       name: "Data Sources",
@@ -53,62 +55,76 @@ const DamaRoutes = (baseUrl='/datasources') => {
       title: Header,
       sideNav: {
         color: "dark",
-        size: "micro",
+        size: "micro"
       },
-      component: SourceListComp,
+      component: SourceListComp
     },
     // -- Source View
     {
-      name:'View Source',
+      name: "View Source",
       path: `${baseUrl}/source/:sourceId`,
       exact: true,
       auth: false,
       mainNav: false,
       title: Header,
       sideNav: {
-        color: 'dark',
-        size: 'micro'
+        color: "dark",
+        size: "micro"
       },
       component: withAuth(SourceViewComp)
     },
     {
-      name:'View Source',
+      name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page`,
       exact: true,
       auth: false,
       mainNav: false,
       title: Header,
       sideNav: {
-        color: 'dark',
-        size: 'micro'
+        color: "dark",
+        size: "micro"
       },
       component: withAuth(SourceViewComp)
-    },{
-      name:'View Source',
-      path: `${baseUrl}/source/:sourceId/:page/:viewId`,
+    }, {
+      name: "View Source",
+      path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
       exact: true,
       auth: false,
       mainNav: false,
       title: Header,
       sideNav: {
-        color: 'dark',
-        size: 'micro'
+        color: "dark",
+        size: "micro"
       },
       component: withAuth(SourceViewComp)
     },
     // Source Create
     {
-      name:'Create Source',
+      name: "Create Source",
       path: `${baseUrl}/create/source`,
       exact: true,
       auth: true,
       mainNav: false,
       title: Header,
       sideNav: {
-        color: 'dark',
-        size: 'micro'
+        color: "dark",
+        size: "micro"
       },
       component: SourceCreateComp
+    },
+    // Source Delete
+    {
+      name: "Delete Source",
+      path: `${baseUrl}/delete/source/:sourceId`,
+      exact: true,
+      auth: true,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro"
+      },
+      component: SourceDeleteComp
     },
     //
     {
@@ -120,9 +136,9 @@ const DamaRoutes = (baseUrl='/datasources') => {
       title: Header,
       sideNav: {
         color: "dark",
-        size: "micro",
+        size: "micro"
       },
-      component: Settings,
+      component: Settings
     },
     {
       name: "ETL Context View",
@@ -133,13 +149,12 @@ const DamaRoutes = (baseUrl='/datasources') => {
       title: Header,
       sideNav: {
         color: "dark",
-        size: "micro",
+        size: "micro"
       },
-      component: EtlContextEvents,
+      component: EtlContextEvents
     }
-  ]
-}
-
+  ];
+};
 
 
 export default DamaRoutes;

@@ -1,64 +1,110 @@
-import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { useFalcor, withAuth, Table} from 'modules/avl-components/src'
-import get from 'lodash.get'
-import { SourceAttributes } from 'pages/DataManager/components/attributes'
+import React, { useEffect, /*useMemo,*/ useState } from "react";
+import { useFalcor, withAuth, Table } from "modules/avl-components/src";
+import get from "lodash.get";
 import { useSelector } from "react-redux";
-import { useHistory, useParams } from "react-router-dom"
-import { selectPgEnv } from "pages/DataManager/store"
+import { Link, useHistory, useParams } from "react-router-dom";
+import { selectPgEnv } from "pages/DataManager/store";
+import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
+import Version from "./version";
+import DeleteVersion from "./DeleteVersion";
 
+export const formatDate = (dateString) => {
+  const options = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  };
+  return new Date(dateString).toLocaleDateString(undefined, options);
+};
 
-const Versions = withAuth(({source, views, user}) => {
-  const history = useHistory()
-  const {viewId} = useParams()
+const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
+  return (
+    <button
+      className={`bg-blue-50 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-blue-400 hover:text-white`} p-2`}
+      disabled={get(meta, "authoritative") === "true"}
+      onClick={async () => {
+        await makeAuthoritative(getDamaApiRoutePrefix(pgEnv), viewId);
+      }
+      }>
 
-  if(viewId) {
-    let view = views.filter(d => d.view_id === viewId)[0] || {}
-    return (
-      <div className='overflow-x-hidden max-w-6xl'>
-        <pre>
-          {JSON.stringify(views[0], null ,3)}
-        </pre>
-      </div>
-    )
+      {get(meta, "authoritative") === "true" ? "Authoritative" : "Make Authoritative"}
+    </button>
+  );
+};
+
+const DeleteButton = ({ viewId, sourceId, meta, history, baseUrl }) => {
+  return (
+    <button
+      disabled={get(meta, "authoritative") === "true"}
+      className={`bg-red-50 p-2 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-red-400 hover:text-white`}`}
+      onClick={() => history.push(`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
+    >
+      Delete
+    </button>
+  );
+};
+
+const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
+  const pgEnv = useSelector(selectPgEnv);
+  const history = useHistory();
+  const { sourceId, viewId, vPage } = useParams();
+
+  if (vPage === "delete") {
+    return <DeleteVersion baseUrl={baseUrl} />;
   }
-  
+  if (viewId) {
+    return (
+      <Version baseUrl={baseUrl} />
+    );
+  }
+
   return (
     <div className="">
-      <Table 
+      <Table
         data={views}
-        onRowClick={(state,rowInfo)=> {
-          //console.log('rowCLick', state, rowInfo)
-          console.log()
-          history.push(`/source/${source.source_id}/versions/${rowInfo.cells[0].value}`)
-        }}
         columns={[
           {
-            Header: 'Version Id',
-            accessor: 'view_id',
-            align: 'left'
+            Header: "Version Id",
+            accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
+            align: "left"
           },
           {
-            Header: 'Version',
-            accessor: 'version',
+            Header: "Version",
+            accessor: "version"
           },
           {
-            Header: 'User',
-            accessor: 'user_id',
+            Header: "User",
+            accessor: "user_id"
           },
           {
-            Header: 'Updated',
-            accessor: '_modified_timestamp',
+            Header: "Updated",
+            accessor: c => formatDate(c["_modified_timestamp"])
           },
           {
-            Header: 'Created',
-            accessor: '_created_timestamp',
+            Header: "Created",
+            accessor: c => formatDate(c["_created_timestamp"])
           },
+          {
+            Header: "Status",
+            accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
+            disableFilters: true
+          },
+          {
+            Header: "Delete",
+            accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
+                                         history={history} baseUrl={baseUrl} />,
+            disableFilters: true
+          }
         ]}
       />
-       
+
     </div>
-  )
-})
+  );
+});
 
 
-export default Versions    
+export default Versions;

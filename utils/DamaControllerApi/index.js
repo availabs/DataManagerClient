@@ -39,3 +39,57 @@ export async function getDamaTileServerUrl() {
 
   return damaTileServerUrl;
 }
+
+export const makeAuthoritative = async (rtPfx, viewId) => {
+  const url = new URL(`${rtPfx}/makeAuthoritativeDamaView`);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ "view_id": viewId }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  await checkApiResponse(res);
+
+  const viewMetaRes = await res.json();
+
+  return viewMetaRes;
+};
+
+export const deleteSource = async (rtPfx, sourceId) => {
+  const url = new URL(`${rtPfx}/deleteDamaSource`);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ "source_id": sourceId }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  await checkApiResponse(res);
+
+  const sourceDelRes = await res.json();
+
+  return sourceDelRes;
+};
+
+export const deleteView = async (rtPfx, viewId) => {
+  const url = new URL(`${rtPfx}/deleteDamaView`);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ "view_id": viewId }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  await checkApiResponse(res);
+
+  const viewMetaRes = await res.json();
+
+  return viewMetaRes;
+};
