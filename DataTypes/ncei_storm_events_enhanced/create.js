@@ -76,7 +76,7 @@ const Create = ({ source, user, newVersion }) => {
             await getSrcViews({rtPfx, setVersions: setVersionsNCEI, type: 'ncei_storm_events'});
         }
         fetchData();
-    }, [])
+    }, [rtPfx])
 
     return (
         <div className='w-full'>
@@ -91,12 +91,12 @@ const Create = ({ source, user, newVersion }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, source,
-                            viewNCEI: versionsNCEI.views.find(v => v.view_id == viewNCEI),
-                            viewZTC: versionsZTC.views.find(v => v.view_id == viewZTC),
-                            viewState: versionsState.views.find(v => v.view_id == viewState),
-                            viewCounty: versionsCounty.views.find(v => v.view_id == viewCounty),
-                            viewCousubs: versionsCousubs.views.find(v => v.view_id == viewCousubs),
-                            viewTract: versionsTract.views.find(v => v.view_id == viewTract),
+                            viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
+                            viewZTC: versionsZTC.views.find(v => v.view_id === parseInt(viewZTC)),
+                            viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
+                            viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
+                            viewCousubs: versionsCousubs.views.find(v => v.view_id === parseInt(viewCousubs)),
+                            viewTract: versionsTract.views.find(v => v.view_id === parseInt(viewTract)),
                             newVersion, history
                         })}>
                 Add New Source

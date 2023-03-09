@@ -137,7 +137,7 @@ export default function Popup({ baseUrl }) {
 
   useEffect(() => {
     getData({ falcor, pgEnv, sourceId });
-  }, [sourceId, pgEnv]);
+  }, [sourceId, pgEnv, falcor]);
 
   const
     dependents = get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "dependents", "value"], []),

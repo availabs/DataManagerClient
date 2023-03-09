@@ -1,5 +1,5 @@
-import React, { useEffect, /*useMemo,*/ useState } from "react";
-import { useFalcor, withAuth, Table } from "modules/avl-components/src";
+import React from "react";
+import { withAuth, Table } from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
 import { Link, useHistory, useParams } from "react-router-dom";

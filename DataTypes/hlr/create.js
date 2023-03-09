@@ -71,7 +71,7 @@ const Create = ({ source, user, newVersion = 1 }) => {
             await getSrcViews({rtPfx, setVersions: setVersionsNCEI, type: 'ncei_storm_events_enhanced'});
         }
         fetchData();
-    }, [])
+    }, [rtPfx])
 
     return (
         <div className='w-full'>
@@ -85,11 +85,11 @@ const Create = ({ source, user, newVersion = 1 }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, source, userId: user.id, newVersion,
-                            viewPB: versionsPB.views.find(v => v.view_id == viewPB),
-                            viewNRI: versionsNRI.views.find(v => v.view_id == viewNRI),
-                            viewState: versionsState.views.find(v => v.view_id == viewState),
-                            viewCounty: versionsCounty.views.find(v => v.view_id == viewCounty),
-                            viewNCEI: versionsNCEI.views.find(v => v.view_id == viewNCEI),
+                            viewPB: versionsPB.views.find(v => v.view_id === parseInt(viewPB)),
+                            viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
+                            viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
+                            viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
+                            viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             history
                         })}>
                 Add New Source

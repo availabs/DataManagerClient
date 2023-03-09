@@ -1,7 +1,4 @@
 import React from 'react'
-import get from 'lodash.get'
-
-
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../utils/DamaControllerApi";
 import { RenderVersions } from "../../utils/macros"
 import {useHistory} from "react-router-dom";
@@ -57,7 +54,7 @@ const Create = ({ source, user, newVersion }) => {
             await getSrcViews({rtPfx, setVersions: setVersionsNRI,  type: 'nri'});
         }
         fetchData();
-    }, [])
+    }, [rtPfx])
 
     return (
         <div className='w-full'>
@@ -68,8 +65,8 @@ const Create = ({ source, user, newVersion }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, source,
-                            viewNCEI: versionsNCEI.views.find(v => v.view_id == viewNCEI),
-                            viewNRI: versionsNRI.views.find(v => v.view_id == viewNRI),
+                            viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
+                            viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             newVersion, history
                         })}>
                 Add New Source

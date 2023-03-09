@@ -53,7 +53,7 @@ const Create = ({ source, user, newVersion }) => {
             await getSrcViews({rtPfx, setVersions: setVersionsNRI, type: 'nri'});
         }
         fetchData();
-    }, [])
+    }, [rtPfx])
 
     return (
         <div className='w-full'>
@@ -64,8 +64,8 @@ const Create = ({ source, user, newVersion }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, source, userId: user.id, newVersion,
-                            viewHlr: versionsHlr.views.find(v => v.view_id == viewHlr),
-                            viewNRI: versionsNRI.views.find(v => v.view_id == viewNRI),
+                            viewHlr: versionsHlr.views.find(v => v.view_id === parseInt(viewHlr)),
+                            viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             history
                         })}>
                 Add New Source
