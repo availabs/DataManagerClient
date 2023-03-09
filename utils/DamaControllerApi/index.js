@@ -40,6 +40,24 @@ export async function getDamaTileServerUrl() {
   return damaTileServerUrl;
 }
 
+export const getSrcViews = async ({rtPfx, setVersions, type}) => {
+  const url = new URL(
+    `${rtPfx}/hazard_mitigation/versionSelectorUtils`
+  );
+  url.searchParams.append("type", type);
+
+  const list = await fetch(url);
+
+  await checkApiResponse(list);
+
+  const {
+    sources, views
+  } = await list.json();
+  setVersions({sources, views})
+
+  return {sources, views}
+}
+
 export const makeAuthoritative = async (rtPfx, viewId) => {
   const url = new URL(`${rtPfx}/makeAuthoritativeDamaView`);
 

@@ -5,21 +5,9 @@ import { useSelector } from "react-redux";
 import { Link, useHistory, useParams } from "react-router-dom";
 import { selectPgEnv } from "pages/DataManager/store";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
+import { formatDate } from "../../utils/macros";
 import Version from "./version";
 import DeleteVersion from "./DeleteVersion";
-
-export const formatDate = (dateString) => {
-  const options = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
-  };
-  return new Date(dateString).toLocaleDateString(undefined, options);
-};
 
 const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
   return (
