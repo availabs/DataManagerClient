@@ -96,19 +96,13 @@ const Source = ({user, baseUrl='datasources/'}) => {
           menuItems={Object.values(pages)
             .map(d => {
               return {
-<<<<<<< HEAD
                 name:d.name,
                 path: `${baseUrl}/source/${sourceId}${d.path}` // ${viewId ? '/'+viewId : ''}
               }
-=======
-                name: d.name,
-                path: `${baseUrl}/source/${sourceId}${d.path}`
-              };
->>>>>>> 52d4f42ec6aff20cad024e0263486ba6241e1dfb
+
             })}
           themeOptions={{ size: "inline" }}
         />
-<<<<<<< HEAD
         <div className='w-full p-4 bg-white shadow mb-4'>
           <Page 
             source={source} 
@@ -116,10 +110,6 @@ const Source = ({user, baseUrl='datasources/'}) => {
             user={user}
             baseUrl={baseUrl}
           />
-=======
-        <div className="w-full p-4 bg-white shadow mb-4">
-          <Page source={source} views={views} user={user} meta={meta} baseUrl={baseUrl} />
->>>>>>> 52d4f42ec6aff20cad024e0263486ba6241e1dfb
         </div>
       </SourcesLayout>
     </div>
