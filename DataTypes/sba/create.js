@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 import { RenderVersions } from "../../utils/macros";
 
-const CallServer = async ({rtPfx, source, viewCounty={}, viewState={}, table, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, viewCounty={}, viewState={}, table, newVersion, history}) => {
     const viewMetadata = [viewState.view_id,  viewCounty.view_id];
 
     const url = new URL(
@@ -17,6 +17,7 @@ const CallServer = async ({rtPfx, source, viewCounty={}, viewState={}, table, ne
     url.searchParams.append("table_name", table);
     url.searchParams.append("source_name", source.name);
     url.searchParams.append("existing_source_id", source.source_id);
+    url.searchParams.append("view_dependencies", JSON.stringify(viewMetadata));
     url.searchParams.append("version", newVersion);
 
     url.searchParams.append("state_schema", viewState.table_schema);
@@ -32,10 +33,10 @@ const CallServer = async ({rtPfx, source, viewCounty={}, viewState={}, table, ne
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
@@ -60,7 +61,7 @@ const Create = ({ source, user, newVersion }) => {
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
-                    rtPfx, source,
+                    rtPfx, baseUrl, source,
                     viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
                     viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
                     table: 'sba_disaster_loan_data_new', newVersion, history

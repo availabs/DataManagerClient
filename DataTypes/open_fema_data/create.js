@@ -76,7 +76,7 @@ const RenderDatasets = ({value, setValue, datasets}) => {
     )
 }
 
-const CallServer = async ({rtPfx, source, table, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, table, newVersion, history}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/openFemaDataLoader`
     );
@@ -94,10 +94,10 @@ const CallServer = async ({rtPfx, source, table, newVersion, history}) => {
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
     const [table, setTable] = React.useState();
@@ -109,7 +109,7 @@ const Create = ({ source, user, newVersion }) => {
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
-                rtPfx, source, table, newVersion, history
+                rtPfx, baseUrl, source, table, newVersion, history
             })}> Add New Source</button>
         </div>
     )

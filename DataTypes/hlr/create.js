@@ -7,7 +7,7 @@ import { RenderVersions } from "../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const CallServer = async ({rtPfx, source, newVersion, history,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYear, endYear,
                               viewPB={}, viewNRI={}, viewState={}, viewCounty={}, viewNCEI={}}) => {
     const viewMetadata = [viewPB.view_id, viewNRI.view_id, viewState.view_id, viewCounty.view_id, viewNCEI.view_id];
 
@@ -18,6 +18,8 @@ const CallServer = async ({rtPfx, source, newVersion, history,
     url.searchParams.append("existing_source_id", source.source_id);
     url.searchParams.append("view_dependencies", JSON.stringify(viewMetadata));
     url.searchParams.append("version", newVersion);
+    url.searchParams.append("startYear", startYear);
+    url.searchParams.append("endYear", endYear);
     url.searchParams.append("table_name", 'hlr');
 
 
@@ -40,14 +42,19 @@ const CallServer = async ({rtPfx, source, newVersion, history,
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create = ({ source, user, newVersion = 1 }) => {
+const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
+
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
 
     // selected views/versions
+    const [startYear, setStartYear] = React.useState(1996);
+    const [endYear, setEndYear] = React.useState(2019);
+    const years = range(1996, 2020);
     const [viewPB, setViewPB] = React.useState();
     const [viewNRI, setViewNRI] = React.useState();
     const [viewState, setViewState] = React.useState();
@@ -75,6 +82,8 @@ const Create = ({ source, user, newVersion = 1 }) => {
 
     return (
         <div className='w-full'>
+            {RenderVersions({value: startYear, setValue: setStartYear, versions: [startYear], type: 'Start Year'})}
+            {RenderVersions({value: endYear, setValue: setEndYear, versions: years, type: 'End Year'})}
             {RenderVersions({value: viewPB, setValue: setViewPB, versions: versionsPB, type: 'PB Storm Events'})}
             {RenderVersions({value: viewNRI, setValue: setViewNRI, versions: versionsNRI, type: 'NRI'})}
             {RenderVersions({value: viewState, setValue: setViewState, versions: versionsState, type: 'State'})}
@@ -84,7 +93,8 @@ const Create = ({ source, user, newVersion = 1 }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer(
-                        {rtPfx, source, userId: user.id, newVersion,
+                        {rtPfx, baseUrl, source, newVersion,
+                            startYear, endYear,
                             viewPB: versionsPB.views.find(v => v.view_id === parseInt(viewPB)),
                             viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),

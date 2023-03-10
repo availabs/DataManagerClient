@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
 
-const CallServer = async ({rtPfx, source, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/zoneToCountyLoader`
     );
@@ -25,10 +25,10 @@ const CallServer = async ({rtPfx, source, newVersion, history}) => {
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create =  ({ source, user, newVersion }) => {
+const Create =  ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
@@ -38,7 +38,7 @@ const Create =  ({ source, user, newVersion }) => {
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
-                rtPfx, source, newVersion, history
+                rtPfx, baseUrl, source, newVersion, history
             })}> Add New Source</button>
         </div>
     )

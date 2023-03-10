@@ -3,6 +3,7 @@ import get from "lodash.get";
 import { DataTypes } from "../index";
 
 const AddVersion = ({ source, views, user }) => {
+  console.log('???', source, views, user)
   const newVersion = Math.max(...views.map(v => parseInt(v.version) || 0)) + 1;
   const [versionName, setVersionName] = useState(newVersion);
 

@@ -10,7 +10,7 @@ export const formatDate = (dateString) => {
     second: "2-digit",
     hour12: false
   };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  return dateString ? new Date(dateString).toLocaleDateString(undefined, options) : ``;
 };
 export const RenderVersions = ({value, setValue, versions, type}) => {
   console.log('versions', versions)
@@ -27,13 +27,13 @@ export const RenderVersions = ({value, setValue, versions, type}) => {
                 setValue(e.target.value)
               }}>
               <option value="" disabled >Select your option</option>
-              {versions.views
+              {(versions.views || versions)
                 .map(v =>
                   <option
                     key={v.view_id}
                     value={v.view_id} className={`p-2 ${get(v, ['metadata', 'authoritative']) === 'true' ? `font-bold` : ``}`}>
-                    {get(versions.sources.find(s => s.source_id === v.source_id), 'name')}
-                    {` (${v.view_id} ${formatDate(v._modified_timestamp)})`}
+                    {get((versions.sources || versions).find(s => s.source_id === v.source_id), 'name') || v}
+                    {v.view_id && ` (${v.view_id || ``} ${formatDate(v._modified_timestamp)})`}
                   </option>)
               }
             </select>

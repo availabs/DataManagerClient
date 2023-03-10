@@ -4,10 +4,7 @@ import {useFalcor} from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
-
-const Table = ({source}) => {
-    return <div> Table View </div>
-}
+import AddVersion from "../default/AddVersion";
 
 const RenderVersions = (domain, value, onchange) => (
     <select
@@ -159,6 +156,11 @@ const Stats = ({source, views}) => {
 }
 
 const NceiStormEventsConfig = {
+    add_version: {
+        name: "Add Version",
+        path: "/add_version",
+        component: AddVersion
+    },
     stats: {
         name: 'Stats',
         path: '/stats',
@@ -168,11 +170,6 @@ const NceiStormEventsConfig = {
         name: 'Map',
         path: '/map',
         component: () => <div> No Map </div>
-    },
-    table: {
-        name: 'Table',
-        path: '/table',
-        component: Table
     },
     sourceCreate: {
         name: 'Create',

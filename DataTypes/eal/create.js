@@ -5,7 +5,7 @@ import { RenderVersions } from "../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const CallServer = async ({rtPfx, source, newVersion, history, viewHlr={}, viewNRI={}}) => {
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, viewHlr={}, viewNRI={}}) => {
     const viewMetadata = [viewHlr.view_id, viewNRI.view_id];
 
     const url = new URL(
@@ -31,10 +31,10 @@ const CallServer = async ({rtPfx, source, newVersion, history, viewHlr={}, viewN
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
 
@@ -63,7 +63,7 @@ const Create = ({ source, user, newVersion }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer(
-                        {rtPfx, source, userId: user.id, newVersion,
+                        {rtPfx, baseUrl, source, newVersion,
                             viewHlr: versionsHlr.views.find(v => v.view_id === parseInt(viewHlr)),
                             viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             history

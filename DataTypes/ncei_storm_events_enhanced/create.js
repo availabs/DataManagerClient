@@ -7,7 +7,7 @@ import { RenderVersions } from "../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const CallServer = async ({rtPfx, source, newVersion, history,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
                               viewNCEI={},viewZTC={}, viewCousubs={}, viewCounty={}, viewState={}, viewTract={}}) => {
     const viewMetadata = [viewZTC.view_id, viewState.view_id,  viewCounty.view_id, viewCousubs.view_id, viewTract.view_id, viewNCEI.view_id];
 
@@ -42,10 +42,10 @@ const CallServer = async ({rtPfx, source, newVersion, history,
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 };
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
 
@@ -90,7 +90,7 @@ const Create = ({ source, user, newVersion }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer(
-                        {rtPfx, source,
+                        {rtPfx, baseUrl, source,
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             viewZTC: versionsZTC.views.find(v => v.view_id === parseInt(viewZTC)),
                             viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),

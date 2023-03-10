@@ -5,7 +5,7 @@ import {useHistory} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const CallServer = async ({rtPfx, source, newVersion, history,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
                               viewNCEI={}, viewNRI={}}) => {
     const viewMetadata = [viewNCEI.view_id, viewNRI.view_id];
 
@@ -32,10 +32,10 @@ const CallServer = async ({rtPfx, source, newVersion, history,
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
     // selected views/versions
@@ -64,7 +64,7 @@ const Create = ({ source, user, newVersion }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer(
-                        {rtPfx, source,
+                        {rtPfx, baseUrl, source,
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             newVersion, history

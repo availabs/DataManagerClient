@@ -5,7 +5,7 @@ import { checkApiResponse, getDamaApiRoutePrefix } from "../../utils/DamaControl
 import {useHistory} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
-const CallServer = async ({rtPfx, source, tigerTable, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, tigerTable, newVersion, history}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/tigerDownloadAction`
     );
@@ -23,7 +23,7 @@ const CallServer = async ({rtPfx, source, tigerTable, newVersion, history}) => {
 
     console.log('res', resJson);
 
-    history.push(`/source/${resJson.payload.source_id}/views`);
+    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const RenderTigerTables= ({value, setValue, domain}) => {
@@ -58,7 +58,7 @@ const RenderTigerTables= ({value, setValue, domain}) => {
     )
 }
 
-const Create = ({ source, user, newVersion }) => {
+const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
     const [tigerTable, setTigerTable] = React.useState();
@@ -72,7 +72,7 @@ const Create = ({ source, user, newVersion }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer({
-                        rtPfx, source, tigerTable, newVersion, history})}
+                        rtPfx, baseUrl, source, tigerTable, newVersion, history})}
                 disabled={!tigerTable}
             >
                 Add New Source
