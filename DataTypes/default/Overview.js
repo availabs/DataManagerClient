@@ -51,11 +51,12 @@ const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   )
 }
 
-const OverviewEdit = withAuth(({source, views, user}) => {
+const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) => {
   const [editing, setEditing] = React.useState(null)
   
   return (
     <div className="overflow-hidden">
+      
       <div className="pl-4 py-6 hover:py-6 sm:pl-6 flex justify-between group">
         <div className="flex-1 mt-1 max-w-2xl text-sm text-gray-500">
           {editing === 'description' ? 
@@ -119,7 +120,7 @@ const OverviewEdit = withAuth(({source, views, user}) => {
           </div>*/}
         </dl>
         <div className='py-10 px-2'>
-          <span className='text-gray-500 py-4'>Metadata</span>
+          <div className='text-gray-500 py-8 px-5'>Metadata</div>
           <div className=''>
             <Metadata source={source} />
           </div>

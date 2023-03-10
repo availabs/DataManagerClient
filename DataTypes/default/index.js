@@ -1,7 +1,7 @@
 import Overview from "./Overview";
-import Metadata from "./Metadata";
+// import Metadata from "./Metadata";
 import Versions from "./Versions";
-import AddVersion from "./AddVersion";
+// import AddVersion from "./AddVersion";
 
 const Pages = {
   overview: {
@@ -19,11 +19,11 @@ const Pages = {
     path: "/versions",
     component: Versions
   },
-  add_version: {
-    name: "Add Version",
-    path: "/add_version",
-    component: AddVersion
-  }
+  // add_version: {
+  //   name: "Add Version",
+  //   path: "/add_version",
+  //   component: AddVersion
+  // }
 };
 
 export default Pages;

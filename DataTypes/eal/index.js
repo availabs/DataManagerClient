@@ -26,7 +26,7 @@ const RenderVersions = (domain, value, onchange) => (
 const fnum = (number) => parseInt(number).toLocaleString();
 
 
-const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
+/*const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     return (
         <div className={`
       flex flex-col px-2 pt-1 rounded bg-white
@@ -70,7 +70,6 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
         </div>
     )
 }
-
 const fnumIndex = (d) => {
     if (d >= 1000000000) {
         return `${parseInt(d / 1000000000)} B`
@@ -81,7 +80,8 @@ const fnumIndex = (d) => {
     } else {
         return `${d}`
     }
-}
+}*/
+
 
 const Stats = ({source, views}) => {
     const {falcor, falcorCache} = useFalcor();
@@ -95,10 +95,10 @@ const Stats = ({source, views}) => {
             ['eal', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'data'],
             ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', [activeView, compareView]]
         )
-    }, [activeView, compareView])
+    }, [activeView, compareView, falcor, source.source_id, pgEnv])
 
-    const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
-    const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
+    // const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
+    // const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
     const metadataActiveView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', activeView, 'data', 'value'], []);
     const metadataCompareView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', compareView, 'data', 'value'], []);
 

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useFalcor, TopNav } from "modules/avl-components/src";
+import { useFalcor, TopNav, withAuth } from "modules/avl-components/src";
 
 
 import get from "lodash.get";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Pages, DataTypes } from "../DataTypes";
 
 import SourcesLayout from "../components/SourcesLayout";
@@ -15,9 +15,9 @@ import { selectPgEnv } from "pages/DataManager/store";
 
 const Source = ({user, baseUrl='datasources/'}) => {
   const {falcor, falcorCache} = useFalcor()
-  const { sourceId, page, viewId } = useParams()
+  const { sourceId, page/*, viewId*/ } = useParams()
   const [ pages, setPages] = useState(Pages)
-  const [ activeView, setActiveView ] = useState(null)
+  // const [ activeView, setActiveView ] = useState(null)
   const pgEnv = useSelector(selectPgEnv);
 
   const Page = useMemo(() => {
@@ -78,19 +78,25 @@ const Source = ({user, baseUrl='datasources/'}) => {
     return attributes;
   }, [falcorCache, sourceId, pgEnv]);
 
-  const meta = useMemo(() => {
-    return get(
-      falcorCache,
-      ["dama", pgEnv, "sources", "byId", sourceId, "meta", "value"],
-      {}
-    );
-  }, [falcorCache, sourceId, pgEnv]);
+
 
   return (
     <div className="max-w-6xl mx-auto">
       <SourcesLayout baseUrl={baseUrl}>
-        <div className="text-xl font-medium overflow-hidden p-2 border-b ">
-          {source.display_name || source.name}
+        <div className='flex w-full p-2 border-b items-center'>
+          <div className="text-2xl font-medium overflow-hidden ">
+            {source.display_name || source.name}
+          </div>
+          <div className='flex-1'></div>
+          <div className='py-2'>
+            { user && user.authLevel >= 10 ? 
+              <Link 
+                className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
+                to={`${baseUrl}/delete/source/${source.source_id}/`}> 
+                  <i className='fad fa-trash' />
+              </Link> : ''
+            }
+          </div>
         </div>
         <TopNav
           menuItems={Object.values(pages)
@@ -117,4 +123,4 @@ const Source = ({user, baseUrl='datasources/'}) => {
 };
 
 
-export default Source;
+export default withAuth(Source);

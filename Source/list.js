@@ -47,11 +47,7 @@ const SourceThumb = ({ source, baseUrl = "/datasources" }) => {
         </Link>
       </div>
 
-      <div className={"align-right"}>
-        <Link className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
-              to={`${baseUrl}/delete/source/${source.source_id}/`}> delete
-        </Link>
-      </div>
+      
     </div>
   );
 };

@@ -36,7 +36,7 @@ const Stats = ({source, views}) => {
             ['dama', pgEnv, 'sources', 'byId', source.source_id, 'views', 'invalidate'],
             ['hlr', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'eal']
         )
-    }, [activeView, compareView])
+    }, [activeView, compareView, pgEnv, source.source_id, falcor])
 
     console.log('fc?', falcorCache)
     const metadataActiveView = get(falcorCache, ['hlr', pgEnv, 'source', source.source_id, 'view', activeView, 'eal', 'value'], []);

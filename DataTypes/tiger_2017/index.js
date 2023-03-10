@@ -1,6 +1,4 @@
 import React from 'react';
-
-import get from 'lodash.get'
 import Create from './create'
 const Table = ({source}) => {
   return <div> Table View </div>  
