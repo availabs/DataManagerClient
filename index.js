@@ -97,6 +97,18 @@ const DamaRoutes = (baseUrl = "/datasources") => {
         size: "micro"
       },
       component: withAuth(SourceViewComp)
+    }, {
+      name: "View Source",
+      path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
+      exact: true,
+      auth: false,
+      mainNav: false,
+      title: Header,
+      sideNav: {
+        color: "dark",
+        size: "micro"
+      },
+      component: withAuth(SourceViewComp)
     },
     // Source Create
     {

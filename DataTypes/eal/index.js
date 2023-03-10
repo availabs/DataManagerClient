@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import Create from './create'
 import {useFalcor} from "modules/avl-components/src";
 import get from "lodash.get";
-// import {BarGraph} from "~/modules/avl-graph-modified/src";
+import {BarGraph} from "modules/avl-graph/src";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
@@ -26,7 +26,7 @@ const RenderVersions = (domain, value, onchange) => (
 const fnum = (number) => parseInt(number).toLocaleString();
 
 
-/*const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
+const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     return (
         <div className={`
       flex flex-col px-2 pt-1 rounded bg-white
@@ -80,7 +80,7 @@ const fnumIndex = (d) => {
     } else {
         return `${d}`
     }
-}*/
+}
 
 
 const Stats = ({source, views}) => {
@@ -125,7 +125,7 @@ const Stats = ({source, views}) => {
                 {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
             </div>
 
-            {/*<div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
+            <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
                 <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === activeView.toString()).version} </label>
                 <BarGraph
                     key={'numEvents'}
@@ -163,7 +163,7 @@ const Stats = ({source, views}) => {
                     groupMode={'grouped'}
                 />
             </div> : null}
-*/}
+
             <div
                 className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
                 EAL by Type
