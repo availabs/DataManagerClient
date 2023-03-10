@@ -29,8 +29,8 @@ const Stats = ({source, views}) => {
         falcor.get(
             ['dama', pgEnv, 'sources', 'byId', source.source_id, 'views', 'invalidate'],
             ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], ['numRows', 'eventsByYear', 'eventsByType']])
-    }, [activeView, compareView])
-
+    }, [activeView, compareView, pgEnv, source.source_id, falcor])
+    
     const metadataActiveView = get(falcorCache, ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', activeView]);
     const metadataCompareView = get(falcorCache, ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', compareView]);
     if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>

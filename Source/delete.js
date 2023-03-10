@@ -32,6 +32,7 @@ async function getData({ falcor, pgEnv, sourceId }) {
 }
 
 const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
+  const { falcor } = useFalcor();
   const history = useHistory();
 
   return (
@@ -39,6 +40,11 @@ const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
       onClick={async () => {
         await deleteSource(`${getDamaApiRoutePrefix(pgEnv)}`, sourceId);
+        falcor.invalidate(
+          ['dama',pgEnv, 'sources', 'length'],
+          ['dama',pgEnv, 'sources', 'byIndex'],
+          ['dama',pgEnv, 'sources', 'byId', sourceId],
+        )
         history.push(baseUrl);
       }}
     >

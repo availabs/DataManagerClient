@@ -34,7 +34,7 @@ const Stats = ({source, views}) => {
         falcor.get(
             ['per_basis', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'stats']
         )
-    }, [activeView, compareView])
+    }, [activeView, compareView, pgEnv, source.source_id, falcor])
 
 
     const metadataActiveView = get(falcorCache, ['per_basis', pgEnv, 'source', source.source_id, 'view', activeView, 'stats', 'value'], []);

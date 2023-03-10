@@ -32,7 +32,7 @@ const Stats = ({source, views}) => {
 
     useEffect(() => {
         falcor.get(['ncei_storm_events', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], ['numRows', 'eventsByYear', 'eventsByType']])
-    }, [activeView, compareView])
+    }, [activeView, compareView, pgEnv, source.source_id, falcor])
 
     const metadataActiveView = get(falcorCache, ['ncei_storm_events', pgEnv, 'source', source.source_id, 'view', activeView]);
     const metadataCompareView = get(falcorCache, ['ncei_storm_events', pgEnv, 'source', source.source_id, 'view', compareView]);

@@ -42,12 +42,8 @@ const ViewSelector = ({views}) => {
 const MapPage = ({source,views, user}) => {
   const { /*sourceId,*/ viewId } = useParams()
   
-  const { falcor } = useFalcor()
-  // console.log('user auth', user)
-  
-  //const [ mapData /*, setMapData*/ ] = useState(get(activeView,`metadata.tiles`,{}))
+  //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
-  //React.useEffect({})
   const activeView = React.useMemo(() => {
     return get(views.filter(d => d.view_id === viewId),'[0]', views[0])
   },[views,viewId])
@@ -67,13 +63,13 @@ const MapPage = ({source,views, user}) => {
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, [])
       }
-  },[source, views, mapData, activeView])
+  },[source, views, mapData, activeViewId])
 
 
   return (
     <div> 
       <div className='flex'>
-        <div className='flex-1 pl-3 pr-4 py-2'>Map View</div>{/*{get(activeView,'id','')}*/}
+        <div className='flex-1 pl-3 pr-4 py-2'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
         <ViewSelector views={views} />
       </div>
       <div className='w-ful h-[700px]'>

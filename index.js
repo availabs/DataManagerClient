@@ -87,7 +87,7 @@ const DamaRoutes = (baseUrl = "/datasources") => {
       component: withAuth(SourceViewComp)
     }, {
       name: "View Source",
-      path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
+      path: `${baseUrl}/source/:sourceId/:page/:viewId`,
       exact: true,
       auth: false,
       mainNav: false,
