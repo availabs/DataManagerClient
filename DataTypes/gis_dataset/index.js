@@ -3,12 +3,10 @@ import React from "react";
 
 import MapPage from "./pages/Map";
 import CreatePage from "./pages/Create";
+import Table from "./pages/Table";
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
-const Table = (/*{ source }*/) => {
-  return <div> Table View </div>;
-};
 
 
 const GisDatasetConfig = {

@@ -97,8 +97,8 @@ const Stats = ({source, views}) => {
         )
     }, [activeView, compareView, falcor, source.source_id, pgEnv])
 
-    // const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
-    // const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
+    const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
+    const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
     const metadataActiveView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', activeView, 'data', 'value'], []);
     const metadataCompareView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', compareView, 'data', 'value'], []);
 
