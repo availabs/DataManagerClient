@@ -25,6 +25,7 @@ import nri from "./nri";
 import per_basis from "./per_basis_swd";
 import hlr from "./hlr";
 import eal from "./eal"
+import disaster_loss_summary from "./disaster_loss_summary";
 
 const DataTypes = {
   freight_atlas_shapefile,
@@ -53,7 +54,8 @@ const DataTypes = {
   nri,
   per_basis,
   hlr,
-  eal
+  eal,
+  disaster_loss_summary
 };
 
 export { DataTypes, Pages };
