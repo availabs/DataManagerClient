@@ -6,6 +6,20 @@ import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 import AddVersion from "../default/AddVersion";
 
+// const fnum = (number) => parseInt(number).toLocaleString();
+const fnum = (d) => {
+  if (!d) return d;
+  if (d >= 1000000000) {
+    return `${(d / 1000000000).toFixed(3)} B`
+  } else if (d >= 1000000) {
+    return `${(d / 1000000).toFixed(3)} M`
+  } else if (d >= 1000) {
+    return `${(d / 1000).toFixed(3)} K`
+  } else {
+    return `${(d).toFixed(3)}`
+  }
+}
+
 const RenderVersions = (domain, value, onchange) => (
     <select
         className={`w-40 pr-4 py-3 bg-white mr-2 flex items-center text-sm`}
@@ -99,18 +113,6 @@ const RenderNumRowsByYear = ({metadataActiveView, metadataCompareView, activeVie
   </>
 )
 
-// const fnum = (number) => parseInt(number).toLocaleString();
-const fnum = (d) => {
-  if (d >= 1000000000) {
-    return `${parseInt(d / 1000000000)} B`
-  } else if (d >= 1000000) {
-    return `${parseInt(d / 1000000)} M`
-  } else if (d >= 1000) {
-    return `${parseInt(d / 1000)} K`
-  } else {
-    return `${parseInt(d)}`
-  }
-}
 const RenderNumRowsByType = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => (
   <>
     <div
