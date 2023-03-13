@@ -4,7 +4,7 @@ import config from "config.json";
 import { EALFactory } from "./layers/EALChoropleth";
 import { CustomSidebar } from "./mapControls";
 
-export const RenderMap = () => {
+export const RenderMap = ({source, views}) => {
   const mapOptions = {
     zoom: 6.2,
     center: [
@@ -34,6 +34,10 @@ export const RenderMap = () => {
     ]
   },[])
 
+  const p = {
+    [map_layers[0].id]: { key: "value" }
+  }
+  console.log('p?', p)
   return (
 
     <div className="w-full h-[700px]">
@@ -42,6 +46,7 @@ export const RenderMap = () => {
         mapOptions={mapOptions}
         layers={map_layers}
         CustomSidebar={CustomSidebar}
+        layerProps={p}
       />
     </div>
 
