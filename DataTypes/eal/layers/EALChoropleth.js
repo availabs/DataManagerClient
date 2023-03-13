@@ -159,7 +159,11 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   getColorScale(domain) {
-    this.legend.domain = ckmeans(domain,10).map(d => parseInt(d))
+    if(!domain.length >= 10) {
+      this.legend.domain = domain;
+    }else{
+      this.legend.domain = ckmeans(domain,10).map(d => parseInt(d))
+    }
     // console.log("test 123", this.legend.domain, this.legend.range);
     return scaleThreshold()
       .domain(this.legend.domain)
