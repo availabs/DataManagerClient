@@ -4,6 +4,7 @@ import {useFalcor} from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
+import AddVersion from "../default/AddVersion";
 
 const RenderVersions = (domain, value, onchange) => (
     <select
@@ -18,6 +19,253 @@ const RenderVersions = (domain, value, onchange) => (
     </select>
 )
 
+const RenderTotalRows = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => (
+  <div className="overflow-hidden">
+    <div className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'}>
+      <dt className="text-gray-600">
+        Total Number of Rows
+      </dt>
+      <dt className="text-sm text-gray-900">
+        {get(metadataActiveView, ['numRows', 'value'])}
+        {` (${views.find(v => v.view_id.toString() === activeView.toString()).version})`}
+      </dt>
+
+      {
+        compareMode ? (
+          <dt className="text-sm text-gray-900">
+            {get(metadataCompareView, ['numRows', 'value'])}
+            {` (${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+          </dt>
+        ) : null
+      }
+
+    </div>
+  </div>
+)
+
+const RenderNumRowsByYear = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => (
+  <>
+    <div
+      className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
+      Number of Rows/Events by Year
+    </div>
+
+    <div>
+      <div>
+        <div className="py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b-2">
+          <dt className="text-sm font-medium text-gray-600">
+            Year
+          </dt>
+          <dd className="text-sm font-medium text-gray-600 ">
+            Count {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+          </dd>
+
+          {
+            compareMode ? (
+              <dd className="text-sm font-medium text-gray-600 ">
+                Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+              </dd>
+            ) : null
+          }
+        </div>
+        <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
+          <dl className="sm:divide-y sm:divide-gray-200">
+
+            {
+              get(metadataActiveView, ['eventsByYear', 'value'], [])
+                .map((col, i) => (
+                  <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm text-gray-900">
+                      {col.year}
+                    </dt>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                      {col.num_events}
+                    </dd>
+
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                      {
+                        compareMode ?
+                          get(get(metadataCompareView, ['eventsByYear', 'value'], [])
+                            .find(row => row.year === col.year), 'num_events') : null
+                      }
+                    </dd>
+                  </div>
+                ))}
+
+          </dl>
+        </div>
+      </div>
+    </div>
+  </>
+)
+
+// const fnum = (number) => parseInt(number).toLocaleString();
+const fnum = (d) => {
+  if (d >= 1000000000) {
+    return `${parseInt(d / 1000000000)} B`
+  } else if (d >= 1000000) {
+    return `${parseInt(d / 1000000)} M`
+  } else if (d >= 1000) {
+    return `${parseInt(d / 1000)} K`
+  } else {
+    return `${parseInt(d)}`
+  }
+}
+const RenderNumRowsByType = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => (
+  <>
+    <div
+      className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
+      Number of Rows/Events by Type
+    </div>
+    <div>
+      <div className="py-4 sm:py-2 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 border-b-2">
+        <dt className="text-sm font-medium text-gray-600">
+          Event Type
+        </dt>
+        <dd className="text-sm font-medium text-gray-600 ">
+          total events {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        <dd className="text-sm font-medium text-gray-600 ">
+          loss events {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        <dd className="text-sm font-medium text-gray-600 ">
+          EAL buildings {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        <dd className="text-sm font-medium text-gray-600 ">
+          EAL crop {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        <dd className="text-sm font-medium text-gray-600 ">
+          EAL person {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        <dd className="text-sm font-medium text-gray-600 ">
+          EAL Total {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+
+        {/*{*/}
+        {/*  compareMode ? (*/}
+        {/*    <dd className="text-sm font-medium text-gray-600 ">*/}
+        {/*      Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}*/}
+        {/*    </dd>*/}
+        {/*  ) : null*/}
+        {/*}*/}
+      </div>
+      <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
+        <dl className="sm:divide-y sm:divide-gray-200">
+
+          {
+            get(metadataActiveView, ['eventsByType', 'value'], [])
+              .map((col, i) => (
+                <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6">
+                  <dt className="text-sm text-gray-900">
+                    {col.event_type}
+                  </dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {col.total_events}
+                  </dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {col.loss_events}
+                  </dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {fnum(col.annual_property_damage)}
+                  </dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {fnum(col.annual_crop_damage)}
+                  </dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {fnum(col.annual_person_damage)}
+                  </dd>
+                  {/*<dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">*/}
+                  {/*  {fnum(col.property_damage + col.crop_damage + col.person_damage)}*/}
+                  {/*</dd>*/}
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {fnum(col.annual_property_damage + col.annual_crop_damage + col.annual_person_damage)}
+                  </dd>
+                  {/*<dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">*/}
+                  {/*  {*/}
+                  {/*    compareMode ?*/}
+                  {/*      get(get(metadataCompareView, ['eventsByType', 'value'], [])*/}
+                  {/*        .find(row => row.event_type === col.event_type), 'num_events') : null*/}
+                  {/*  }*/}
+                  {/*</dd>*/}
+                </div>
+              ))}
+
+        </dl>
+      </div>
+    </div>
+  </>
+)
+
+const RenderTypeMapping = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => (
+  <>
+    <div
+      className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
+      Event Type Mapping
+    </div>
+    <div>
+      <div className={`py-4 sm:py-2 sm:grid sm:grid-cols-${compareMode ? `7` : `2`} sm:gap-4 sm:px-6 border-b-2`}>
+        <dt className="text-sm font-medium text-gray-600">
+          NRI Category
+        </dt>
+        <dd className="text-sm font-medium text-gray-600 ">
+          Event Types {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+        </dd>
+        {/*<dd className="text-sm font-medium text-gray-600 ">*/}
+        {/*  Count {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}*/}
+        {/*</dd>*/}
+
+        {
+          compareMode ? (
+            <>
+              <dd className="text-sm font-medium text-gray-600 ">
+                Event Types {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+              </dd>
+              {/*<dd className="text-sm font-medium text-gray-600 ">*/}
+              {/*  Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}*/}
+              {/*</dd>*/}
+            </>
+          ) : null
+        }
+      </div>
+      <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
+        <dl className="sm:divide-y sm:divide-gray-200">
+
+          {
+            get(metadataActiveView, ['eventsMappingToNRICategories', 'value'], [])
+              .map((col, i) => (
+                <div key={i} className={`py-4 sm:py-5 sm:grid sm:grid-cols-${compareMode ? `7` : `2`} sm:gap-4 sm:px-6`}>
+                  <dt className="text-sm text-gray-900">
+                    {col.nri_category}
+                  </dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {(col.event_types || []).join(', ')}
+                  </dd>
+                  {/*<dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">*/}
+                  {/*  {col.num_events}*/}
+                  {/*</dd>*/}
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                    {
+                      compareMode ?
+                        (get(get(metadataCompareView, ['eventsMappingToNRICategories', 'value'], [])
+                          .find(row => row.nri_category === col.nri_category), 'event_types') || []).join(', ') : null
+                    }
+                  </dd>
+                  {/*<dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">*/}
+                  {/*  {*/}
+                  {/*    compareMode ?*/}
+                  {/*      get(get(metadataCompareView, ['eventsMappingToNRICategories', 'value'], [])*/}
+                  {/*        .find(row => row.nri_category === col.nri_category), 'num_events') : null*/}
+                  {/*  }*/}
+                  {/*</dd>*/}
+                </div>
+              ))}
+
+        </dl>
+      </div>
+    </div>
+  </>
+)
+
 const Stats = ({source, views}) => {
     const pgEnv = useSelector(selectPgEnv);
     const {falcor, falcorCache} = useFalcor();
@@ -28,12 +276,14 @@ const Stats = ({source, views}) => {
     useEffect(() => {
         falcor.get(
             ['dama', pgEnv, 'sources', 'byId', source.source_id, 'views', 'invalidate'],
-            ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], ['numRows', 'eventsByYear', 'eventsByType']])
+            ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view',
+              [activeView, compareView],
+              ['numRows', 'eventsByYear', 'eventsByType', 'eventsMappingToNRICategories']]
+        )
     }, [activeView, compareView, pgEnv, source.source_id, falcor])
-    
+    console.log('fc', falcorCache)
     const metadataActiveView = get(falcorCache, ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', activeView]);
     const metadataCompareView = get(falcorCache, ['ncei_storm_events_enhanced', pgEnv, 'source', source.source_id, 'view', compareView]);
-    if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
 
     // const eventsByYear = get(metadataActiveView, ['eventsByYear', 'value'], [])
 
@@ -57,126 +307,24 @@ const Stats = ({source, views}) => {
                 {compareMode ? <label>Compare with Version: </label> : null}
                 {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
             </div>
-            <div className="overflow-hidden">
-                <div className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'}>
-                    <dt className="text-gray-600">
-                        Total Number of Rows
-                    </dt>
-                    <dt className="text-sm text-gray-900">
-                        {get(metadataActiveView, ['numRows', 'value'])}
-                        {` (${views.find(v => v.view_id.toString() === activeView.toString()).version})`}
-                    </dt>
+          {
+            !metadataActiveView || metadataActiveView.length === 0 ? <div> Stats Not Available </div> :
+              <>
+                
+                <RenderTotalRows metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+                                 activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
 
-                    {
-                        compareMode ? (
-                            <dt className="text-sm text-gray-900">
-                                {get(metadataCompareView, ['numRows', 'value'])}
-                                {` (${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                            </dt>
-                        ) : null
-                    }
+                <RenderTypeMapping metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+                                     activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
 
-                </div>
-            </div>
+                <RenderNumRowsByType metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+                                     activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
 
-            <div
-                className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
-                Number of Rows/Events by Year
-            </div>
+                <RenderNumRowsByYear metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+                                     activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
 
-            <div>
-                <div>
-                    <div className="py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b-2">
-                        <dt className="text-sm font-medium text-gray-600">
-                            Year
-                        </dt>
-                        <dd className="text-sm font-medium text-gray-600 ">
-                            Count {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-                        </dd>
-
-                        {
-                            compareMode ? (
-                                <dd className="text-sm font-medium text-gray-600 ">
-                                    Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                                </dd>
-                            ) : null
-                        }
-                    </div>
-                    <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
-                        <dl className="sm:divide-y sm:divide-gray-200">
-
-                            {
-                                get(metadataActiveView, ['eventsByYear', 'value'], [])
-                                    .map((col, i) => (
-                                        <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                            <dt className="text-sm text-gray-900">
-                                                {col.year}
-                                            </dt>
-                                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                                {col.num_events}
-                                            </dd>
-
-                                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                                {
-                                                    compareMode ?
-                                                        get(get(metadataCompareView, ['eventsByYear', 'value'], [])
-                                                            .find(row => row.year === col.year), 'num_events') : null
-                                                }
-                                            </dd>
-                                        </div>
-                                    ))}
-
-                        </dl>
-                    </div>
-                </div>
-            </div>
-            <div
-                className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
-                Number of Rows/Events by Type
-            </div>
-            <div>
-                <div className="py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b-2">
-                    <dt className="text-sm font-medium text-gray-600">
-                        Event Type
-                    </dt>
-                    <dd className="text-sm font-medium text-gray-600 ">
-                        Count {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-                    </dd>
-
-                    {
-                        compareMode ? (
-                            <dd className="text-sm font-medium text-gray-600 ">
-                                Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                            </dd>
-                        ) : null
-                    }
-                </div>
-                <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
-                    <dl className="sm:divide-y sm:divide-gray-200">
-
-                        {
-                            get(metadataActiveView, ['eventsByType', 'value'], [])
-                                .map((col, i) => (
-                                    <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                        <dt className="text-sm text-gray-900">
-                                            {col.event_type}
-                                        </dt>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {col.num_events}
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {
-                                                compareMode ?
-                                                    get(get(metadataCompareView, ['eventsByType', 'value'], [])
-                                                        .find(row => row.event_type === col.event_type), 'num_events') : null
-                                            }
-                                        </dd>
-                                    </div>
-                                ))}
-
-                    </dl>
-                </div>
-            </div>
+              </>
+          }
         </>
     )
 }
@@ -185,6 +333,11 @@ const Table = ({source}) => {
 }
 
 const NceiStormEventsConfig = {
+    add_version: {
+      name: "Add Version",
+      path: "/add_version",
+      component: AddVersion
+    },
     stats: {
         name: "Stats",
         path: "/stats",

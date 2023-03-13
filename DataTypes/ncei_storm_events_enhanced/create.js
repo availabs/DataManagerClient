@@ -7,7 +7,7 @@ import { RenderVersions } from "../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYear, endYear,
                               viewNCEI={},viewZTC={}, viewCousubs={}, viewCounty={}, viewState={}, viewTract={}}) => {
     const viewMetadata = [viewZTC.view_id, viewState.view_id,  viewCounty.view_id, viewCousubs.view_id, viewTract.view_id, viewNCEI.view_id];
 
@@ -20,6 +20,8 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
     url.searchParams.append("existing_source_id", source.source_id);
     url.searchParams.append("view_dependencies", JSON.stringify(viewMetadata));
     url.searchParams.append("version", newVersion);
+    url.searchParams.append("start_year", startYear);
+    url.searchParams.append("end_year", endYear);
     
     url.searchParams.append("ncei_schema", viewNCEI.table_schema);
     url.searchParams.append("ncei_table", viewNCEI.table_name);
@@ -45,9 +47,15 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
     history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 };
 
+const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
+
 const Create = ({ source, newVersion, baseUrl }) => {
     const history = useHistory();
     const pgEnv = useSelector(selectPgEnv);
+
+    const [startYear, setStartYear] = React.useState(1996);
+    const [endYear, setEndYear] = React.useState(2019);
+    const years = range(1996, 2022);
 
     // selected views/versions
     const [viewZTC, setViewZTC] = React.useState();
@@ -80,6 +88,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     return (
         <div className='w-full'>
+            {RenderVersions({value: startYear, setValue: setStartYear, versions: [startYear], type: 'Start Year'})}
+            {RenderVersions({value: endYear, setValue: setEndYear, versions: years, type: 'End Year'})}
             {RenderVersions({value: viewNCEI, setValue: setViewNCEI, versions: versionsNCEI, type: 'NCEI Storm Events'})}
             {RenderVersions({value: viewZTC, setValue: setViewZTC, versions: versionsZTC, type: 'Zone to County'})}
             {RenderVersions({value: viewState, setValue: setViewState, versions: versionsState, type: 'State'})}
@@ -91,6 +101,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, baseUrl, source,
+                            startYear, endYear,
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             viewZTC: versionsZTC.views.find(v => v.view_id === parseInt(viewZTC)),
                             viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),

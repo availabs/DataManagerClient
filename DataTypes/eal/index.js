@@ -1,13 +1,23 @@
 import React, {useEffect, useState} from 'react';
 import Create from './create'
-import {useFalcor} from "modules/avl-components/src";
+import {useFalcor, Table} from "modules/avl-components/src";
 import get from "lodash.get";
 import {BarGraph} from "modules/avl-graph/src";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const Table = ({source}) => {
-    return <div> Table View </div>
+const fnum = (number) => parseInt(number).toLocaleString();
+
+const fnumIndex = (d) => {
+    if (d >= 1000000000) {
+        return `${parseInt(d / 1000000000)} B`
+    } else if (d >= 1000000) {
+        return `${parseInt(d / 1000000)} M`
+    } else if (d >= 1000) {
+        return `${parseInt(d / 1000)} K`
+    } else {
+        return `${d}`
+    }
 }
 
 const RenderVersions = (domain, value, onchange) => (
@@ -23,8 +33,35 @@ const RenderVersions = (domain, value, onchange) => (
     </select>
 )
 
-const fnum = (number) => parseInt(number).toLocaleString();
+const RenderComparativeStats = ({chartComparativeStatsData = []}) => {
+    console.log('??', chartComparativeStatsData)
+    const cols = Object.keys((chartComparativeStatsData[0] || {}))
+    console.log('cols', cols)
+    return (
+      <>
+          <div
+            className={'flex flex-row py-4 sm:py-2 sm:gap-4 sm:px-6 text-lg font-md'}>
+              All Stats
+          </div>
 
+          <div className={`py-4 sm:py-2  sm:gap-4 sm:px-6 border-b-2 max-w-5xl`}>
+              <Table
+                columns={
+                    cols.map(col => ({
+                        Header: col,
+                        accessor: (c) => col === 'nri_category' ? c[col] : fnum(c[col]),
+                        align: 'left'
+                    }))
+                }
+                data={chartComparativeStatsData}
+                pageSize={chartComparativeStatsData.length}
+              />
+
+
+          </div>
+      </>
+    )
+}
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     return (
@@ -70,17 +107,6 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
         </div>
     )
 }
-const fnumIndex = (d) => {
-    if (d >= 1000000000) {
-        return `${parseInt(d / 1000000000)} B`
-    } else if (d >= 1000000) {
-        return `${parseInt(d / 1000000)} M`
-    } else if (d >= 1000) {
-        return `${parseInt(d / 1000)} K`
-    } else {
-        return `${d}`
-    }
-}
 
 
 const Stats = ({source, views}) => {
@@ -101,11 +127,11 @@ const Stats = ({source, views}) => {
     const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
     const metadataActiveView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', activeView, 'data', 'value'], []);
     const metadataCompareView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', compareView, 'data', 'value'], []);
-
+    console.log(chartComparativeStatsData)
     if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
 
     return (
-        <>
+        <div>
             <div key={'versionSelector'}
                  className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'}>
                 <label>Current Version: </label>
@@ -125,6 +151,7 @@ const Stats = ({source, views}) => {
                 {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
             </div>
 
+            <RenderComparativeStats chartComparativeStatsData={chartComparativeStatsData} />
             <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
                 <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === activeView.toString()).version} </label>
                 <BarGraph
@@ -252,7 +279,7 @@ const Stats = ({source, views}) => {
                     </dl>
                 </div>
             </div>
-        </>
+        </div>
 )
 }
 
@@ -266,11 +293,6 @@ const NceiStormEventsConfig = {
         name: 'Map',
         path: '/map',
         component: () => <div> No Map </div>
-    },
-    table: {
-        name: 'Table',
-        path: '/table',
-        component: Table
     },
     sourceCreate: {
         name: 'Create',
