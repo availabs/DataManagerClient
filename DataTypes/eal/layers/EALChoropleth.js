@@ -1,6 +1,6 @@
 import { scaleLinear, scaleOrdinal, scaleThreshold } from "d3-scale";
 import get from "lodash.get";
-import center from "@turf/center";
+//import center from "@turf/center";
 import { LayerContainer } from "modules/avl-map/src";
 import { getColorRange } from "modules/avl-components/src";
 import ckmeans from "../../../utils/ckmeans";
@@ -42,10 +42,11 @@ class EALChoroplethOptions extends LayerContainer {
   };
 
   legend = {
-    Title: ({ layer }) => get(layer.filters.attribute, "value", "").replace(/_/g, " "),
-    type: "linear",
+    Title: ({ layer }) => `Estimated Annual Loss by ${get(layer.filters.hazard, "value", "").toUpperCase()} in $`,
+    type: "threshold",
+    format: "0.2s",
     domain: [],
-    range: getColorRange(10, "RdYlGn", true),
+    range: getColorRange(9, "Reds", false),
     show: true
   };
 
@@ -62,10 +63,10 @@ class EALChoroplethOptions extends LayerContainer {
                     <div key={ii}
                       // style={{maxWidth: '200px'}}
                          className={`
-                                                    ${ii === 0 ? "flex-1 font-bold" : "overflow-auto scrollbarXsm"}
-                                                    ${row.length > 1 && ii === 0 ? "mr-4" : ""}
-                                                    ${row.length === 1 && ii === 0 ? `border-b-2 text-lg ${i > 0 ? "mt-1" : ""}` : ""}
-                                                    `}>
+                    ${ii === 0 ? "flex-1 font-bold" : "overflow-auto scrollbarXsm"}
+                    ${row.length > 1 && ii === 0 ? "mr-4" : ""}
+                    ${row.length === 1 && ii === 0 ? `border-b-2 text-lg ${i > 0 ? "mt-1" : ""}` : ""}
+                    `}>
                       {d}
                     </div>
                   )
@@ -78,11 +79,11 @@ class EALChoroplethOptions extends LayerContainer {
     },
     callback: (layerId, features, lngLat) => {
       return features.reduce((a, feature) => {
-
+        let { hazard } = this.props
         let record = this.data[this.dataSRC]
             .find(d =>
-              this.filters.hazard.value !== "all" ?
-                d.nri_category === this.filters.hazard.value && d.geoid === feature.properties.geoid :
+              hazard !== "all" ?
+                d.nri_category === hazard && d.geoid === feature.properties.geoid :
                 d.geoid === feature.properties.geoid),
           response = [
             [this.filters.compare.domain.find(d => d.key === this.filters.compare.value).label, fnum(get(record, this.filters.compare.value))]
@@ -159,11 +160,9 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   getColorScale(domain) {
-    if(!domain.length >= 10) {
-      this.legend.domain = domain;
-    }else{
-      this.legend.domain = ckmeans(domain,10).map(d => parseInt(d))
-    }
+    
+    this.legend.domain = ckmeans(domain,Math.min(domain.length,this.legend.range.length)).map(d => parseInt(d))
+    
     // console.log("test 123", this.legend.domain, this.legend.range);
     return scaleThreshold()
       .domain(this.legend.domain)
@@ -171,25 +170,28 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   handleMapFocus(map) {
-    if (this.mapFocus) {
-      try {
-        map.flyTo(
-          {
-            center: get(center(JSON.parse(this.mapFocus)), ["geometry", "coordinates"]),
-            zoom: 9
-          });
-      } catch (e) {
-        map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904]);
-      }
-    } else {
+    // if (this.mapFocus) {
+    //   try {
+    //     map.flyTo(
+    //       {
+    //         center: get(center(JSON.parse(this.mapFocus)), ["geometry", "coordinates"]),
+    //         zoom: 9
+    //       });
+    //   } catch (e) {
+    //     map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904]);
+    //   }
+    // } 
+    //   else {
       map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904]);
-    }
+    //}
   }
 
   paintMap(map) {
+    let { hazard } = this.props
+    
     const colorScale = this.getColorScale(
       this.data[this.dataSRC]
-          .filter(d => this.filters.hazard.value !== 'all' ? d.nri_category === this.filters.hazard.value : true)
+          .filter(d => hazard !== 'all' ? d.nri_category === hazard : true)
           .map((d) => d[this.filters.compare.value])
           .filter(d => d)
     );
@@ -197,9 +199,9 @@ class EALChoroplethOptions extends LayerContainer {
     let colors = {};
     console.log('this.data', this.data)
     this.data[this.dataSRC]
-      .filter(d => this.filters.hazard.value !== "all" ? d.nri_category === this.filters.hazard.value : true)
+      .filter(d => hazard !== "all" ? d.nri_category === hazard : true)
       .forEach(d => {
-        console.log("d?", parseInt(d[this.filters.compare.value]), colorScale(parseInt(d[this.filters.compare.value])));
+        //console.log("d?", parseInt(d[this.filters.compare.value]), colorScale(parseInt(d[this.filters.compare.value])));
         colors[d.geoid] = d[this.filters.compare.value] ? colorScale(parseInt(d[this.filters.compare.value])) : "rgb(0,0,0)";
       });
 
@@ -208,7 +210,8 @@ class EALChoroplethOptions extends LayerContainer {
       ["get", ["get", "geoid"], ["literal", colors]]);
   }
 
-  render(map, falcor, props) {
+  render(map, falcor) {
+    console.log('render map props', this.props)
     this.handleMapFocus(map);
     this.paintMap(map);
   }
