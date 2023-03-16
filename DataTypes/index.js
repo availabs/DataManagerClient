@@ -26,6 +26,7 @@ import per_basis from "./per_basis_swd";
 import hlr from "./hlr";
 import eal from "./eal"
 import disaster_loss_summary from "./disaster_loss_summary";
+import fusion from "./fusion";
 
 const DataTypes = {
   freight_atlas_shapefile,
@@ -55,7 +56,8 @@ const DataTypes = {
   per_basis,
   hlr,
   eal,
-  disaster_loss_summary
+  ofd: disaster_loss_summary,
+  fusion
 };
 
 export { DataTypes, Pages };

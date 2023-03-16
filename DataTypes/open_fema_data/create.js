@@ -6,7 +6,7 @@ import {useHistory} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
-const datasets = [
+export const datasets = [
     // "data_set_fields_v1",
     // "data_sets_v1",
     // "disaster_declarations_summaries_v1",
