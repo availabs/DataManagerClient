@@ -61,7 +61,11 @@ export default function UploadGisDataset({ source={}, user={} }) {
 
   useEffect( () => {
     if (state.publishStatus === 'PUBLISHED') {
-      falcor.invalidate(["dama", pgEnv, "sources","byId",state.damaSourceId,"views","length"])
+      if(state.damaSourceId) {
+        falcor.invalidate(["dama", pgEnv, "sources","byId",state.damaSourceId,"views","length"])
+      } else {
+         falcor.invalidate(["dama", pgEnv, "sources", "length"])
+      }
       history.push(`/source/${state.damaSourceId}/versions`)
     }
   }, [state.publishStatus, state.damaSourceId, pgEnv, history]);
@@ -81,8 +85,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
   if (!sourceId && !damaSourceName) {
     return <div> Please enter a datasource name.</div>;
   }
-
-
+  
   return (
     <div>
       <div>
@@ -91,11 +94,11 @@ export default function UploadGisDataset({ source={}, user={} }) {
         <SchemaEditorComp state={state} dispatch={dispatch} />
         <PublishComp state={state} dispatch={dispatch} />
       </div>
-      <div>
+      {/*<div>
         <pre>
             {JSON.stringify({state},null,3)}
         </pre>
-      </div>
+      </div>*/}
     </div>
   )
 

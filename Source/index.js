@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useFalcor, TopNav, withAuth } from "modules/avl-components/src";
+import { useFalcor, TopNav, SideNav, withAuth } from "modules/avl-components/src";
 
 
 import get from "lodash.get";
@@ -84,7 +84,7 @@ const Source = ({user, baseUrl='datasources/'}) => {
     <div className="max-w-6xl mx-auto">
       <SourcesLayout baseUrl={baseUrl}>
         <div className='flex w-full p-2 border-b items-center'>
-          <div className="text-2xl font-medium overflow-hidden ">
+          <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
             {source.display_name || source.name}
           </div>
           <div className='flex-1'></div>
