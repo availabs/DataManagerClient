@@ -3,7 +3,7 @@ import get from "lodash.get";
 import { DataTypes } from "../index";
 import { datasets } from "../open_fema_data/create";
 
-const AddVersion = ({ source, views, user }) => {
+const AddVersion = ({ source, views, user, baseUrl }) => {
   console.log('???', source, views, user)
   const newVersion = Math.max(...views.map(v => parseInt(v.version) || 0)) + 1;
   const [versionName, setVersionName] = useState(newVersion);
@@ -28,7 +28,7 @@ const AddVersion = ({ source, views, user }) => {
         placeholder={versionName}
         onChange={e => setVersionName(e.target.value)} />
     </div>
-    <CreateComp source={source} existingSource={source} user={user} newVersion={versionName} />
+    <CreateComp source={source} existingSource={source} user={user} newVersion={versionName} baseUrl={baseUrl} />
   </>;
 };
 
