@@ -21,7 +21,7 @@ export const RenderMap = ({source, views}) => {
   const p = {
     [map_layers[0].id]: { hazard: hazard }
   }
-  console.log('p?', p)
+  //console.log('p?', p)
   return (
 
     <div className="w-full h-[700px]">

@@ -205,7 +205,7 @@ class EALChoroplethOptions extends LayerContainer {
         colors[d.geoid] = d[this.filters.compare.value] ? colorScale(parseInt(d[this.filters.compare.value])) : "rgb(0,0,0)";
       });
 
-    // console.log(colors);
+    console.log(colors);
     map.setPaintProperty("counties", "fill-color",
       ["get", ["get", "geoid"], ["literal", colors]]);
   }

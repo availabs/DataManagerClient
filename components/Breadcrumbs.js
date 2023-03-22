@@ -41,7 +41,7 @@ export default function BreadCrumbs ({baseUrl='/datasources'}) {
           name: d,
           href: `${baseUrl}/cat/${i > 0 ? catList[i-1] + '/' : ''}${d}`        }
       })
-    cats.push({name:attr.display_name})
+    cats.push({name:attr.name})
     return cats
 
   },[falcorCache,sourceId,pgEnv, cat1, cat2, baseUrl])
