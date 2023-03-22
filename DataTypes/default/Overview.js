@@ -5,6 +5,7 @@ import { SourceAttributes } from 'pages/DataManager/components/attributes'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 import Metadata from './Metadata'
+//import Versions from './Versions'
 
 const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   const { falcor } = useFalcor()
@@ -119,6 +120,12 @@ const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) =>
             </dd>
           </div>*/}
         </dl>
+        {/*<div className='py-10 px-2'>
+          <div className='text-gray-500 py-8 px-5'>Versions</div>
+          <div className=''>
+            <Versions source={source} view={views} baseUrl={baseUrl}/>
+          </div>
+        </div>*/}
         <div className='py-10 px-2'>
           <div className='text-gray-500 py-8 px-5'>Metadata</div>
           <div className=''>

@@ -3,14 +3,14 @@ import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
 import get from 'lodash.get'
 import { useParams, useHistory } from 'react-router-dom'
 import GISDatasetLayer from './Layer'
-import { AvlMap } from "modules/avl-map2/src"
+import { AvlMap } from "modules/avl-maplibre/src"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 import config from 'config.json'
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 
 
-const TILEHOST = 'http://dama-dev.availabs.org/tiles'
+const TILEHOST = 'https://dama-dev.availabs.org/tiles'
 
 
 const ViewSelector = ({views}) => {
@@ -39,29 +39,60 @@ const ViewSelector = ({views}) => {
   )
 }
 // import { getAttributes } from 'pages/DataManager/components/attributes'
+const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
+  const variables = get(source,'metadata',[])
+    .filter(d => ['number'].includes(d.type))
+    .sort((a,b) => a.name - b.name)
+    .map(d => d.name)
+
+  return (
+    <div className='flex flex-1'>
+      <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
+      <div className='flex-1'>
+        <select  
+            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+            value={activeVar}
+            onChange={(e) => setActiveVar(e.target.value)}
+          >
+            <option  className="ml-2  truncate" value={null}>
+              none    
+            </option>
+            {variables
+              .map((v,i) => (
+              <option key={i} className="ml-2  truncate" value={v}>
+                {v}
+              </option>
+            ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 const MapPage = ({source,views, user}) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
   
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
+  const [ activeVar, setActiveVar] = React.useState(null)
   const activeView = React.useMemo(() => {
-    return get(views.filter(d => d.view_id === viewId),'[0]', views[0])
+    return get(views.filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
     return out
   }, [activeView])
-  const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [activeView])
+  const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
   const layer = React.useMemo(() => {
       return {
             name: source.name,
             pgEnv,
-            id: activeViewId,
             source: source,
             activeView: activeView,
-            activeVariable: 'totpop_10',
+            activeVariable: activeVar,
+
             attributes: get(source,'metadata',[])
               .filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
@@ -70,16 +101,22 @@ const MapPage = ({source,views, user}) => {
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, [])
       }
-  },[source, views, mapData, activeViewId])
+  },[source, views, mapData, activeViewId,activeVar])
 
+  //console.log('layer mappage', layer)
 
   return (
     <div> 
       <div className='flex'>
         <div className='flex-1 pl-3 pr-4 py-2'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
+        <DefaultMapFilter 
+          source={source} 
+          activeView={activeVar} 
+          setActiveVar={setActiveVar}
+        />
         <ViewSelector views={views} />
       </div>
-      <div className='w-ful h-[700px]'>
+      <div className='w-ful h-[900px]'>
         <Map layers={[layer]}  />
       </div>
       {user.authLevel >= 5 ? 
@@ -135,34 +172,41 @@ const Map = ({layers}) => {
   const mounted = React.useRef(false);
   const { falcor } = useFalcor()
   const [layerData, setLayerData] = React.useState([])
-
+  const  currentLayerIds = React.useMemo(() => {
+    console.log('update', layers)
+    return 
+  },[layers])
 
   React.useEffect( () => {
     const updateLayers = async () => {      
-        if(mounted.current) {
-            setLayerData(l => {
-                // use functional setState
-                // to get info about previous layerData (l)
-                let currentLayerIds = l.map(d => d.activeViewId).filter(d => d)
-                
-                let output = layers
-                    .filter(d => d)
-                    .filter(d => !currentLayerIds.includes(d.activeViewId))
-                    .map(l => GISDatasetLayer(l))
+      if(mounted.current) {
+        setLayerData(l => {
+            // use functional setState
+            // to get info about previous layerData (l)
+            let activeLayerIds = l.map(d => d.activeViewId).filter(d => d)
+            //console.log('updatelayers', currentLayerIds, l, layers)
+            
+            let output = layers
+                .filter(d => d)
+                .filter(d => !activeLayerIds.includes(d.activeViewId))
+                .map(l => GISDatasetLayer(l))
 
-                return [
-                  // remove layers not in list anymore
-                  ...l.filter(d => layers.map(x => x.activeViewId).includes(d.activeViewId)), 
-                  // add newly initialized layers
-                  ...output
-                ]
-            })
-        }
+            //console.log('updatelayers2', output)
+
+            return [
+              // remove layers not in list anymore
+              ...l.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)), 
+              // add newly initialized layers
+              ...output
+            ]
+        })
+      }
     }
     updateLayers()
-  },[ layers ])
+  },[ currentLayerIds ])
 
   const layerProps = React.useMemo(()=>{
+    console.log('update layers', layers)
     let inputViewIds = layers.map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
       //console.log('s', inputViewIds, cur.activeViewId)
@@ -173,8 +217,6 @@ const Map = ({layers}) => {
     },{})
   },[layers, layerData])
 
-  //console.log('layerProps', layerProps)
-  
   return (
       
       <div className='w-full h-full' ref={mounted}>   

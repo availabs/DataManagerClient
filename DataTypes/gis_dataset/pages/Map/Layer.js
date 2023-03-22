@@ -70,7 +70,7 @@ class GISDatasetLayer extends LayerContainer {
     layers: this.layers.map(d => d.id),
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
-      //console.log(feature)
+      console.log(feature)
       
       let data = [feature.id,  layerId]
       
@@ -80,7 +80,7 @@ class GISDatasetLayer extends LayerContainer {
   };
 
   init(map, falcor) {
-    console.log('init freight atlas layer', this.id, this.activeViewId)
+    //console.log('init freight atlas layer', this.id, this.activeViewId)
     
   }
 
@@ -92,11 +92,13 @@ class GISDatasetLayer extends LayerContainer {
 
   fetchData(falcor) {
     if(this.props.activeVariable) {
+
       const {
         activeVariable,
         activeViewId,
         pgEnv
       } = this.props
+      // console.log('fetchData', activeViewId, activeVariable)
       console.time(`GisMapLayer ${activeViewId} ${activeVariable}`)
       return this.falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
         .then(d => {
@@ -116,7 +118,9 @@ class GISDatasetLayer extends LayerContainer {
           console.timeEnd(`GisMapLayer ${activeViewId} ${activeVariable}`) 
         })
     }
-    return Promise.resolve({})
+    //console.log('fetchData empty')
+    
+    return Promise.resolve()
   }
 
   render(map) {
@@ -125,33 +129,28 @@ class GISDatasetLayer extends LayerContainer {
       activeViewId,
       pgEnv
     } = this.props
-    console.log('this sources', this.sources)
-    const falcorCache = this.falcor.getCache()
-    const dataById = get(falcorCache, [
-      'dama',
-      pgEnv,
-      'viewsbyId',
-      activeViewId,
-      'databyId'
-    ], {})
-    const domainData = Object.values(dataById).map( d => d[activeVariable] )
-    if(domainData.length > 0){
-      let colorScale = this.getColorScale(domainData)
-      let colors = Object.keys(dataById).reduce((out, id) => {
-        out[id] = colorScale(dataById[id][activeVariable])
-        return out
-      },{})
-      // console.log('colors', colors)
-      map.setPaintProperty(
-        this.layers[0].id, 
-        "fill-color",
-        ["get", ["get", "ogc_fid"], ["literal", colors]]
-        
-      )
-      //console.log('viewData', colors, dataById, domainData)
+    if(activeVariable) {
+      const falcorCache = this.falcor.getCache()
+      const dataById = get(falcorCache, 
+        ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
+      {})
+      
+      const domainData = Object.values(dataById).map( d => d[activeVariable] )
+      
+      if(domainData.length > 0){
+        let colorScale = this.getColorScale(domainData)
+        let colors = Object.keys(dataById).reduce((out, id) => {
+          out[+id] = colorScale(dataById[+id][activeVariable])
+          return out
+        },{})
+        map.setPaintProperty(
+          this.layers[0].id, 
+          "fill-color",
+          ["get",  ["to-string",["get","ogc_fid"]], ["literal", colors]]
+          
+        )
+      }
     }
-    
-    
   }
    
 }
