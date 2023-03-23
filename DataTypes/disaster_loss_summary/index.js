@@ -1,6 +1,11 @@
 import React from 'react';
 import Create from './create'
+import {useFalcor} from "modules/avl-components/src";
+import get from "lodash.get";
+import { useSelector } from "react-redux";
+import { selectPgEnv } from "../../store";
 import AddVersion from "../default/AddVersion";
+
 
 
 const NceiStormEventsConfig = {
@@ -8,6 +13,11 @@ const NceiStormEventsConfig = {
         name: "Add Version",
         path: "/add_version",
         component: AddVersion
+    },
+    stats: {
+        name: 'Stats',
+        path: '/stats',
+        component: () => <div> No stats </div>
     },
     sourceCreate: {
         name: 'Create',

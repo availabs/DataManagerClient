@@ -49,6 +49,7 @@ const DataTypes = {
   zone_to_county,
   tiger_2017,
   open_fema_data,
+  disaster_declarations_summaries_v2: open_fema_data,
   usda_crop_insurance_cause_of_loss,
   sba_disaster_loan_data_new,
   nri,
