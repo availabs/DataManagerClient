@@ -5,6 +5,7 @@ import { SourceAttributes } from 'pages/DataManager/components/attributes'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 import Metadata from './Metadata'
+import { useParams } from "react-router-dom";
 //import Versions from './Versions'
 
 const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
@@ -12,6 +13,7 @@ const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   const [value, setValue] = useState('')
   const pgEnv = useSelector(selectPgEnv);
   /*const [loading, setLoading] = useState(false)*/
+  console.log('useParams', useParams())
 
   useEffect(() => {
     setValue(startValue)

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { Modal } from "modules/avl-components/src";
 
@@ -37,7 +37,7 @@ const RawJsonModal = (props) => {
 };
 
 function EtlEventsContextTable(etlContexts) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [eventIdx, setEventIdx] = useState(-1);
 
@@ -83,7 +83,7 @@ function EtlEventsContextTable(etlContexts) {
             <span
               style={{ cursor: "pointer", color: "blue" }}
               onClick={() => {
-                history.push(`/etl-context/${etl_context_id}`);
+                navigate(`/etl-context/${etl_context_id}`);
               }}
             >
               {etl_context_id}

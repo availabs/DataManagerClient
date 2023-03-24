@@ -2,12 +2,12 @@ import React from 'react'
 
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
-import {useHistory} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 import { RenderVersions } from "../../../utils/macros";
 
-const CallServer = async ({rtPfx, baseUrl, source, viewCounty={}, viewState={}, table, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, viewCounty={}, viewState={}, table, newVersion, navigate}) => {
     const viewMetadata = [viewState.view_id,  viewCounty.view_id];
 
     const url = new URL(
@@ -33,11 +33,11 @@ const CallServer = async ({rtPfx, baseUrl, source, viewCounty={}, viewState={}, 
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
@@ -64,7 +64,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                     rtPfx, baseUrl, source,
                     viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
                     viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
-                    table: 'sba_disaster_loan_data_new', newVersion, history
+                    table: 'sba_disaster_loan_data_new', newVersion, navigate
             })}> Add New Source</button>
         </div>
     )

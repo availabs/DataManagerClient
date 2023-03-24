@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import { getEtlContext } from "pages/DataManager/utils/FalcorApi";
@@ -7,7 +7,7 @@ import { getEtlContext } from "pages/DataManager/utils/FalcorApi";
 import { selectPgEnv } from "pages/DataManager/store";
 
 export function EtlContextEvents() {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [etlContext, setEtlContext] = React.useState(undefined);
 
@@ -82,7 +82,7 @@ export function EtlContextEvents() {
             <span
               style={{ cursor: "pointer", color: "blue" }}
               onClick={() => {
-                history.push(`/datasources/source/${source_id}`);
+                navigate(`/datasources/source/${source_id}`);
               }}
             >
               {source_id}

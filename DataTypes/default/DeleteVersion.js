@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash.get";
 import { useFalcor } from "../../../../modules/avl-components/src";
@@ -42,13 +42,13 @@ async function getData({ falcor, pgEnv, viewId }) {
 }
 
 const DeleteButton = ({ text, viewId, sourceId, pgEnv, baseUrl }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   return (
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
       onClick={async () => {
         await deleteView(getDamaApiRoutePrefix(pgEnv), viewId);
-        history.push(`${baseUrl}/source/${sourceId}/versions`);
+        navigate(`${baseUrl}/source/${sourceId}/versions`);
       }
       }>
 

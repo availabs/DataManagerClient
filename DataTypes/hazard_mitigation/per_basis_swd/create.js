@@ -1,11 +1,11 @@
 import React from 'react'
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
 import { RenderVersions } from "../../../utils/macros"
-import {useHistory} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
                               viewNCEI={}, viewNRI={}}) => {
     const viewMetadata = [viewNCEI.view_id, viewNRI.view_id];
 
@@ -32,11 +32,11 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
     // selected views/versions
     const [viewNCEI, setViewNCEI] = React.useState();
@@ -67,7 +67,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                         {rtPfx, baseUrl, source,
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
-                            newVersion, history
+                            newVersion, navigate
                         })}>
                 Add New Source
             </button>

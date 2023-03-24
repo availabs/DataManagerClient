@@ -2,7 +2,7 @@ import React from "react";
 import { withAuth, Table } from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { selectPgEnv } from "pages/DataManager/store";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
 import { formatDate } from "../../utils/macros";
@@ -24,12 +24,12 @@ const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
   );
 };
 
-const DeleteButton = ({ viewId, sourceId, meta, history, baseUrl }) => {
+const DeleteButton = ({ viewId, sourceId, meta, navigate, baseUrl }) => {
   return (
     <button
       disabled={get(meta, "authoritative") === "true"}
       className={`bg-red-50 p-2 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-red-400 hover:text-white`}`}
-      onClick={() => history.push(`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
+      onClick={() => navigate(`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
     >
       <i className="fad fa-trash"></i>
     </button>
@@ -38,7 +38,7 @@ const DeleteButton = ({ viewId, sourceId, meta, history, baseUrl }) => {
 
 const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
   const pgEnv = useSelector(selectPgEnv);
-  const history = useHistory();
+  const navigate = useNavigate();
   const { sourceId, viewId, vPage } = useParams();
 
   if (vPage === "delete") {
@@ -84,7 +84,7 @@ const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
           {
             Header: " ",
             accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
-                                         history={history} baseUrl={baseUrl} />,
+                                         navigate={navigate} baseUrl={baseUrl} />,
             disableFilters: true
           }
         ]}

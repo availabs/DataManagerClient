@@ -6,7 +6,7 @@ import { selectPgEnv } from "../store";
 import { getDamaApiRoutePrefix, deleteSource } from "../utils/DamaControllerApi";
 import { useEffect } from "react";
 import SourcesLayout from "../components/SourcesLayout";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 async function getData({ falcor, pgEnv, sourceId }) {
 
@@ -33,7 +33,7 @@ async function getData({ falcor, pgEnv, sourceId }) {
 
 const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
   const { falcor } = useFalcor();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <button
@@ -45,7 +45,7 @@ const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
           ['dama',pgEnv, 'sources', 'byIndex'],
           ['dama',pgEnv, 'sources', 'byId', sourceId],
         )
-        history.push(baseUrl);
+        navigate(baseUrl);
       }}
     >
       {text}

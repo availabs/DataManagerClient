@@ -1,5 +1,5 @@
 import React from 'react'
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
@@ -7,7 +7,7 @@ import { RenderVersions } from "../../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYear, endYear,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, startYear, endYear,
                               viewPB={}, viewNRI={}, viewState={}, viewCounty={}, viewNCEI={}}) => {
     const viewMetadata = [viewPB.view_id, viewNRI.view_id, viewState.view_id, viewCounty.view_id, viewNCEI.view_id];
 
@@ -42,13 +42,13 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYea
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
 
     // selected views/versions
@@ -100,7 +100,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                             viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
                             viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
-                            history
+                            navigate
                         })}>
                 Add New Source
             </button>
