@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-
-import get from "lodash.get";
-import { useFalcor } from "../../../../modules/avl-components/src";
+import { useFalcor, withAuth, Input, Button } from 'modules/avl-components/src'
+import get from 'lodash.get'
+import { ViewAttributes } from 'pages/DataManager/components/attributes'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../store";
 
@@ -166,6 +166,113 @@ const RenderDependents = ({ dependents = [], viewId, srcMeta, viewMeta, baseUrl 
   );
 };
 
+
+const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
+  const { falcor } = useFalcor()
+  const [value, setValue] = useState('')
+  const pgEnv = useSelector(selectPgEnv);
+  /*const [loading, setLoading] = useState(false)*/
+
+  useEffect(() => {
+    setValue(startValue)
+  },[startValue])
+
+  const save = (attr, value) => {
+    if(viewId) {
+      falcor.set({
+          paths: [
+            ['dama',pgEnv,'views','byId',viewId,'attributes', attr ]
+          ],
+          jsonGraph: {
+            dama:{
+              [pgEnv] : {
+                views: {
+                  byId:{
+                    [viewId] : {
+                        attributes : {[attr]: value}
+                    }
+                  }
+                }
+              }
+            }
+          }
+      }).then(d => {
+        console.log('set run', d)
+        cancel()
+      })
+    }
+  }
+
+  return (
+    <div className='w-full flex'>
+      <Input className='flex-1 px-2 shadow bg-blue-100 focus:ring-blue-700 focus:border-blue-500  border-gray-300 rounded-none rounded-l-md' value={value} onChange={e => setValue(e)}/>
+      <Button themeOptions={{size:'sm', color: 'primary'}} onClick={e => save(attr,value)}> Save </Button>
+      <Button themeOptions={{size:'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button>
+    </div>
+  )
+}
+
+const VersionEditor = withAuth(({view, user, baseUrl='/datasources'}) => {
+  const [editing, setEditing] = React.useState(null)
+  
+  return (
+    <div className="overflow-hidden">
+     {/* <pre>
+        {JSON.stringify(view, null ,3)}
+      </pre>*/}
+      {/*<div className="pl-4 py-6 hover:py-6 sm:pl-6 flex justify-between group">
+        <div className="flex-1 mt-1 max-w-2xl text-sm text-gray-500">
+          {editing === 'description' ? 
+            <Edit 
+              startValue={get(view,'description', '')}
+              attr={'description'}
+              viewId={view.view_id}
+              cancel={() => setEditing(null)}/> : 
+            get(source,'description', false) || 'No Description'}
+        </div>
+        {user.authLevel > 5 ? 
+        <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => setEditing('description')}>
+            <i className="fad fa-pencil absolute -ml-12  p-2 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
+        </div> : '' }
+      </div>*/}
+      <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+        <dl className="sm:divide-y sm:divide-gray-200">
+          {Object.keys(ViewAttributes)
+            .filter(d => !['view_id','source_id', 'metadata','description', 'statistics', 'category'].includes(d))
+            .map((attr,i) => {
+              let val = typeof view[attr] === 'object' ? JSON.stringify(view[attr].value) : view[attr]
+              return (
+                <div key={i} className='flex justify-between group'>
+                  <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      {editing === attr ? 
+                        <div className='pt-3 pr-8'>
+                          <Edit 
+                            startValue={val} 
+                            attr={attr}
+                            viewId={view.view_id}
+                            cancel={() => setEditing(null)}
+                          />
+                        </div> :  
+                        <div className='py-5 px-2'>{val}</div> 
+                      }
+                    </dd>
+                  </div>
+                  {user.authLevel > 5 ? 
+                  <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => editing === attr ? setEditing(null): setEditing(attr)}>
+                    <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
+                  </div> : ''}
+                </div>
+              )
+            })
+          }
+        </dl>
+      </div>
+    </div>
+  )
+})
+
 export default function Version({baseUrl}) {
   const { falcor, falcorCache } = useFalcor();
   const { viewId } = useParams();
@@ -178,16 +285,32 @@ export default function Version({baseUrl}) {
   const dependencies = get(falcorCache, ["dama", pgEnv, "viewDependencySubgraphs", "byViewId", viewId, "value"], { dependencies: [] }),
     dependents = get(falcorCache, ["dama", pgEnv, "views", "byId", viewId, "dependents", "value"], []),
     srcMeta = get(falcorCache, ["dama", pgEnv, "sources", "byId"], {}),
-    viewMeta = get(falcorCache, ["dama", pgEnv, "views", "byId"], {});
+    viewMeta = get(falcorCache, ["dama", pgEnv, "views", "byId"], {}),
+    view = get(falcorCache, ["dama", pgEnv, "views", "byId", viewId, 'attributes'], {});
 
   return (
     <div>
       <div className="text-xl font-medium overflow-hidden p-2 border-b ">
         {viewId}
       </div>
-
-      <RenderDeps viewId={viewId} dependencies={dependencies} srcMeta={srcMeta} viewMeta={viewMeta} baseUrl={baseUrl}/>
-      <RenderDependents viewId={viewId} dependents={dependents} srcMeta={srcMeta} viewMeta={viewMeta} baseUrl={baseUrl}/>
+      <VersionEditor view={view} baseUrl={baseUrl} />
+      {dependencies.length > 0 ? 
+        <RenderDeps 
+          viewId={viewId} 
+          dependencies={dependencies} 
+          srcMeta={srcMeta} 
+          viewMeta={viewMeta} 
+          baseUrl={baseUrl}
+        /> : ''}
+      {dependents.length > 0 ? 
+        <RenderDependents 
+          viewId={viewId}
+          dependents={dependents}
+          srcMeta={srcMeta} 
+          viewMeta={viewMeta} 
+          baseUrl={baseUrl}
+        /> : ''}
+      }
     </div>
   );
 }

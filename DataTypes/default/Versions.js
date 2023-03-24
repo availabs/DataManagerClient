@@ -12,14 +12,14 @@ import DeleteVersion from "./DeleteVersion";
 const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
   return (
     <button
-      className={`bg-blue-50 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-blue-400 hover:text-white`} p-2`}
+      className={`${get(meta, "authoritative") === "true" ? `cursor-not-allowed bg-blue-100` : `bg-blue-50 hover:bg-blue-400 hover:text-white`} p-2`}
       disabled={get(meta, "authoritative") === "true"}
       onClick={async () => {
         await makeAuthoritative(getDamaApiRoutePrefix(pgEnv), viewId);
       }
       }>
 
-      {get(meta, "authoritative") === "true" ? "Authoritative" : "Make Authoritative"}
+      {get(meta, "authoritative") === "true" ? <i className="fad fa-gavel"></i> : <i class="fa-regular fa-gavel"></i>}
     </button>
   );
 };
@@ -31,7 +31,7 @@ const DeleteButton = ({ viewId, sourceId, meta, history, baseUrl }) => {
       className={`bg-red-50 p-2 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-red-400 hover:text-white`}`}
       onClick={() => history.push(`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
     >
-      Delete
+      <i className="fad fa-trash"></i>
     </button>
   );
 };
@@ -77,12 +77,12 @@ const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
             accessor: c => formatDate(c["_created_timestamp"])
           },
           {
-            Header: "Status",
+            Header: "Make Authoritative",
             accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
-            disableFilters: true
+            disableFilters: true,
           },
           {
-            Header: "Delete",
+            Header: " ",
             accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
                                          history={history} baseUrl={baseUrl} />,
             disableFilters: true
@@ -93,6 +93,8 @@ const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
     </div>
   );
 });
+
+
 
 
 export default Versions;
