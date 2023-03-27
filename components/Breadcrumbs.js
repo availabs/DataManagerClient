@@ -9,7 +9,7 @@ import { selectPgEnv } from "pages/DataManager/store"
 
 
 export default function BreadCrumbs ({baseUrl='/datasources'}) {
-  const { sourceId, cat1, cat2} = useParams()
+  const { sourceId, page, cat1, cat2} = useParams()
   const {falcor,falcorCache} = useFalcor()
   const pgEnv = useSelector(selectPgEnv);
 
@@ -18,7 +18,7 @@ export default function BreadCrumbs ({baseUrl='/datasources'}) {
       return sourceId ? await falcor.get(
         [
           "dama", pgEnv,"sources","byId",sourceId,
-          "attributes",["categories","name"]
+          "attributes",["categories","name", "data_type"]
         ]
       ) : Promise.resolve({})
     }

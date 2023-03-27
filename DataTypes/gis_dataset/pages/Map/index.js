@@ -3,6 +3,7 @@ import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
 import get from 'lodash.get'
 import { useParams, useHistory } from 'react-router-dom'
 import GISDatasetLayer from './Layer'
+import Symbology from './Symbology'
 import { AvlMap } from "modules/avl-maplibre/src"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
@@ -69,6 +70,37 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
   )
 }
 
+
+const CustomMapFilter = ({source, activeVar, setActiveVar}) => {
+  const variables = get(source,'metadata',[])
+    .filter(d => ['number'].includes(d.type))
+    .sort((a,b) => a.name - b.name)
+    .map(d => d.name)
+
+  return (
+    <div className='flex flex-1'>
+      <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
+      <div className='flex-1'>
+        <select  
+            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+            value={activeVar}
+            onChange={(e) => setActiveVar(e.target.value)}
+          >
+            <option  className="ml-2  truncate" value={null}>
+              none    
+            </option>
+            {variables
+              .map((v,i) => (
+              <option key={i} className="ml-2  truncate" value={v}>
+                {v}
+              </option>
+            ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 const MapPage = ({source,views, user}) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
@@ -76,6 +108,7 @@ const MapPage = ({source,views, user}) => {
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   const [ activeVar, setActiveVar] = React.useState(null)
+  const [ tempSymbology, setTempSymbology] = React.useState({})
   const activeView = React.useMemo(() => {
     return get(views.filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
@@ -86,6 +119,7 @@ const MapPage = ({source,views, user}) => {
   }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
   const layer = React.useMemo(() => {
+      //console.log('layer update', tempSymbology)
       return {
             name: source.name,
             pgEnv,
@@ -99,9 +133,9 @@ const MapPage = ({source,views, user}) => {
             activeViewId: activeViewId,
             sources: get(mapData,'sources',[]), 
             layers: get(mapData,'layers',[]),
-            symbology: get(mapData, `symbology`, [])
+            symbology: {... get(mapData, `symbology`, {}), ...tempSymbology}
       }
-  },[source, views, mapData, activeViewId,activeVar])
+  },[source, views, mapData, activeViewId,activeVar,tempSymbology])
 
   //console.log('layer mappage', layer)
 
@@ -121,14 +155,10 @@ const MapPage = ({source,views, user}) => {
       </div>
       {user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-        {/*<SymbologyControls 
-          layer={layer} 
-          onChange={(v) => save('symbology',v)}
-        />*/}
         <dl className="sm:divide-y sm:divide-gray-200">
-          {['sources','layers','symbology']
+          {['sources','layers']
             .map((attr,i) => {
-              let val = JSON.stringify(get(mapData,attr,[]),null,3)
+              let val = JSON.stringify(get(layer,attr,[]),null,3)
               return (
                 <div key={i} className='flex justify-between group'>
                   <div  className="flex-1 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6">
@@ -161,6 +191,7 @@ const MapPage = ({source,views, user}) => {
             })
           }
         </dl>
+        <Symbology layer={layer} onChange={setTempSymbology}/>
       </div> : ''}
     </div>
   ) 
@@ -173,7 +204,7 @@ const Map = ({layers}) => {
   const { falcor } = useFalcor()
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
-    console.log('update', layers)
+    //console.log('update', layers)
     return 
   },[layers])
 
@@ -206,7 +237,7 @@ const Map = ({layers}) => {
   },[ currentLayerIds ])
 
   const layerProps = React.useMemo(()=>{
-    console.log('update layers', layers)
+    console.log('layerProps', layers)
     let inputViewIds = layers.map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
       //console.log('s', inputViewIds, cur.activeViewId)
