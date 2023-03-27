@@ -3,7 +3,7 @@ import Create from './create'
 import {useFalcor} from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../store";
+import { selectPgEnv } from "../../../store";
 
 const Table = ({source}) => {
   return <div> Table View </div>  
