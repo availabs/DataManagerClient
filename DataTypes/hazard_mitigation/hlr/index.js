@@ -5,6 +5,7 @@ import get from "lodash.get";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 import AddVersion from "../../default/AddVersion";
+import { fnum } from "../../../utils/macros"
 
 const RenderVersions = (domain, value, onchange) => (
     <select
@@ -18,8 +19,6 @@ const RenderVersions = (domain, value, onchange) => (
         ))}
     </select>
 )
-
-const fnum = (number) => parseInt(number).toLocaleString();
 
 const Stats = ({source, views}) => {
     const {falcor, falcorCache} = useFalcor();
@@ -40,7 +39,7 @@ const Stats = ({source, views}) => {
     const metadataCompareView = get(falcorCache, ['hlr', pgEnv, 'source', source.source_id, 'view', compareView, 'eal', 'value'], []);
 
     console.log('md', metadataCompareView)
-    if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
+    // if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
 
     return (
         <>
@@ -62,95 +61,101 @@ const Stats = ({source, views}) => {
                 {compareMode ? <label>Compare with Version: </label> : null}
                 {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
             </div>
+            {
+                (!metadataActiveView || metadataActiveView.length === 0) ? <div> Stats Not Available </div> :
+                  (
+                    <>
+                        <div
+                          className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
+                            EAL by Type
+                        </div>
+                        <div>
+                            <div className="py-4 sm:py-2 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 border-b-2">
+                                <dt className="text-sm font-medium text-gray-600">
+                                    Event Type
+                                </dt>
+                                <dd className="text-sm font-medium text-gray-600 ">
+                                    buildings {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                                </dd>
+                                <dd className="text-sm font-medium text-gray-600 ">
+                                    crop {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                                </dd>
+                                <dd className="text-sm font-medium text-gray-600 ">
+                                    population {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                                </dd>
 
-            <div
-                className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
-                EAL by Type
-            </div>
-            <div>
-                <div className="py-4 sm:py-2 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 border-b-2">
-                    <dt className="text-sm font-medium text-gray-600">
-                        Event Type
-                    </dt>
-                    <dd className="text-sm font-medium text-gray-600 ">
-                        buildings {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-                    </dd>
-                    <dd className="text-sm font-medium text-gray-600 ">
-                        crop {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-                    </dd>
-                    <dd className="text-sm font-medium text-gray-600 ">
-                        population {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-                    </dd>
 
+                                {
+                                  compareMode &&
+                                  <dd className="text-sm font-medium text-gray-600 ">
+                                      buildings {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                                  </dd>
+                                }
 
-                    {
-                        compareMode &&
-                        <dd className="text-sm font-medium text-gray-600 ">
-                            buildings {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                        </dd>
-                    }
+                                {
+                                  compareMode &&
+                                  <dd className="text-sm font-medium text-gray-600 ">
+                                      crop {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                                  </dd>
+                                }
 
-                    {
-                        compareMode &&
-                        <dd className="text-sm font-medium text-gray-600 ">
-                            crop {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                        </dd>
-                    }
+                                {
+                                  compareMode &&
+                                  <dd className="text-sm font-medium text-gray-600 ">
+                                      population {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                                  </dd>
+                                }
+                            </div>
+                            <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
+                                <dl className="sm:divide-y sm:divide-gray-200">
 
-                    {
-                        compareMode &&
-                        <dd className="text-sm font-medium text-gray-600 ">
-                            population {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-                        </dd>
-                    }
-                </div>
-                <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
-                    <dl className="sm:divide-y sm:divide-gray-200">
+                                    {
+                                        metadataActiveView
+                                          .map((col, i) => (
+                                            <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6">
+                                                <dt className="text-sm text-gray-900">
+                                                    {col.nri_category}
+                                                </dt>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {fnum(col.swd_buildings)}
+                                                </dd>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {fnum(col.swd_crop)}
+                                                </dd>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {fnum(col.swd_population)}
+                                                </dd>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {
+                                                      compareMode &&
+                                                      fnum(get(metadataCompareView
+                                                        .find(row => row.nri_category === col.nri_category), 'swd_buildings'))
+                                                    }
+                                                </dd>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {
+                                                      compareMode &&
+                                                      fnum(get(metadataCompareView
+                                                        .find(row => row.nri_category === col.nri_category), 'swd_crop'))
+                                                    }
+                                                </dd>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                                                    {
+                                                      compareMode &&
+                                                      fnum(get(metadataCompareView
+                                                        .find(row => row.nri_category === col.nri_category), 'swd_population'))
+                                                    }
+                                                </dd>
+                                            </div>
+                                          ))
+                                    }
 
-                        {
-                            metadataActiveView
-                                .map((col, i) => (
-                                    <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6">
-                                        <dt className="text-sm text-gray-900">
-                                            {col.nri_category}
-                                        </dt>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {fnum(col.swd_buildings)}
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {fnum(col.swd_crop)}
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {fnum(col.swd_population)}
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {
-                                                compareMode &&
-                                                fnum(get(metadataCompareView
-                                                    .find(row => row.nri_category === col.nri_category), 'swd_buildings'))
-                                            }
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {
-                                                compareMode &&
-                                                fnum(get(metadataCompareView
-                                                    .find(row => row.nri_category === col.nri_category), 'swd_crop'))
-                                            }
-                                        </dd>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                            {
-                                                compareMode &&
-                                                fnum(get(metadataCompareView
-                                                    .find(row => row.nri_category === col.nri_category), 'swd_population'))
-                                            }
-                                        </dd>
-                                    </div>
-                                ))
-                        }
-
-                    </dl>
-                </div>
-            </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </>
+                  )
+            }
         </>
 )
 }

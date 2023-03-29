@@ -61,6 +61,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const [viewCounty, setViewCounty] = React.useState();
     const [viewNCEI, setViewNCEI] = React.useState();
     // all versions
+    const [versionsPBSWD, setVersionsPBSWD] = React.useState({sources:[], views: []});
+    const [versionsPBFusion, setVersionsPBFusion] = React.useState({sources:[], views: []});
     const [versionsPB, setVersionsPB] = React.useState({sources:[], views: []});
     const [versionsNRI, setVersionsNRI] = React.useState({sources:[], views: []});
     const [versionsState, setVersionsState] = React.useState({sources:[], views: []});
@@ -71,13 +73,20 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsPB, type: 'per_basis'});
+            await getSrcViews({rtPfx, setVersions: setVersionsPBSWD, type: 'per_basis'});
+            await getSrcViews({rtPfx, setVersions: setVersionsPBFusion, type: 'per_basis_fusion'});
             await getSrcViews({rtPfx, setVersions: setVersionsNRI, type: 'nri'});
             await getSrcViews({rtPfx, setVersions: setVersionsState, type: `tl_state`});
             await getSrcViews({rtPfx, setVersions: setVersionsCounty, type: 'tl_county'});
             await getSrcViews({rtPfx, setVersions: setVersionsNCEI, type: 'ncei_storm_events_enhanced'});
         }
-        fetchData();
+        fetchData().then(() => {
+            console.log("???", versionsPBSWD, versionsPBFusion, versionsNCEI)
+            setVersionsPB({
+                sources: [...versionsPBSWD.sources, ...versionsPBFusion.sources],
+                views: [...versionsPBSWD.views, ...versionsPBFusion.views]
+            })
+        });
     }, [rtPfx])
 
     return (

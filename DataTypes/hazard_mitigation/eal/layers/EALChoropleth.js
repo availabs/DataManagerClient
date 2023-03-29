@@ -4,8 +4,8 @@ import get from "lodash.get";
 import { LayerContainer } from "modules/avl-map/src";
 import { getColorRange } from "modules/avl-components/src";
 import ckmeans from "../../../../utils/ckmeans";
+import { fnum } from "../../../../utils/macros"
 
-const fnum = (number) => parseInt(number).toLocaleString();
 class EALChoroplethOptions extends LayerContainer {
   constructor(props) {
     super(props);

@@ -6,18 +6,8 @@ import { selectPgEnv } from "../../../store";
 import { useFalcor } from "../../../../../modules/avl-components/src";
 import get from "lodash.get";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
+import { fnum, fnumIndex } from "../../../utils/macros"
 
-const fnumIndex = (d) => {
-  if (d >= 1000000000) {
-    return `${parseInt(d / 1000000000)} B`;
-  } else if (d >= 1000000) {
-    return `${parseInt(d / 1000000)} M`;
-  } else if (d >= 1000) {
-    return `${parseInt(d / 1000)} K`;
-  } else {
-    return `${d}`;
-  }
-};
 
 const RenderVersions = (domain, value, onchange) => (
   <select
@@ -98,6 +88,68 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     )
 }
 
+const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Math.floor((d))) }) => {
+  const compareTypes = [['NCEI', 'Fusion NCEI'], ['OFD', 'Fusion OFD']];
+  const compareCols = ['property_damage', 'crop_damage', 'population_damage'];
+  const invalidData = []
+  const cols = ['', 'Property Damage', 'Crop Damage', 'Population Damage'];
+
+  if (!Object.keys(data).length) return null;
+  const isValid = compareTypes.reduce((acc, types) => {
+    return acc && compareCols.reduce((subAcc, col) => {
+
+      const tmpRes = types.reduce((acc, type) => {
+        return !acc ? data[type][col] : acc - data[type][col];
+      }, null) < tolerance;
+
+      if(!tmpRes) invalidData.push({types, col});
+      return subAcc && tmpRes
+    }, true)
+  }, true);
+
+  return (
+    <div>
+      <div className={`overflow-hidden border-2 border-${isValid ? `green-300` : `red-200`}`}>
+        <i className={`text-sm ${isValid ? `text-[#1dff6a]` : `text-red-900`}`}> {isValid ? `Valid` : `Invalid`} with tolerance {tolerance}</i>
+
+        <div className={`flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6`}>
+          {
+            cols
+              .map(col => (
+                <dt className="text-sm text-gray-900">
+                  {col}
+                </dt>
+              ))
+          }
+          {
+            Object.keys(data).map(type => (
+              <>
+                <dt className="text-gray-600">
+                  {type}
+                </dt>
+
+                {
+                  Object.keys(data[type])
+                    .map(col => (
+                      <dt className={`text-sm 
+                      ${
+                        !isValid && 
+                        invalidData.find(d => d.types.includes(type) && d.col === col) ? `text-red-900` : `text-gray-900`
+                      }`}>
+                        {formatData(data[type][col])}
+                      </dt>
+                    ))
+                }
+              </>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 const Stats = ({ source, views }) => {
   const pgEnv = useSelector(selectPgEnv);
   const { falcor, falcorCache } = useFalcor();
@@ -108,14 +160,15 @@ const Stats = ({ source, views }) => {
 
   useEffect(() => {
     falcor.get(
-      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], "lossByYearByDisasterNumber"]
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["lossByYearByDisasterNumber", "validateLosses"]]
     );
   }, [activeView, compareView, pgEnv, source.source_id, falcor]);
 
   const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "lossByYearByDisasterNumber", "value"], []);
+  const compareLossesActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "validateLosses", "value"], {});
   const metadataCompareView = get(falcorCache, ["ncei_storm_events_enhanced", pgEnv, "source", source.source_id, "view", compareView, "lossByYearByDisasterNumber", "value"], []);
   const { processed_data: chartDataActiveView, disaster_numbers } = ProcessDataForMap(metadataActiveView);
-
+  console.log(compareLossesActiveView)
   return (
     <>
       <div key={"versionSelector"}
@@ -162,6 +215,13 @@ const Stats = ({ source, views }) => {
               />
           </div>
       }
+
+      <div className={`pt-4`}>
+        <RenderValidation data={compareLossesActiveView} />
+      </div>
+      <div className={`pt-4`}>
+        <RenderValidation data={compareLossesActiveView} tolerance={0.0009} formatData={d => parseFloat(d).toFixed(4).toLocaleString()}/>
+      </div>
     </>
   );
 };

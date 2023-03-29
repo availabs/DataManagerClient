@@ -28,10 +28,12 @@ import usda_crop_insurance_cause_of_loss from "./hazard_mitigation/usda";
 import sba_disaster_loan_data_new from "./hazard_mitigation/sba";
 import nri from "./hazard_mitigation/nri";
 import per_basis from "./hazard_mitigation/per_basis_swd";
+import per_basis_fusion from "./hazard_mitigation/per_basis_fusion";
 import hlr from "./hazard_mitigation/hlr";
 import eal from "./hazard_mitigation/eal"
 import disaster_loss_summary from "./hazard_mitigation/disaster_loss_summary";
 import fusion from "./hazard_mitigation/fusion";
+// import open_fema_data from "./hazard_mitigation/open_fema_data";
 
 const DataTypes = {
   freight_atlas_shapefile,
@@ -67,11 +69,13 @@ const DataTypes = {
   fema_nfip_claims_v1,
   individuals_and_households_program_valid_registrations_v1,
   public_assistance_funded_projects_details_v1,
+  // open_fema_data,
 
-  ofd: disaster_loss_summary,
+  disaster_loss_summary,
 
   // hazmit types: AVAIL processing
   per_basis,
+  per_basis_fusion,
   hlr,
   eal,
   fusion

@@ -1,5 +1,19 @@
 import get from "lodash.get";
 
+export const fnumIndex = (d) => {
+  if (d >= 1000000000) {
+    return `${parseInt(d / 1000000000)} B`;
+  } else if (d >= 1000000) {
+    return `${parseInt(d / 1000000)} M`;
+  } else if (d >= 1000) {
+    return `${parseInt(d / 1000)} K`;
+  } else {
+    return `${d}`;
+  }
+};
+
+export const fnum = (number) => parseInt(number).toLocaleString();
+
 export const formatDate = (dateString) => {
   const options = {
     year: "numeric",

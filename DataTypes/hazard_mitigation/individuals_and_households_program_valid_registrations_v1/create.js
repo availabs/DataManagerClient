@@ -12,6 +12,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     url.searchParams.append("table_name", 'individuals_and_households_program_valid_registrations_v1');
     url.searchParams.append("source_name", source.name);
     url.searchParams.append("existing_source_id", source.source_id);
+    url.searchParams.append("existing_view_id", '484');
     url.searchParams.append("version", newVersion);
 
     const stgLyrDataRes = await fetch(url);
