@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
-import get from 'lodash.get'
+import get from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useHistory } from 'react-router-dom'
 import GISDatasetLayer from './Layer'
-import Symbology from './Symbology'
+import Symbology from './symbology/index.js'
 import { AvlMap } from "modules/avl-maplibre/src"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
@@ -19,7 +20,7 @@ const ViewSelector = ({views}) => {
   const history = useHistory()
   
   return (
-    <div className='flex flex-1'>
+    <div className='flex'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Version : </div>
       <div className='flex-1'>
         <select  
@@ -70,45 +71,13 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
   )
 }
 
-
-const CustomMapFilter = ({source, activeVar, setActiveVar}) => {
-  const variables = get(source,'metadata',[])
-    .filter(d => ['number'].includes(d.type))
-    .sort((a,b) => a.name - b.name)
-    .map(d => d.name)
-
-  return (
-    <div className='flex flex-1'>
-      <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
-      <div className='flex-1'>
-        <select  
-            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-            value={activeVar}
-            onChange={(e) => setActiveVar(e.target.value)}
-          >
-            <option  className="ml-2  truncate" value={null}>
-              none    
-            </option>
-            {variables
-              .map((v,i) => (
-              <option key={i} className="ml-2  truncate" value={v}>
-                {v}
-              </option>
-            ))}
-        </select>
-      </div>
-    </div>
-  )
-}
-
-const MapPage = ({source,views, user}) => {
+const MapPage = ({source,views, user, MapFilter=DefaultMapFilter}) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
   
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   const [ activeVar, setActiveVar] = React.useState(null)
-  const [ tempSymbology, setTempSymbology] = React.useState({})
   const activeView = React.useMemo(() => {
     return get(views.filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
@@ -118,6 +87,16 @@ const MapPage = ({source,views, user}) => {
     return out
   }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
+
+  const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
+  
+  
+  // useEffect(() => setTempSymbology((ts => 
+  //   ({...ts, ...get(mapData, `symbology`, {})})
+  // )),[mapData])
+
+  console.log('render map page', mapData, tempSymbology)
+  
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
       return {
@@ -133,25 +112,28 @@ const MapPage = ({source,views, user}) => {
             activeViewId: activeViewId,
             sources: get(mapData,'sources',[]), 
             layers: get(mapData,'layers',[]),
-            symbology: {... get(mapData, `symbology`, {}), ...tempSymbology}
+            symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
-  },[source, views, mapData, activeViewId,activeVar,tempSymbology])
+  },[source, views, mapData, activeViewId,activeVar])
 
   //console.log('layer mappage', layer)
 
   return (
     <div> 
       <div className='flex'>
-        <div className='flex-1 pl-3 pr-4 py-2'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
-        <DefaultMapFilter 
+        <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
+        <MapFilter 
           source={source} 
-          activeView={activeVar} 
+          activeVar={activeVar} 
           setActiveVar={setActiveVar}
         />
         <ViewSelector views={views} />
       </div>
       <div className='w-ful h-[900px]'>
-        <Map layers={[layer]}  />
+        <Map 
+          layers={[layer]}  
+          tempSymbology={tempSymbology}
+        />
       </div>
       {user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -191,7 +173,18 @@ const MapPage = ({source,views, user}) => {
             })
           }
         </dl>
-        <Symbology layer={layer} onChange={setTempSymbology}/>
+        <Symbology 
+          layer={layer}  
+          onChange={setTempSymbology}
+        />
+        <div className='flex'>
+          <div className='flex-1' />
+          <SaveSymbologyButton 
+            mapData={mapData}
+            symbology={tempSymbology}
+            viewId={activeViewId}
+          />
+        </div>
       </div> : ''}
     </div>
   ) 
@@ -199,13 +192,59 @@ const MapPage = ({source,views, user}) => {
 
 export default withAuth(MapPage)
 
-const Map = ({layers}) => {
+const SaveSymbologyButton = ({mapData,symbology, viewId}) => {
+  const { falcor } = useFalcor()
+  const pgEnv = useSelector(selectPgEnv);
+  
+  const save = async () => {
+    //console.log('click save 222', attr, value)
+    if(viewId) {
+      try{
+        let val = { tiles: mapData}
+        val.tiles['symbology'] = symbology
+        console.log('out value', val)
+        let response = await falcor.set({
+            paths: [
+              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
+            ],
+            jsonGraph: {
+              dama:{
+                [pgEnv]:{
+                  views: {
+                    byId:{
+                      [viewId] : {
+                        attributes : { 
+                          metadata: JSON.stringify(val)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+        })
+        console.log('set run response', response)
+      } catch (error) {
+        console.log('error stuff',error,symbology, mapData);
+      }
+    }
+  }
+  return( 
+    <button 
+      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+      onClick={save}
+    >
+      Save Symbology
+    </button>
+  )
+}
+
+const Map = ({layers,tempSymbology}) => {
   const mounted = React.useRef(false);
   const { falcor } = useFalcor()
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
-    //console.log('update', layers)
-    return 
+    return layers.map(d => d.activeViewId)
   },[layers])
 
   React.useEffect( () => {
@@ -237,16 +276,15 @@ const Map = ({layers}) => {
   },[ currentLayerIds ])
 
   const layerProps = React.useMemo(()=>{
-    console.log('layerProps', layers)
     let inputViewIds = layers.map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
-      //console.log('s', inputViewIds, cur.activeViewId)
       if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
-        out[cur.id] = layers[inputViewIds.indexOf(cur.activeViewId)]
+        out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])
+        out[cur.id].symbology = cloneDeep(tempSymbology)
       }
       return out
     },{})
-  },[layers, layerData])
+  },[layers, layerData, tempSymbology])
 
   return (
       
@@ -275,6 +313,8 @@ const Map = ({layers}) => {
      
   )
 }
+
+
 
 
 

@@ -1,8 +1,18 @@
 import Pages from "./default";
+// ---------------------------
+// ---- Deprecated
+// ---------------------------
 import freight_atlas_shapefile from "./freight_atlas_shapefile";
 import npmrdsTravelTime from "./npmrdsTravelTime";
+// ---------------------------
+// ---- Basic Types
+// ---------------------------
 import gis_dataset from "./gis_dataset";
 
+
+// ---------------------------
+// ---- NPMRDS Types
+// ---------------------------
 import npmrds from "./npmrds";
 import npmrds_travel_times_export_ritis from "./npmrds/npmrds_travel_times_export_ritis";
 import npmrds_travel_times_export_etl from "./npmrds/npmrds_travel_times_export_etl";
@@ -13,7 +23,9 @@ import npmrds_travel_times from "./npmrds/npmrds_travel_times";
 import npmrds_tmc_identification_imp from "./npmrds/npmrds_tmc_identification_imp";
 import npmrds_tmc_identification from "./npmrds/npmrds_tmc_identification";
 
-// hazmit types
+// ---------------------------
+// ---- Hazard Mitigation Types
+// ---------------------------
 import disaster_declarations_summaries_v2 from "./hazard_mitigation/disaster_declarations_summaries_v2";
 import fema_nfip_claims_v1 from "./hazard_mitigation/fema_nfip_claims_v1";
 import individuals_and_households_program_valid_registrations_v1
@@ -32,6 +44,12 @@ import hlr from "./hazard_mitigation/hlr";
 import eal from "./hazard_mitigation/eal"
 import disaster_loss_summary from "./hazard_mitigation/disaster_loss_summary";
 import fusion from "./hazard_mitigation/fusion";
+
+// ---------------------------
+// ---- Tig Types
+// ---------------------------
+import tig_sed from './tig/sed'
+
 
 const DataTypes = {
   freight_atlas_shapefile,
@@ -74,7 +92,10 @@ const DataTypes = {
   per_basis,
   hlr,
   eal,
-  fusion
+  fusion,
+
+  //TIG
+  tig_sed
 };
 
 export { DataTypes, Pages };

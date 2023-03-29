@@ -91,35 +91,6 @@ class GISDatasetLayer extends LayerContainer {
   }
 
   fetchData(falcor) {
-    // if(this.props.activeVariable) {
-
-    //   const {
-    //     activeVariable,
-    //     activeViewId,
-    //     pgEnv
-    //   } = this.props
-    //   // console.log('fetchData', activeViewId, activeVariable)
-    //   console.time(`GisMapLayer ${activeViewId} ${activeVariable}`)
-    //   return this.falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
-    //     .then(d => {
-    //       let length = get(d, 
-    //         ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'], 
-    //       0)
-    //       return this.falcor.chunk([
-    //         'dama',
-    //         pgEnv,
-    //         'viewsbyId',
-    //         activeViewId,
-    //         'databyIndex', 
-    //         [...Array(length).keys()],
-    //         activeVariable
-    //       ])
-    //     }).then(d => {
-    //       console.timeEnd(`GisMapLayer ${activeViewId} ${activeVariable}`) 
-    //     })
-    // }
-    // //console.log('fetchData empty')
-    
     return Promise.resolve()
   }
 
@@ -130,15 +101,15 @@ class GISDatasetLayer extends LayerContainer {
       symbology
     } = this.props
 
-    console.log('update layer',symbology)
+    console.log('renderLayer', activeViewId, activeVariable)
 
     Object.keys(symbology)
       .filter(paintProperty => {
         let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
           || get(symbology, `[${paintProperty}][default]`, false)
-        console.log('filter',
-          value
-        )
+        // console.log('filter',
+        //   value
+        // )
         return value 
       })
       .forEach(paintProperty => {
@@ -146,7 +117,7 @@ class GISDatasetLayer extends LayerContainer {
           || get(symbology, `[${paintProperty}][default][value]`, '')
 
        
-        console.log('paintProperty',paintProperty, value)
+        //console.log('paintProperty',paintProperty, value)
          
         map.setPaintProperty(
           this.layers[0].id, 
