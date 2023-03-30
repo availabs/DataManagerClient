@@ -12,7 +12,7 @@ import config from 'config.json'
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 
 
-const TILEHOST = 'https://dama-dev.availabs.org/tiles'
+const TILEHOST = 'https://tig22.nymtc.org/dama/tiles'
 
 
 const ViewSelector = ({views}) => {
@@ -71,13 +71,14 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
   )
 }
 
-const MapPage = ({source,views, user, MapFilter=DefaultMapFilter}) => {
+const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {} }) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
   
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
-  const [ activeVar, setActiveVar] = React.useState(null)
+  //const [ activeVar, setActiveVar] = React.useState(null)
+  const [ filters, setFilters ] = useState(filterData)
   const activeView = React.useMemo(() => {
     return get(views.filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
@@ -104,7 +105,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter}) => {
             pgEnv,
             source: source,
             activeView: activeView,
-            activeVariable: activeVar,
+            filters,
 
             attributes: get(source,'metadata',[])
               .filter(d => ['integer','string','number'].includes(d.type))
@@ -114,7 +115,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter}) => {
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
-  },[source, views, mapData, activeViewId,activeVar])
+  },[source, views, mapData, activeViewId,filters])
 
   //console.log('layer mappage', layer)
 
@@ -124,8 +125,8 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter}) => {
         <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
         <MapFilter 
           source={source} 
-          activeVar={activeVar} 
-          setActiveVar={setActiveVar}
+          filters={filters} 
+          setFilters={setFilters}
         />
         <ViewSelector views={views} />
       </div>

@@ -96,11 +96,12 @@ class GISDatasetLayer extends LayerContainer {
 
   render(map) {
     const {
-      activeVariable,
+      filters,
       activeViewId,
       symbology
     } = this.props
 
+    const activeVariable = get(filters,'activeVar.value', '')
     console.log('renderLayer', activeViewId, activeVariable)
 
     Object.keys(symbology)
