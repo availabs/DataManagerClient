@@ -294,10 +294,10 @@ const Map = ({layers,tempSymbology}) => {
           accessToken={ config.MAPBOX_TOKEN }
           falcor={falcor}
           mapOptions={{
-            zoom: 6.2,
+            zoom: 7.3,//8.32/40.594/-74.093
             center: [
-                -75.95,
-               42.89
+                -73.8,
+               40.79
             ],
             styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},

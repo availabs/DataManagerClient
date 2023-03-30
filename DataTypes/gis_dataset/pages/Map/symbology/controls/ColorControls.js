@@ -52,7 +52,7 @@ const ThresholdScaleColorControl = ({
         settings: {
           numBins: 5,
           domain: "[]",
-          colorRange: 'Reds'
+          colorRange: 'YlOrRd'
         }
       })
     }
@@ -95,7 +95,7 @@ const ThresholdScaleColorControl = ({
         let colorScale = getColorScale(
           domainData, 
           symbologySlice?.settings?.numBins || 5, 
-          symbologySlice?.settings?.colorRange || 'Reds'
+          symbologySlice?.settings?.colorRange || 'YlOrRd'
         ) 
         let colors = Object.keys(dataById).reduce((out, id) => {
           out[+id] = colorScale(dataById[+id][activeColumn]) || "#000"
@@ -154,7 +154,7 @@ const OrdinalScaleColorControl = ({value,onChange}) =>
     <div> Ordinal Scale Color Control </div>
 
 
-function getColorScale(domain, numBins=5, color='Reds') {
+function getColorScale(domain, numBins=5, color='YlOrRd') {
     return d3scale.scaleThreshold()
         .domain(ckmeans(domain,Math.min(numBins,domain.length)))
         .range(getColorRange(numBins,color));
