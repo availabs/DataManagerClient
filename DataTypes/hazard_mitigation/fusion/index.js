@@ -110,7 +110,7 @@ const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Mat
   return (
     <div>
       <div className={`overflow-hidden border-2 border-${isValid ? `green-300` : `red-200`}`}>
-        <i className={`text-sm ${isValid ? `text-[#1dff6a]` : `text-red-900`}`}> {isValid ? `Valid` : `Invalid`} with tolerance {tolerance}</i>
+        <i className={`text-sm ${isValid ? `text-[#46951a]` : `text-red-900`}`}> {isValid ? `Valid` : `Invalid`} with tolerance {tolerance}</i>
 
         <div className={`flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6`}>
           {

@@ -32,9 +32,9 @@ class EALChoroplethOptions extends LayerContainer {
       name: "compare",
       type: "dropdown",
       multi: false,
-      value: "avail_swd_eal",
+      value: "avail_eal",
       domain: [
-        { key: "avail_swd_eal", label: "Avail EAL" },
+        { key: "avail_eal", label: "Avail EAL" },
       ],
       valueAccessor: d => d.key,
       accessor: d => d.label
