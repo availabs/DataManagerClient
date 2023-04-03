@@ -163,7 +163,8 @@ const RenderComparativeStats = ({data = []}) => {
           columns={
             cols.map(col => ({
               Header: col,
-              accessor: (c) => col === 'disaster_number' ? c[col] : fnum(c[col]),
+              accessor: col,
+              Cell: cell => col === 'disaster_number' ? cell.value : fnum(cell.value),
               align: 'left'
             }))
           }
