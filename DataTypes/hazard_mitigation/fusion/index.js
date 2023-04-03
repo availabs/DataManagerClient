@@ -3,7 +3,7 @@ import Create from "./create";
 import AddVersion from "../../default/AddVersion";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
-import { useFalcor } from "../../../../../modules/avl-components/src";
+import { Table, useFalcor } from "../../../../../modules/avl-components/src";
 import get from "lodash.get";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
 import { fnum, fnumIndex } from "../../../utils/macros"
@@ -149,6 +149,33 @@ const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Mat
   );
 }
 
+const RenderComparativeStats = ({data = []}) => {
+  const cols = Object.keys((data[0] || {})).filter(c => c.includes('total') || c.includes('diff') || c === 'disaster_number')
+  return (
+    <>
+      <div
+        className={'flex flex-row py-4 sm:py-2 sm:gap-4 sm:px-6 text-lg font-md'}>
+        Breakdown
+      </div>
+
+      <div className={`py-4 sm:py-2  sm:gap-4 sm:px-6 border-b-2 max-w-5xl`}>
+        <Table
+          columns={
+            cols.map(col => ({
+              Header: col,
+              accessor: (c) => col === 'disaster_number' ? c[col] : fnum(c[col]),
+              align: 'left'
+            }))
+          }
+          data={data}
+          pageSize={10}
+        />
+
+
+      </div>
+    </>
+  )
+}
 
 const Stats = ({ source, views }) => {
   const pgEnv = useSelector(selectPgEnv);
@@ -160,15 +187,16 @@ const Stats = ({ source, views }) => {
 
   useEffect(() => {
     falcor.get(
-      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["lossByYearByDisasterNumber", "validateLosses"]]
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["lossByYearByDisasterNumber", "validateLosses", "dataSourcesBreakdown"]]
     );
   }, [activeView, compareView, pgEnv, source.source_id, falcor]);
 
   const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "lossByYearByDisasterNumber", "value"], []);
   const compareLossesActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "validateLosses", "value"], {});
+  const breakdownActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "dataSourcesBreakdown", "value"], {});
   const metadataCompareView = get(falcorCache, ["ncei_storm_events_enhanced", pgEnv, "source", source.source_id, "view", compareView, "lossByYearByDisasterNumber", "value"], []);
   const { processed_data: chartDataActiveView, disaster_numbers } = ProcessDataForMap(metadataActiveView);
-  console.log(compareLossesActiveView)
+  console.log(breakdownActiveView)
   return (
     <>
       <div key={"versionSelector"}
@@ -215,6 +243,10 @@ const Stats = ({ source, views }) => {
               />
           </div>
       }
+
+      <div className={`pt-4`}>
+        <RenderComparativeStats data={breakdownActiveView} />
+      </div>
 
       <div className={`pt-4`}>
         <RenderValidation data={compareLossesActiveView} />
