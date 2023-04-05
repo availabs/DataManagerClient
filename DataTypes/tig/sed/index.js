@@ -15,12 +15,26 @@ const TigSedConfig = {
   map: {
     name: "Map",
     path: "/map",
-    component: (props) => <MapPage {...props} MapFilter={SedMapFilter} />,
+    component: (props) => 
+      <MapPage 
+        {...props} 
+        MapFilter={SedMapFilter} 
+      />
   },
   table: {
     name: "Table",
     path: "/table",
-    component: (props) => <Table {...props}  transform={SedTableTransform} TableFilter={SedTableFilter}/>,
+    component: (props) =>
+      <Table 
+        {...props}  
+        transform={SedTableTransform} 
+        TableFilter={SedTableFilter}
+      />,
+  },
+  chart: {
+    name: "Chart",
+    path: "/chart",
+    component: (props) => <div>Chart Goes Here</div>,
   },
   sourceCreate: {
     name: "Create",
