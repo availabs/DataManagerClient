@@ -55,7 +55,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsDL, type: 'ofd'});
+            await getSrcViews({rtPfx, setVersions: setVersionsDL, type: 'disaster_loss_summary'});
             await getSrcViews({rtPfx, setVersions: setVersionsNCEIE, type: 'ncei_storm_events_enhanced'});
         }
         fetchData();
@@ -63,8 +63,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     return (
         <div className='w-full'>
-            {RenderVersions({value: viewDL, setValue: setViewDL, versions: versionsDL, type: 'public_assistance_funded_projects_details_v1'})}
-            {RenderVersions({value: viewNCEIE, setValue: setViewNCEIE, versions: versionsNCEIE, type: 'individuals_and_households_program_valid_registrations_v1'})}
+            {RenderVersions({value: viewDL, setValue: setViewDL, versions: versionsDL, type: 'Open Fema Data'})}
+            {RenderVersions({value: viewNCEIE, setValue: setViewNCEIE, versions: versionsNCEIE, type: 'NCEI Enhanced'})}
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
