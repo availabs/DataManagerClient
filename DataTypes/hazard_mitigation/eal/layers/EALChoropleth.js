@@ -147,7 +147,7 @@ class EALChoroplethOptions extends LayerContainer {
   fetchData(falcor, props) {
     const pgEnv = 'hazmit_dama',
       source_id = 229,
-      view_id = 305;
+      view_id = 511;
     return falcor.get(
       ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid']
     ).then(d => {

@@ -8,7 +8,7 @@ export const fnumIndex = (d) => {
   } else if (d >= 1000) {
     return `${parseInt(d / 1000)} K`;
   } else {
-    return `${d}`;
+    return typeof d === 'object' ?  `` : `${parseInt(d)}`;
   }
 };
 

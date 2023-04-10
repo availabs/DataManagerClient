@@ -23,24 +23,54 @@ const RenderVersions = (domain, value, onchange) => (
 );
 
 const ProcessDataForMap = (data) => React.useMemo(() => {
-    const years = [...new Set(data.map(d => d.year))];
-    const disaster_numbers = new Set();
-    const processed_data = years.map(year => {
-        const lossData = data
-          .filter(d => d.year === year)
-          .reduce((acc, d) => {
-              disaster_numbers.add(d.disaster_number);
-              return {
-                  ...acc, ...{
-                      [`${d.disaster_number}_pd`]: d.fusion_property_damage,
-                      [`${d.disaster_number}_cd`]: d.fusion_crop_damage
-                  }
-              }
-          }, {});
-        return { year, ...lossData };
-    });
+  const years = [...new Set(data.map(d => d.year))];
+  const disaster_numbers = new Set(['swd']);
+  const swdTotal = {swd_tpd: 0, swd_tcd: 0, swd_ttd: 0};
+  const ofdTotal = {ofd_tpd: 0, ofd_tcd: 0, ofd_ttd: 0};
 
-    return {processed_data, disaster_numbers: [...disaster_numbers]}
+  const processed_data = years.map(year => {
+    const swdTotalPerYear = {swd_pd: 0, swd_cd: 0, swd_td: 0};
+    const ofdTotalPerYear = {ofd_pd: 0, ofd_cd: 0, ofd_td: 0};
+
+    const lossData = data
+      .filter(d => d.year === year)
+      .reduce((acc, d) => {
+        const tmpDn = d.disaster_number;
+        const tmpPd = +d.fusion_property_damage || 0,
+          tmpCd =  +d.fusion_crop_damage || 0,
+          tmptd = tmpPd + tmpCd + (+d.swd_population_damage || 0);
+
+        if(tmpDn.includes('SWD')){
+          swdTotalPerYear.swd_pd += tmpPd;
+          swdTotalPerYear.swd_cd += tmpCd;
+          swdTotalPerYear.swd_td += tmptd;
+
+          swdTotal.swd_tpd += tmpPd;
+          swdTotal.swd_tcd += tmpCd;
+          swdTotal.swd_ttd += tmptd;
+        }else{
+          disaster_numbers.add(tmpDn);
+          ofdTotalPerYear.ofd_pd += tmpPd;
+          ofdTotalPerYear.ofd_cd += tmpCd;
+          ofdTotalPerYear.ofd_td += tmptd;
+
+          ofdTotal.ofd_tpd += tmpPd;
+          ofdTotal.ofd_tcd += tmpCd;
+          ofdTotal.ofd_ttd += tmptd;
+        }
+
+        return {
+          ...acc, ...{
+            [`${tmpDn}_pd`]: (acc[[`${tmpDn}_pd`]] || 0) + tmpPd,
+            [`${tmpDn}_cd`]: (acc[`${tmpDn}_cd`] || 0) + tmpCd,
+            [`${tmpDn}_td`]: (acc[`${tmpDn}_td`] || 0) + tmptd
+          }
+        };
+      }, {});
+    return { year, ...lossData, ...swdTotalPerYear, ...ofdTotalPerYear };
+  });
+
+  return { processed_data,  disaster_numbers: [...disaster_numbers] };
 }, [data]);
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
@@ -188,16 +218,17 @@ const Stats = ({ source, views }) => {
 
   useEffect(() => {
     falcor.get(
-      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["lossByYearByDisasterNumber", "validateLosses", "dataSourcesBreakdown"]]
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], 'total', ["lossByYearByDisasterNumber"]],
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["validateLosses", "dataSourcesBreakdown"]]
     );
   }, [activeView, compareView, pgEnv, source.source_id, falcor]);
 
-  const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "lossByYearByDisasterNumber", "value"], []);
+  const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, 'total', "lossByYearByDisasterNumber", "value"], []);
   const compareLossesActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "validateLosses", "value"], {});
   const breakdownActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "dataSourcesBreakdown", "value"], {});
   const metadataCompareView = get(falcorCache, ["ncei_storm_events_enhanced", pgEnv, "source", source.source_id, "view", compareView, "lossByYearByDisasterNumber", "value"], []);
   const { processed_data: chartDataActiveView, disaster_numbers } = ProcessDataForMap(metadataActiveView);
-  console.log(breakdownActiveView)
+  console.log(metadataActiveView)
   return (
     <>
       <div key={"versionSelector"}
@@ -229,7 +260,7 @@ const Stats = ({ source, views }) => {
               <BarGraph
                 key={"numEvents"}
                 data={chartDataActiveView}
-                keys={disaster_numbers.map(dn => `${dn}_pd`)}
+                keys={disaster_numbers.map(dn => `${dn}_td`)}
                 indexBy={"year"}
                 axisBottom={d => d}
                 axisLeft={{ format: fnumIndex, gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
@@ -238,7 +269,7 @@ const Stats = ({ source, views }) => {
                 hoverComp={{
                     HoverComp: HoverComp,
                     valueFormat: fnumIndex,
-                    keyFormat: k => k.replace('_pd', '').replace('_cd', '')
+                    keyFormat: k => k.replace('_td', '')
                 }}
                 groupMode={"stacked"}
               />
