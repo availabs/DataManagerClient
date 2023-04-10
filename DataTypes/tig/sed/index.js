@@ -4,9 +4,10 @@ import React from "react";
 import MapPage from "../../gis_dataset/pages/Map";
 import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
+import Chart from './chart';
 
-
-import {SedMapFilter, SedTableFilter, SedTableTransform} from './sedCustom'
+import {SedMapFilter, SedTableFilter, SedTableTransform} from './sedCustom';
+import {SedTableFilter2, SedTableTransform2 }  from './sedCustom2';
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
 
@@ -34,7 +35,7 @@ const TigSedConfig = {
   chart: {
     name: "Chart",
     path: "/chart",
-    component: (props) => <div>Chart Goes Here</div>,
+    component: (props) => <Chart {...props}  transform={SedTableTransform2} TableFilter={SedTableFilter2} />, 
   },
   sourceCreate: {
     name: "Create",
