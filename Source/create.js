@@ -128,7 +128,7 @@ const SourceCreate = ({baseUrl}) => {
                         setSource({ ...source, type: e.target.value,})
                       }}>
                         <option value="" disabled >Select your option</option>
-                        {Object.keys(dataTypes)
+                        {Object.keys(dataTypes || [])
                           .filter(k => dataTypes[k].sourceCreate)
                           .map(k => <option key={k} value={k} className='p-2'>{k}</option>)
                         }
