@@ -9,10 +9,11 @@ import { AvlMap } from "modules/avl-maplibre/src"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 import config from 'config.json'
+import { DAMA_HOST } from 'config'
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 
 
-const TILEHOST = 'https://tig22.nymtc.org/dama/tiles'
+const TILEHOST = DAMA_HOST + '/tiles'
 
 
 const ViewSelector = ({views}) => {
@@ -41,7 +42,7 @@ const ViewSelector = ({views}) => {
   )
 }
 // import { getAttributes } from 'pages/DataManager/components/attributes'
-const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
+const DefaultMapFilter = ({source, filters, setFilters}) => {
   const variables = get(source,'metadata',[])
     .filter(d => ['number'].includes(d.type))
     .sort((a,b) => a.name - b.name)
@@ -53,8 +54,8 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
       <div className='flex-1'>
         <select  
             className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-            value={activeVar}
-            onChange={(e) => setActiveVar(e.target.value)}
+            value={filters?.activeVar?.value}
+            onChange={(e) => setFilters({'activeVar' :{ value: e.target.value}})}
           >
             <option  className="ml-2  truncate" value={null}>
               none    
@@ -96,7 +97,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
   //   ({...ts, ...get(mapData, `symbology`, {})})
   // )),[mapData])
 
-  console.log('render map page', mapData, tempSymbology)
+  //console.log('render map page', mapData, tempSymbology)
   
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -300,7 +301,7 @@ const Map = ({layers,tempSymbology}) => {
                40.79
             ],
             styles: [
-                config.google_streets_style,
+                //config.google_streets_style,
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },
