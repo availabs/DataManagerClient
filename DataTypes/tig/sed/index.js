@@ -8,9 +8,10 @@ import Chart from './chart';
 
 import {SedMapFilter, SedTableFilter, SedTableTransform} from './sedCustom';
 import {SedTableFilter2, SedTableTransform2 }  from './sedCustom2';
+import dbCols from './dbCols.json'
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
-
+//console.log('dbCols', dbCols)
 
 const TigSedConfig = {
   map: {
@@ -39,12 +40,12 @@ const TigSedConfig = {
   },
   sourceCreate: {
     name: "Create",
-    component: CreatePage,
+    component: (props) => <CreatePage {...props} databaseColumnNames={dbCols} />,
   },
   gisDatasetUpdate: {
     name: "Upload",
     path: "/gisDatasetUpdate",
-    component: CreatePage,
+    component: (props) => <CreatePage {...props} />,
   }
 };
 

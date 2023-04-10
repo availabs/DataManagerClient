@@ -1,4 +1,5 @@
 import get from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 
 
 export function reducer(state, action) {
@@ -16,9 +17,11 @@ export function reducer(state, action) {
     const { tableDescriptor } = state;
     const oldColName = get(tableDescriptor, ["columnTypes", rowIdx, "col"]);
 
+    console.log('update_dbColName', action.payload)
+
     if (oldColName === newColName) { return state; }
 
-    const newTblDscr = { ...tableDescriptor };
+    const newTblDscr = cloneDeep(tableDescriptor)
     newTblDscr.columnTypes = tableDescriptor.columnTypes.slice();
     newTblDscr.columnTypes[rowIdx] = {
       ...newTblDscr.columnTypes[rowIdx],

@@ -67,6 +67,8 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
     databaseColumnNames 
   } = state;
 
+  //console.log('databaseColumnNames', databaseColumnNames)
+
   const [omittedFields, setOmittedFields] = useState(null);
   const [defaultMappings, setDefaultMappings] = useState(null);
 
@@ -79,6 +81,8 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
       acc[key] = col || null;
       return acc;
     }, {});
+
+  console.log('gisDatasetFieldNamesToDbColumns', gisDatasetFieldNamesToDbColumns)
 
   useEffect(() => {
     if (defaultMappings === null && gisDatasetFieldNamesToDbColumns) {
@@ -116,14 +120,23 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
     : FreeFormColumnNameInput;
 
   const assignedColNamesSet = new Set(
-    Object.values(gisDatasetFieldNamesToDbColumns).filter(Boolean)
+    Object.values(gisDatasetFieldNamesToDbColumns)
+    .filter(Boolean)
+    .filter(k => databaseColumnNames &&
+        databaseColumnNames.includes(k)
+    )
   );
+
+  console.log('assignedColNamesSet', assignedColNamesSet)
+
 
   const availableDbColNames =
     databaseColumnNames &&
     databaseColumnNames
       .filter((c) => !assignedColNamesSet.has(c))
       .filter(Boolean);
+
+  console.log('databaseColumnNames', availableDbColNames, databaseColumnNames ? 'yes' : 'no')
 
   return (
     <div>
@@ -135,7 +148,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
           <thead>
             <tr>
               <th className="text-center" style={{ paddingRight: "40px" }}>
-                GIS Dataset Field Name
+                Upload File Columns
               </th>
               <th className="text-center">Database Column Name</th>
               <th className="text-center">Omit</th>
@@ -159,13 +172,13 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
                     publishStatus,
                     field: key,
                     col,
-                    onChange: debounce((e) => {
-                      const value = e.target ? e.target.value : e.value;
-
+                    onChange: (e) => {
+                      const value = e.target ? e.target.value : e;
+                      console.log('onChange', e)
                       dispatch(
                         {type:'update_dbColName', payload: {rowIdx, colName: value }}
                       );
-                    }, 500),
+                    },
                   }}
                 />
               );
