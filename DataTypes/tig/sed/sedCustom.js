@@ -22,14 +22,19 @@ const sedVars = {
 
 const years = ['10','17','20','25','30','35','40','45','50','55']
 
-const SedMapFilter = ({source, activeVar, setActiveVar}) => {
+const SedMapFilter = ({source, filters, setFilters}) => {
+  let activeVar = useMemo(() => get(filters, 'activeVar.value',''),[filters])
   let varType = useMemo(() => typeof activeVar === 'string' ? activeVar.substring(0,activeVar.length-3) : '',[activeVar])
   let year = useMemo(() => typeof activeVar === 'string' ? activeVar.slice(-2) : '10' ,[activeVar])
 
   React.useEffect(() => {
     console.log('SedMapFilter', activeVar)
     if(!activeVar) {
-      setActiveVar('totpop_10')
+      setFilters({
+        ...filters,
+        activeVar: { value: 'totpop_10'}
+      })
+
     }
   },[])
   console.log(varType, year,activeVar)
@@ -41,7 +46,10 @@ const SedMapFilter = ({source, activeVar, setActiveVar}) => {
         <select  
             className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
             value={varType}
-            onChange={(e) => setActiveVar(`${e.target.value}_${year}`)}
+            onChange={(e) => setFilters({
+              ...filters,
+              activeVar: { value: `${e.target.value}_${year}`}
+            })}
           >
             <option  className="ml-2  truncate" value={null}>
               none    
@@ -60,7 +68,10 @@ const SedMapFilter = ({source, activeVar, setActiveVar}) => {
         <select  
             className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
             value={year}
-            onChange={(e) => setActiveVar(`${varType}_${e.target.value}`)}
+            onChange={(e) => setFilters({
+              ...filters,
+              activeVar: { value: `${varType}_${e.target.value}`}
+            })}
           >
             {years
               .map((k,i) => (
@@ -117,17 +128,19 @@ const SedTableTransform = (tableData, attributes,filters) => {
   
   const columns =  [{
       Header: 'TAZ',
-      accessor: 'taz_2012'
+      accessor: 'taz'
   },
-  {
-      Header: 'COUNTY',
-      accessor: 'COUNTY_NAM'
-  }]
+  // {
+  //     Header: 'COUNTY',
+  //     accessor: 'COUNTY_NAM'
+  // }
+  ]
 
   years.forEach(y => {
     columns.push({
       Header: `20${y}`,
-      accessor: `${activeVar}_${y}`
+      accessor: `${activeVar}_${y}`,
+      Cell: ({ value }) => Math.round(value).toLocaleString()
     })
   })
 

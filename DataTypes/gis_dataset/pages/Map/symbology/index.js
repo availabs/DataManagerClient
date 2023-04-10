@@ -6,8 +6,7 @@ import cloneDeep from 'lodash/cloneDeep'
 
 import attributeControls from './controls'
 function reducer(state, action) {
-	console.log('reducer', state, action)
-  if (action.type === 'update') {
+	if (action.type === 'update') {
     return merge(cloneDeep(state), cloneDeep(action.payload));
   }
   return state

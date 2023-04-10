@@ -82,7 +82,10 @@ const TablePage = ({ source, views, user, transform = identityMap, filterData = 
       console.log('dataLength', dataLength)
       let maxData = Math.min(dataLength, 10000)
       console.time('getViewData', maxData)
-      falcor.chunk(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'databyIndex', [...Array(maxData).keys()], attributes])
+      falcor.chunk(
+        ['dama',pgEnv, 'viewsbyId' ,activeViewId, 'databyIndex', [...Array(maxData).keys()], attributes],
+        {chunkSize:500}
+        )
       .then(d => {
         console.timeEnd('getViewData', maxData)
       })
@@ -129,6 +132,7 @@ const TablePage = ({ source, views, user, transform = identityMap, filterData = 
         <Table
         data={data}
         columns={columns}
+        pageSize={50}
       />
        {/* <pre>
           {JSON.stringify(attributes,null,3)}
