@@ -169,7 +169,7 @@ const RenderComparativeStats = ({data = []}) => {
             }))
           }
           data={data}
-          pageSize={10}
+          pageSize={100}
         />
 
 
