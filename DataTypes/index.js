@@ -52,9 +52,6 @@ const DataTypes = {
   // hazmit types: geo
   zone_to_county,
   tiger_2017,
-  open_fema_data,
-  disaster_declarations_summaries_v2: open_fema_data,
-
 
   // hazmit types: swd
   ncei_storm_events,

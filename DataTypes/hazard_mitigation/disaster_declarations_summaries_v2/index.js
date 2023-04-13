@@ -3,7 +3,7 @@ import Create from './create'
 import {useFalcor} from "modules/avl-components/src";
 import get from "lodash.get";
 import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../store";
+import { selectPgEnv } from "../../../store";
 
 const Table = ({source}) => {
   return <div> Table View </div>  
@@ -11,47 +11,104 @@ const Table = ({source}) => {
 
 
 const RenderNumRowsByMonth = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => {
-  console.log('comes here', get(metadataActiveView, ['incidentByMonth', 'value'], []), metadataActiveView)
+  console.log('comes here', get(metadataActiveView, ['countbymonth', 'value'], []), metadataActiveView)
   return (
   <>
     <div
-      className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
-      Number of Disaster by Year
+      className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-2 sm:px-6 text-lg font-md'}>
+      Number of Disaster by Month
     </div>
 
     <div>
       <div>
-        <div className="py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b-2">
+        <div className="py-4 sm:py-2 sm:grid sm:grid-cols-11 sm:gap-1 sm:px-6 border-b-2">
           <dt className="text-sm font-medium text-gray-600">
-            Year
+            Month
           </dt>
           <dd className="text-sm font-medium text-gray-600 ">
-            Disaster Count {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+          volcaniceruption 
           </dd>
-
-          {
-            compareMode ? (
-              <dd className="text-sm font-medium text-gray-600 ">
-              Disaster Count {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-              </dd>
-            ) : null
-          }
+          <dd className="text-sm font-medium text-gray-600 ">
+            Flood
+          </dd>
+         
+          <dd className="text-sm font-medium text-gray-600 ">
+          Earthquake
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          severeicestorm
+          </dd>
+         
+          <dd className="text-sm font-medium text-gray-600 ">
+          Freezing
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          Drought
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          Tsunami
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          Fire
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          Typhoon
+          </dd>
+          <dd className="text-sm font-medium text-gray-600 ">
+          Damleveebreak
+          </dd>
+         
+         
+          
+          
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
           <dl className="sm:divide-y sm:divide-gray-200">
 
             {
-              metadataActiveView
+              get(metadataActiveView, ['countbymonth', 'value'], [])
                 .map((col, i) => (
-                  <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-11 sm:gap-1 sm:px-6">
                     <dt className="text-sm text-gray-900">
-                      {col.fy_declared}
+                      {col.month}
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {col.disaster_number}
+                      {col.volcaniceruption}
                     </dd>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                      {col.flood}
+                    </dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                  {col.earthquake}
+                </dd>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                {col.severeicestorm}
+                </dd>
+             
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+               {col.freezing}
+              </dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+              {col.drought}
+              </dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+              {col.tsunami}
+            </dd>
+            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+              {col.fire}
+            </dd>
 
-                    
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                      {col.typhoon}
+                    </dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+              {col.damleveebreak}
+            </dd>
+           
+            
+                   
+                   
+
                   </div>
                 ))}
 
@@ -61,6 +118,7 @@ const RenderNumRowsByMonth = ({metadataActiveView, metadataCompareView, activeVi
     </div>
   </>
 )}
+
 
 const RenderNumRowsByYear = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => {
   console.log('comes here', get(metadataActiveView, ['ddCount', 'value'], []), metadataActiveView)
@@ -93,7 +151,7 @@ const RenderNumRowsByYear = ({metadataActiveView, metadataCompareView, activeVie
           <dl className="sm:divide-y sm:divide-gray-200">
 
             {
-              metadataActiveView
+              get(metadataActiveView, ['count', 'value'], [])
                 .map((col, i) => (
                   <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm text-gray-900">
@@ -125,13 +183,16 @@ const Stats = ({source, views}) => {
   useEffect(() => {
       falcor.get(
           ['dama', pgEnv, 'sources', 'byId', source.source_id, 'views', 'invalidate'],
-          ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'count']
+          ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view',
+           [activeView, compareView], 
+           ['count', 'countbymonth']]
       )
   }, [activeView, compareView, pgEnv, source.source_id, falcor])
 
   console.log('fc?', falcorCache)
-  const metadataActiveView = get(falcorCache, ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view', activeView, 'count', 'value'], []);
-  const metadataCompareView = get(falcorCache, ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view', compareView, 'count', 'value'], []);
+  const metadataActiveView = get(falcorCache, ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view', activeView]);
+  const metadataCompareView = get(falcorCache, ['disaster_declaration_summary', pgEnv, 'source', source.source_id, 'view', compareView]);
+
 
   console.log('md', metadataActiveView)
   if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
@@ -141,7 +202,10 @@ const Stats = ({source, views}) => {
       {
         !metadataActiveView || metadataActiveView.length === 0 ? <div> Stats Not Available </div> :
           <>
-            <RenderNumRowsByYear metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+           
+          <RenderNumRowsByYear metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
+          activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
+            <RenderNumRowsByMonth metadataActiveView={metadataActiveView} metadataCompareView={metadataCompareView}
                                  activeView={activeView} compareView={compareView} compareMode={compareMode} views={views} />
             
           </>
