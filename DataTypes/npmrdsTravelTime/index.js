@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 
 import { Select } from "modules/avl-components/src";
-//import { LineGraph } from "modules/avl-graph/src";
+// import { LineGraph } from "modules/avl-graph/src";
 
 const availableStats = [
   "total_tmcs",

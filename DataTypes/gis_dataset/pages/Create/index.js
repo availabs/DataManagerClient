@@ -16,7 +16,10 @@ import SelectLayerComp from './selectLayer'
 import SchemaEditorComp from './schemaEditor'
 import PublishComp from './publish'
 
-export default function UploadGisDataset({ source={}, user={} }) {
+const BlankComponent = () => <></>  
+
+
+export default function UploadGisDataset({ source={}, user={}, CustomAttributes=BlankComponent, databaseColumnNames=null}) {
     
   const { name: damaSourceName, source_id: sourceId } = source;
   const userId = get(user,`id`, null)
@@ -29,6 +32,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
     damaSourceName: damaSourceName,
     userId: 7,
     etlContextId: null,
+    CustomAttributes: {},
     // maxSeenEventId: null,
     damaServerPath: `${DAMA_HOST}/dama-admin/${pgEnv}`,
     
@@ -47,7 +51,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
     layerAnalysis: null,
 
     // schemaEditor state
-    databaseColumnNames: null,
+    databaseColumnNames: databaseColumnNames,
     tableDescriptor: null,
 
     // publish state
@@ -89,6 +93,7 @@ export default function UploadGisDataset({ source={}, user={} }) {
   return (
     <div>
       <div>
+        <CustomAttributes state={state} dispatch={dispatch} />
         <UploadFileComp state={state} dispatch={dispatch} />
         <SelectLayerComp state={state} dispatch={dispatch} />
         <SchemaEditorComp state={state} dispatch={dispatch} />

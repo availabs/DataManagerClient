@@ -1,6 +1,3 @@
-import React from "react";
-
-
 import MapPage from "./pages/Map";
 import CreatePage from "./pages/Create";
 import Table from "./pages/Table";
@@ -29,8 +26,7 @@ const GisDatasetConfig = {
     name: "Load New View",
     path: "/gisDatasetUpdate",
     component: CreatePage,
-  },
-  pwrUsrOnly: false,
+  }
 };
 
 export default GisDatasetConfig;

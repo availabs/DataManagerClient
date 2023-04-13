@@ -36,17 +36,17 @@ const Map = ({layers}) => {
       return layers.map(l => FreightAtlasLayer(l))
     },[layers])
 
-    console.log('map_layers',map_layers)
+    // console.log('map_layers',map_layers)
     
     return (
         
         <div className='w-full h-full'>   
-            <AvlMap
-                accessToken={ config.MAPBOX_TOKEN }
-                mapOptions={ mapOptions }
-                layers={map_layers}
-                CustomSidebar={() => <div/>}
-            />
+          <AvlMap
+            accessToken={ config.MAPBOX_TOKEN }
+            mapOptions={ mapOptions }
+            layers={map_layers}
+            CustomSidebar={() => <div/>}
+          />
         </div>
        
     )

@@ -12,7 +12,7 @@ import { selectPgEnv } from "pages/DataManager/store"
 
 const HoverComp = ({ data, layer }) => {
   const { falcor, falcorCache } = useFalcor() 
-  const {layerName, version, attributes, activeViewId} = layer 
+  const { attributes, activeViewId } = layer 
   const pgEnv = useSelector(selectPgEnv);
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
@@ -70,7 +70,7 @@ class GISDatasetLayer extends LayerContainer {
     layers: this.layers.map(d => d.id),
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
-      console.log(feature)
+      //console.log(feature)
       
       let data = [feature.id,  layerId]
       
@@ -91,66 +91,67 @@ class GISDatasetLayer extends LayerContainer {
   }
 
   fetchData(falcor) {
-    if(this.props.activeVariable) {
-
-      const {
-        activeVariable,
-        activeViewId,
-        pgEnv
-      } = this.props
-      // console.log('fetchData', activeViewId, activeVariable)
-      console.time(`GisMapLayer ${activeViewId} ${activeVariable}`)
-      return this.falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
-        .then(d => {
-          let length = get(d, 
-            ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'], 
-          0)
-          return this.falcor.chunk([
-            'dama',
-            pgEnv,
-            'viewsbyId',
-            activeViewId,
-            'databyIndex', 
-            [...Array(length).keys()],
-            activeVariable
-          ])
-        }).then(d => {
-          console.timeEnd(`GisMapLayer ${activeViewId} ${activeVariable}`) 
-        })
-    }
-    //console.log('fetchData empty')
-    
     return Promise.resolve()
   }
 
   render(map) {
     const {
-      activeVariable,
+      filters,
       activeViewId,
-      pgEnv
+      symbology
     } = this.props
-    if(activeVariable) {
-      const falcorCache = this.falcor.getCache()
-      const dataById = get(falcorCache, 
-        ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
-      {})
-      
-      const domainData = Object.values(dataById).map( d => d[activeVariable] )
-      
-      if(domainData.length > 0){
-        let colorScale = this.getColorScale(domainData)
-        let colors = Object.keys(dataById).reduce((out, id) => {
-          out[+id] = colorScale(dataById[+id][activeVariable])
-          return out
-        },{})
+
+    const activeVariable = get(filters,'activeVar.value', '')
+    console.log('renderLayer', activeViewId, activeVariable)
+
+    Object.keys(symbology)
+      .filter(paintProperty => {
+        let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
+          || get(symbology, `[${paintProperty}][default]`, false)
+        // console.log('filter',
+        //   value
+        // )
+        return value 
+      })
+      .forEach(paintProperty => {
+        let value = get(symbology, `[${paintProperty}][${activeVariable}][value]`, '')
+          || get(symbology, `[${paintProperty}][default][value]`, '')
+
+       
+        //console.log('paintProperty',paintProperty, value)
+         
         map.setPaintProperty(
           this.layers[0].id, 
-          "fill-color",
-          ["get",  ["to-string",["get","ogc_fid"]], ["literal", colors]]
-          
+          paintProperty,
+          value
         )
-      }
-    }
+      })
+    // if(activeVariable) {
+    //   const falcorCache = this.falcor.getCache()
+    //   const dataById = get(falcorCache, 
+    //     ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
+    //   {})
+      
+    //   const domainData = Object.values(dataById).map( d => d[activeVariable] )
+      
+    //   if(domainData.length > 0){
+    //     let colorScale = this.getColorScale(domainData) 
+    //     let colors = Object.keys(dataById).reduce((out, id) => {
+    //       out[+id] = colorScale(dataById[+id][activeVariable]) || "#000"
+    //       return out
+    //     },{})
+    //     console.log(`${this.layers[0].type}-color`, this.layers[0].id, 
+    //       Object.keys(colors).filter(k => !colors[k])
+    //       .forEach(k => console.log(k, colors[k]))
+    //     )
+    //     map.setPaintProperty(
+    //       this.layers[0].id, 
+    //       `${this.layers[0].type}-color`,
+    //       ["get",  ["to-string",["get","ogc_fid"]], ["literal", colors]]
+          
+    //     )
+    //   }
+    // }
   }
    
 }
@@ -158,3 +159,14 @@ class GISDatasetLayer extends LayerContainer {
 const GISDatasetLayerFactory = (options = {}) => new GISDatasetLayer(options);
 export default GISDatasetLayerFactory
 
+
+// function getPropertyByType (type) {
+//   switch (type) {
+//   case 'fill':
+//       return 'fill-color';
+//   case: 'line':
+//     return 'line-color';
+//   case: 
+  
+//   }
+// }

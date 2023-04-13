@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFalcor, withAuth, Table } from 'modules/avl-components/src'
 import get from 'lodash.get'
 import { useParams, useHistory } from 'react-router-dom'
@@ -34,10 +34,23 @@ const ViewSelector = ({views}) => {
     </div>
   )
 }
+
+const DefaultTableFilter = () => <div />
+
+const identityMap = (tableData, attributes) => {
+  return {
+    data: tableData,
+    columns: attributes.map(d => ({
+      Header: d,
+      accessor: d
+    }))
+  }
+}
 // import { getAttributes } from 'pages/DataManager/components/attributes'
-const TablePage = ({ source, views, user}) => {
+const TablePage = ({ source, views, user, transform = identityMap, filterData = {}, TableFilter=DefaultTableFilter }) => {
   const { viewId } = useParams()
   const { falcor, falcorCache } = useFalcor()
+  const [ filters, setFilters ] = useState(filterData)
   const pgEnv = useSelector(selectPgEnv);
   
   const activeView = React.useMemo(() => {
@@ -45,9 +58,7 @@ const TablePage = ({ source, views, user}) => {
   },[views,viewId])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [activeView])
   
-  console.log('activeViewId', activeViewId)
   React.useEffect(() => {
-    // dama[{keys:pgEnvs}].views.byId[{keys:damaViewIds}].data.length
     console.time('getviewLength')
     falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
     .then(d => {
@@ -67,12 +78,14 @@ const TablePage = ({ source, views, user}) => {
 
   // const metadata = get(source,'metadata',[])
   React.useEffect(() => {
-    // dama[{keys:pgEnvs}].views.byId[{keys:damaViewIds}].data.length
     if(dataLength > 0) {
       console.log('dataLength', dataLength)
       let maxData = Math.min(dataLength, 10000)
       console.time('getViewData', maxData)
-      falcor.chunk(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'databyIndex', [...Array(maxData).keys()], attributes])
+      falcor.chunk(
+        ['dama',pgEnv, 'viewsbyId' ,activeViewId, 'databyIndex', [...Array(maxData).keys()], attributes],
+        {chunkSize:500}
+        )
       .then(d => {
         console.timeEnd('getViewData', maxData)
       })
@@ -98,24 +111,28 @@ const TablePage = ({ source, views, user}) => {
     return data
   },[pgEnv, activeViewId, falcorCache, dataLength])
 
+  const { data, columns } = React.useMemo(() => 
+    transform(tableData, attributes, filters),
+  [tableData,attributes,transform, filters])
 
-  // console.log('dataLength', dataLength)
+
+  console.log('dataLength', dataLength)
 
   return (
     <div > 
       <div className='flex'>
-        <div className='flex-1 pl-3 pr-4 py-2'>Table View  {viewId}</div>
+        <div className='flex-1 pl-3 pr-4 py-2'>Table View</div>
+        <TableFilter
+          filters={filters}
+          setFilters={setFilters}
+        />
         <ViewSelector views={views} />
       </div>
       <div className='max-w-6xl'>
         <Table
-        data={tableData}
-        columns={
-          attributes.map(d => ({
-            Header: d,
-            accessor: d
-          }))
-        }
+        data={data}
+        columns={columns}
+        pageSize={50}
       />
        {/* <pre>
           {JSON.stringify(attributes,null,3)}
