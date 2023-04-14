@@ -43,8 +43,7 @@ const ViewSelector = ({views}) => {
 }
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
-  const variables = get(source,'metadata',[])
-    .filter(d => ['number'].includes(d.type))
+  const variables = get(source,'metadata',[])?.filter(d => ['number'].includes(d.type))
     .sort((a,b) => a.name - b.name)
     .map(d => d.name)
 
@@ -60,8 +59,7 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
             <option  className="ml-2  truncate" value={null}>
               none    
             </option>
-            {variables
-              .map((v,i) => (
+            {variables?.map((v,i) => (
               <option key={i} className="ml-2  truncate" value={v}>
                 {v}
               </option>
@@ -81,7 +79,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
   //const [ activeVar, setActiveVar] = React.useState(null)
   const [ filters, setFilters ] = useState(filterData)
   const activeView = React.useMemo(() => {
-    return get(views.filter(d => d.view_id === +viewId),'[0]', views[0])
+    return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
@@ -108,8 +106,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
             activeView: activeView,
             filters,
 
-            attributes: get(source,'metadata',[])
-              .filter(d => ['integer','string','number'].includes(d.type))
+            attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
             sources: get(mapData,'sources',[]), 
@@ -255,11 +252,10 @@ const Map = ({layers,tempSymbology}) => {
         setLayerData(l => {
             // use functional setState
             // to get info about previous layerData (l)
-            let activeLayerIds = l.map(d => d.activeViewId).filter(d => d)
+            let activeLayerIds = l?.map(d => d.activeViewId)?.filter(d => d)
             //console.log('updatelayers', currentLayerIds, l, layers)
             
-            let output = layers
-                .filter(d => d)
+            let output = layers?.filter(d => d)
                 .filter(d => !activeLayerIds.includes(d.activeViewId))
                 .map(l => GISDatasetLayer(l))
 
@@ -267,7 +263,7 @@ const Map = ({layers,tempSymbology}) => {
 
             return [
               // remove layers not in list anymore
-              ...l.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)), 
+              ...l?.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)), 
               // add newly initialized layers
               ...output
             ]

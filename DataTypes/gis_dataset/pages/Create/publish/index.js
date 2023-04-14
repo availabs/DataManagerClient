@@ -33,9 +33,13 @@ export default function PublishButton({ state, dispatch }) {
     damaServerPath,
     etlContextId,
     gisUploadId,
-    userId
+    userId,
+    customViewAttributes
   } = state
 
+  console.log('====================================');
+  console.log("customViewAttributes in publish", customViewAttributes);
+  console.log('====================================');
   const { 
     text: publishButtonText, 
     color: publishButtonBgColor } = useMemo(()=> 
@@ -62,7 +66,8 @@ export default function PublishButton({ state, dispatch }) {
           tableDescriptor,
           gisUploadId,
           layerName,
-          etlContextId
+          etlContextId,
+          customViewAttributes
         };
 
         const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
