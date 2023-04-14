@@ -22,8 +22,7 @@ const ViewSelector = ({views}) => {
           value={viewId}
           onChange={(e) => history.push(`/source/${sourceId}/${page}/${e.target.value}`)}
         >
-          {views
-            .sort((a,b) => b.view_id - a.view_id)
+          {views?.sort((a,b) => b.view_id - a.view_id)
             .map((v,i) => (
             <option key={i} className="ml-2  truncate" value={v.view_id}>
               {v.version ? v.version : v.view_id}
@@ -40,7 +39,7 @@ const DefaultTableFilter = () => <div />
 const identityMap = (tableData, attributes) => {
   return {
     data: tableData,
-    columns: attributes.map(d => ({
+    columns: attributes?.map(d => ({
       Header: d,
       accessor: d
     }))
@@ -54,7 +53,7 @@ const TablePage = ({ source, views, user, transform = identityMap, filterData = 
   const pgEnv = useSelector(selectPgEnv);
   
   const activeView = React.useMemo(() => {
-    return get(views.filter(d => d.view_id === viewId),'[0]', views[0])
+    return get(views?.filter(d => d.view_id === viewId),'[0]', views[0])
   },[views,viewId])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [activeView])
   
@@ -71,8 +70,7 @@ const TablePage = ({ source, views, user, transform = identityMap, filterData = 
   },[pgEnv,activeViewId, falcorCache])
 
   const attributes = React.useMemo(() => {
-    return get(source,'metadata',[])
-      .filter(d => ['integer','string','number'].includes(d.type))
+    return get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
       .map(d => d.name)
   }, [source])
 

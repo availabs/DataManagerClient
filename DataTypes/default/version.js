@@ -238,7 +238,7 @@ const VersionEditor = withAuth(({view, user, baseUrl='/datasources'}) => {
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {Object.keys(ViewAttributes)
-            .filter(d => !['view_id','source_id', 'metadata','description', 'statistics', 'category'].includes(d))
+            .filter(d => !['view_id','source_id','description', 'statistics', 'category'].includes(d))
             .map((attr,i) => {
               let val = typeof view[attr] === 'object' ? JSON.stringify(view[attr].value) : view[attr]
               return (
@@ -310,7 +310,6 @@ export default function Version({baseUrl}) {
           viewMeta={viewMeta} 
           baseUrl={baseUrl}
         /> : ''}
-      }
     </div>
   );
 }
