@@ -149,11 +149,11 @@ class EALChoroplethOptions extends LayerContainer {
       source_id = 229,
       view_id = 511;
     return falcor.get(
-      ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid']
+      ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid', 'all']
     ).then(d => {
       console.log('data?', d.json)
       this.data = {
-        byHaz: get(d, ["json", 'comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid'], [])
+        byHaz: get(d, ["json", 'comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid', 'all'], [])
       };
 
     });
