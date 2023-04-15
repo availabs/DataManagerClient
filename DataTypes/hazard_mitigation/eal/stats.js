@@ -94,6 +94,8 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
   )
 }
 
+const processData = (data) => data.map(d => ({nri_category: d.nri_category, avail_eal: d.avail_eal, nri_eal: d.nri_eal, diff: ((d.avail_eal - d.nri_eal)/ d.nri_eal) * 100}))
+
 export const Stats = ({source, views}) => {
   const {falcor, falcorCache} = useFalcor();
   const pgEnv = useSelector(selectPgEnv);
@@ -103,16 +105,15 @@ export const Stats = ({source, views}) => {
 
   useEffect(() => {
     falcor.get(
-      ['eal', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'data'],
       ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', [activeView, compareView]]
     )
   }, [activeView, compareView, falcor, source.source_id, pgEnv])
 
   const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
   const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
-  const metadataActiveView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', activeView, 'data', 'value'], []);
-  const metadataCompareView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', compareView, 'data', 'value'], []);
-  console.log(chartComparativeStatsData)
+  const metadataActiveView = processData(chartComparativeStatsData);
+  const metadataCompareView = processData(chartComparativeStatsCompareData)
+
   // if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
 
   return (
@@ -186,39 +187,39 @@ export const Stats = ({source, views}) => {
                 EAL by Type
               </div>
               <div>
-                <div className="py-4 sm:py-2 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 border-b-2">
+                <div className={`py-4 sm:py-2 sm:grid sm:grid-cols-${compareMode ? 7 : 4} sm:gap-4 sm:px-6 border-b-2`}>
                   <dt className="text-sm font-medium text-gray-600">
                     Event Type
                   </dt>
                   <dd className="text-sm font-medium text-gray-600 ">
-                    buildings {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                    Avail EAL {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
                   </dd>
                   <dd className="text-sm font-medium text-gray-600 ">
-                    crop {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                    NRI EAL {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
                   </dd>
                   <dd className="text-sm font-medium text-gray-600 ">
-                    population {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                    % diff {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
                   </dd>
 
 
                   {
                     compareMode &&
                     <dd className="text-sm font-medium text-gray-600 ">
-                      buildings {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                      Avail EAL {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
                     </dd>
                   }
 
                   {
                     compareMode &&
                     <dd className="text-sm font-medium text-gray-600 ">
-                      crop {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                      NRI EAL {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
                     </dd>
                   }
 
                   {
                     compareMode &&
                     <dd className="text-sm font-medium text-gray-600 ">
-                      population {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                      % diff {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
                     </dd>
                   }
                 </div>
@@ -228,38 +229,38 @@ export const Stats = ({source, views}) => {
                     {
                       metadataActiveView
                         .map((col, i) => (
-                          <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6">
+                          <div key={i} className={`py-4 sm:py-5 sm:grid sm:grid-cols-${compareMode ? 7 : 4} sm:gap-4 sm:px-6`}>
                             <dt className="text-sm text-gray-900">
                               {col.nri_category}
                             </dt>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                              {fnum(col.swd_buildings)}
+                              {fnum(col.avail_eal)}
                             </dd>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                              {fnum(col.swd_crop)}
+                              {fnum(col.nri_eal)}
                             </dd>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                              {fnum(col.swd_population)}
+                              {(col.diff).toFixed(2)} %
                             </dd>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
                               {
                                 compareMode &&
                                 fnum(get(metadataCompareView
-                                  .find(row => row.nri_category === col.nri_category), 'swd_buildings'))
+                                  .find(row => row.nri_category === col.nri_category), 'avail_eal'))
                               }
                             </dd>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
                               {
                                 compareMode &&
                                 fnum(get(metadataCompareView
-                                  .find(row => row.nri_category === col.nri_category), 'swd_crop'))
+                                  .find(row => row.nri_category === col.nri_category), 'nri_eal'))
                               }
                             </dd>
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
                               {
                                 compareMode &&
-                                fnum(get(metadataCompareView
-                                  .find(row => row.nri_category === col.nri_category), 'swd_population'))
+                                `${(get(metadataCompareView
+                                  .find(row => row.nri_category === col.nri_category), 'diff')).toFixed(2)} %`
                               }
                             </dd>
                           </div>
