@@ -228,6 +228,7 @@ export const Stats = ({source, views}) => {
 
                     {
                       metadataActiveView
+                        .sort((a, b) => a.diff - b.diff)
                         .map((col, i) => (
                           <div key={i} className={`py-4 sm:py-5 sm:grid sm:grid-cols-${compareMode ? 7 : 4} sm:gap-4 sm:px-6`}>
                             <dt className="text-sm text-gray-900">

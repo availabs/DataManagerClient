@@ -88,6 +88,7 @@ class EALChoroplethOptions extends LayerContainer {
                 d.nri_category === hazard && d.geoid === feature.properties.geoid :
                 d.geoid === feature.properties.geoid),
            response = [
+             [feature.properties.geoid, ''],
             ...this.filters.compare.domain
               .map(d => [d.label, fnum(get(record, d.key))])
           ];
