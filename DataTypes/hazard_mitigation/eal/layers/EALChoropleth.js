@@ -48,7 +48,7 @@ class EALChoroplethOptions extends LayerContainer {
     type: "threshold",
     format: "0.2s",
     domain: [],
-    range: getColorRange(9, "Reds", false),
+    range: getColorRange(9, "RdYlGn", false),
     show: true
   };
 
@@ -148,9 +148,10 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   fetchData(falcor, props) {
+    console.log('fetchData', this.props)
     const pgEnv = 'hazmit_dama',
       source_id = 229,
-      view_id = 511;
+      view_id = this.props.viewId;
     return falcor.get(
       ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid', 'all']
     ).then(d => {
@@ -163,8 +164,12 @@ class EALChoroplethOptions extends LayerContainer {
 
   getColorScale(domain) {
     if(!domain.length) domain = [0, 25, 50, 75, 100];
-
-    if(this.props.paintKey === 'diff') domain = [-100, -50, 0, 50, 100, 200, 300, 500, 1000]
+    this.legend.range = getColorRange(9, "Oranges", false)
+    
+    if(this.props.paintKey === 'diff') {
+      this.legend.range = getColorRange(9, "RdYlGn", false)
+      domain = [-100, -75, -50, -25, 0, 50, 100, 500, 1000]
+    }
     this.legend.domain = ckmeans(domain,Math.min(domain.length,this.legend.range.length)).map(d => parseInt(d))
     
     // console.log("test 123", this.legend.domain, this.legend.range);

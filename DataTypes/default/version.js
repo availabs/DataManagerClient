@@ -294,23 +294,23 @@ export default function Version({baseUrl}) {
         {viewId}
       </div>
       <VersionEditor view={view} baseUrl={baseUrl} />
-      {dependencies.length > 0 ? 
+
         <RenderDeps 
           viewId={viewId} 
           dependencies={dependencies} 
           srcMeta={srcMeta} 
           viewMeta={viewMeta} 
           baseUrl={baseUrl}
-        /> : ''}
-      {dependents.length > 0 ? 
+        /> 
+     
         <RenderDependents 
           viewId={viewId}
           dependents={dependents}
           srcMeta={srcMeta} 
           viewMeta={viewMeta} 
           baseUrl={baseUrl}
-        /> : ''}
-      }
+        /> 
+      
     </div>
   );
 }
