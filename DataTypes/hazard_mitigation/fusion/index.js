@@ -126,15 +126,16 @@ const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Mat
 
   if (!Object.keys(data).length) return null;
   const isValid = compareTypes.reduce((acc, types) => {
-    return acc && compareCols.reduce((subAcc, col) => {
+    const tmp = compareCols.reduce((subAcc, col) => {
 
       const tmpRes = types.reduce((acc, type) => {
-        return !acc ? data[type][col] : acc - data[type][col];
+        return !acc ? Math.abs(data[type][col]) : Math.abs(acc - Math.abs(data[type][col]));
       }, null) < tolerance;
 
       if(!tmpRes) invalidData.push({types, col});
       return subAcc && tmpRes
     }, true)
+    return acc && tmp;
   }, true);
 
   return (
@@ -228,7 +229,7 @@ const Stats = ({ source, views }) => {
   const breakdownActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "dataSourcesBreakdown", "value"], {});
   const metadataCompareView = get(falcorCache, ["ncei_storm_events_enhanced", pgEnv, "source", source.source_id, "view", compareView, "lossByYearByDisasterNumber", "value"], []);
   const { processed_data: chartDataActiveView, disaster_numbers } = ProcessDataForMap(metadataActiveView);
-  console.log(metadataActiveView)
+
   return (
     <>
       <div key={"versionSelector"}
@@ -263,7 +264,7 @@ const Stats = ({ source, views }) => {
                 keys={disaster_numbers.map(dn => `${dn}_td`)}
                 indexBy={"year"}
                 axisBottom={d => d}
-                axisLeft={{ format: fnumIndex, gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
+                axisLeft={{ format:  d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
                 paddingInner={0.1}
                 // colors={(value, ii, d, key) => ctypeColors[key]}
                 hoverComp={{

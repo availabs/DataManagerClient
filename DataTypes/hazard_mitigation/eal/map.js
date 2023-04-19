@@ -9,9 +9,13 @@ const hazards = [
         // "all",
         "avalanche", "coastal", "coldwave", "drought", "earthquake", "hail", "heatwave", "hurricane", "icestorm", "landslide", "lightning", "riverine", "tornado", "tsunami", "volcano", "wildfire", "wind", "winterweat"
       ]
+
+const paintKeys = ['avail_eal', 'nri_eal', 'diff'];
+
 export const RenderMap = ({source, views}) => {
   //const mapOptions = ;
-  const [hazard, setHazard ] = React.useState('hurricane')
+  const [hazard, setHazard ] = React.useState('hurricane');
+  const [paintKey, setPaintKey ] = React.useState('avail_eal');
   const map_layers = useMemo(() => {
     return [
       EALFactory()
@@ -19,7 +23,7 @@ export const RenderMap = ({source, views}) => {
   },[])
 
   const p = {
-    [map_layers[0].id]: { hazard: hazard }
+    [map_layers[0].id]: { hazard: hazard, paintKey: paintKey }
   }
   //console.log('p?', p)
   return (
@@ -36,6 +40,25 @@ export const RenderMap = ({source, views}) => {
                 onChange={(e) => setHazard(e.target.value)}
               >
                 {hazards
+                  //.sort((a,b) => b - a.view_id)
+                  .map((v,i) => (
+                  <option key={i} className="ml-2  truncate" value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+        <div className='flex flex-1'>
+            <div className='py-3.5 px-2 text-sm text-gray-400'>Display : </div>
+            <div className='flex-1'>
+              <select
+                className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+                value={paintKey}
+                onChange={(e) => setPaintKey(e.target.value)}
+              >
+                {paintKeys
                   //.sort((a,b) => b - a.view_id)
                   .map((v,i) => (
                   <option key={i} className="ml-2  truncate" value={v}>

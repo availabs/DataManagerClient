@@ -73,18 +73,21 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsPBSWD, type: 'per_basis'});
-            await getSrcViews({rtPfx, setVersions: setVersionsPBFusion, type: 'per_basis_fusion'});
+            const pb_swd = await getSrcViews({rtPfx, setVersions: setVersionsPBSWD, type: 'per_basis'});
+            const pb_fusion = await getSrcViews({rtPfx, setVersions: setVersionsPBFusion, type: 'per_basis_fusion'});
             await getSrcViews({rtPfx, setVersions: setVersionsNRI, type: 'nri'});
             await getSrcViews({rtPfx, setVersions: setVersionsState, type: `tl_state`});
             await getSrcViews({rtPfx, setVersions: setVersionsCounty, type: 'tl_county'});
             await getSrcViews({rtPfx, setVersions: setVersionsNCEI, type: 'ncei_storm_events_enhanced'});
+
+            return {pb_swd, pb_fusion};
         }
-        fetchData().then(() => {
-            console.log("???", versionsPBSWD, versionsPBFusion, versionsNCEI)
+        fetchData()
+          .then(({pb_swd, pb_fusion}) => {
+            console.log("???", {pb_swd, pb_fusion})
             setVersionsPB({
-                sources: [...versionsPBSWD.sources, ...versionsPBFusion.sources],
-                views: [...versionsPBSWD.views, ...versionsPBFusion.views]
+                sources: [...pb_swd.sources, ...pb_fusion.sources],
+                views: [...pb_swd.views, ...pb_fusion.views]
             })
         });
     }, [rtPfx])

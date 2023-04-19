@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Create from './create'
+import AddVersion from "../../default/AddVersion";
 
 const Table = ({source}) => {
   return <div> Table View </div>  
@@ -9,10 +10,10 @@ const Table = ({source}) => {
 
 
 const FreightAtlashShapefileConfig = {
-  map: {
-    name: 'Map',
-    path: '/map',
-    component: () => <div> No Map </div>
+  add_version: {
+    name: 'Add Version',
+    path: '/add_version',
+    component: AddVersion
   },
   table: {
     name: 'Table',

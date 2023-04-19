@@ -1,16 +1,17 @@
 import get from "lodash.get";
 
-export const fnumIndex = (d) => {
+export const fnumIndex = (d, fractions = 2) => {
   if (d >= 1000000000) {
-    return `${parseInt(d / 1000000000)} B`;
+    return `${(d / 1000000000).toFixed(fractions)} B`;
   } else if (d >= 1000000) {
-    return `${parseInt(d / 1000000)} M`;
+    return `${(d / 1000000).toFixed(fractions)} M`;
   } else if (d >= 1000) {
-    return `${parseInt(d / 1000)} K`;
+    return `${(d / 1000).toFixed(fractions)} K`;
   } else {
     return typeof d === 'object' ?  `` : `${parseInt(d)}`;
   }
-};
+}
+;
 
 export const fnum = (number) => parseInt(number).toLocaleString();
 
