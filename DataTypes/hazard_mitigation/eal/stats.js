@@ -149,7 +149,7 @@ export const Stats = ({source, views}) => {
                   keys={Object.keys(chartComparativeStatsData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
                   indexBy={'nri_category'}
                   axisBottom={d => d}
-                  axisLeft={{format: fnumIndex, gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
+                  axisLeft={{format: d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
                   paddingInner={0.1}
                   // colors={(value, ii, d, key) => ctypeColors[key]}
                   hoverComp={{
@@ -170,7 +170,7 @@ export const Stats = ({source, views}) => {
                     keys={Object.keys(chartComparativeStatsCompareData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
                     indexBy={'nri_category'}
                     axisBottom={d => d}
-                    axisLeft={{format: fnumIndex, gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
+                    axisLeft={{format:  d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
                     paddingInner={0.1}
                     // colors={(value, ii, d, key) => ctypeColors[key]}
                     hoverComp={{

@@ -264,7 +264,7 @@ const Stats = ({ source, views }) => {
                 keys={disaster_numbers.map(dn => `${dn}_td`)}
                 indexBy={"year"}
                 axisBottom={d => d}
-                axisLeft={{ format: fnumIndex, gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
+                axisLeft={{ format:  d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
                 paddingInner={0.1}
                 // colors={(value, ii, d, key) => ctypeColors[key]}
                 hoverComp={{
