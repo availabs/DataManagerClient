@@ -3,6 +3,7 @@ import { AvlMap } from "modules/avl-map/src";
 import config from "config.json";
 import { EALFactory } from "./layers/EALChoropleth";
 import { CustomSidebar } from "./mapControls";
+import { useParams } from 'react-router-dom'
 import VersionSelect from '../../components/VersionSelect'
 
 const hazards = [
@@ -16,6 +17,11 @@ export const RenderMap = ({source, views}) => {
   //const mapOptions = ;
   const [hazard, setHazard ] = React.useState('hurricane');
   const [paintKey, setPaintKey ] = React.useState('avail_eal');
+  let { viewId } = useParams()
+  if(!viewId) {
+    viewId = views?.[0]?.view_id || 511
+  }
+
   const map_layers = useMemo(() => {
     return [
       EALFactory()
@@ -23,7 +29,7 @@ export const RenderMap = ({source, views}) => {
   },[])
 
   const p = {
-    [map_layers[0].id]: { hazard: hazard, paintKey: paintKey }
+    [map_layers[0].id]: { hazard: hazard, paintKey: paintKey, viewId: viewId }
   }
   //console.log('p?', p)
   return (
