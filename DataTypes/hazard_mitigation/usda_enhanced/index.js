@@ -1,7 +1,11 @@
 import React from 'react';
-
 import Create from './create'
 import AddVersion from "../../default/AddVersion";
+
+const Table = ({source}) => {
+  return <div> Table View </div>  
+}
+
 
 
 const FreightAtlashShapefileConfig = {

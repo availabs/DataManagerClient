@@ -6,7 +6,7 @@ import { selectPgEnv } from "../../../store";
 
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     const url = new URL(
-        `${rtPfx}/hazard_mitigation/openFemaDataLoader`
+        `${rtPfx}/hazard_mitigation/ihp_v1`
     );
 
     url.searchParams.append("table_name", 'individuals_and_households_program_valid_registrations_v1');

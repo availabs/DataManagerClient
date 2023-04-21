@@ -43,11 +43,12 @@ export const RenderVersions = ({value, setValue, versions, type}) => {
               }}>
               <option value="" disabled >Select your option</option>
               {(versions.views || versions)
+                .sort((a,b) => (b.view_id || a) - (a.view_id || b))
                 .map(v =>
                   <option
                     key={v.view_id}
                     value={v.view_id} className={`p-2 ${get(v, ['metadata', 'authoritative']) === 'true' ? `font-bold` : ``}`}>
-                    {get((versions.sources || versions).find(s => s.source_id === v.source_id), 'name') || v}
+                    {get(v, 'version') || v}
                     {v.view_id && ` (${v.view_id || ``} ${formatDate(v._modified_timestamp)})`}
                   </option>)
               }

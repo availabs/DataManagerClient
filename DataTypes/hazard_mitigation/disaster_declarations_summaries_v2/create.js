@@ -8,7 +8,7 @@ import { selectPgEnv } from "../../../store";
 
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     const url = new URL(
-        `${rtPfx}/hazard_mitigation/openFemaDataLoader`
+        `${rtPfx}/hazard_mitigation/disaster_declarations_summary_v2`
     );
 
     url.searchParams.append("table_name", 'disaster_declarations_summaries_v2');

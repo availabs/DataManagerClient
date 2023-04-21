@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     const url = new URL(
-        `${rtPfx}/hazard_mitigation/openFemaDataLoader`
+        `${rtPfx}/hazard_mitigation/pa_v1`
     );
 
     url.searchParams.append("table_name", 'public_assistance_funded_projects_details_v1');
