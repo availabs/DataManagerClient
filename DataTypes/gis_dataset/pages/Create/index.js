@@ -121,18 +121,22 @@ export default function UploadGisDataset({
       </>
     );
   }
-  if (customRules.check(state)) {
-    return customRules.message(state);
-  }
+  const canUpload = Object.keys(customRules)
+    .reduce((out,ruleKey) => {
+      if(cusomRules[ruleKe](state) !== 'canUpload') {
+        out = cusomRules[ruleKe](state)
+      }
+      return out
+    },'canUpload')
 
   return (
     <div>
-      {customRules?.isAllowToUpload(state) && type === "tig_sed" ? (
         <CustomAttributes state={state} dispatch={dispatch} />
-      ) : null}
-      {customRules?.isYearsValidate(state) ? (
-        <UploadFileComp state={state} dispatch={dispatch} />
-      ) : null}
+        {canUpload === 'canUpload' ? 
+          <UploadFileComp state={state} dispatch={dispatch} /> :
+          canUpload
+        }
+      
 
       <SelectLayerComp state={state} dispatch={dispatch} />
       <SchemaEditorComp state={state} dispatch={dispatch} />

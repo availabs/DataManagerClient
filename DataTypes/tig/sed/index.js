@@ -48,10 +48,7 @@ const TigSedConfig = {
       <CreatePage
         {...props}
         dataType="tig_sed"
-        customRules={{
-          check: (state) => state.SedCustomAttributes?.years?.length >= 7,
-          message: () => "Must have 7 years",
-        }}
+        customRules={customRules}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
       />
@@ -64,10 +61,7 @@ const TigSedConfig = {
       <CreatePage
         {...props}
         dataType="tig_sed"
-        customRules={{
-          check: (state) => state.SedCustomAttributes?.years?.length >= 7,
-          message: () => "Must have 7 years",
-        }}
+        customRules={customRules}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
       />
