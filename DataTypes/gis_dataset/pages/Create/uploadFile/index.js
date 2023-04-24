@@ -57,7 +57,7 @@ export default function UploadGisDataset({ state, dispatch }) {
   useEffect(() => {
     const doPolling = async () => {
       // could add check for maxId
-      const url = `${damaServerPath}/events/query?etl_context_id=${etlContextId}&event_id=${null}`
+      const url = `${damaServerPath}/events/query?etl_context_id=${etlContextId}&event_id=-1`
       const res = await fetch(url);
       const pollingData = await res.json()
       // console.log('polling data', pollingData)

@@ -46,6 +46,12 @@ const TigSedConfig = {
     component: (props) => (
       <CreatePage
         {...props}
+        dataType='tig_sed'
+        customRules= {{
+          check: (state) => state.SedCustomAttributes?.years?.length >= 7,
+          message: () => 'Must have 7 years'   
+
+        }}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
       />
@@ -54,7 +60,8 @@ const TigSedConfig = {
   gisDatasetUpdate: {
     name: "Upload",
     path: "/gisDatasetUpdate",
-    component: (props) => <CreatePage {...props} />,
+    component: (props) => <CreatePage {...props} 
+    CustomAttributes={SedCustomAttribute}/>,
   },
 };
 
