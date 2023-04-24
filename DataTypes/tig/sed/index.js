@@ -6,8 +6,9 @@ import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
 
 import { SedMapFilter, SedTableFilter, SedTableTransform } from "./sedCustom";
-import { SedTableFilter2, SedTableTransform2 } from "./sedCustom2";
+import { SedChartFilter, SedChartTransform } from "./sedChartCustom";
 import { SedCustomAttribute } from "./sedCustomAttribute";
+import { customRules } from "./sedCustomRules";
 import dbCols from "./dbCols.json";
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
@@ -36,8 +37,8 @@ const TigSedConfig = {
     component: (props) => (
       <Chart
         {...props}
-        transform={SedTableTransform2}
-        TableFilter={SedTableFilter2}
+        transform={SedChartTransform}
+        TableFilter={SedChartFilter}
       />
     ),
   },
@@ -48,13 +49,14 @@ const TigSedConfig = {
         {...props}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
+        customRules={customRules}
       />
     ),
   },
   gisDatasetUpdate: {
     name: "Upload",
     path: "/gisDatasetUpdate",
-    component: (props) => <CreatePage {...props} />,
+    component: (props) => <CreatePage {...props} customRules={customRules}/>,
   },
 };
 

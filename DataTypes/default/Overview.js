@@ -64,7 +64,7 @@ const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) =>
             <Edit 
               startValue={get(source,'description', '')}
               attr={'description'}
-              sourceId={source.source_id}
+              sourceId={source?.source_id}
               cancel={() => setEditing(null)}/> : 
             get(source,'description', false) || 'No Description'}
         </div>

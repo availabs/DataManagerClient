@@ -5,7 +5,6 @@ import mapValues from "lodash/mapValues";
 // import Dropdown from "react-dropdown";
 // import "react-dropdown/style.css";
 
-
 const FreeFormColumnNameInput = ({ publishStatus, field, col, onChange }) => {
   return (
     <input
@@ -18,8 +17,13 @@ const FreeFormColumnNameInput = ({ publishStatus, field, col, onChange }) => {
   );
 };
 
-const ConstrainedColumnNameInput = ({ publishStatus, field, col, availableDbColNames, onChange }) => {
-  
+const ConstrainedColumnNameInput = ({
+  publishStatus,
+  field,
+  col,
+  availableDbColNames,
+  onChange,
+}) => {
   if (!availableDbColNames) {
     return "";
   }
@@ -39,7 +43,7 @@ const ConstrainedColumnNameInput = ({ publishStatus, field, col, availableDbColN
   }
 
   if (matches && availableDbColNames.length === 1) {
-    return <span className='text-center'>{col}</span>;
+    return <span className="text-center">{col}</span>;
   }
 
   return (
@@ -49,28 +53,26 @@ const ConstrainedColumnNameInput = ({ publishStatus, field, col, availableDbColN
       onChange={(e) => onChange(e.target.value)}
       value={matches ? col : ""}
       placeholder="Select the db column name"
-      disabled={
-        !hasAvailableDbColNames || publishStatus !== "AWAITING"
-      }
+      disabled={!hasAvailableDbColNames || publishStatus !== "AWAITING"}
     >
-      {availableDbColNames.map((col,i) => <option key={i} value={col}>{col}</option>)}
+      {availableDbColNames.map((col, i) => (
+        <option key={i} value={col}>
+          {col}
+        </option>
+      ))}
     </select>
   );
 };
 
-export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
-  
-  const { 
-    layerName, 
-    tableDescriptor, 
-    publishStatus, 
-    databaseColumnNames 
-  } = state;
+export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
+  const { layerName, tableDescriptor, publishStatus, databaseColumnNames } =
+    state;
 
   //console.log('databaseColumnNames', databaseColumnNames)
 
   const [omittedFields, setOmittedFields] = useState(null);
   const [defaultMappings, setDefaultMappings] = useState(null);
+  const [allChecked, setAllChecked] = useState(false);
 
   const tableDescriptorColumnTypes =
     tableDescriptor && tableDescriptor.columnTypes;
@@ -81,8 +83,6 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
       acc[key] = col || null;
       return acc;
     }, {});
-
-  console.log('gisDatasetFieldNamesToDbColumns', gisDatasetFieldNamesToDbColumns)
 
   useEffect(() => {
     if (defaultMappings === null && gisDatasetFieldNamesToDbColumns) {
@@ -104,7 +104,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
 
   if (!gisDatasetFieldNamesToDbColumns) {
     return (
-      <span className='w-full p-10 text-center'>
+      <span className="w-full p-10 text-center">
         Please wait... the server is analyzing the {layerName} layer. This may
         take a few moments.
       </span>
@@ -121,14 +121,14 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
 
   const assignedColNamesSet = new Set(
     Object.values(gisDatasetFieldNamesToDbColumns)
-    .filter(Boolean)
-    .filter(k => databaseColumnNames &&
-        databaseColumnNames.includes(k)
-    )
+      .filter(Boolean)
+      .filter((k) => databaseColumnNames && databaseColumnNames.includes(k))
   );
 
-  console.log('assignedColNamesSet', assignedColNamesSet)
-
+  const onChangeAllOmit = (e) => {
+    setOmittedFields(mapValues(omittedFields, () => e.target.checked));
+    setAllChecked(!e.target.checked);
+  };
 
   const availableDbColNames =
     databaseColumnNames &&
@@ -136,13 +136,9 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
       .filter((c) => !assignedColNamesSet.has(c))
       .filter(Boolean);
 
-  console.log('databaseColumnNames', availableDbColNames, databaseColumnNames ? 'yes' : 'no')
-
   return (
     <div>
-      <span className='text-lg font-bold'>
-        Field Names Mappings
-      </span>
+      <span className="text-lg font-bold">Field Names Mappings</span>
       <div>
         <table className="w-full">
           <thead>
@@ -151,7 +147,14 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
                 Upload File Columns
               </th>
               <th className="text-center">Database Column Name</th>
-              <th className="text-center">Omit</th>
+              <th className="text-center">
+                Omit
+                <input
+                  type="checkbox"
+                  checked={!allChecked}
+                  onChange={onChangeAllOmit}
+                />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -174,10 +177,10 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
                     col,
                     onChange: (e) => {
                       const value = e.target ? e.target.value : e;
-                      console.log('onChange', e)
-                      dispatch(
-                        {type:'update_dbColName', payload: {rowIdx, colName: value }}
-                      );
+                      dispatch({
+                        type: "update_dbColName",
+                        payload: { rowIdx, colName: value },
+                      });
                     },
                   }}
                 />
@@ -187,10 +190,10 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
                 <tr key={key} className="border-b">
                   <td className="py-4 text-left">{key}</td>
                   <td className="text-center  p-2">{ColNameCell}</td>
-                  <td className='text-center'>
+                  <td className="text-center">
                     <input
                       type="checkbox"
-                      checked={!col}
+                      checked={omittedFields[key]}
                       disabled={
                         fieldColNameOptions && fieldColNameOptions.length === 0
                       }
@@ -201,17 +204,24 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({state, dispatch}) => {
                         };
 
                         setOmittedFields(newOmittedFields);
+
+                        const isAllChecked = Object.values(
+                          newOmittedFields
+                        ).some((v) => v === false);
+                        setAllChecked(isAllChecked);
                         if (col) {
-                          dispatch(
-                            {type:'update_dbColName', payload: {rowIdx, colName:""}}
-                          );
+                          dispatch({
+                            type: "update_dbColName",
+                            payload: { rowIdx, colName: "" },
+                          });
                         } else if (!fieldColNameOptions) {
-                          dispatch(
-                            {type:'update_dbColName', payload: {
+                          dispatch({
+                            type: "update_dbColName",
+                            payload: {
                               rowIdx,
-                              colName: defaultMappings[key]
-                            }}
-                          );
+                              colName: defaultMappings[key],
+                            },
+                          });
                         }
                       }}
                     />
