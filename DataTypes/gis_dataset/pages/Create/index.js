@@ -20,7 +20,7 @@ export default function UploadGisDataset({
   user = {},
   dataType = "gis_dataset",
   CustomAttributes = BlankComponent,
-  customRules = { check: () => false, message: () => "" },
+  customRules = {},
   databaseColumnNames = null,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
@@ -109,34 +109,22 @@ export default function UploadGisDataset({
     return <div> Please enter a datasource name.</div>;
   }
 
-  // && !customRules?.isYearsValidate(state)
-  if (!customRules?.isAllowToUpload(state) && type === "tig_sed") {
-    return (
-      <>
-        <div className="bg-red-500 mt-2 p-3">
-          <span> Please enter minimum 7 values </span>
-        </div>
-        <br />
-        <CustomAttributes state={state} dispatch={dispatch} />
-      </>
-    );
-  }
-  const canUpload = Object.keys(customRules)
-    .reduce((out,ruleKey) => {
-      if(cusomRules[ruleKe](state) !== 'canUpload') {
-        out = cusomRules[ruleKe](state)
-      }
-      return out
-    },'canUpload')
+  const canUpload = Object.keys(customRules)?.reduce((out, ruleKey) => {
+    if (customRules[ruleKey](state) !== "canUpload") {
+      out = customRules[ruleKey](state);
+    }
+    return out;
+  }, "canUpload");
 
   return (
     <div>
-        <CustomAttributes state={state} dispatch={dispatch} />
-        {canUpload === 'canUpload' ? 
-          <UploadFileComp state={state} dispatch={dispatch} /> :
-          canUpload
-        }
-      
+      <CustomAttributes state={state} dispatch={dispatch} />
+
+      {canUpload === "canUpload" ? (
+        <UploadFileComp state={state} dispatch={dispatch} />
+      ) : (
+        canUpload
+      )}
 
       <SelectLayerComp state={state} dispatch={dispatch} />
       <SchemaEditorComp state={state} dispatch={dispatch} />
