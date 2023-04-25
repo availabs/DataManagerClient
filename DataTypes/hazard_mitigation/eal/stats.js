@@ -149,8 +149,8 @@ export const Stats = ({source, views}) => {
                   data={chartComparativeStatsData}
                   keys={Object.keys(chartComparativeStatsData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
                   indexBy={'nri_category'}
-                  axisBottom={d => d}
-                  axisLeft={{format: d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
+                  axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
+                  axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
                   paddingInner={0.1}
                   // colors={(value, ii, d, key) => ctypeColors[key]}
                   hoverComp={{
@@ -170,8 +170,8 @@ export const Stats = ({source, views}) => {
                     data={chartComparativeStatsCompareData}
                     keys={Object.keys(chartComparativeStatsCompareData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
                     indexBy={'nri_category'}
-                    axisBottom={d => d}
-                    axisLeft={{format:  d => fnumIndex(d, 0), gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
+                    axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
+                    axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
                     paddingInner={0.1}
                     // colors={(value, ii, d, key) => ctypeColors[key]}
                     hoverComp={{

@@ -64,11 +64,11 @@ export const hazardsMeta = {
   'winterweat':{color:'#76c8c8', name:'Snow Storm', prefix: 'wntw'},
   'icestorm':{color:'#98d1d1', name:'Ice Storm', prefix: 'istm'},
   'coldwave':{color:'#badbdb', name:'Coldwave', prefix: 'cwav'},
-  'coastal': {color:'#54bebe', name:'Coastal Hazards', prefix: 'cfld'},
+  'coastal': {color:'#54bebe', name:'Coastal', prefix: 'cfld'},
   'riverine':{color:'#115f9a', name:'Flooding', prefix: 'rfld'},
 
   // watery blues
-  'tsunami':{color:'#5e569b', name:'Tsunami/Seiche', prefix: 'tsun'},
+  'tsunami':{color:'#5e569b', name:'Tsunami', prefix: 'tsun'},
   'avalanche':{color:'#776bcd', name:'Avalanche', prefix: 'avln'},
   'tornado':{color:'#9080ff', name:'Tornado', prefix: 'trnd'},
   'lightning':{color:'#beb9db', name:'Lightning', prefix: 'ltng'},
