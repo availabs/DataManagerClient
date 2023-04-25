@@ -19,7 +19,7 @@ export const RenderMap = ({source, views}) => {
   const [paintKey, setPaintKey ] = React.useState('avail_eal');
   let { viewId } = useParams()
   if(!viewId) {
-    viewId = views?.[0]?.view_id || 511
+    viewId = views?.[views?.length - 1]?.view_id;
   }
 
   const map_layers = useMemo(() => {

@@ -36,7 +36,8 @@ const RenderComparativeStats = ({chartComparativeStatsData = []}) => {
           columns={
             cols.map(col => ({
               Header: col,
-              accessor: (c) => col === 'nri_category' ? c[col] : fnum(c[col]),
+              accessor: col,
+              Cell: cell => col === 'nri_category' ? cell.value : fnum(cell.value),
               align: 'left'
             }))
           }
@@ -111,10 +112,8 @@ export const MegaTable = ({source, views}) => {
   }, [activeView, falcor, source.source_id, pgEnv])
 
   const chartComparativeStatsData =
-    useMemo(() => {
-      return get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'mega', 'value'], [])
+       get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'mega', 'value'], [])
         .filter(d => d.nri_category === hazard)
-    }, [hazard, activeView]);
 
   const cols = Object.keys(chartComparativeStatsData[0] || {})
                       .map(col => ({

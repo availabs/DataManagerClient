@@ -35,7 +35,8 @@ const RenderComparativeStats = ({chartComparativeStatsData = []}) => {
           columns={
             cols.map(col => ({
               Header: col,
-              accessor: (c) => col === 'nri_category' ? c[col] : fnum(c[col]),
+              accessor: col,
+              Cell: cell => col === 'nri_category' ? cell.value : fnum(cell.value),
               align: 'left'
             }))
           }
