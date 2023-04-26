@@ -12,8 +12,12 @@ import config from 'config.json'
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 import { DAMA_HOST } from 'config'
 
+const getTilehost = (DAMA_HOST) =>
+  'http://localhost:3369' ? 
+  'http://localhost:3370' : 
+  DAMA_HOST + '/tiles'
 
-const TILEHOST = DAMA_HOST + '/tiles'
+const TILEHOST = getTilehost(DAMA_HOST)
 
 
 const ViewSelector = ({views}) => {

@@ -20,7 +20,7 @@ export default function UploadGisDataset({
   user = {},
   dataType = "gis_dataset",
   CustomAttributes = BlankComponent,
-  customRules = { check: () => false, message: () => "" },
+  customRules = {},
   databaseColumnNames = null,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
@@ -87,6 +87,7 @@ export default function UploadGisDataset({
       } else {
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
+      console.log()
       history.push(`/source/${state.damaSourceId}/versions`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,24 +111,16 @@ export default function UploadGisDataset({
   }
 
   // && !customRules?.isYearsValidate(state)
-  if (!customRules?.isAllowToUpload(state) && type === "tig_sed") {
-    return (
-      <>
-        <div className="bg-red-500 mt-2 p-3">
-          <span> Please enter minimum 7 values </span>
-        </div>
-        <br />
-        <CustomAttributes state={state} dispatch={dispatch} />
-      </>
-    );
-  }
   const canUpload = Object.keys(customRules)
     .reduce((out,ruleKey) => {
-      if(cusomRules[ruleKe](state) !== 'canUpload') {
-        out = cusomRules[ruleKe](state)
+      console.log('hola', ruleKey, customRules[ruleKey](state), out)
+      if(customRules[ruleKey](state) !== 'canUpload') {
+        out = customRules[ruleKey](state)
       }
       return out
     },'canUpload')
+
+  console.log('xxxxxxxxxxxxxxxx',canUpload)
 
   return (
     <div>

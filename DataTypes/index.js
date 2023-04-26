@@ -49,6 +49,8 @@ import fusion from "./hazard_mitigation/fusion";
 // ---- Tig Types
 // ---------------------------
 import tig_sed from './tig/sed'
+import tiger_counties from './tig/tiger_counties'
+import tig_acs from './tig/tig_acs'
 
 
 const DataTypes = {
@@ -95,7 +97,9 @@ const DataTypes = {
   // fusion,
 
   //TIG
-  tig_sed
+  tig_sed,
+  tiger_counties,
+  tig_acs
 };
 
 export { DataTypes, Pages };
