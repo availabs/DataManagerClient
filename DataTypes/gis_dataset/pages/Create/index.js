@@ -110,26 +110,24 @@ export default function UploadGisDataset({
     return <div> Please enter a datasource name.</div>;
   }
 
-  // && !customRules?.isYearsValidate(state)
-  const canUpload = Object.keys(customRules)
-    .reduce((out,ruleKey) => {
-      console.log('hola', ruleKey, customRules[ruleKey](state), out)
-      if(customRules[ruleKey](state) !== 'canUpload') {
-        out = customRules[ruleKey](state)
-      }
-      return out
-    },'canUpload')
 
-  console.log('xxxxxxxxxxxxxxxx',canUpload)
+  const canUpload = Object.keys(customRules)?.reduce((out, ruleKey) => {
+    if (customRules[ruleKey](state) !== "canUpload") {
+      out = customRules[ruleKey](state);
+    }
+    return out;
+  }, "canUpload");
 
+  
   return (
     <div>
-        <CustomAttributes state={state} dispatch={dispatch} />
-        {canUpload === 'canUpload' ? 
-          <UploadFileComp state={state} dispatch={dispatch} /> :
-          canUpload
-        }
-      
+      <CustomAttributes state={state} dispatch={dispatch} />
+
+      {canUpload === "canUpload" ? (
+        <UploadFileComp state={state} dispatch={dispatch} />
+      ) : (
+        canUpload
+      )}
 
       <SelectLayerComp state={state} dispatch={dispatch} />
       <SchemaEditorComp state={state} dispatch={dispatch} />

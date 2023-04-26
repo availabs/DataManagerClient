@@ -70,7 +70,7 @@ export const CustomYears = ({ state, dispatch }) => {
                 <br />
                 {isAlreadyExist(i, years) ? (
                   <span className="text-rose-800">
-                    Year is already available
+                    {`Year ${year} is already available`}
                   </span>
                 ) : null}
               </div>

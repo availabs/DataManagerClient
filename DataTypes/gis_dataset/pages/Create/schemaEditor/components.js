@@ -72,7 +72,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
 
   const [omittedFields, setOmittedFields] = useState(null);
   const [defaultMappings, setDefaultMappings] = useState(null);
-  const [allChecked, setAllChecked] = useState(false);
+  const [allChecked, setAllChecked] = useState(true);
 
   const tableDescriptorColumnTypes =
     tableDescriptor && tableDescriptor.columnTypes;

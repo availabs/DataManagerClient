@@ -130,8 +130,11 @@ const TablePage = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId, falcorCache, dataLength]);
 
+  let years = get(activeView, ["metadata", "years"], []);
+
   const { data } = React.useMemo(
-    () => transform(tableData, attributes, filters, "group_by_county"),
+    () => transform(tableData, attributes, filters, years, "group_by_county"),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tableData, attributes, transform, filters]
   );
 

@@ -212,16 +212,18 @@ const getSelectedArea = (area, groupByTableData) => {
   return selectedGroupByTableData;
 };
 
-const SedChartTransform = (tableData, attributes, filters, flag) => {
+const SedChartTransform = (tableData, attributes, filters, years, flag) => {
   let activeVar = get(filters, "activeVar.value", "totpop");
   let summarize = get(filters, "summarize.value", "county");
   let area = get(filters, "area.value", "all");
 
+  let updatedYears = years?.map((str) => str.slice(-2));
+
   const columns = [];
-  (years || []).forEach((y) => {
+  (updatedYears || []).forEach((y, i) => {
     (columns || []).push({
       Header: `20${y}`,
-      accessor: `${activeVar}_${y}`,
+      accessor: `${activeVar}_${i}`,
     });
   });
 
@@ -229,10 +231,10 @@ const SedChartTransform = (tableData, attributes, filters, flag) => {
    * GroupBy county_nam
    */
   let groupByTableData = (tableData || []).reduce((g, d) => {
-    const { county_nam } = d;
-    if (county_nam !== null) {
-      g[`${county_nam}`] = g[`${county_nam}`] ?? [];
-      g[`${county_nam}`].push(d);
+    const { county } = d;
+    if (county !== null) {
+      g[`${county}`] = g[`${county}`] ?? [];
+      g[`${county}`].push(d);
     }
     return g;
   }, {});
