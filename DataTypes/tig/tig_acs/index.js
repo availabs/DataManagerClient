@@ -1,7 +1,4 @@
 
-// import { getAttributes } from 'pages/DataManager/components/attributes'
-
-//console.log('dbCols', dbCols)
 
 const TigSedConfig = {
  
@@ -10,7 +7,6 @@ const TigSedConfig = {
     component: (props) => (
      <div>
         Add Ammerican Communinity Survey Data
-        
      </div>
     ),
   },

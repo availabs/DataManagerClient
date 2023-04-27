@@ -36,7 +36,7 @@ const SymbologyControls = ({layer, onChange=()=>{}}) => {
   	onChange(symbology)
   },[symbology, onChange])
 
-  console.log('render SymbologyControls')
+  //console.log('render SymbologyControls')
 
   return React.useMemo(() => (
     <div className='border-t border-gray-300 h-full w-full'> 
