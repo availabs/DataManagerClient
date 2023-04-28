@@ -1,5 +1,5 @@
 import React from 'react'
-import { useFalcor } from 'modules/avl-components/src'
+import { useFalcor, Legend } from 'modules/avl-components/src'
 import get from 'lodash/get'
 
 import { LayerContainer } from "modules/avl-map/src";
@@ -57,8 +57,12 @@ const HoverComp = ({ data, layer }) => {
 
 
 class GISDatasetLayer extends LayerContainer {
+  state = {
+    showLegend: false
+  }
+
   legend = {
-    type: "quantile",
+    type: "threshold",
     domain: [0, 150],
     range: [],
     format: ".2s",
@@ -78,6 +82,23 @@ class GISDatasetLayer extends LayerContainer {
     },
     HoverComp
   };
+
+  infoBoxes = [
+      {
+        Component: () => {
+          return (
+            <div className='bg-white w-[320px] p-2'>
+              <div className='pb-1 text-sm font-medium'>{this.legend.title}</div>
+              <Legend {...this.legend} />
+            </div>
+          )
+        }, 
+        show: (layer) => {
+          console.log('show', layer, layer.state.showLegend)
+          return layer.state.showLegend
+        }
+      }  
+  ];
 
   init(map, falcor) {
     //console.log('init freight atlas layer', this.id, this.activeViewId)
@@ -108,50 +129,33 @@ class GISDatasetLayer extends LayerContainer {
       .filter(paintProperty => {
         let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
           || get(symbology, `[${paintProperty}][default]`, false)
-        // console.log('filter',
-        //   value
-        // )
         return value 
       })
       .forEach(paintProperty => {
-        let value = get(symbology, `[${paintProperty}][${activeVariable}][value]`, '')
-          || get(symbology, `[${paintProperty}][default][value]`, '')
+        let sym = get(symbology, `[${paintProperty}][${activeVariable}]`, '')
+          || get(symbology, `[${paintProperty}][default]`, '')
 
-       
+        
+        //console.log('ss', sym.settings)
+        if(sym.settings) {
+          this.legend.domain =  sym.settings.domain
+          this.legend.range = sym.settings.range
+          this.legend.title = sym.settings.title
+          this.legend.show = true
+          this.updateState({showLegend: true})
+        } else {
+          this.updateState({showLegend: false})
+        }
+
         //console.log('paintProperty',paintProperty, value)
-         
-        map.setPaintProperty(
-          this.layers[0].id, 
-          paintProperty,
-          value
-        )
+        if(sym.value) { 
+          map.setPaintProperty(
+            this.layers[0].id, 
+            paintProperty,
+            sym.value
+          )
+        }
       })
-    // if(activeVariable) {
-    //   const falcorCache = this.falcor.getCache()
-    //   const dataById = get(falcorCache, 
-    //     ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
-    //   {})
-      
-    //   const domainData = Object.values(dataById).map( d => d[activeVariable] )
-      
-    //   if(domainData.length > 0){
-    //     let colorScale = this.getColorScale(domainData) 
-    //     let colors = Object.keys(dataById).reduce((out, id) => {
-    //       out[+id] = colorScale(dataById[+id][activeVariable]) || "#000"
-    //       return out
-    //     },{})
-    //     console.log(`${this.layers[0].type}-color`, this.layers[0].id, 
-    //       Object.keys(colors).filter(k => !colors[k])
-    //       .forEach(k => console.log(k, colors[k]))
-    //     )
-    //     map.setPaintProperty(
-    //       this.layers[0].id, 
-    //       `${this.layers[0].type}-color`,
-    //       ["get",  ["to-string",["get","ogc_fid"]], ["literal", colors]]
-          
-    //     )
-    //   }
-    // }
   }
    
 }

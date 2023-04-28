@@ -60,7 +60,7 @@ export const tig_sed_taz = {
     component: (props) => (
       <CreatePage
         {...props}
-        dataType="tig_sed"
+        dataType="tig_sed_taz"
         customRules={customRules}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
@@ -116,7 +116,7 @@ export const tig_sed_county = {
     component: (props) => (
       <CreatePage
         {...props}
-        dataType="tig_sed"
+        dataType="tig_sed_county"
         customRules={customRules}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}

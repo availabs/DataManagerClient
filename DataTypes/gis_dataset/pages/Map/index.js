@@ -147,7 +147,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
           tempSymbology={tempSymbology}
         />
       </div>
-      {user.authLevel >= 5 ? 
+      {/*{user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {['sources','layers']
@@ -197,7 +197,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
             viewId={activeViewId}
           />
         </div>
-      </div> : ''}
+      </div> : ''}*/}
     </div>
   ) 
 }
