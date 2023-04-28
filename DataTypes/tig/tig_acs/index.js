@@ -1,20 +1,33 @@
+import React, { useState } from "react";
+import CountySelector from "./multiCountySelect";
 
-// import { getAttributes } from 'pages/DataManager/components/attributes'
+export const CountySelectorComponent = () => {
+  const [selectedCounties, setSelectedCounties] = useState([]);
+  const countiesOptions = new Array(10).fill("null").map((_, i) => ({
+    label: `new ${i}`,
+    value: i,
+  }));
+  return (
+    <>
+      <CountySelector
+        countiesOptions={countiesOptions}
+        selectedCounties={selectedCounties}
+        setSelectedCounties={setSelectedCounties}
+      />
+    </>
+  );
+};
 
-//console.log('dbCols', dbCols)
-
-const TigSedConfig = {
- 
+const TigAcsConfig = {
   sourceCreate: {
     name: "Create",
     component: (props) => (
-     <div>
+      <div>
         Add Ammerican Communinity Survey Data
-        
-     </div>
+        <CountySelectorComponent />
+      </div>
     ),
   },
-  
 };
 
-export default TigSedConfig;
+export default TigAcsConfig;
