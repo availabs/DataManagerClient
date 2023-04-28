@@ -120,6 +120,7 @@ export const MegaTable = ({source, views}) => {
                         Header: col,
                         accessor: col,
                         align: 'left',
+                        filter: 'text'
                       }))
   console.log(chartComparativeStatsData)
   return (
