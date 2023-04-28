@@ -102,7 +102,7 @@ class GISDatasetLayer extends LayerContainer {
     } = this.props
 
     const activeVariable = get(filters,'activeVar.value', '')
-    console.log('renderLayer', activeViewId, activeVariable)
+    //console.log('renderLayer', activeViewId, activeVariable, symbology)
 
     Object.keys(symbology)
       .filter(paintProperty => {

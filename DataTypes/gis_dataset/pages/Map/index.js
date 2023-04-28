@@ -90,6 +90,11 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
     out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
     return out
   }, [activeView])
+  const metaData = useMemo(() => {
+    let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
+    out.tiles.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    return out
+  }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
 
   const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
@@ -99,7 +104,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
   //   ({...ts, ...get(mapData, `symbology`, {})})
   // )),[mapData])
 
-  console.log('render map page', mapData, tempSymbology)
+  //console.log('render map page', mapData, tempSymbology)
   
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -119,16 +124,20 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
       }
   },[source, views, mapData, activeViewId,filters])
 
-  //console.log('layer mappage', layer)
+  //console.log('layer mappage', tempSymbology)
 
   return (
     <div> 
       <div className='flex'>
         <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
         <MapFilter 
-          source={source} 
+          source={source}
+          metaData={metaData}
           filters={filters} 
           setFilters={setFilters}
+          tempSymbology={tempSymbology}
+          setTempSymbology={setTempSymbology}
+          activeViewId={activeViewId}
         />
         <ViewSelector views={views} />
       </div>
@@ -183,7 +192,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
         <div className='flex'>
           <div className='flex-1' />
           <SaveSymbologyButton 
-            mapData={mapData}
+            metaData={metaData}
             symbology={tempSymbology}
             viewId={activeViewId}
           />
@@ -195,7 +204,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
 
 export default withAuth(MapPage)
 
-const SaveSymbologyButton = ({mapData,symbology, viewId}) => {
+const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
   const { falcor } = useFalcor()
   const pgEnv = useSelector(selectPgEnv);
   
@@ -203,9 +212,8 @@ const SaveSymbologyButton = ({mapData,symbology, viewId}) => {
     //console.log('click save 222', attr, value)
     if(viewId) {
       try{
-        let val = { tiles: mapData}
+        let val = metaData || { tiles:{} }
         val.tiles['symbology'] = symbology
-        console.log('out value', val)
         let response = await falcor.set({
             paths: [
               ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
@@ -228,7 +236,7 @@ const SaveSymbologyButton = ({mapData,symbology, viewId}) => {
         })
         console.log('set run response', response)
       } catch (error) {
-        console.log('error stuff',error,symbology, mapData);
+        console.log('error stuff',error,symbology, metaData);
       }
     }
   }
