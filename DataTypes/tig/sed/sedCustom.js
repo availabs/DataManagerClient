@@ -78,7 +78,7 @@ const SedMapFilter = ({
               ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
             {})
 
-            console.log('getColorScale', dataById, falcorCache)
+            //console.log('getColorScale', dataById, falcorCache)
 
             const colorScale = d3scale.scaleThreshold()
               .domain(sedVars[varType].domain)
@@ -90,7 +90,10 @@ const SedMapFilter = ({
             },{})
             let output = ["get",["to-string",["get","ogc_fid"]], ["literal", colors]]
 
-            let newSymbology = cloneDeep(tempSymbology)
+            let newSymbology = cloneDeep(tempSymbology) || {'fill-color':{}}
+            if(!newSymbology['fill-color']) {
+              newSymbology['fill-color'] = {}
+            }
             newSymbology['fill-color'][activeVar] = { 
               type: 'scale-threshold',
               settings: {
