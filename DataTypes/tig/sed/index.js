@@ -5,7 +5,7 @@ import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
 
-import { SedMapFilter, SedTableFilter, SedTableTransform } from "./sedCustom";
+import { SedMapFilter, SedTableFilter, SedTableTransform, SedHoverComp } from "./sedCustom";
 import { SedChartFilter, SedChartTransform } from "./sedChartCustom";
 import { SedCustomAttribute } from "./sedCustomAttribute";
 import { customRules } from "./sedCustomRules";
@@ -18,7 +18,11 @@ export const tig_sed_taz = {
   map: {
     name: "Map",
     path: "/map",
-    component: (props) => <MapPage {...props} MapFilter={SedMapFilter} />,
+    component: (props) => <MapPage 
+      {...props} 
+      MapFilter={SedMapFilter} 
+      HoverComp={SedHoverComp}
+    />,
   },
   table: {
     name: "Table",

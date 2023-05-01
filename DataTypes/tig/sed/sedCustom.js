@@ -55,7 +55,7 @@ const SedMapFilter = ({
   );
 
   useEffect(() => {
-    console.log('calculate the tempSymbology',activeVar)
+    //console.log('calculate the tempSymbology',activeVar)
     const updateSymbology = () => {
       falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
         .then(d => {
@@ -63,7 +63,7 @@ const SedMapFilter = ({
             ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'], 
           0)
 
-          console.log('length',length)
+          // console.log('length',length)
           return falcor.chunk([
             'dama',
             pgEnv,
@@ -104,7 +104,7 @@ const SedMapFilter = ({
               value: output
             }
 
-            console.log('newSymbology', newSymbology)
+            //console.log('newSymbology', newSymbology)
             
             setTempSymbology(newSymbology)
 
@@ -237,4 +237,53 @@ const SedTableTransform = (tableData, attributes, filters, years) => {
   };
 };
 
-export { SedMapFilter, SedTableFilter, SedTableTransform };
+const SedHoverComp = ({ data, layer }) => {
+  const { falcor, falcorCache } = useFalcor() 
+  const { attributes, activeViewId, props: { filters }  } = layer 
+  const pgEnv = useSelector(selectPgEnv);
+  const id = React.useMemo(() => get(data, '[0]', null), [data])
+  let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
+
+  console.log('filters', filters , layer)
+
+  React.useEffect(() => {
+    falcor.get([
+      'dama',
+      pgEnv, 
+      'viewsbyId',
+      activeViewId, 
+      'databyId', 
+      id,
+      attributes
+    ])
+  }, [falcor, pgEnv, activeViewId, id, attributes])
+    
+
+  const attrInfo = React.useMemo(() => {
+    return get(falcorCache, [
+        'dama',
+        pgEnv, 
+        'viewsbyId',
+        activeViewId, 
+        'databyId', 
+        id
+      ], {});
+  }, [id, falcorCache, activeViewId, pgEnv]);
+
+  
+  return (
+    <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
+     {activeVar}
+      <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
+        {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
+        {Object.keys(attrInfo).map((k,i) => 
+          <div className='flex border-b pt-1' key={i}>
+            <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
+            <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>
+          </div>
+        )} 
+    </div>
+  )
+}
+
+export { SedMapFilter, SedTableFilter, SedTableTransform, SedHoverComp };

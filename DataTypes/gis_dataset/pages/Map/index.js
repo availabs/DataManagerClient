@@ -74,7 +74,7 @@ const DefaultMapFilter = ({source, activeVar, setActiveVar}) => {
   )
 }
 
-const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {} }) => {
+const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
   
@@ -114,7 +114,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
             source: source,
             activeView: activeView,
             filters,
-
+            hoverComp: HoverComp,
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
@@ -204,51 +204,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
 
 export default withAuth(MapPage)
 
-const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
-  const { falcor } = useFalcor()
-  const pgEnv = useSelector(selectPgEnv);
-  
-  const save = async () => {
-    //console.log('click save 222', attr, value)
-    if(viewId) {
-      try{
-        let val = metaData || { tiles:{} }
-        val.tiles['symbology'] = symbology
-        let response = await falcor.set({
-            paths: [
-              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
-            ],
-            jsonGraph: {
-              dama:{
-                [pgEnv]:{
-                  views: {
-                    byId:{
-                      [viewId] : {
-                        attributes : { 
-                          metadata: JSON.stringify(val)
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-        })
-        console.log('set run response', response)
-      } catch (error) {
-        console.log('error stuff',error,symbology, metaData);
-      }
-    }
-  }
-  return( 
-    <button 
-      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-      onClick={save}
-    >
-      Save Symbology
-    </button>
-  )
-}
+
 
 const Map = ({layers,tempSymbology}) => {
   const mounted = React.useRef(false);
@@ -328,6 +284,51 @@ const Map = ({layers,tempSymbology}) => {
 }
 
 
+const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
+  const { falcor } = useFalcor()
+  const pgEnv = useSelector(selectPgEnv);
+  
+  const save = async () => {
+    //console.log('click save 222', attr, value)
+    if(viewId) {
+      try{
+        let val = metaData || { tiles:{} }
+        val.tiles['symbology'] = symbology
+        let response = await falcor.set({
+            paths: [
+              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
+            ],
+            jsonGraph: {
+              dama:{
+                [pgEnv]:{
+                  views: {
+                    byId:{
+                      [viewId] : {
+                        attributes : { 
+                          metadata: JSON.stringify(val)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+        })
+        console.log('set run response', response)
+      } catch (error) {
+        console.log('error stuff',error,symbology, metaData);
+      }
+    }
+  }
+  return( 
+    <button 
+      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+      onClick={save}
+    >
+      Save Symbology
+    </button>
+  )
+}
 
 
 

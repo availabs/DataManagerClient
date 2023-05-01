@@ -80,7 +80,7 @@ class GISDatasetLayer extends LayerContainer {
       
       return data
     },
-    HoverComp
+    HoverComp: this.hoverComp || HoverComp
   };
 
   infoBoxes = [
@@ -101,7 +101,7 @@ class GISDatasetLayer extends LayerContainer {
   ];
 
   init(map, falcor) {
-    //console.log('init freight atlas layer', this.id, this.activeViewId)
+    console.log('init freight atlas layer', this.id, this.activeViewId, this)
     
   }
 
