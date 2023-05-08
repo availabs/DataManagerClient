@@ -1,15 +1,16 @@
-import React, { useState } from "react";
-import { useFalcor, withAuth, Table } from "modules/avl-components/src";
-import get from "lodash.get";
-import { useParams, useHistory } from "react-router-dom";
+
+import React, { useState } from 'react';
+import { useFalcor, withAuth, Table } from 'modules/avl-components/src'
+import get from 'lodash.get'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store";
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 
-const ViewSelector = ({ views }) => {
-  const { viewId, sourceId, page } = useParams();
-  const history = useHistory();
-
+const ViewSelector = ({views}) => {
+  const { viewId, sourceId, page } = useParams()
+  const navigate = useNavigate()
+  
   return (
     <div className="flex flex-1">
       <div className="py-3.5 px-2 text-sm text-gray-400">Version : </div>
@@ -17,9 +18,7 @@ const ViewSelector = ({ views }) => {
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) =>
-            history.push(`/source/${sourceId}/${page}/${e.target.value}`)
-          }
+          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             ?.sort((a, b) => b.view_id - a.view_id)

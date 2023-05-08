@@ -2,10 +2,10 @@ import React from 'react'
 
 
 import { checkApiResponse, getDamaApiRoutePrefix } from "../../../utils/DamaControllerApi";
-import {useHistory} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
-const CallServer = async ({rtPfx, baseUrl, source, tigerTable, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, tigerTable, newVersion, navigate}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/tigerDownloadAction`
     );
@@ -23,7 +23,7 @@ const CallServer = async ({rtPfx, baseUrl, source, tigerTable, newVersion, histo
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const RenderTigerTables= ({value, setValue, domain}) => {
@@ -59,7 +59,7 @@ const RenderTigerTables= ({value, setValue, domain}) => {
 }
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
     const [tigerTable, setTigerTable] = React.useState();
 
@@ -72,7 +72,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
                     CallServer({
-                        rtPfx, baseUrl, source, tigerTable, newVersion, history})}
+                        rtPfx, baseUrl, source, tigerTable, newVersion, navigate})}
                 disabled={!tigerTable}
             >
                 Add New Source

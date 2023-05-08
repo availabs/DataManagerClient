@@ -1,5 +1,5 @@
 import React from 'react'
-import {useHistory} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
@@ -7,7 +7,7 @@ import { RenderVersions } from "../../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYear, endYear,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, startYear, endYear,
                               viewNCEI={},viewZTC={}, viewCousubs={}, viewCounty={}, viewState={}, viewTract={}}) => {
     const viewMetadata = [viewZTC.view_id, viewState.view_id,  viewCounty.view_id, viewCousubs.view_id, viewTract.view_id, viewNCEI.view_id];
 
@@ -44,13 +44,13 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYea
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 };
 
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
 
     const [startYear, setStartYear] = React.useState(1996);
@@ -108,7 +108,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                             viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
                             viewCousubs: versionsCousubs.views.find(v => v.view_id === parseInt(viewCousubs)),
                             viewTract: versionsTract.views.find(v => v.view_id === parseInt(viewTract)),
-                            newVersion, history
+                            newVersion, navigate
                         })}>
                 Add New Source
             </button>

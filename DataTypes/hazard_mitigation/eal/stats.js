@@ -4,20 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
-
-const fnum = (number) => parseInt(number).toLocaleString();
-
-const fnumIndex = (d) => {
-  if (d >= 1000000000) {
-    return `${parseInt(d / 1000000000)} B`
-  } else if (d >= 1000000) {
-    return `${parseInt(d / 1000000)} M`
-  } else if (d >= 1000) {
-    return `${parseInt(d / 1000)} K`
-  } else {
-    return `${d}`
-  }
-}
+import { fnum, fnumIndex } from "../../../utils/macros"
 
 const RenderVersions = (domain, value, onchange) => (
   <select
@@ -48,7 +35,8 @@ const RenderComparativeStats = ({chartComparativeStatsData = []}) => {
           columns={
             cols.map(col => ({
               Header: col,
-              accessor: (c) => col === 'nri_category' ? c[col] : fnum(c[col]),
+              accessor: col,
+              Cell: cell => col === 'nri_category' ? cell.value : fnum(cell.value),
               align: 'left'
             }))
           }
@@ -107,6 +95,8 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
   )
 }
 
+const processData = (data) => data.map(d => ({nri_category: d.nri_category, avail_eal: d.avail_eal, nri_eal: d.nri_eal, diff: ((d.avail_eal - d.nri_eal)/ d.nri_eal) * 100}))
+
 export const Stats = ({source, views}) => {
   const {falcor, falcorCache} = useFalcor();
   const pgEnv = useSelector(selectPgEnv);
@@ -116,17 +106,16 @@ export const Stats = ({source, views}) => {
 
   useEffect(() => {
     falcor.get(
-      ['eal', pgEnv, 'source', source.source_id, 'view', [activeView, compareView], 'data'],
       ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', [activeView, compareView]]
     )
   }, [activeView, compareView, falcor, source.source_id, pgEnv])
 
   const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
   const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
-  const metadataActiveView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', activeView, 'data', 'value'], []);
-  const metadataCompareView = get(falcorCache, ['eal', pgEnv, 'source', source.source_id, 'view', compareView, 'data', 'value'], []);
-  console.log(chartComparativeStatsData)
-  if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
+  const metadataActiveView = processData(chartComparativeStatsData);
+  const metadataCompareView = processData(chartComparativeStatsCompareData)
+
+  // if (!metadataActiveView || metadataActiveView.length === 0) return <div> Stats Not Available </div>
 
   return (
     <div>
@@ -149,135 +138,144 @@ export const Stats = ({source, views}) => {
         {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
       </div>
 
-      <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
-        <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === activeView.toString()).version} </label>
-        <BarGraph
-          key={'numEvents'}
-          data={chartComparativeStatsData}
-          keys={Object.keys(chartComparativeStatsData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
-          indexBy={'nri_category'}
-          axisBottom={d => d}
-          axisLeft={{format: fnumIndex, gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
-          paddingInner={0.1}
-          // colors={(value, ii, d, key) => ctypeColors[key]}
-          hoverComp={{
-            HoverComp: HoverComp,
-            valueFormat: fnumIndex
-          }}
-          groupMode={'grouped'}
-        />
-      </div>
-
-      <RenderComparativeStats chartComparativeStatsData={chartComparativeStatsData} />
-
-      {compareMode ?
-        <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
-          <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === compareView.toString()).version} </label>
-          <BarGraph
-            key={'numEvents'}
-            data={chartComparativeStatsCompareData}
-            keys={Object.keys(chartComparativeStatsCompareData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
-            indexBy={'nri_category'}
-            axisBottom={d => d}
-            axisLeft={{format: fnumIndex, gridLineOpacity: 1, gridLineColor: '#9d9c9c'}}
-            paddingInner={0.1}
-            // colors={(value, ii, d, key) => ctypeColors[key]}
-            hoverComp={{
-              HoverComp: HoverComp,
-              valueFormat: fnumIndex
-            }}
-            groupMode={'grouped'}
-          />
-        </div> : null}
-
-      <div
-        className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
-        EAL by Type
-      </div>
-      <div>
-        <div className="py-4 sm:py-2 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 border-b-2">
-          <dt className="text-sm font-medium text-gray-600">
-            Event Type
-          </dt>
-          <dd className="text-sm font-medium text-gray-600 ">
-            buildings {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-          </dd>
-          <dd className="text-sm font-medium text-gray-600 ">
-            crop {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-          </dd>
-          <dd className="text-sm font-medium text-gray-600 ">
-            population {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
-          </dd>
+      {
+        (!metadataActiveView || metadataActiveView.length === 0) ? <div> Stats Not Available </div> :
+          (
+            <>
+              <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
+                <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === activeView.toString()).version} </label>
+                <BarGraph
+                  key={'numEvents'}
+                  data={chartComparativeStatsData}
+                  keys={Object.keys(chartComparativeStatsData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
+                  indexBy={'nri_category'}
+                  axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
+                  axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
+                  paddingInner={0.1}
+                  // colors={(value, ii, d, key) => ctypeColors[key]}
+                  hoverComp={{
+                    HoverComp: HoverComp,
+                    valueFormat: fnumIndex
+                  }}
+                  groupMode={'grouped'}
+                />
+              </div>
 
 
-          {
-            compareMode &&
-            <dd className="text-sm font-medium text-gray-600 ">
-              buildings {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-            </dd>
-          }
+              {compareMode ?
+                <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
+                  <label key={'nceiLossesTitle'} className={'text-lg'}> EAL (SWD, NRI and AVAIL) {views.find(v => v.view_id.toString() === compareView.toString()).version} </label>
+                  <BarGraph
+                    key={'numEvents'}
+                    data={chartComparativeStatsCompareData}
+                    keys={Object.keys(chartComparativeStatsCompareData[0] || {}).filter(key => key.includes('eal') || key.includes('annualized'))}
+                    indexBy={'nri_category'}
+                    axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
+                    axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
+                    paddingInner={0.1}
+                    // colors={(value, ii, d, key) => ctypeColors[key]}
+                    hoverComp={{
+                      HoverComp: HoverComp,
+                      valueFormat: fnumIndex
+                    }}
+                    groupMode={'grouped'}
+                  />
+                </div> : null}
+              <RenderComparativeStats chartComparativeStatsData={chartComparativeStatsData} />
 
-          {
-            compareMode &&
-            <dd className="text-sm font-medium text-gray-600 ">
-              crop {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-            </dd>
-          }
+              <div
+                className={'flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-lg font-md'}>
+                EAL by Type
+              </div>
+              <div>
+                <div className={`py-4 sm:py-2 sm:grid sm:grid-cols-${compareMode ? 7 : 4} sm:gap-4 sm:px-6 border-b-2`}>
+                  <dt className="text-sm font-medium text-gray-600">
+                    Event Type
+                  </dt>
+                  <dd className="text-sm font-medium text-gray-600 ">
+                    Avail EAL {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                  </dd>
+                  <dd className="text-sm font-medium text-gray-600 ">
+                    NRI EAL {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                  </dd>
+                  <dd className="text-sm font-medium text-gray-600 ">
+                    % diff {compareMode ? `(${views.find(v => v.view_id.toString() === activeView.toString()).version})` : null}
+                  </dd>
 
-          {
-            compareMode &&
-            <dd className="text-sm font-medium text-gray-600 ">
-              population {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
-            </dd>
-          }
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
-          <dl className="sm:divide-y sm:divide-gray-200">
 
-            {
-              metadataActiveView
-                .map((col, i) => (
-                  <div key={i} className="py-4 sm:py-5 sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6">
-                    <dt className="text-sm text-gray-900">
-                      {col.nri_category}
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {fnum(col.swd_buildings)}
+                  {
+                    compareMode &&
+                    <dd className="text-sm font-medium text-gray-600 ">
+                      Avail EAL {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
                     </dd>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {fnum(col.swd_crop)}
-                    </dd>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {fnum(col.swd_population)}
-                    </dd>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {
-                        compareMode &&
-                        fnum(get(metadataCompareView
-                          .find(row => row.nri_category === col.nri_category), 'swd_buildings'))
-                      }
-                    </dd>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {
-                        compareMode &&
-                        fnum(get(metadataCompareView
-                          .find(row => row.nri_category === col.nri_category), 'swd_crop'))
-                      }
-                    </dd>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                      {
-                        compareMode &&
-                        fnum(get(metadataCompareView
-                          .find(row => row.nri_category === col.nri_category), 'swd_population'))
-                      }
-                    </dd>
-                  </div>
-                ))
-            }
+                  }
 
-          </dl>
-        </div>
-      </div>
+                  {
+                    compareMode &&
+                    <dd className="text-sm font-medium text-gray-600 ">
+                      NRI EAL {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                    </dd>
+                  }
+
+                  {
+                    compareMode &&
+                    <dd className="text-sm font-medium text-gray-600 ">
+                      % diff {`(${views.find(v => v.view_id.toString() === compareView.toString()).version})`}
+                    </dd>
+                  }
+                </div>
+                <div className="border-t border-gray-200 px-4 py-5 sm:p-0 overflow-auto h-[700px]">
+                  <dl className="sm:divide-y sm:divide-gray-200">
+
+                    {
+                      metadataActiveView
+                        .sort((a, b) => a.diff - b.diff)
+                        .map((col, i) => (
+                          <div key={i} className={`py-4 sm:py-5 sm:grid sm:grid-cols-${compareMode ? 7 : 4} sm:gap-4 sm:px-6`}>
+                            <dt className="text-sm text-gray-900">
+                              {col.nri_category}
+                            </dt>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {fnum(col.avail_eal)}
+                            </dd>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {fnum(col.nri_eal)}
+                            </dd>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {(col.diff).toFixed(2)} %
+                            </dd>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {
+                                compareMode &&
+                                fnum(get(metadataCompareView
+                                  .find(row => row.nri_category === col.nri_category), 'avail_eal'))
+                              }
+                            </dd>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {
+                                compareMode &&
+                                fnum(get(metadataCompareView
+                                  .find(row => row.nri_category === col.nri_category), 'nri_eal'))
+                              }
+                            </dd>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
+                              {
+                                compareMode &&
+                                `${(get(metadataCompareView
+                                  .find(row => row.nri_category === col.nri_category), 'diff')).toFixed(2)} %`
+                              }
+                            </dd>
+                          </div>
+                        ))
+                    }
+
+                  </dl>
+                </div>
+              </div>
+            </>
+          )
+      }
+
     </div>
   )
 }

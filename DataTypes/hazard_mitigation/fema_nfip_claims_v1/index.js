@@ -1,13 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import Create from './create'
 import {useFalcor} from "modules/avl-components/src";
-import get from "lodash.get";
+import get from "lodash/get";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
+import AddVersion from "../../default/AddVersion";
 
 const Table = ({source}) => {
   return <div> Table View </div>  
 }
+
+
 
 
 const RenderNumRowsByMonth = ({metadataActiveView, metadataCompareView, activeView, compareView, compareMode, views}) => {
@@ -152,20 +155,11 @@ const Stats = ({source, views}) => {
 
 
 const FreightAtlashShapefileConfig = {
-  map: {
-    name: 'Map',
-    path: '/map',
-    component: () => <div> No Map </div>
-  },
-  stats: {
-    name: 'Stats',
-    path: '/stats',
-    component: Stats
-  },
-  table: {
-    name: 'Table',
-    path: '/table',
-    component: Table
+
+  add_version: {
+    name: "Add Version",
+    path: "/add_version",
+    component: AddVersion
   },
   sourceCreate: {
     name: 'Create',

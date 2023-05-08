@@ -79,8 +79,8 @@ class FreightAtlasLayer extends LayerContainer {
   init(map, falcor) {
     console.log('init freight atlas layer')
     const { data_table } = get(this, `views[${this.activeView}]`, '')
-    this.layerName = get(data_table.split('.'),'[1]','').slice(0,-6)
-    this.version = get(data_table.split('.'),'[1]','').slice(-4)
+    this.layerName = get(data_table?.split('.'),'[1]','').slice(0,-6)
+    this.version = get(data_table?.split('.'),'[1]','').slice(-4)
   }
 
   getColorScale(domain, numBins=5, color='Reds') {

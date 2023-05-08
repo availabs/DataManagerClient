@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash.get";
 import { useFalcor } from "../../../../modules/avl-components/src";
@@ -41,14 +41,15 @@ async function getData({ falcor, pgEnv, viewId }) {
   };
 }
 
-const DeleteButton = ({ text, viewId, sourceId, pgEnv, baseUrl }) => {
-  const history = useHistory();
+const DeleteButton = ({ text, viewId, sourceId, pgEnv, baseUrl, falcor }) => {
+  const navigate = useNavigate();
   return (
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
       onClick={async () => {
         await deleteView(getDamaApiRoutePrefix(pgEnv), viewId);
-        history.push(`${baseUrl}/source/${sourceId}/versions`);
+        await falcor.invalidate(["dama", pgEnv, "sources", "byId", sourceId, "views", "length"])
+        navigate(`${baseUrl}/source/${sourceId}/versions`);
       }
       }>
 
@@ -119,12 +120,12 @@ const RenderDependents = ({ dependents, viewId, srcMeta, viewMeta }) => {
   );
 };
 
-const LoadDependentViews = (dependents, sourceId, viewId, srcMeta, viewMeta, pgEnv, baseUrl) => (
+const LoadDependentViews = (dependents, sourceId, viewId, srcMeta, viewMeta, pgEnv, baseUrl, falcor) => (
   <>
     <div className={"pb-4 flex justify-between"}>
       <label>The View has following dependents:</label>
 
-      <DeleteButton text={"Delete anyway"} viewId={viewId} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+      <DeleteButton text={"Delete anyway"} viewId={viewId} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} falcor={falcor}/>
     </div>
 
     <div className={"bg-red-50"}>
@@ -132,11 +133,11 @@ const LoadDependentViews = (dependents, sourceId, viewId, srcMeta, viewMeta, pgE
     </div>
   </>);
 
-const LoadConfirmDelete = (viewId, sourceId, pgEnv, baseUrl) => (
+const LoadConfirmDelete = (viewId, sourceId, pgEnv, baseUrl, falcor) => (
   <div className={"pb-4 flex justify-between"}>
     <label>No dependents found.</label>
 
-    <DeleteButton text={"Confirm Delete"} viewId={viewId} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+    <DeleteButton text={"Confirm Delete"} viewId={viewId} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} falcor={falcor} />
   </div>
 );
 
@@ -156,7 +157,7 @@ export default function Popup({ baseUrl }) {
   return (
     <div className="w-full p-4 bg-white my-1 block border shadow">
       <div className={"pb-4 font-bold"}>Delete <i>{viewId}</i></div>
-      {dependents.length ? LoadDependentViews(dependents, sourceId, viewId, srcMeta, viewMeta, pgEnv, baseUrl) : LoadConfirmDelete(viewId, sourceId, pgEnv, baseUrl)}
+      {dependents.length ? LoadDependentViews(dependents, sourceId, viewId, srcMeta, viewMeta, pgEnv, baseUrl, falcor) : LoadConfirmDelete(viewId, sourceId, pgEnv, baseUrl, falcor)}
     </div>
   );
 }

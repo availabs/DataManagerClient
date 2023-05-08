@@ -4,7 +4,7 @@ import get from "lodash.get";
 
 const sliceName = "data_manager";
 
-const defaultPgEnv = "tig_dama_dev";
+const defaultPgEnv = "npmrds";
 
 const lclStoKeys = {
   pgEnv: `redux.${sliceName}.pgEnv`,

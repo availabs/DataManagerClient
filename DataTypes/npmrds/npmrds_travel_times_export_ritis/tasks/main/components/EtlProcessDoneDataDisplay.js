@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { DAMA_HOST } from "config";
 
@@ -9,7 +9,7 @@ import {
 } from "pages/DataManager/utils/EtlContext";
 
 export default function RequestStatusMessage() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const ctx = useContext(EtlContextReact);
 
   const { etlProcessFinalEvent } = useEtlContext(ctx);
@@ -57,7 +57,7 @@ export default function RequestStatusMessage() {
               cursor: "pointer",
             }}
             onClick={() => {
-              history.push(`/datasources/source/${source_id}`);
+              navigate(`/datasources/source/${source_id}`);
             }}
           >
             {name}

@@ -3,21 +3,11 @@ import Create from "./create";
 import AddVersion from "../../default/AddVersion";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
-import { useFalcor } from "../../../../../modules/avl-components/src";
+import { Table, useFalcor } from "../../../../../modules/avl-components/src";
 import get from "lodash.get";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
+import { fnum, fnumIndex } from "../../../utils/macros"
 
-const fnumIndex = (d) => {
-  if (d >= 1000000000) {
-    return `${parseInt(d / 1000000000)} B`;
-  } else if (d >= 1000000) {
-    return `${parseInt(d / 1000000)} M`;
-  } else if (d >= 1000) {
-    return `${parseInt(d / 1000)} K`;
-  } else {
-    return `${d}`;
-  }
-};
 
 const RenderVersions = (domain, value, onchange) => (
   <select
@@ -33,24 +23,54 @@ const RenderVersions = (domain, value, onchange) => (
 );
 
 const ProcessDataForMap = (data) => React.useMemo(() => {
-    const years = [...new Set(data.map(d => d.year))];
-    const disaster_numbers = new Set();
-    const processed_data = years.map(year => {
-        const lossData = data
-          .filter(d => d.year === year)
-          .reduce((acc, d) => {
-              disaster_numbers.add(d.disaster_number);
-              return {
-                  ...acc, ...{
-                      [`${d.disaster_number}_pd`]: d.fusion_property_damage,
-                      [`${d.disaster_number}_cd`]: d.fusion_crop_damage
-                  }
-              }
-          }, {});
-        return { year, ...lossData };
-    });
+  const years = [...new Set(data.map(d => d.year))];
+  const disaster_numbers = new Set(['swd']);
+  const swdTotal = {swd_tpd: 0, swd_tcd: 0, swd_ttd: 0};
+  const ofdTotal = {ofd_tpd: 0, ofd_tcd: 0, ofd_ttd: 0};
 
-    return {processed_data, disaster_numbers: [...disaster_numbers]}
+  const processed_data = years.map(year => {
+    const swdTotalPerYear = {swd_pd: 0, swd_cd: 0, swd_td: 0};
+    const ofdTotalPerYear = {ofd_pd: 0, ofd_cd: 0, ofd_td: 0};
+
+    const lossData = data
+      .filter(d => d.year === year)
+      .reduce((acc, d) => {
+        const tmpDn = d.disaster_number;
+        const tmpPd = +d.fusion_property_damage || 0,
+          tmpCd =  +d.fusion_crop_damage || 0,
+          tmptd = tmpPd + tmpCd + (+d.swd_population_damage || 0);
+
+        if(tmpDn.includes('SWD')){
+          swdTotalPerYear.swd_pd += tmpPd;
+          swdTotalPerYear.swd_cd += tmpCd;
+          swdTotalPerYear.swd_td += tmptd;
+
+          swdTotal.swd_tpd += tmpPd;
+          swdTotal.swd_tcd += tmpCd;
+          swdTotal.swd_ttd += tmptd;
+        }else{
+          disaster_numbers.add(tmpDn);
+          ofdTotalPerYear.ofd_pd += tmpPd;
+          ofdTotalPerYear.ofd_cd += tmpCd;
+          ofdTotalPerYear.ofd_td += tmptd;
+
+          ofdTotal.ofd_tpd += tmpPd;
+          ofdTotal.ofd_tcd += tmpCd;
+          ofdTotal.ofd_ttd += tmptd;
+        }
+
+        return {
+          ...acc, ...{
+            [`${tmpDn}_pd`]: (acc[[`${tmpDn}_pd`]] || 0) + tmpPd,
+            [`${tmpDn}_cd`]: (acc[`${tmpDn}_cd`] || 0) + tmpCd,
+            [`${tmpDn}_td`]: (acc[`${tmpDn}_td`] || 0) + tmptd
+          }
+        };
+      }, {});
+    return { year, ...lossData, ...swdTotalPerYear, ...ofdTotalPerYear };
+  });
+
+  return { processed_data,  disaster_numbers: [...disaster_numbers] };
 }, [data]);
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
@@ -98,6 +118,98 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     )
 }
 
+const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Math.floor((d))) }) => {
+  const compareTypes = [['NCEI', 'Fusion NCEI'], ['OFD', 'Fusion OFD']];
+  const compareCols = ['property_damage', 'crop_damage', 'population_damage'];
+  const invalidData = []
+  const cols = ['', 'Property Damage', 'Crop Damage', 'Population Damage'];
+
+  if (!Object.keys(data).length) return null;
+  const isValid = compareTypes.reduce((acc, types) => {
+    const tmp = compareCols.reduce((subAcc, col) => {
+
+      const tmpRes = types.reduce((acc, type) => {
+        return !acc ? Math.abs(data[type][col]) : Math.abs(acc - Math.abs(data[type][col]));
+      }, null) < tolerance;
+
+      if(!tmpRes) invalidData.push({types, col});
+      return subAcc && tmpRes
+    }, true)
+    return acc && tmp;
+  }, true);
+
+  return (
+    <div>
+      <div className={`overflow-hidden border-2 border-${isValid ? `green-300` : `red-200`}`}>
+        <i className={`text-sm ${isValid ? `text-[#46951a]` : `text-red-900`}`}> {isValid ? `Valid` : `Invalid`} with tolerance {tolerance}</i>
+
+        <div className={`flex flex-row items-center py-4 sm:py-2 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6`}>
+          {
+            cols
+              .map(col => (
+                <dt className="text-sm text-gray-900">
+                  {col}
+                </dt>
+              ))
+          }
+          {
+            Object.keys(data).map(type => (
+              <>
+                <dt className="text-gray-600">
+                  {type}
+                </dt>
+
+                {
+                  Object.keys(data[type])
+                    .map(col => (
+                      <dt className={`text-sm 
+                      ${
+                        !isValid && 
+                        invalidData.find(d => d.types.includes(type) && d.col === col) ? `text-red-900` : `text-gray-900`
+                      }`}>
+                        {formatData(data[type][col])}
+                      </dt>
+                    ))
+                }
+              </>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const RenderComparativeStats = ({data = []}) => {
+  const cols = Object.keys((data[0] || {})).filter(c => c.includes('total') || c.includes('diff') || c === 'disaster_number')
+  return (
+    <>
+      <div
+        className={'flex flex-row py-4 sm:py-2 sm:gap-4 sm:px-6 text-lg font-md'}>
+        Breakdown
+      </div>
+
+      <div className={`py-4 sm:py-2  sm:gap-4 sm:px-6 border-b-2 max-w-5xl`}>
+        <Table
+          columns={
+            cols.map(col => ({
+              Header: col,
+              accessor: col,
+              Cell: cell => col === 'disaster_number' ? cell.value : fnum((cell.value)),
+              align: 'left',
+              sortType: 'basic'
+            }))
+          }
+          data={data}
+          pageSize={100}
+        />
+
+
+      </div>
+    </>
+  )
+}
+
 const Stats = ({ source, views }) => {
   const pgEnv = useSelector(selectPgEnv);
   const { falcor, falcorCache } = useFalcor();
@@ -108,11 +220,14 @@ const Stats = ({ source, views }) => {
 
   useEffect(() => {
     falcor.get(
-      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], "lossByYearByDisasterNumber"]
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], 'total', ["lossByYearByDisasterNumber"]],
+      ["fusion", pgEnv, "source", source.source_id, "view", [activeView, compareView], ["validateLosses", "dataSourcesBreakdown"]]
     );
   }, [activeView, compareView, pgEnv, source.source_id, falcor]);
 
-  const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "lossByYearByDisasterNumber", "value"], []);
+  const metadataActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, 'total', "lossByYearByDisasterNumber", "value"], []);
+  const compareLossesActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "validateLosses", "value"], {});
+  const breakdownActiveView = get(falcorCache, ["fusion", pgEnv, "source", source.source_id, "view", activeView, "dataSourcesBreakdown", "value"], {});
   const metadataCompareView = get(falcorCache, ["ncei_storm_events_enhanced", pgEnv, "source", source.source_id, "view", compareView, "lossByYearByDisasterNumber", "value"], []);
   const { processed_data: chartDataActiveView, disaster_numbers } = ProcessDataForMap(metadataActiveView);
 
@@ -147,21 +262,32 @@ const Stats = ({ source, views }) => {
               <BarGraph
                 key={"numEvents"}
                 data={chartDataActiveView}
-                keys={disaster_numbers.map(dn => `${dn}_pd`)}
+                keys={disaster_numbers.map(dn => `${dn}_td`)}
                 indexBy={"year"}
-                axisBottom={d => d}
-                axisLeft={{ format: fnumIndex, gridLineOpacity: 1, gridLineColor: "#9d9c9c" }}
+                axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
+                axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
                 paddingInner={0.1}
                 // colors={(value, ii, d, key) => ctypeColors[key]}
                 hoverComp={{
                     HoverComp: HoverComp,
                     valueFormat: fnumIndex,
-                    keyFormat: k => k.replace('_pd', '').replace('_cd', '')
+                    keyFormat: k => k.replace('_td', '')
                 }}
                 groupMode={"stacked"}
               />
           </div>
       }
+
+      <div className={`pt-4`}>
+        <RenderComparativeStats data={breakdownActiveView} />
+      </div>
+
+      <div className={`pt-4`}>
+        <RenderValidation data={compareLossesActiveView} />
+      </div>
+      <div className={`pt-4`}>
+        <RenderValidation data={compareLossesActiveView} tolerance={0.0009} formatData={d => parseFloat(d).toFixed(4).toLocaleString()}/>
+      </div>
     </>
   );
 };

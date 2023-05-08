@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 import AddVersion from "../../default/AddVersion";
 
-// const fnum = (number) => parseInt(number).toLocaleString();
 const fnum = (d) => {
   if (!d) return d;
   if (d >= 1000000000) {

@@ -1,6 +1,6 @@
 import React from 'react';
 //import { useFalcor, withAuth } from 'modules/avl-components/src'
-import { useParams, useHistory } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 /*import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store"
 */// import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
@@ -10,7 +10,7 @@ import { selectPgEnv } from "pages/DataManager/store"
 
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
-  const history = useHistory()
+  const navigate = useNavigate()
   
   return (
     <div className='flex flex-1'>
@@ -19,7 +19,7 @@ const ViewSelector = ({views}) => {
         <select  
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => history.push(`/datasources/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`/datasources/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             .sort((a,b) => b.view_id - a.view_id)

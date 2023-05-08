@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { selectPgEnv } from "pages/DataManager/store";
 
@@ -66,7 +66,7 @@ export async function initializeNpmrdsDamaSources(pgEnv) {
 }
 
 function LinksTable(damaSrcMeta) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   if (!damaSrcMeta) {
     return "";
@@ -92,7 +92,7 @@ function LinksTable(damaSrcMeta) {
           key={`link-${source_id}`}
           style={{ cursor: "pointer", color: "blue" }}
           onClick={() => {
-            history.push(`/datasources/source/${source_id}`);
+            navigate(`/datasources/source/${source_id}`);
           }}
         >
           {source_id}

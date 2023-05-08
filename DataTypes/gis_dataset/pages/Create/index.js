@@ -1,8 +1,12 @@
 import React, { useReducer, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { selectPgEnv } from "pages/DataManager/store";
-import { useHistory } from "react-router-dom";
-import { useFalcor, Input } from "modules/avl-components/src";
+
+import { selectPgEnv } from "pages/DataManager/store"
+import { useNavigate } from "react-router-dom";
+import { useFalcor } from "modules/avl-components/src"
+// import {  useParams } from "react-router-dom";
+
+import get from 'lodash/get'
 
 import { DAMA_HOST } from "config";
 
@@ -25,8 +29,9 @@ export default function UploadGisDataset({
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
   const pgEnv = useSelector(selectPgEnv);
-  const history = useHistory();
-  const { falcor } = useFalcor();
+
+  const navigate = useNavigate()
+  const { falcor } = useFalcor()
 
   const [state, dispatch] = useReducer(reducer, {
     damaSourceId: sourceId,
@@ -87,11 +92,9 @@ export default function UploadGisDataset({
       } else {
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
-      console.log()
-      history.push(`/source/${state.damaSourceId}/versions`);
+      navigate(`/source/${state.damaSourceId}/versions`)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.publishStatus, state.damaSourceId, pgEnv, history]);
+  }, [state.publishStatus, state.damaSourceId, pgEnv, navigate]);
 
   useEffect(() => {
     // on page load get etl context

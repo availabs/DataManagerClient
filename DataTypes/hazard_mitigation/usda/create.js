@@ -2,11 +2,11 @@ import React from 'react'
 
 
 import { checkApiResponse, getDamaApiRoutePrefix } from "../../../utils/DamaControllerApi";
-import {useHistory} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, table, newVersion, history}) => {
+const CallServer = async ({rtPfx, baseUrl, source, table, newVersion, navigate}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/usdaLoader`
     );
@@ -24,11 +24,11 @@ const CallServer = async ({rtPfx, baseUrl, source, table, newVersion, history}) 
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const Create =  ({ source, newVersion, baseUrl })=> {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
@@ -37,7 +37,7 @@ const Create =  ({ source, newVersion, baseUrl })=> {
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
-                rtPfx, baseUrl, source, table: 'usda_crop_insurance_cause_of_loss', newVersion, history
+                rtPfx, baseUrl, source, table: 'usda_crop_insurance_cause_of_loss', newVersion, navigate
             })}> Add New Source</button>
         </div>
     )

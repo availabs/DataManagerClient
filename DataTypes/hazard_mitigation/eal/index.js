@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import Create from './create'
 import { Stats } from "./stats"
+import { MegaTable } from "./table"
 import { RenderMap } from "./map";
 import AddVersion from "../../default/AddVersion";
 
@@ -19,6 +20,11 @@ const NceiStormEventsConfig = {
         name: 'Map',
         path: '/map',
         component: RenderMap
+    },
+    table: {
+        name: 'Table',
+        path: '/table',
+        component: MegaTable
     },
     sourceCreate: {
         name: 'Create',

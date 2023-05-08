@@ -1,5 +1,5 @@
 import React from 'react'
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
@@ -7,7 +7,7 @@ import { RenderVersions } from "../../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYear, endYear,
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, startYear, endYear,
                               viewPB={}, viewNRI={}, viewState={}, viewCounty={}, viewNCEI={}}) => {
     const viewMetadata = [viewPB.view_id, viewNRI.view_id, viewState.view_id, viewCounty.view_id, viewNCEI.view_id];
 
@@ -42,13 +42,13 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, startYea
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
 
     // selected views/versions
@@ -61,6 +61,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const [viewCounty, setViewCounty] = React.useState();
     const [viewNCEI, setViewNCEI] = React.useState();
     // all versions
+    const [versionsPBSWD, setVersionsPBSWD] = React.useState({sources:[], views: []});
+    const [versionsPBFusion, setVersionsPBFusion] = React.useState({sources:[], views: []});
     const [versionsPB, setVersionsPB] = React.useState({sources:[], views: []});
     const [versionsNRI, setVersionsNRI] = React.useState({sources:[], views: []});
     const [versionsState, setVersionsState] = React.useState({sources:[], views: []});
@@ -71,13 +73,23 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsPB, type: 'per_basis'});
+            const pb_swd = await getSrcViews({rtPfx, setVersions: setVersionsPBSWD, type: 'per_basis'});
+            const pb_fusion = await getSrcViews({rtPfx, setVersions: setVersionsPBFusion, type: 'per_basis_fusion'});
             await getSrcViews({rtPfx, setVersions: setVersionsNRI, type: 'nri'});
             await getSrcViews({rtPfx, setVersions: setVersionsState, type: `tl_state`});
             await getSrcViews({rtPfx, setVersions: setVersionsCounty, type: 'tl_county'});
             await getSrcViews({rtPfx, setVersions: setVersionsNCEI, type: 'ncei_storm_events_enhanced'});
+
+            return {pb_swd, pb_fusion};
         }
-        fetchData();
+        fetchData()
+          .then(({pb_swd, pb_fusion}) => {
+            console.log("???", {pb_swd, pb_fusion})
+            setVersionsPB({
+                sources: [...pb_swd.sources, ...pb_fusion.sources],
+                views: [...pb_swd.views, ...pb_fusion.views]
+            })
+        });
     }, [rtPfx])
 
     return (
@@ -100,7 +112,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                             viewState: versionsState.views.find(v => v.view_id === parseInt(viewState)),
                             viewCounty: versionsCounty.views.find(v => v.view_id === parseInt(viewCounty)),
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
-                            history
+                            navigate
                         })}>
                 Add New Source
             </button>

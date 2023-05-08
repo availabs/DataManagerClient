@@ -4,8 +4,8 @@ import get from "lodash.get";
 import { LayerContainer } from "modules/avl-map/src";
 import { getColorRange } from "modules/avl-components/src";
 import ckmeans from "../../../../utils/ckmeans";
+import { fnum } from "../../../../utils/macros"
 
-const fnum = (number) => parseInt(number).toLocaleString();
 class EALChoroplethOptions extends LayerContainer {
   constructor(props) {
     super(props);
@@ -32,9 +32,11 @@ class EALChoroplethOptions extends LayerContainer {
       name: "compare",
       type: "dropdown",
       multi: false,
-      value: "avail_swd_eal",
+      value: "avail_eal",
       domain: [
-        { key: "avail_swd_eal", label: "Avail EAL" },
+        { key: "avail_eal", label: "Avail EAL" },
+        { key: "nri_eal", label: "NRI EAL" },
+        { key: "diff", label: "% Difference" },
       ],
       valueAccessor: d => d.key,
       accessor: d => d.label
@@ -46,7 +48,7 @@ class EALChoroplethOptions extends LayerContainer {
     type: "threshold",
     format: "0.2s",
     domain: [],
-    range: getColorRange(9, "Reds", false),
+    range: getColorRange(9, "RdYlGn", false),
     show: true
   };
 
@@ -79,15 +81,16 @@ class EALChoroplethOptions extends LayerContainer {
     },
     callback: (layerId, features, lngLat) => {
       return features.reduce((a, feature) => {
-        let { hazard } = this.props
+        let { hazard, paintKey } = this.props
         let record = this.data[this.dataSRC]
             .find(d =>
               hazard !== "all" ?
                 d.nri_category === hazard && d.geoid === feature.properties.geoid :
                 d.geoid === feature.properties.geoid),
-          response = [
-            [this.filters.compare.domain.find(d => d.key === this.filters.compare.value).label, fnum(get(record, this.filters.compare.value))]
-
+           response = [
+             [feature.properties.geoid, ''],
+            ...this.filters.compare.domain
+              .map(d => [d.label, fnum(get(record, d.key))])
           ];
         // console.log(record);
         return response;
@@ -145,22 +148,28 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   fetchData(falcor, props) {
+    console.log('fetchData', this.props)
     const pgEnv = 'hazmit_dama',
       source_id = 229,
-      view_id = 305;
+      view_id = this.props.viewId;
     return falcor.get(
-      ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid']
+      ['comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid', 'all']
     ).then(d => {
-      console.log('data?', d.json)
       this.data = {
-        byHaz: get(d, ["json", 'comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid'], [])
+        byHaz: get(d, ["json", 'comparative_stats', pgEnv, 'byEalIds', 'source', source_id, 'view', view_id, 'byGeoid', 'all'], [])
       };
 
     });
   }
 
   getColorScale(domain) {
+    if(!domain.length) domain = [0, 25, 50, 75, 100];
+    this.legend.range = getColorRange(9, "Oranges", false)
     
+    if(this.props.paintKey === 'diff') {
+      this.legend.range = getColorRange(9, "RdYlGn", false)
+      domain = [-100, -75, -50, -25, 0, 50, 100, 500, 1000]
+    }
     this.legend.domain = ckmeans(domain,Math.min(domain.length,this.legend.range.length)).map(d => parseInt(d))
     
     // console.log("test 123", this.legend.domain, this.legend.range);
@@ -187,31 +196,28 @@ class EALChoroplethOptions extends LayerContainer {
   }
 
   paintMap(map) {
-    let { hazard } = this.props
+    let { hazard, paintKey } = this.props;
     
     const colorScale = this.getColorScale(
       this.data[this.dataSRC]
           .filter(d => hazard !== 'all' ? d.nri_category === hazard : true)
-          .map((d) => d[this.filters.compare.value])
+          .map((d) => d[paintKey])
           .filter(d => d)
     );
-    console.log("cs?", colorScale(-77), colorScale(77), colorScale.range(), colorScale.domain());
     let colors = {};
-    console.log('this.data', this.data)
+
     this.data[this.dataSRC]
       .filter(d => hazard !== "all" ? d.nri_category === hazard : true)
       .forEach(d => {
-        //console.log("d?", parseInt(d[this.filters.compare.value]), colorScale(parseInt(d[this.filters.compare.value])));
-        colors[d.geoid] = d[this.filters.compare.value] ? colorScale(parseInt(d[this.filters.compare.value])) : "rgb(0,0,0)";
+        colors[d.geoid] = d[paintKey] ? colorScale(parseInt(d[paintKey])) : "rgb(0,0,0)";
       });
 
-    console.log(colors);
+
     map.setPaintProperty("counties", "fill-color",
       ["get", ["get", "geoid"], ["literal", colors]]);
   }
 
   render(map, falcor) {
-    console.log('render map props', this.props)
     this.handleMapFocus(map);
     this.paintMap(map);
   }

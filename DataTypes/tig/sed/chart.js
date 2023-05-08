@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import get from "lodash.get";
 
 import { selectPgEnv } from "pages/DataManager/store";
@@ -10,7 +10,7 @@ import { LineGraph } from "modules/avl-graph/src";
 
 const ViewSelector = ({ views }) => {
   const { viewId, sourceId, page } = useParams();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-1">
@@ -19,9 +19,7 @@ const ViewSelector = ({ views }) => {
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) =>
-            history.push(`/source/${sourceId}/${page}/${e.target.value}`)
-          }
+         
         >
           {views
             .sort((a, b) => b.view_id - a.view_id)

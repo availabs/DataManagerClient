@@ -4,7 +4,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { DAMA_HOST } from "config";
 
@@ -13,7 +13,7 @@ import { getViewsDependenciesForSource } from "pages/DataManager/utils/FalcorApi
 import { selectPgEnv } from "pages/DataManager/store";
 
 export default function DamaViewsTable() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { sourceId } = useParams();
   const [viewsMetaWithDeps, setViewsMetaWithDeps] = React.useState(null);
 
@@ -61,7 +61,7 @@ export default function DamaViewsTable() {
                 key={depViewId}
                 style={{ cursor: "pointer" }}
                 onClick={() => {
-                  history.push(
+                  navigate(
                     `/datasources/source/${depSrcId}/view/${depViewId}`
                   );
                 }}

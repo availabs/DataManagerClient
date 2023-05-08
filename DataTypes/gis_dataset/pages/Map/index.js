@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
-import { useParams, useHistory } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import GISDatasetLayer from './Layer'
 import Symbology from './symbology/index.js'
 import { AvlMap } from "modules/avl-maplibre/src"
@@ -23,7 +23,7 @@ const TILEHOST = getTilehost(DAMA_HOST)
 
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
-  const history = useHistory()
+  const navigate = useNavigate()
   
   return (
     <div className='flex'>
@@ -32,7 +32,7 @@ const ViewSelector = ({views}) => {
         <select  
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => history.push(`/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             .sort((a,b) => b.view_id - a.view_id)
@@ -267,13 +267,8 @@ const Map = ({layers,tempSymbology}) => {
                40.79
             ],
             styles: [
-<<<<<<< HEAD
-
-=======
-                config.google_streets_style,
-                
-                config.google_sattelite_style,
->>>>>>> d69fcec9436e24cb0eb1e252ba0bfbf43d14ed50
+//              config.google_streets_style,               
+//              config.google_sattelite_style,
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },

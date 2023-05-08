@@ -1,11 +1,11 @@
 import React from 'react'
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
 import { RenderVersions } from "../../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, history, 
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, 
                               viewPAFPD = {}, viewIHP = {}, 
                               viewDDS = {}, viewSBA = {}, 
                               viewNFIP = {}, viewUSDA = {}
@@ -54,13 +54,13 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, history,
 
     console.log('res', resJson);
 
-    history.push(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
+    navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
 const Create = ({ source, newVersion, baseUrl }) => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
 
     // selected views/versions
@@ -86,20 +86,20 @@ const Create = ({ source, newVersion, baseUrl }) => {
             await getSrcViews({rtPfx, setVersions: setVersionsIHP, type: 'individuals_and_households_program_valid_registrations_v1'});
             await getSrcViews({rtPfx, setVersions: setVersionsDDS, type: 'disaster_declarations_summaries_v2'});
             await getSrcViews({rtPfx, setVersions: setVersionsSBA, type: 'sba_disaster_loan_data_new'});
-            await getSrcViews({rtPfx, setVersions: setVersionsNFIP, type: 'fima_nfip_claims_v1'});
-            await getSrcViews({rtPfx, setVersions: setVersionsUSDA, type: 'usda_crop_insurance_cause_of_loss'});
+            await getSrcViews({rtPfx, setVersions: setVersionsNFIP, type: 'fima_nfip_claims_v1_enhanced'});
+            await getSrcViews({rtPfx, setVersions: setVersionsUSDA, type: 'usda_crop_insurance_cause_of_loss_enhanced'});
         }
         fetchData();
     }, [rtPfx])
 
     return (
         <div className='w-full'>
-            {RenderVersions({value: viewPAFPD, setValue: setViewPAFPD, versions: versionsPAFPD, type: 'public_assistance_funded_projects_details_v1'})}
-            {RenderVersions({value: viewIHP, setValue: setViewIHP, versions: versionsIHP, type: 'individuals_and_households_program_valid_registrations_v1'})}
-            {RenderVersions({value: viewDDS, setValue: setViewDDS, versions: versionsDDS, type: 'disaster_declarations_summaries_v2'})}
-            {RenderVersions({value: viewSBA, setValue: setViewSBA, versions: versionsSBA, type: 'sba_disaster_loan_data_new'})}
-            {RenderVersions({value: viewNFIP, setValue: setViewNFIP, versions: versionsNFIP, type: 'fima_nfip_claims_v1'})}
-            {RenderVersions({value: viewUSDA, setValue: setViewUSDA, versions: versionsUSDA, type: 'usda_crop_insurance_cause_of_loss'})}
+            {RenderVersions({value: viewDDS, setValue: setViewDDS, versions: versionsDDS, type: 'Disaster Declarations Summaries'})}
+            {RenderVersions({value: viewIHP, setValue: setViewIHP, versions: versionsIHP, type: 'Individuals and Households Program Valid Registrations'})}
+            {RenderVersions({value: viewPAFPD, setValue: setViewPAFPD, versions: versionsPAFPD, type: 'Public Assistance Funded Projects Details'})}
+            {RenderVersions({value: viewSBA, setValue: setViewSBA, versions: versionsSBA, type: 'SBA Loan Data'})}
+            {RenderVersions({value: viewNFIP, setValue: setViewNFIP, versions: versionsNFIP, type: 'NFIP Claims Enhanced'})}
+            {RenderVersions({value: viewUSDA, setValue: setViewUSDA, versions: versionsUSDA, type: 'USDA Crop Loss Enhanced'})}
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
@@ -111,7 +111,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                             viewSBA: versionsSBA.views.find(v => v.view_id === parseInt(viewSBA)),
                             viewNFIP: versionsNFIP.views.find(v => v.view_id === parseInt(viewNFIP)),
                             viewUSDA: versionsUSDA.views.find(v => v.view_id === parseInt(viewUSDA)),
-                            history
+                            navigate
                         })}>
                 Add New Source
             </button>
