@@ -76,7 +76,7 @@ const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) =>
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {Object.keys(SourceAttributes)
-            .filter(d => !['source_id','metadata','description', 'statistics', 'category'].includes(d))
+            .filter(d => !['source_id','metadata','description', 'statistics', 'category', 'display_name'].includes(d))
             .map((attr,i) => {
               let val = typeof source[attr] === 'object' ? JSON.stringify(source[attr]) : source[attr]
               return (
@@ -126,12 +126,12 @@ const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) =>
             <Versions source={source} view={views} baseUrl={baseUrl}/>
           </div>
         </div>*/}
-        <div className='py-10 px-2'>
+        {/*<div className='py-10 px-2'>
           <div className='text-gray-500 py-8 px-5'>Metadata</div>
           <div className=''>
             <Metadata source={source} />
           </div>
-        </div>
+        </div>*/}
       </div>
     </div>
   )

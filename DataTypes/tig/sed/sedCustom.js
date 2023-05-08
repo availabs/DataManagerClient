@@ -126,6 +126,7 @@ const SedTableFilter = ({source, filters, setFilters}) => {
 const SedTableTransform = (tableData, attributes,filters) => {
   let activeVar = get(filters, 'activeVar.value','totpop')
   
+  console.log('Hola', tableData, activeVar, years)
   const columns =  [{
       Header: 'TAZ',
       accessor: 'taz'
