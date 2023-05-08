@@ -9,6 +9,8 @@
     "earnwork_5",
     "earnwork_6",
     "earnwork_7",
+    "earnwork_8",
+    
     "elf_0",
     "elf_1",
     "elf_2",
@@ -17,6 +19,8 @@
     "elf_5",
     "elf_6",
     "elf_7",
+    "elf_8",
+    
     "empoff_0",
     "empoff_1",
     "empoff_2",
@@ -25,6 +29,8 @@
     "empoff_5",
     "empoff_6",
     "empoff_7",
+    "empoff_8",
+    
     "empret_0",
     "empret_1",
     "empret_2",
@@ -33,6 +39,8 @@
     "empret_5",
     "empret_6",
     "empret_7",
+    "empret_8",
+    
     "emptot_0",
     "emptot_1",
     "emptot_2",
@@ -41,6 +49,8 @@
     "emptot_5",
     "emptot_6",
     "emptot_7",
+    "emptot_8",
+    
     "gqpop_0",
     "gqpop_1",
     "gqpop_2",
@@ -49,6 +59,8 @@
     "gqpop_5",
     "gqpop_6",
     "gqpop_7",
+    "gqpop_8",
+    
     "gqpopins_0",
     "gqpopins_1",
     "gqpopins_2",
@@ -57,6 +69,8 @@
     "gqpopins_5",
     "gqpopins_6",
     "gqpopins_7",
+    "gqpopins_8",
+    
     "gqpopoth_0",
     "gqpopoth_1",
     "gqpopoth_2",
@@ -65,6 +79,8 @@
     "gqpopoth_5",
     "gqpopoth_6",
     "gqpopoth_7",
+    "gqpopoth_8",
+    
     "gqpopstr_0",
     "gqpopstr_1",
     "gqpopstr_2",
@@ -73,6 +89,8 @@
     "gqpopstr_5",
     "gqpopstr_6",
     "gqpopstr_7",
+    "gqpopstr_8",
+    
     "hhincx_0",
     "hhincx_1",
     "hhincx_2",
@@ -81,6 +99,8 @@
     "hhincx_5",
     "hhincx_6",
     "hhincx_7",
+    "hhincx_8",
+    
     "hhnum_0",
     "hhnum_1",
     "hhnum_2",
@@ -89,6 +109,8 @@
     "hhnum_5",
     "hhnum_6",
     "hhnum_7",
+    "hhnum_8",
+    
     "hhpop_0",
     "hhpop_1",
     "hhpop_2",
@@ -97,6 +119,8 @@
     "hhpop_5",
     "hhpop_6",
     "hhpop_7",
+    "hhpop_8",
+    
     "hhsize_0",
     "hhsize_1",
     "hhsize_2",
@@ -105,6 +129,8 @@
     "hhsize_5",
     "hhsize_6",
     "hhsize_7",
+    "hhsize_8",
+    
     "k_12_etot_0",
     "k_12_etot_1",
     "k_12_etot_2",
@@ -113,6 +139,8 @@
     "k_12_etot_5",
     "k_12_etot_6",
     "k_12_etot_7",
+    "k_12_etot_8",
+    
     "totpop_0",
     "totpop_1",
     "totpop_2",
@@ -121,6 +149,8 @@
     "totpop_5",
     "totpop_6",
     "totpop_7",
+    "totpop_8",
+    
     "unvenrol_0",
     "unvenrol_1",
     "unvenrol_2",
@@ -128,5 +158,6 @@
     "unvenrol_4",
     "unvenrol_5",
     "unvenrol_6",
-    "unvenrol_7"
+    "unvenrol_7",
+    "unvenrol_8"
 ]

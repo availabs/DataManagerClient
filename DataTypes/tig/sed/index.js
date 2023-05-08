@@ -5,15 +5,76 @@ import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
 
-import { SedMapFilter, SedTableFilter, SedTableTransform } from "./sedCustom";
-import { SedTableFilter2, SedTableTransform2 } from "./sedCustom2";
+import { SedMapFilter, SedTableFilter, SedTableTransform, SedHoverComp } from "./sedCustom";
+import { SedChartFilter, SedChartTransform } from "./sedChartCustom";
 import { SedCustomAttribute } from "./sedCustomAttribute";
+import { customRules } from "./sedCustomRules";
 import dbCols from "./dbCols.json";
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
 //console.log('dbCols', dbCols)
 
-const TigSedConfig = {
+export const tig_sed_taz = {
+  map: {
+    name: "Map",
+    path: "/map",
+    component: (props) => <MapPage 
+      {...props} 
+      MapFilter={SedMapFilter} 
+      HoverComp={SedHoverComp}
+    />,
+  },
+  table: {
+    name: "Table",
+    path: "/table",
+    component: (props) => (
+      <Table
+        {...props}
+        transform={SedTableTransform}
+        TableFilter={SedTableFilter}
+      />
+    ),
+  },
+  chart: {
+    name: "Chart",
+    path: "/chart",
+    component: (props) => (
+      <Chart
+        {...props}
+        transform={SedChartTransform}
+        TableFilter={SedChartFilter}
+      />
+    ),
+  },
+  sourceCreate: {
+    name: "Create",
+    component: (props) => (
+      <CreatePage
+        {...props}
+        dataType="tig_sed"
+        customRules={customRules}
+        databaseColumnNames={dbCols}
+        CustomAttributes={SedCustomAttribute}
+      />
+    ),
+  },
+  gisDatasetUpdate: {
+    name: "Upload",
+    path: "/gisDatasetUpdate",
+    component: (props) => (
+      <CreatePage
+        {...props}
+        dataType="tig_sed_taz"
+        customRules={customRules}
+        databaseColumnNames={dbCols}
+        CustomAttributes={SedCustomAttribute}
+      />
+    ),
+  },
+};
+
+
+export const tig_sed_county = {
   map: {
     name: "Map",
     path: "/map",
@@ -36,8 +97,8 @@ const TigSedConfig = {
     component: (props) => (
       <Chart
         {...props}
-        transform={SedTableTransform2}
-        TableFilter={SedTableFilter2}
+        transform={SedChartTransform}
+        TableFilter={SedChartFilter}
       />
     ),
   },
@@ -46,6 +107,8 @@ const TigSedConfig = {
     component: (props) => (
       <CreatePage
         {...props}
+        dataType="tig_sed"
+        customRules={customRules}
         databaseColumnNames={dbCols}
         CustomAttributes={SedCustomAttribute}
       />
@@ -54,8 +117,15 @@ const TigSedConfig = {
   gisDatasetUpdate: {
     name: "Upload",
     path: "/gisDatasetUpdate",
-    component: (props) => <CreatePage {...props} />,
+    component: (props) => (
+      <CreatePage
+        {...props}
+        dataType="tig_sed_county"
+        customRules={customRules}
+        databaseColumnNames={dbCols}
+        CustomAttributes={SedCustomAttribute}
+      />
+    ),
   },
 };
 
-export default TigSedConfig;

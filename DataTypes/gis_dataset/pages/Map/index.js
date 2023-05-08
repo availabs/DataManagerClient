@@ -13,8 +13,12 @@ import { DAMA_HOST } from 'config'
 // import { SymbologyControls } from 'pages/DataManager/components/SymbologyControls'
 //import { DAMA_HOST } from 'config'
 
+const getTilehost = (DAMA_HOST) =>
+  'http://localhost:3369' ? 
+  'http://localhost:3370' : 
+  DAMA_HOST + '/tiles'
 
-const TILEHOST = DAMA_HOST + '/tiles'
+const TILEHOST = getTilehost(DAMA_HOST)
 
 
 const ViewSelector = ({views}) => {
@@ -72,7 +76,7 @@ const DefaultMapFilter = ({source, filters, setFilters}) => {
   )
 }
 
-const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {} }) => {
+const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
   const { /*sourceId,*/ viewId } = useParams()
   const pgEnv = useSelector(selectPgEnv);
   
@@ -86,6 +90,11 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    return out
+  }, [activeView])
+  const metaData = useMemo(() => {
+    let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
+    out.tiles.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
     return out
   }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
@@ -107,7 +116,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
             source: source,
             activeView: activeView,
             filters,
-
+            hoverComp: HoverComp,
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
@@ -117,16 +126,20 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
       }
   },[source, views, mapData, activeViewId,filters])
 
-  //console.log('layer mappage', layer)
+  //console.log('layer mappage', tempSymbology)
 
   return (
     <div> 
       <div className='flex'>
         <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
         <MapFilter 
-          source={source} 
+          source={source}
+          metaData={metaData}
           filters={filters} 
           setFilters={setFilters}
+          tempSymbology={tempSymbology}
+          setTempSymbology={setTempSymbology}
+          activeViewId={activeViewId}
         />
         <ViewSelector views={views} />
       </div>
@@ -136,7 +149,7 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
           tempSymbology={tempSymbology}
         />
       </div>
-      {user.authLevel >= 5 ? 
+      {/*{user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {['sources','layers']
@@ -181,64 +194,19 @@ const MapPage = ({source,views, user, MapFilter=DefaultMapFilter, filterData = {
         <div className='flex'>
           <div className='flex-1' />
           <SaveSymbologyButton 
-            mapData={mapData}
+            metaData={metaData}
             symbology={tempSymbology}
             viewId={activeViewId}
           />
         </div>
-      </div> : ''}
+      </div> : ''}*/}
     </div>
   ) 
 }
 
 export default withAuth(MapPage)
 
-const SaveSymbologyButton = ({mapData,symbology, viewId}) => {
-  const { falcor } = useFalcor()
-  const pgEnv = useSelector(selectPgEnv);
-  
-  const save = async () => {
-    //console.log('click save 222', attr, value)
-    if(viewId) {
-      try{
-        let val = { tiles: mapData}
-        val.tiles['symbology'] = symbology
-        console.log('out value', val)
-        let response = await falcor.set({
-            paths: [
-              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
-            ],
-            jsonGraph: {
-              dama:{
-                [pgEnv]:{
-                  views: {
-                    byId:{
-                      [viewId] : {
-                        attributes : { 
-                          metadata: JSON.stringify(val)
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-        })
-        console.log('set run response', response)
-      } catch (error) {
-        console.log('error stuff',error,symbology, mapData);
-      }
-    }
-  }
-  return( 
-    <button 
-      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-      onClick={save}
-    >
-      Save Symbology
-    </button>
-  )
-}
+
 
 const Map = ({layers,tempSymbology}) => {
   const mounted = React.useRef(false);
@@ -299,7 +267,13 @@ const Map = ({layers,tempSymbology}) => {
                40.79
             ],
             styles: [
+<<<<<<< HEAD
 
+=======
+                config.google_streets_style,
+                
+                config.google_sattelite_style,
+>>>>>>> d69fcec9436e24cb0eb1e252ba0bfbf43d14ed50
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },
@@ -316,6 +290,51 @@ const Map = ({layers,tempSymbology}) => {
 }
 
 
+const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
+  const { falcor } = useFalcor()
+  const pgEnv = useSelector(selectPgEnv);
+  
+  const save = async () => {
+    //console.log('click save 222', attr, value)
+    if(viewId) {
+      try{
+        let val = metaData || { tiles:{} }
+        val.tiles['symbology'] = symbology
+        let response = await falcor.set({
+            paths: [
+              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
+            ],
+            jsonGraph: {
+              dama:{
+                [pgEnv]:{
+                  views: {
+                    byId:{
+                      [viewId] : {
+                        attributes : { 
+                          metadata: JSON.stringify(val)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+        })
+        console.log('set run response', response)
+      } catch (error) {
+        console.log('error stuff',error,symbology, metaData);
+      }
+    }
+  }
+  return( 
+    <button 
+      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+      onClick={save}
+    >
+      Save Symbology
+    </button>
+  )
+}
 
 
 

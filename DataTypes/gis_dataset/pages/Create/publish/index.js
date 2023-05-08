@@ -34,12 +34,10 @@ export default function PublishButton({ state, dispatch }) {
     etlContextId,
     gisUploadId,
     userId,
-    customViewAttributes
+    customViewAttributes,
+    sourceType
   } = state
 
-  console.log('====================================');
-  console.log("customViewAttributes in publish", customViewAttributes);
-  console.log('====================================');
   const { 
     text: publishButtonText, 
     color: publishButtonBgColor } = useMemo(()=> 
@@ -60,7 +58,7 @@ export default function PublishButton({ state, dispatch }) {
           source_id: damaSourceId || null,
           source_values: {
             name: damaSourceName,
-            type: 'gis_dataset'
+            type: sourceType || 'gis_dataset'
           },
           user_id: userId,
           tableDescriptor,

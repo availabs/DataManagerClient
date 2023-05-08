@@ -2,6 +2,9 @@ import React, { useMemo } from "react";
 import get from "lodash/get";
 import sumBy from "lodash/sumBy";
 import { regionalData } from "../constants/index";
+import ckmeans from '../../../../../utils/ckmeans'
+import * as d3scale from "d3-scale"
+import { useFalcor, withAuth, Button } from 'modules/avl-components/src'
 
 const sedVars = {
   totpop: { name: "Total Population" },
@@ -32,68 +35,10 @@ const areas = [
   ...Object.keys(regionalData?.sub_regions || {}),
 ];
 
-const years = ["10", "17", "20", "25", "30", "35", "40", "45", "50", "55"];
 
-const SedMapFilter = ({ source, activeVar, setActiveVar }) => {
-  let varType = useMemo(
-    () =>
-      typeof activeVar === "string"
-        ? activeVar.substring(0, activeVar.length - 3)
-        : "",
-    [activeVar]
-  );
-
-  let year = useMemo(
-    () => (typeof activeVar === "string" ? activeVar.slice(-2) : "10"),
-    [activeVar]
-  );
-
-  React.useEffect(() => {
-    if (!activeVar) {
-      setActiveVar("totpop_10");
-    }
-  }, []);
-  console.log(varType, year, activeVar);
-
-  return (
-    <div className="flex flex-1 border-blue-100">
-      <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
-      <div className="flex-1">
-        <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={varType}
-          onChange={(e) => setActiveVar(`${e.target.value}_${year}`)}
-        >
-          <option className="ml-2  truncate" value={null}>
-            none
-          </option>
-          {Object.keys(sedVars).map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={k}>
-              {sedVars[k].name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
-      <div className="">
-        <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={year}
-          onChange={(e) => setActiveVar(`${varType}_${e.target.value}`)}
-        >
-          {years.map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-};
 
 const SedChartFilter = ({ source, filters, setFilters }) => {
+  
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let area = useMemo(() => get(filters, "area.value", ""), [filters]);
   let summarize = useMemo(() => get(filters, "summarize.value", ""), [filters]);
@@ -212,16 +157,18 @@ const getSelectedArea = (area, groupByTableData) => {
   return selectedGroupByTableData;
 };
 
-const SedChartTransform = (tableData, attributes, filters, flag) => {
+const SedChartTransform = (tableData, attributes, filters, years, flag) => {
   let activeVar = get(filters, "activeVar.value", "totpop");
   let summarize = get(filters, "summarize.value", "county");
   let area = get(filters, "area.value", "all");
 
+  let updatedYears = years?.map((str) => (''+str).slice(-2));
+
   const columns = [];
-  (years || []).forEach((y) => {
+  (updatedYears || []).forEach((y, i) => {
     (columns || []).push({
       Header: `20${y}`,
-      accessor: `${activeVar}_${y}`,
+      accessor: `${activeVar}_${i}`,
     });
   });
 
@@ -229,10 +176,10 @@ const SedChartTransform = (tableData, attributes, filters, flag) => {
    * GroupBy county_nam
    */
   let groupByTableData = (tableData || []).reduce((g, d) => {
-    const { county_nam } = d;
-    if (county_nam !== null) {
-      g[`${county_nam}`] = g[`${county_nam}`] ?? [];
-      g[`${county_nam}`].push(d);
+    const { county } = d;
+    if (county !== null) {
+      g[`${county}`] = g[`${county}`] ?? [];
+      g[`${county}`].push(d);
     }
     return g;
   }, {});
@@ -310,4 +257,4 @@ const SedChartTransform = (tableData, attributes, filters, flag) => {
   };
 };
 
-export { SedChartFilter, SedMapFilter, SedChartTransform };
+export { SedChartFilter, SedChartTransform };

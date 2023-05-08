@@ -80,7 +80,7 @@ const TablePage = ({
       .then((d) => {
         console.timeEnd("getviewLength");
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId]);
 
   const dataLength = React.useMemo(() => {
@@ -93,7 +93,7 @@ const TablePage = ({
 
   const attributes = React.useMemo(() => {
     return get(source, "metadata", [])
-      .filter((d) => ["integer", "string", "number"].includes(d.type))
+      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
       .map((d) => d.name);
   }, [source]);
 
@@ -130,8 +130,11 @@ const TablePage = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId, falcorCache, dataLength]);
 
-  const { data} = React.useMemo(
-    () => transform(tableData, attributes, filters, "group_by_county"),
+  let years = get(activeView, ["metadata", "years"], []);
+
+  const { data } = React.useMemo(
+    () => transform(tableData, attributes, filters, years, "group_by_county"),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tableData, attributes, transform, filters]
   );
 
@@ -148,29 +151,36 @@ const TablePage = ({
             <LineGraph
               data={data}
               axisBottom={{ tickDensity: 1 }}
-              axisLeft={ {
+              axisLeft={{
                 lzabel: "Values",
                 showGridLines: false,
-                tickDensity: 1
-              } }
-              axisRight={ {
+                tickDensity: 1,
+              }}
+              axisRight={{
                 label: "Year",
                 showGridLines: false,
-              } }
-              hoverComp={ {
+              }}
+              hoverComp={{
                 idFormat: (id, data) => data.name,
                 yFormat: ",.2f",
-                showTotals: false
-              } }
-              margin={ {
+                showTotals: false,
+              }}
+              margin={{
                 top: 20,
                 bottom: 25,
                 left: 80,
-                right: 30
-              } }
+                right: 30,
+              }}
             />
           </>
-        ) : null}
+        ) : (
+          <div
+            className="text-center justify-content-center"
+            style={{ height: "600px", lineHeight: "600px" }}
+          >
+            No Chart Data Available
+          </div>
+        )}
       </div>
     </div>
   );
