@@ -19,11 +19,11 @@ const SymbologyControls = ({layer, onChange}) => {
   [layer.views, layer.activeView])
   
   const layerName = useMemo(() => 
-  	get(data_table.split('.'),'[1]','').slice(0,-6),
+  	get(data_table?.split('.'),'[1]','').slice(0,-6),
   [data_table])
 
   const version = useMemo(() => 
-  	get(data_table.split('.'),'[1]','').slice(-4),
+  	get(data_table?.split('.'),'[1]','').slice(-4),
   [data_table])
 
   return React.useMemo(() => (

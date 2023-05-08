@@ -16,7 +16,7 @@ const SourceThumb = ({ source, baseUrl = "/datasources" }) => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
       const resp = await falcor.get(lengthPath);
-      return await falcor.get([
+      await falcor.get([
         "dama", pgEnv, "sources", "byId",
         source.source_id, "views", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
@@ -64,14 +64,14 @@ const SourcesList = ({ baseUrl = "/datasources" }) => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "length"];
       const resp = await falcor.get(lengthPath);
-      return await falcor.get([
+      await falcor.get([
         "dama", pgEnv, "sources", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(SourceAttributes)
       ]);
     }
 
-    return fetchData();
+    fetchData();
   }, [falcor, pgEnv]);
 
   const sources = useMemo(() => {
