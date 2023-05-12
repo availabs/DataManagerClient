@@ -1,13 +1,13 @@
 import {
   checkApiResponse,
   getDamaApiRoutePrefix,
-} from "pages/DataManager/utils/DamaControllerApi";
+} from "~/pages/DataManager/utils/DamaControllerApi";
 
 export {
   checkApiResponse,
   getNewEtlContextId,
   getDamaApiRoutePrefix,
-} from "pages/DataManager/utils/DamaControllerApi";
+} from "~/pages/DataManager/utils/DamaControllerApi";
 
 export async function getNpmrdsDataDateExtent(ctx) {
   const {

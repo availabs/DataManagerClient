@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-import get from "lodash.get";
+import get from "lodash/get";
 
 const sliceName = "data_manager";
 
-const defaultPgEnv = "npmrds";
+const defaultPgEnv = "pan";
 
 const lclStoKeys = {
   pgEnv: `redux.${sliceName}.pgEnv`,

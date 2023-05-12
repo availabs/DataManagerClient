@@ -2,7 +2,7 @@
 
 import _ from "lodash";
 
-import { createSimpleSelector } from "pages/DataManager/utils/Reducks";
+import { createSimpleSelector } from "~/pages/DataManager/utils/Reducks";
 
 export const selectDataMinDate = (state) =>
   _.get(state, ["npmrdsDataDateExtent", 0], null);

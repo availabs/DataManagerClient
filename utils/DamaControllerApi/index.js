@@ -1,6 +1,6 @@
 // Consider:  Should this be a class so that tasks can extend and override methods?
 
-import { DAMA_HOST } from "config";
+import { DAMA_HOST } from "~/config";
 
 export async function checkApiResponse(res) {
   if (!res.ok) {

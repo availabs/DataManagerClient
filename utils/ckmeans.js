@@ -267,4 +267,6 @@ function ckmeans(data, nClusters) {
   return clusters;
 }
 
-module.exports = ckmeans;
+
+
+export default ckmeans
