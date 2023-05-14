@@ -37,6 +37,7 @@ const sedVarsCounty = {
     "gq_pop": {name: 'Group Quarters Population', domain: defaultDomain, range: defaultRange},
     "hh_num": {name: 'Households', domain: defaultDomain, range: defaultRange},
     "hh_size": {name: 'Household Size', domain: defaultDomain, range: defaultRange},
+    "emplf": {name: 'Employed Labor Force', domain: defaultDomain, range: defaultRange},
     "lf": {name: 'Labor Force', domain: defaultDomain, range: defaultRange}
 }
 
@@ -298,7 +299,7 @@ const SedHoverComp = ({ data, layer }) => {
     sedVars[activeVar.split('_')[0] || 'tot_pop']?.name || '' :
     sedVarsCounty[activeVar.slice(0,-2) || 'totpop']?.name || '' 
 
-    console.log(type, sedVarsCounty[activeVar.slice(-2) || 'totpop']?.name || '' , activeVar.slice(0,-2) )
+    //console.log(type, sedVarsCounty[activeVar.slice(-2) || 'totpop']?.name || '' , activeVar.slice(0,-2) )
 
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>

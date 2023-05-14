@@ -15,7 +15,6 @@ import dbColsTaz from "./dbColsTaz.json";
 import dbColsCounty from "./dbColsCounty.json";
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 
-//console.log('dbCols', dbCols)
 
 export const tig_sed_taz = {
   map: {
