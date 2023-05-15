@@ -1,11 +1,11 @@
 import Select from "react-select";
 
-const Group = (props) => {
+const MultiSelect = ({ options, onChange, value, ...props }) => {
   return (
     <Select
-      options={props.options}
-      onChange={props.onChange}
-      value={props.value}
+      options={options}
+      onChange={onChange}
+      value={value}
       hideSelectedOptions={true}
       closeMenuOnSelect={false}
       isMulti
@@ -15,4 +15,4 @@ const Group = (props) => {
   );
 };
 
-export default Group;
+export default MultiSelect;

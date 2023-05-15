@@ -2,7 +2,7 @@ import React, { useReducer, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "pages/DataManager/store";
 import { useHistory } from "react-router-dom";
-import { useFalcor, Input } from "modules/avl-components/src";
+import { useFalcor } from "modules/avl-components/src";
 
 import { DAMA_HOST } from "config";
 
@@ -87,7 +87,7 @@ export default function UploadGisDataset({
       } else {
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
-      console.log()
+
       history.push(`/source/${state.damaSourceId}/versions`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,7 +110,6 @@ export default function UploadGisDataset({
     return <div> Please enter a datasource name.</div>;
   }
 
-
   const canUpload = Object.keys(customRules)?.reduce((out, ruleKey) => {
     if (customRules[ruleKey](state) !== "canUpload") {
       out = customRules[ruleKey](state);
@@ -118,7 +117,6 @@ export default function UploadGisDataset({
     return out;
   }, "canUpload");
 
-  
   return (
     <div>
       <CustomAttributes state={state} dispatch={dispatch} />

@@ -1,6 +1,5 @@
 export const customRules = {
   isAllowToUpload: (state) =>
-
     (Number(state?.customViewAttributes?.years?.length) || 0) > 6 ? (
       "canUpload"
     ) : (

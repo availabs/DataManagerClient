@@ -1,22 +1,5 @@
-import React, { useState } from "react";
-import CountySelector from "./multiCountySelect";
-
-export const CountySelectorComponent = () => {
-  const [selectedCounties, setSelectedCounties] = useState([]);
-  const countiesOptions = new Array(10).fill("null").map((_, i) => ({
-    label: `new ${i}`,
-    value: i,
-  }));
-  return (
-    <>
-      <CountySelector
-        countiesOptions={countiesOptions}
-        selectedCounties={selectedCounties}
-        setSelectedCounties={setSelectedCounties}
-      />
-    </>
-  );
-};
+import React from "react";
+import AcsSelection from "./acsSelection";
 
 const TigAcsConfig = {
   sourceCreate: {
@@ -24,7 +7,7 @@ const TigAcsConfig = {
     component: (props) => (
       <div>
         Add Ammerican Communinity Survey Data
-        <CountySelectorComponent />
+        <AcsSelection {...props} dataType="tig_acs" />
       </div>
     ),
   },
