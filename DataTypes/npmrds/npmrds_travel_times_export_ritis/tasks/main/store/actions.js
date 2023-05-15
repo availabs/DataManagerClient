@@ -1,6 +1,6 @@
 // NOTE: Could dynamically create using the initialState object
 
-import { createSimpleIdentityAction } from "pages/DataManager/utils/Reducks";
+import { createSimpleIdentityAction } from "~/pages/DataManager/utils/Reducks";
 import RequestStatus from "../constants/RequestStatus";
 
 export const updateDataState = createSimpleIdentityAction("dataState/UPDATE");
