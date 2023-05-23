@@ -117,7 +117,6 @@ export default function UploadGisDataset({
     return <div> Please enter a datasource name.</div>;
   }
 
-
   const canUpload = Object.keys(customRules)?.reduce((out, ruleKey) => {
     if (customRules[ruleKey](state) !== "canUpload") {
       out = customRules[ruleKey](state);
@@ -125,7 +124,6 @@ export default function UploadGisDataset({
     return out;
   }, "canUpload");
 
-  
   return (
     <div>
       <CustomAttributes state={state} dispatch={dispatch} />
