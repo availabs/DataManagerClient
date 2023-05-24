@@ -13,7 +13,7 @@ const hazards = [
         "avalanche", "coastal", "coldwave", "drought", "earthquake", "hail", "heatwave", "hurricane", "icestorm", "landslide", "lightning", "riverine", "tornado", "tsunami", "volcano", "wildfire", "wind", "winterweat"
       ]
 
-const paintKeys = ['avail_eal', 'nri_eal', 'diff', 'wt_n', 'wt_r', 'wt_s', 'wt_c', 'max_wt', 'hlr_r'];
+const paintKeys = ['avail_eal', 'nri_eal', 'diff', 'wt_n', 'wt_r', 'wt_s', 'wt_c', 'max_wt', 'hlr_r', 'hlr'];
 
 const consequences = ['buildings', 'crop', 'population'];
 

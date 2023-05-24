@@ -191,7 +191,9 @@ export const Stats = ({source, views}) => {
                     Object.keys(NCEIeAttributes({'nri_category': 'nri_category'}))
                 ],
 
-                ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', [activeView, compareView]]
+                ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', [activeView, compareView]],
+
+                ['ncei_storm_events_enhanced', pgEnv, 'view', NCEIeVersion.view_id, 'normalized_event_count']
             );
         }
 
@@ -206,7 +208,7 @@ export const Stats = ({source, views}) => {
         [...NCEIePath(NCEIeView),
             NCEIeOptions(['nri_category']),
             'databyIndex'], {}));
-    console.log('data', (NCEIeETFData), (NCEIeNRICatData))
+    const NCEIeNormalizedCount = get(falcorCache, ['ncei_storm_events_enhanced', pgEnv, 'view', NCEIeView, 'normalized_event_count', 'value'], []);
 
     const chartComparativeStatsData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', activeView, 'value'], []);
     const chartComparativeStatsCompareData = get(falcorCache, ['comparative_stats', pgEnv, 'byEalIds', 'source', source.source_id, 'view', compareView, 'value'], []);
@@ -376,6 +378,27 @@ export const Stats = ({source, views}) => {
                                           pageSize={18}
                                       />
                                   </div>
+                              </div>
+
+                              <div>
+                                  NCEI Enhanced Loss event counts (Consequence Normalized)
+                                  <Table
+                                      data={NCEIeNormalizedCount}
+                                      columns={
+                                          ['nri_category', 'loss_events', 'total_events']
+                                              .map(col => {
+                                                  const mappedName = col.replace('_', ' ')
+                                                  return {
+                                                      Header: mappedName,
+                                                      accessor: col,
+                                                      align: col === 'nri_category' ? 'left' : 'right',
+                                                      Cell: cell => col === 'nri_category' ? cell.value : cell.value?.toLocaleString()
+                                                  }
+                                              })
+                                      }
+                                      sortBy={'nri_category'}
+                                      pageSize={18}
+                                  />
                               </div>
                           </div>
                         </>

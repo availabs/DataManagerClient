@@ -206,6 +206,13 @@ class EALChoroplethOptions extends LayerContainer {
 
   sources = [
     {
+      id: "states",
+      source: {
+        'type': "vector",
+        'url': 'mapbox://am3081.1fysv9an'
+      },
+    },
+    {
       id: "counties",
       source: {
         "type": "vector",
@@ -231,13 +238,29 @@ class EALChoroplethOptions extends LayerContainer {
           "interpolate",
           ["linear"],
           ["zoom"],
-          4, 0,
-          22, 0
+          4, 0.5,
+          22, 1
         ],
         "line-color": "#ccc",
+        "line-opacity": 0.7
+      }
+    },
+    {
+      'id': 'states-line',
+      'source': 'states',
+      'source-layer': 'us_states',
+      'type': 'line',
+      paint: {
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          4, 1,
+          22, 1.5
+        ],
         "line-opacity": 0.5
       }
-    }
+    },
   ];
 
   init(map, falcor, props) {
@@ -307,14 +330,15 @@ class EALChoroplethOptions extends LayerContainer {
     this.legend.range = getColorRange(9, "Oranges", false)
 
     if(this.props.paintKey === 'max_wt') {
-      this.legend.domain = ['wt_n', 'wt_r', 'wt_s', 'wt_c']
+      this.legend.domain = ['National', 'Regional', 'Surrounding', 'County']
       this.legend.range = getColorRange(4, "RdYlGn", false)
       this.legend.type = 'ordinal'
       this.legend.format = null
 
-      return scaleOrdinal()
-        .domain(this.legend.domain)
-        .range(this.legend.range);
+      return key => key === 'wt_n' ? this.legend.range[0] :
+                    key === 'wt_r' ? this.legend.range[1]:
+                    key === 'wt_s'? this.legend.range[2]:
+                    key === 'wt_c' ? this.legend.range[3]: '#000'
     }
 
     if(this.props.paintKey === 'diff') {
