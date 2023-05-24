@@ -1,9 +1,7 @@
 import React from 'react'
 import {useNavigate} from "react-router-dom";
-
-
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
-import { RenderVersions } from "../../../utils/macros"
+import { RenderVersions, range } from "../../../utils/macros"
 import { useSelector } from "react-redux";
 import { selectPgEnv } from "../../../store";
 
@@ -47,15 +45,13 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, startYe
     navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 };
 
-const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
-
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
     const pgEnv = useSelector(selectPgEnv);
 
     const [startYear, setStartYear] = React.useState(1996);
     const [endYear, setEndYear] = React.useState(2019);
-    const years = range(1996, 2022);
+    const years = range(1996, new Date().getFullYear()).reverse();
 
     // selected views/versions
     const [viewZTC, setViewZTC] = React.useState();
@@ -73,7 +69,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const [versionsNCEI, setVersionsNCEI] = React.useState({sources:[], views: []});
 
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
-
+    console.log('years', endYear)
     React.useEffect(() => {
         async function fetchData() {
             await getSrcViews({rtPfx, setVersions: setVersionsZTC, type: 'zone_to_county'});

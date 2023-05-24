@@ -38,7 +38,8 @@ const Stats = ({source, views}) => {
     }, [activeView, compareView, pgEnv, source.source_id, falcor])
 
 
-    const metadataActiveView = get(falcorCache, ['per_basis', pgEnv, 'source', source.source_id, 'view', activeView, 'stats', 'value'], []);
+    const metadataActiveView = get(falcorCache, ['per_basis', pgEnv, 'source', source.source_id, 'view', activeView, 'stats', 'value'], [])
+        .sort((a, b) => a.nri_category.localeCompare(b.nri_category));
     const metadataCompareView = get(falcorCache, ['per_basis', pgEnv, 'source', source.source_id, 'view', compareView, 'stats', 'value'], []);
 
     console.log('??', compareMode)

@@ -16,7 +16,9 @@ const RenderVersions = (domain, value, onchange) => (
     onChange={(e) => onchange(e.target.value)
     }
   >
-    {domain.map((v, i) => (
+    {domain
+        .sort((a, b) => b.view_id - a.view_id)
+        .map((v, i) => (
       <option key={i} value={v.view_id} className="ml-2  truncate">{v.version}</option>
     ))}
   </select>
@@ -181,7 +183,9 @@ const RenderValidation = ({ data = {}, tolerance = 1, formatData = d => fnum(Mat
 }
 
 const RenderComparativeStats = ({data = []}) => {
-  const cols = Object.keys((data[0] || {})).filter(c => c.includes('total') || c.includes('diff') || c === 'disaster_number')
+    console.log('reloaded')
+  const cols = Object.keys((data[0] || {}))
+      .filter(c => c.includes('total') || c.includes('diff') || c === 'disaster_number'|| c === 'declaration_title')
   return (
     <>
       <div
@@ -189,19 +193,23 @@ const RenderComparativeStats = ({data = []}) => {
         Breakdown
       </div>
 
-      <div className={`py-4 sm:py-2  sm:gap-4 sm:px-6 border-b-2 max-w-5xl`}>
+      <div className={`py-4 sm:py-2  sm:gap-4 sm:px-6 border-b-2 max-w-5xl text-sm`}>
         <Table
           columns={
             cols.map(col => ({
-              Header: col,
-              accessor: col,
-              Cell: cell => col === 'disaster_number' ? cell.value : fnum((cell.value)),
-              align: 'left',
-              sortType: 'basic'
+                Header: col,
+                accessor: col,
+                Cell: cell => ['disaster_number', 'declaration_title'].includes(col) ? cell.value : fnum(cell.value, true),
+                align: 'left',
+                width:
+                    col === 'disaster_number' ? '5%' :
+                        col === 'declaration_title' ? '23%' :
+                            '20%',
+                sortType: 'basic',
             }))
           }
           data={data}
-          pageSize={100}
+          pageSize={10}
         />
 
 
@@ -253,41 +261,41 @@ const Stats = ({ source, views }) => {
         {compareMode ? RenderVersions(views, compareView, setCompareView) : null}
       </div>
 
-      {
-        !metadataActiveView || metadataActiveView.length === 0 ? <div> Stats Not Available </div> :
-          <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>
-              <label key={'nceiLossesTitle'} className={'text-lg'}> Loss by Disaster Number
-                  {/*{views.find(v => v.view_id.toString() === activeView.toString()).version}*/}
-              </label>
-              <BarGraph
-                key={"numEvents"}
-                data={chartDataActiveView}
-                keys={disaster_numbers.map(dn => `${dn}_td`)}
-                indexBy={"year"}
-                axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}
-                axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}
-                paddingInner={0.1}
-                // colors={(value, ii, d, key) => ctypeColors[key]}
-                hoverComp={{
-                    HoverComp: HoverComp,
-                    valueFormat: fnumIndex,
-                    keyFormat: k => k.replace('_td', '')
-                }}
-                groupMode={"stacked"}
-              />
-          </div>
-      }
+      {/*{*/}
+      {/*  !metadataActiveView || metadataActiveView.length === 0 ? <div> Stats Not Available </div> :*/}
+      {/*    <div className={`w-full p-4 my-1 block flex flex-col`} style={{height: '350px'}}>*/}
+      {/*        <label key={'nceiLossesTitle'} className={'text-lg'}> Loss by Disaster Number*/}
+      {/*            /!*{views.find(v => v.view_id.toString() === activeView.toString()).version}*!/*/}
+      {/*        </label>*/}
+      {/*        <BarGraph*/}
+      {/*          key={"numEvents"}*/}
+      {/*          data={chartDataActiveView}*/}
+      {/*          keys={disaster_numbers.map(dn => `${dn}_td`)}*/}
+      {/*          indexBy={"year"}*/}
+      {/*          axisBottom={{ tickDensity: 3, axisColor: '#000', axisOpacity: 0  }}*/}
+      {/*          axisLeft={{ format: d => fnumIndex(d, 0), gridLineOpacity: 0.1, showGridLines: true, ticks: 5, axisColor: '#000', axisOpacity: 0 }}*/}
+      {/*          paddingInner={0.1}*/}
+      {/*          // colors={(value, ii, d, key) => ctypeColors[key]}*/}
+      {/*          hoverComp={{*/}
+      {/*              HoverComp: HoverComp,*/}
+      {/*              valueFormat: fnumIndex,*/}
+      {/*              keyFormat: k => k.replace('_td', '')*/}
+      {/*          }}*/}
+      {/*          groupMode={"stacked"}*/}
+      {/*        />*/}
+      {/*    </div>*/}
+      {/*}*/}
 
       <div className={`pt-4`}>
         <RenderComparativeStats data={breakdownActiveView} />
       </div>
 
-      <div className={`pt-4`}>
-        <RenderValidation data={compareLossesActiveView} />
-      </div>
-      <div className={`pt-4`}>
-        <RenderValidation data={compareLossesActiveView} tolerance={0.0009} formatData={d => parseFloat(d).toFixed(4).toLocaleString()}/>
-      </div>
+      {/*<div className={`pt-4`}>*/}
+      {/*  <RenderValidation data={compareLossesActiveView} />*/}
+      {/*</div>*/}
+      {/*<div className={`pt-4`}>*/}
+      {/*  <RenderValidation data={compareLossesActiveView} tolerance={0.0009} formatData={d => parseFloat(d).toFixed(4).toLocaleString()}/>*/}
+      {/*</div>*/}
     </>
   );
 };

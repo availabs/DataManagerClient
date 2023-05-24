@@ -29,6 +29,9 @@ export const formatDate = (dateString) => {
   };
   return dateString ? new Date(dateString).toLocaleDateString(undefined, options) : ``;
 };
+
+export const range = (start, end) => Array.from({length: (end + 1 - start)}, (v, k) => k + start);
+
 export const RenderVersions = ({ value, setValue, versions, type }) => {
   return (
     <div className="flex justify-between group">
@@ -42,13 +45,13 @@ export const RenderVersions = ({ value, setValue, versions, type }) => {
               onChange={e => {
                 setValue(e.target.value);
               }}>
-              <option value="" disabled>Select your option</option>
+              <option value="" disabled key={type}>Select your option</option>
               {(versions.views || versions)
-                .sort((a, b) => (b.view_id || a) - (a.view_id || b))
+                .sort((a, b) => (b.view_id) - (a.view_id))
                 .map(v =>
                   <option
-                    key={v.view_id}
-                    value={v.view_id}
+                    key={v.view_id || v}
+                    value={v.view_id || v}
                     className={`p-2 ${get(v, ["metadata", "authoritative"]) === "true" ? `font-bold` : ``}`}>
                     {get(v, "version") || v}
                     {v.view_id && ` (${v.view_id || ``} ${formatDate(v._modified_timestamp)})`}
