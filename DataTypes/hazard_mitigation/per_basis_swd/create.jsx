@@ -2,8 +2,8 @@ import React from 'react'
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
 import { RenderVersions } from "../../../utils/macros"
 import {useNavigate} from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
                               viewNCEI={}, viewNRI={}}) => {
@@ -37,7 +37,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
 
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     // selected views/versions
     const [viewNCEI, setViewNCEI] = React.useState();
     const [viewNRI, setViewNRI] = React.useState();

@@ -1,9 +1,8 @@
 import React from "react";
 import { withAuth, Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
-import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
 import { formatDate } from "../../utils/macros";
 import Version from "./version";
@@ -24,29 +23,30 @@ const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
   );
 };
 
-const DeleteButton = ({ viewId, sourceId, meta, navigate, baseUrl }) => {
+const DeleteButton = ({ viewId, sourceId, meta, navigate }) => {
+  const { baseUrl } = React.useContext(DamaContext);
   return (
     <button
       disabled={get(meta, "authoritative") === "true"}
       className={`bg-red-50 p-2 ${get(meta, "authoritative") === "true" ? `cursor-not-allowed` : `hover:bg-red-400 hover:text-white`}`}
-      onClick={() => navigate(`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
+      onClick={() => navigate(`/${baseUrl}/source/${sourceId}/versions/${viewId}/delete`)}
     >
       <i className="fad fa-trash"></i>
     </button>
   );
 };
 
-const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
-  const pgEnv = useSelector(selectPgEnv);
+const Versions = withAuth(({ source, views, user,  meta }) => {
+  const {pgEnv, baseUrl} = React.useContext(DamaContext);
   const navigate = useNavigate();
   const { sourceId, viewId, vPage } = useParams();
 
   if (vPage === "delete") {
-    return <DeleteVersion baseUrl={baseUrl} />;
+    return <DeleteVersion  />;
   }
   if (viewId) {
     return (
-      <Version baseUrl={baseUrl} />
+      <Version />
     );
   }
 
@@ -57,7 +57,7 @@ const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
         columns={[
           {
             Header: "Version Id",
-            accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
+            accessor: c => <Link to={`/${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
             align: "left"
           },
           {
@@ -84,7 +84,7 @@ const Versions = withAuth(({ source, views, user, baseUrl, meta }) => {
           {
             Header: " ",
             accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
-                                         navigate={navigate} baseUrl={baseUrl} />,
+                                         navigate={navigate} />,
             disableFilters: true
           }
         ]}

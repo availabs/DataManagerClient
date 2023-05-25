@@ -6,8 +6,8 @@ import { getColorRange } from '../../../../../../utils/color-ranges'
 import ckmeans from '../../../../../../utils/ckmeans'
 import * as d3scale from "d3-scale"
 import {  ColorInput, useFalcor } from "~/modules/avl-components/src"
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+
+import { DamaContext } from "~/pages/DataManager/store"
 
 
 const SimpleColorControl = ({symbologySlice,updateSlice}) => {
@@ -42,7 +42,7 @@ const ThresholdScaleColorControl = ({
  activeViewId
 }) => {
   const {falcor, falcorCache} = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
  
   useEffect(() =>  {
     if(symbologySlice.type !== 'scale-threshold'){

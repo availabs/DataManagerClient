@@ -1,8 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import get from "lodash/get";
-import { useSelector } from "react-redux";
 import { useFalcor } from "~/modules/avl-components/src";
-import { selectPgEnv } from "../store";
+import { DamaContext } from "../store";
 import { getDamaApiRoutePrefix, deleteSource } from "../utils/DamaControllerApi";
 import { useEffect } from "react";
 import SourcesLayout from "../components/SourcesLayout";
@@ -136,10 +135,10 @@ const LoadConfirmDelete = (sourceId, pgEnv, baseUrl) => (
   </div>
 );
 
-export default function Popup({ baseUrl }) {
+export default function Popup() {
   const { falcor, falcorCache } = useFalcor();
   const { sourceId } = useParams();
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
 
   useEffect(() => {
     getData({ falcor, pgEnv, sourceId });
@@ -153,7 +152,7 @@ export default function Popup({ baseUrl }) {
 
   return (
     <div>
-      <SourcesLayout baseUrl={baseUrl}>
+      <SourcesLayout>
         <div className="w-full p-4 bg-white my-1 block border shadow">
           <div className={"pb-4 font-bold"}>Delete <i>{display_name}</i></div>
           {dependents.length ? LoadDependentViews(dependents, srcMeta, viewMeta, sourceId, pgEnv, baseUrl) : LoadConfirmDelete(sourceId, pgEnv, baseUrl)}

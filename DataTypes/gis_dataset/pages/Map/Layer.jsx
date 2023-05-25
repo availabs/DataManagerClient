@@ -6,14 +6,14 @@ import { LayerContainer } from "~/modules/avl-map/src";
 import ckmeans from '../../../../utils/ckmeans'
 import { getColorRange } from '../../../../utils/color-ranges'
 import * as d3scale from "d3-scale"
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+
+import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
   const { falcor, falcorCache } = useFalcor() 
   const { attributes, activeViewId } = layer 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+
 import { useNavigate } from "react-router-dom";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 import {
   checkApiResponse,
@@ -174,7 +174,7 @@ function LinksTable(damaSrcMeta) {
 export default function CreateAllNpmrdsDataSources() {
   const [initializedAndMissing, setInitializedAndMissing] = useState(null);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   useEffect(
     () =>

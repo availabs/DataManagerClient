@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import { useFalcor, SideNav } from "~/modules/avl-components/src";
-import { useSelector } from "react-redux";
+
 
 import get from "lodash/get";
 //import {getDomain,getSubdomain} from 'utils'
@@ -11,7 +11,7 @@ import {SourceAttributes, getAttributes } from '~/pages/DataManager/components/a
 
 import { LayerContext } from "./FreightMap";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 const LayerManager = ({ activeLayers, MapActions, ...rest }) => {
   // const SUBDOMAIN = getSubdomain(window.location.host)
@@ -20,7 +20,7 @@ const LayerManager = ({ activeLayers, MapActions, ...rest }) => {
   const [layerSearch, setLayerSearch] = useState("");
   const { layerList, toggleLayer } = useContext(LayerContext);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   useEffect(() => {
     const fetchData = async () => {

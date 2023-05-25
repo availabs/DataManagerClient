@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+
 import { useParams, useNavigate } from "react-router-dom";
 import get from "lodash/get";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 import { useFalcor, withAuth } from "~/modules/avl-components/src";
 import { LineGraph } from "~/modules/avl-graph/src";
@@ -57,7 +57,7 @@ const TablePage = ({
   const { viewId } = useParams();
   const { falcor, falcorCache } = useFalcor();
   const [filters, setFilters] = useState(filterData);
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(

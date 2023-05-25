@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Create from "./create";
 import AddVersion from "../../default/AddVersion";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 import { Table, useFalcor } from "../../../../../modules/avl-components/src";
 import get from "lodash/get";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
@@ -211,7 +211,7 @@ const RenderComparativeStats = ({data = []}) => {
 }
 
 const Stats = ({ source, views }) => {
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const { falcor, falcorCache } = useFalcor();
   const [activeView, setActiveView] = useState(views[0].view_id);
   const [compareView, setCompareView] = useState(views[0].view_id);

@@ -2,8 +2,8 @@ import React, {useState, useEffect} from 'react';
 import Create from './create';
 import {useFalcor} from "~/modules/avl-components/src";
 import get from "lodash/get";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 import AddVersion from "../../default/AddVersion";
 
 const fnum = (d) => {
@@ -268,7 +268,7 @@ const RenderTypeMapping = ({metadataActiveView, metadataCompareView, activeView,
 )
 
 const Stats = ({source, views}) => {
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     const {falcor, falcorCache} = useFalcor();
     const [activeView, setActiveView] = useState(views[0].view_id);
     const [compareView, setCompareView] = useState(views[0].view_id);

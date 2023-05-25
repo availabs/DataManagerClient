@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useFalcor, withAuth, Table } from '~/modules/avl-components/src'
 import get from 'lodash/get'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store";
+
+import { DamaContext } from "~/pages/DataManager/store";
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 
 const ViewSelector = ({views}) => {
@@ -56,7 +56,7 @@ const TablePage = ({
   const { viewId } = useParams();
   const { falcor, falcorCache } = useFalcor();
   const [filters, setFilters] = useState(filterData);
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(

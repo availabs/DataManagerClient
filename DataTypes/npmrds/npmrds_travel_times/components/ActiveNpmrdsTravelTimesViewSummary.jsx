@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+
+import { DamaContext } from "~/pages/DataManager/store";
 
 import {
   Falcor,
@@ -542,7 +542,7 @@ export default function ActiveNpmrdsTravelTimesViewSummary() {
   // https://stackoverflow.com/a/55862077/3970755
   const [tick, setTick] = useState(0);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   const toggleImport = (view_id) => {
     const newSelectedImports = new Set(selectedImports);

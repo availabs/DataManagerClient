@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect} from "react";
 import get from "lodash/get";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+
+import { DamaContext } from "~/pages/DataManager/store"
 import { useFalcor } from "~/modules/avl-components/src"
 import * as d3scale from "d3-scale"
 import ckmeans from '../../../utils/ckmeans'
@@ -53,7 +53,7 @@ const SedMapFilter = ({
     activeViewId 
   }) => {
   const {falcor, falcorCache} = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let varType = useMemo(
     () =>
@@ -262,7 +262,7 @@ const SedHoverComp = ({ data, layer }) => {
   const { falcor, falcorCache } = useFalcor() 
   const { source: { type }, attributes, activeViewId, props: { filters, activeView: {metadata: { years } } }  } = layer
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 

@@ -2,8 +2,7 @@ import React, { useEffect, /*useMemo,*/ useState } from 'react';
 import { useFalcor, withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+import { DamaContext } from "~/pages/DataManager/store"
 import Metadata from './Metadata'
 import { useParams } from "react-router-dom";
 //import Versions from './Versions'
@@ -11,10 +10,9 @@ import { useParams } from "react-router-dom";
 const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv, baseUrl} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
-  console.log('useParams', useParams())
-
+  
   useEffect(() => {
     setValue(startValue)
   },[startValue])
@@ -54,9 +52,10 @@ const Edit = ({startValue, attr, sourceId, cancel=()=>{}}) => {
   )
 }
 
-const OverviewEdit = withAuth(({source, views, user, baseUrl='/datasources'}) => {
+const OverviewEdit = withAuth(({source, views, user}) => {
   const [editing, setEditing] = React.useState(null)
-  
+  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+
   return (
     <div className="overflow-hidden">
       

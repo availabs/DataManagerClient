@@ -3,8 +3,8 @@ import React from 'react'
 
 import { checkApiResponse, getDamaApiRoutePrefix } from "../../../utils/DamaControllerApi";
 import {useNavigate} from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 const CallServer = async ({rtPfx, baseUrl, source, tigerTable, newVersion, navigate}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/tigerDownloadAction`
@@ -60,7 +60,7 @@ const RenderTigerTables= ({value, setValue, domain}) => {
 
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     const [tigerTable, setTigerTable] = React.useState();
 
     const rtPfx = getDamaApiRoutePrefix(pgEnv);

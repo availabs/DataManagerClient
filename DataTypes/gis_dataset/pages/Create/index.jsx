@@ -1,7 +1,6 @@
 import React, { useReducer, useEffect } from "react";
-import { useSelector } from "react-redux";
 
-import { selectPgEnv } from "~/pages/DataManager/store"
+import { DamaContext } from "~/pages/DataManager/store"
 import { useNavigate } from "react-router-dom";
 import { useFalcor } from "~/modules/avl-components/src"
 // import {  useParams } from "react-router-dom";
@@ -28,7 +27,7 @@ export default function UploadGisDataset({
   databaseColumnNames = null,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv, baseUrl } = React.useContext(DamaContext);
 
   const navigate = useNavigate()
   const { falcor } = useFalcor()
@@ -93,7 +92,7 @@ export default function UploadGisDataset({
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
       console.log('publish done', state, state.damaSourceId)
-      navigate(`/source/${state.damaSourceId}/versions`)
+      navigate(`/${baseUrl}source/${state.damaSourceId}/versions`)
     }
   }, [state.publishStatus, state.damaSourceId, pgEnv, navigate]);
 
