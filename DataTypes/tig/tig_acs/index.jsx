@@ -1,16 +1,11 @@
+import React from "react";
+import AcsSelection from "./acsSelection";
 
-
-const TigSedConfig = {
- 
+const TigAcsConfig = {
   sourceCreate: {
     name: "Create",
-    component: (props) => (
-     <div>
-        Add Ammerican Communinity Survey Data
-     </div>
-    ),
+    component: (props) => <AcsSelection {...props} dataType="tig_acs" />,
   },
-  
 };
 
-export default TigSedConfig;
+export default TigAcsConfig;

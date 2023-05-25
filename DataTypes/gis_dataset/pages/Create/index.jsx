@@ -100,19 +100,21 @@ export default function UploadGisDataset({
     // on page load get etl context
     // TODO :: probably want to move this to on file upload
     // currently it runs every refresh leaving orphaned contextIds
-    (async () => {
+    
+    async function getContextId () {
       const newEtlCtxRes = await fetch(
         `${state.damaServerPath}/etl/new-context-id`
       );
       const newEtlCtxId = +(await newEtlCtxRes.text());
       dispatch({ type: "update", payload: { etlContextId: newEtlCtxId } });
-    })();
+    };
+
+    getContextId()
   }, [pgEnv, state.damaServerPath]);
 
   if (!sourceId && !damaSourceName) {
     return <div> Please enter a datasource name.</div>;
   }
-
 
   const canUpload = Object.keys(customRules)?.reduce((out, ruleKey) => {
     if (customRules[ruleKey](state) !== "canUpload") {
@@ -121,7 +123,6 @@ export default function UploadGisDataset({
     return out;
   }, "canUpload");
 
-  
   return (
     <div>
       <CustomAttributes state={state} dispatch={dispatch} />
