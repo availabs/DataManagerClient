@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { get, uniqBy } from "lodash";
 import { useSelector } from "react-redux";
-import { useFalcor } from "modules/avl-components/src";
-import { selectPgEnv } from "pages/DataManager/store";
+import { useFalcor } from "~/modules/avl-components/src";
+import { selectPgEnv } from "~/pages/DataManager/store";
 import makeAnimated from "react-select/animated";
 
 import MultiSelect from "./multiSelect";
 import { Select } from "./singleSelect";
 import PublishAcs from "./publish";
 
-import { DAMA_HOST } from "config";
+import { DAMA_HOST } from "~/config";
 
 import {
   ViewAttributes,

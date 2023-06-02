@@ -7,11 +7,12 @@ import * as d3scale from "d3-scale"
 import ckmeans from '../../../utils/ckmeans'
 import cloneDeep from 'lodash/cloneDeep'
 
+[1112,1588,2112,2958,56390]
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 const defaultDomain = [0,872,2047,3649,6934,14119,28578]
 const sedVars = {
-  totpop: { name: "Total Population", domain: defaultDomain, range: defaultRange},
-  hhpop: { name: "Households", domain: defaultDomain, range: defaultRange},
+  totpop: { name: "Total Population", domain: [0,872,2047,3649,6934,14119,28578], range: defaultRange},
+  hhpop: { name: "Households", domain: [1112,1588,2112,2958,56390], range: defaultRange},
   hhnum: { name: "Household Population", domain: defaultDomain, range: defaultRange},
   hhsize: { name: "Household Size", domain: defaultDomain, range: defaultRange},
   hhincx: { name: "Household Income", domain: defaultDomain, range: defaultRange},
