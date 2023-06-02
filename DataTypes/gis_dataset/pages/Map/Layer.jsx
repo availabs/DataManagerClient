@@ -6,18 +6,18 @@ import { LayerContainer } from "~/modules/avl-map/src";
 import ckmeans from '../../../../utils/ckmeans'
 import { getColorRange } from '../../../../utils/color-ranges'
 import * as d3scale from "d3-scale"
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+
+import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
   const { falcor, falcorCache } = useFalcor() 
   const { attributes, activeViewId } = layer 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
-    falcor.get([
+    console.log('hover falcor',[
       'dama',
       pgEnv, 
       'viewsbyId',
@@ -26,6 +26,15 @@ const HoverComp = ({ data, layer }) => {
       id,
       attributes
     ])
+    falcor.get([
+      'dama',
+      pgEnv, 
+      'viewsbyId',
+      activeViewId, 
+      'databyId', 
+      id,
+      attributes
+    ]).then(d => console.log('hover data', d))
   }, [falcor, pgEnv, activeViewId, id, attributes])
     
 
@@ -41,11 +50,14 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, activeViewId, pgEnv]);
 
   
+  console.log('hover2', attrInfo )
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
       <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
         {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
-        {Object.keys(attrInfo).map((k,i) => 
+        {Object.keys(attrInfo)
+          .filter(k => typeof attrInfo[k] !== 'object')
+          .map((k,i) => 
           <div className='flex border-b pt-1' key={i}>
             <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>

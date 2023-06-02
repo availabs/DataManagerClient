@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+
 import { useParams, useNavigate } from "react-router-dom";
 
 import { Modal } from "~/modules/avl-components/src";
 
 import { getEtlContextsForDamaSourceId } from "~/pages/DataManager/utils/FalcorApi";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 const RawJsonModal = (props) => {
   const { selectedEvent, close } = props;
@@ -178,7 +178,7 @@ export default function EtlContextsStatusTable() {
   const [etlContextStatus, setEtlContextStatus] = React.useState("RUNNING");
   const [etlContexts, setEtlContexts] = React.useState(null);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   const { sourceId } = useParams();
 

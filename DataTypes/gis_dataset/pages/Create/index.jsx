@@ -1,7 +1,6 @@
 import React, { useReducer, useEffect } from "react";
-import { useSelector } from "react-redux";
 
-import { selectPgEnv } from "~/pages/DataManager/store"
+import { DamaContext } from "~/pages/DataManager/store"
 import { useNavigate } from "react-router-dom";
 import { useFalcor } from "~/modules/avl-components/src"
 // import {  useParams } from "react-router-dom";
@@ -28,7 +27,7 @@ export default function UploadGisDataset({
   databaseColumnNames = null,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv, baseUrl } = React.useContext(DamaContext);
 
   const navigate = useNavigate()
   const { falcor } = useFalcor()
@@ -79,7 +78,7 @@ export default function UploadGisDataset({
 
   useEffect(() => {
     if (state.publishStatus === "PUBLISHED") {
-      if (state.damaSourceId) {
+      if (state.damaSourceId && state.etlContextId) {
         falcor.invalidate([
           "dama",
           pgEnv,
@@ -93,7 +92,7 @@ export default function UploadGisDataset({
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
       console.log('publish done', state, state.damaSourceId)
-      navigate(`/source/${state.damaSourceId}/versions`)
+      navigate(`/source/${state.damaSourceId}/uploads/${state.etlContextId}`);
     }
   }, [state.publishStatus, state.damaSourceId, pgEnv, navigate]);
 
@@ -101,13 +100,16 @@ export default function UploadGisDataset({
     // on page load get etl context
     // TODO :: probably want to move this to on file upload
     // currently it runs every refresh leaving orphaned contextIds
-    (async () => {
+    
+    async function getContextId () {
       const newEtlCtxRes = await fetch(
         `${state.damaServerPath}/etl/new-context-id`
       );
       const newEtlCtxId = +(await newEtlCtxRes.text());
       dispatch({ type: "update", payload: { etlContextId: newEtlCtxId } });
-    })();
+    };
+
+    getContextId()
   }, [pgEnv, state.damaServerPath]);
 
   if (!sourceId && !damaSourceName) {

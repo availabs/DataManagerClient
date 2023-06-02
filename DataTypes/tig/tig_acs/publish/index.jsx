@@ -1,6 +1,7 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const submitUpload = (props) => {
+const submitUpload = (props, navigate) => {
   const runPublish = async () => {
     try {
       const publishData = {
@@ -23,24 +24,28 @@ const submitUpload = (props) => {
       });
 
       const publishFinalEvent = await res.json();
-      console.log("publishFinalEvent", publishFinalEvent);
 
       const {
-        payload: { damaViewId, damaSourceId: finalSourceId },
+        payload: { damaViewId, damaSourceId: finalSourceId, etlContextId },
       } = publishFinalEvent;
 
-      console.log("published view id", damaViewId);
-    } catch (err) {}
+      if (damaViewId && finalSourceId && etlContextId) {
+        navigate(`/source/${finalSourceId}`);
+      }
+    } catch (err) {
+      console.error("new Error", err);
+    }
   };
   runPublish();
 };
 
 export default function PublishAcs(props) {
+  const navigate = useNavigate();
   return (
     <div>
       <button
         className={`cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded`}
-        onClick={() => submitUpload(props)}
+        onClick={() => submitUpload(props, navigate)}
       >
         {"New Publish"}
       </button>

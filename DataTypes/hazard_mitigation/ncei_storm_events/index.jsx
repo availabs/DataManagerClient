@@ -3,8 +3,8 @@ import React, {useEffect, useState} from 'react';
 import Create from './create'
 import {useFalcor} from "~/modules/avl-components/src";
 import get from "lodash/get";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 
 
 const Table = ({source}) => {
@@ -25,7 +25,7 @@ const RenderVersions = (domain, value, onchange) => (
 )
 const Stats = ({source, views}) => {
     const {falcor, falcorCache} = useFalcor();
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     const [activeView, setActiveView] = useState(views[0].view_id);
     const [compareView, setCompareView] = useState(views[0].view_id);
     const [compareMode, setCompareMode] = useState(undefined);

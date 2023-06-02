@@ -1,17 +1,19 @@
 import React, {useMemo, useEffect} from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSelector } from "react-redux";
+
 import { useFalcor } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
 import { getAttributes } from './attributes'
-import { selectPgEnv } from "~/pages/DataManager/store"
+import { DamaContext } from '../store'
 
 
-export default function BreadCrumbs ({baseUrl='/datasources'}) {
+export default function BreadCrumbs () {
   const { sourceId, page, cat1, cat2} = useParams()
-  const {falcor,falcorCache} = useFalcor()
-  const pgEnv = useSelector(selectPgEnv);
+  const { falcor , falcorCache} = useFalcor()
+  const { pgEnv, baseUrl } = React.useContext(DamaContext)
+
+  // console.log('BreadCrumbs', baseUrl)
 
   useEffect(() => { 
     async function fetchData () {
@@ -51,7 +53,7 @@ export default function BreadCrumbs ({baseUrl='/datasources'}) {
       <ol className="max-w-screen-xl w-full mx-auto px-4 flex space-x-4 sm:px-6 lg:px-8">
         <li className="flex">
           <div className="flex items-center">
-            <Link to={`${baseUrl}`} className="hover:text-[#bbd4cb] text-[#679d89]">
+            <Link to={`${baseUrl || '/'}`} className={"hover:text-blue-500 text-blue-500"/*"hover:text-[#bbd4cb] text-[#679d89]"*/}>
               <i className="fad fa-database flex-shrink-0 h-5 w-5" aria-hidden="true" />
               <span className="sr-only">Data Sources</span>
             </Link>

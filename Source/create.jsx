@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSelector } from "react-redux";
 
 import { /*useFalcor,*//*TopNav,*/ Input /*withAuth, Input, Button*/ } from '~/modules/avl-components/src'
 
@@ -11,7 +10,7 @@ import SourcesLayout from '../components/SourcesLayout'
 
 import {SourceAttributes, /*ViewAttributes, getAttributes*/} from '../components/attributes'
     
-import { selectPgEnv, selectIsPwrUsr } from "../store";
+import { DamaContext } from "../store";
 
 const SourceCreate = ({baseUrl}) => {
 // prettier canary
@@ -27,17 +26,14 @@ const SourceCreate = ({baseUrl}) => {
 
   const [dataTypes, setDataTypes] = useState(null);
 
-  const pgEnv = useSelector(selectPgEnv);
-  const isPwrUsr = useSelector(selectIsPwrUsr);
+  const {pgEnv} = React.useContext(DamaContext)
 
   useEffect(() => {
     (async () => {
       const filteredDataTypeKeys = (
         await Promise.all(
           Object.keys(DataTypes).map(async (dt) => {
-            if (dt.pwrUsrOnly && !isPwrUsr) {
-              return null;
-            }
+            
 
             if (DataTypes[dt].getIsAlreadyCreated) {
               const exclude = await DataTypes[dt].getIsAlreadyCreated(pgEnv);
@@ -56,10 +52,10 @@ const SourceCreate = ({baseUrl}) => {
         acc[dt] = DataTypes[dt];
         return acc;
       }, {});
-      console.log('testing',filteredDataTypes)
+      //console.log('testing',filteredDataTypes)
       setDataTypes(filteredDataTypes);
     })();
-  }, [pgEnv, isPwrUsr]);
+  }, [pgEnv]);
 
   const CreateComp = useMemo(() => get(dataTypes, `[${source.type}].sourceCreate.component`, () => <div />)
     ,[dataTypes, source.type])
@@ -79,7 +75,7 @@ const SourceCreate = ({baseUrl}) => {
             {JSON.stringify(source,null,3)}
           </pre>
       </div>*/}
-      <SourcesLayout baseUrl={baseUrl}>
+      <SourcesLayout>
         
       <div className='p-4 font-medium'> Create New Source </div>
       
@@ -140,9 +136,8 @@ const SourceCreate = ({baseUrl}) => {
             </div>
           </div>
         </dl>
-        <CreateComp source={source} baseUrl={baseUrl}/>
+        <CreateComp source={source} />
       </div>
-   
   </SourcesLayout>
 </div>
   )

@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef } from "react";
-import { useSelector } from "react-redux";
+
 
 import EtlContext, {
   useEtlContext,
@@ -20,7 +20,7 @@ import EtlProcessDoneDataDisplay from "./components/EtlProcessDoneDataDisplay";
 const NpmrdsTravelTimesExportRequester = ({ store = _store_ }) => {
   const { reducer, init } = store;
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const userId = useSelector(selectUserId);
 
   const [state, dispatch] = useReducer(reducer, null, init);

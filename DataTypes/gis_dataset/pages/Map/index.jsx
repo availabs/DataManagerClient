@@ -6,8 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import GISDatasetLayer from './Layer'
 import Symbology from './symbology/index'
 import { AvlMap } from "~/modules/avl-maplibre/src"
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store"
+import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
@@ -80,8 +79,7 @@ const DefaultMapFilter = ({source, filters, setFilters}) => {
 
 const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
   const { /*sourceId,*/ viewId } = useParams()
-  const pgEnv = useSelector(selectPgEnv);
-  
+  const { pgEnv, baseUrl } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
@@ -289,7 +287,7 @@ const Map = ({layers,tempSymbology}) => {
 
 const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
   const { falcor } = useFalcor()
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext);
   
   const save = async () => {
     //console.log('click save 222', attr, value)
@@ -338,7 +336,7 @@ const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv, baseUrl } = React.useContext(DamaContext);
   const inputEl = useRef(null);
 
   useEffect(() => {

@@ -22,12 +22,12 @@ export const Select = ({ selectedOption, options, setSelecteOptions }) => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <Listbox.Options className="z-1000000 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
               {options?.map((opt, optIndex) => (
                 <Listbox.Option
                   key={optIndex}
                   className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                    `z-1000000 relative cursor-default select-none py-2 pl-10 pr-4 ${
                       active ? "bg-cyan-100 text-cyan-900" : "text-gray-900"
                     }`
                   }

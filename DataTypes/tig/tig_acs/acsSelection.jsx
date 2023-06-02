@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, } from "react";
 import { get, uniqBy } from "lodash";
-import { useSelector } from "react-redux";
 import { useFalcor } from "~/modules/avl-components/src";
-import { selectPgEnv } from "~/pages/DataManager/store";
+
+import { DamaContext } from "~/pages/DataManager/store";
 import makeAnimated from "react-select/animated";
 
 import MultiSelect from "./multiSelect";
@@ -55,7 +55,7 @@ export const OptionSelectorComponent = ({
           onChange(value?.map((val) => val?.value));
         }}
         components={{ animatedComponents }}
-        placeholder="-- Select --"
+        selectMessage={"Counties"}
         isSearchable
       />
     </>
@@ -86,7 +86,7 @@ export const VariableSelectorComponent = ({
           onChange(value);
         }}
         components={{ animatedComponents }}
-        placeholder="-- Select --"
+        selectMessage={"Variables"}
         isSearchable
       />
     </>
@@ -95,7 +95,7 @@ export const VariableSelectorComponent = ({
 
 const AcsSelection = (props) => {
   const { falcor, falcorCache } = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv} = React.useContext(DamaContext)
 
   const [selectedView, setSelecteView] = useState(null);
   const [selectedTableViews, setSelecteTableOptions] = useState(null);
@@ -315,25 +315,53 @@ const AcsSelection = (props) => {
 
   return (
     <>
-      <div className="flex flex-1">
-        <div>
-          <Select
-            selectedOption={selectedView || (viewOptions && viewOptions[0])}
-            options={viewOptions}
-            setSelecteOptions={setSelecteView}
-          />
-        </div>
+      <div className="w-full max-w-lg">
+        <div className="flex flex-wrap -mx-3 mb-6">
+          <div className="w-full md:w-1/2 px-3 mb-6 md:mb-0">
+            <label
+              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+              for="grid-view-dependency"
+            >
+              View Dependency
+            </label>
 
+            <Select
+              selectedOption={selectedView || (viewOptions && viewOptions[0])}
+              options={viewOptions}
+              setSelecteOptions={setSelecteView}
+            />
+          </div>
+        </div>
         {selectedView ? (
-          <>
-            <div className="w-4/5 mx-2">
+          <div className="flex flex-wrap -mx-3 mb-6">
+            <div className="w-full px-3">
+              <label
+                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                for="grid-counties"
+              >
+                Counties
+              </label>
               <OptionSelectorComponent
                 options={tableOptions}
                 selectedOptions={selectedTableViews}
                 onChange={setSelecteTableOptions}
               />
+
+              <p className="text-gray-600 text-xs italic">
+                Select Counties for the view
+              </p>
             </div>
-            <div>
+          </div>
+        ) : null}
+        {selectedView ? (
+          <div className="flex flex-wrap -mx-3 mb-6">
+            <div className="w-full px-3">
+              <label
+                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                for="grid-counties"
+              >
+                Variables
+              </label>
               <VariableSelectorComponent
                 options={(censusVariables || []).map((v) => ({
                   label: v?.name,
@@ -342,21 +370,24 @@ const AcsSelection = (props) => {
                 selectedOptions={selectedVariables}
                 onChange={setSelecteVariableOptions}
               />
+              <p className="text-gray-600 text-xs italic">
+                Select Variables for the view
+              </p>
             </div>
-          </>
+          </div>
         ) : null}
-      </div>
-      <div>
-        <PublishAcs
-          viewDependency={selectedView}
-          viewMetadata={{
-            counties: selectedTableViews,
-            variables: selectedVariables,
-          }}
-          etlContextId={newEtlCtxId}
-          damaServerPath={damaServerPath}
-          {...props}
-        />
+        <div class="md:flex md:items-center">
+          <PublishAcs
+            viewDependency={selectedView}
+            viewMetadata={{
+              counties: selectedTableViews,
+              variables: selectedVariables,
+            }}
+            etlContextId={newEtlCtxId}
+            damaServerPath={damaServerPath}
+            {...props}
+          />
+        </div>
       </div>
     </>
   );

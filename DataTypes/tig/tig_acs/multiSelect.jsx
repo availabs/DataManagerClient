@@ -1,6 +1,6 @@
 import Select from "react-select";
 
-const MultiSelect = ({ options, onChange, value, ...props }) => {
+const MultiSelect = ({ options, onChange, value, selectMessage, ...props }) => {
   return (
     <Select
       options={options}
@@ -9,7 +9,7 @@ const MultiSelect = ({ options, onChange, value, ...props }) => {
       hideSelectedOptions={true}
       closeMenuOnSelect={false}
       isMulti
-      placeholder="-- Select --"
+      placeholder={`-- Select ${selectMessage || ""} --`}
       {...props}
     />
   );

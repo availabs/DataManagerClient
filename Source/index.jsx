@@ -9,16 +9,16 @@ import { Pages, DataTypes } from "../DataTypes";
 import SourcesLayout from "../components/SourcesLayout";
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/components/attributes";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 
-const Source = ({user, baseUrl='datasources/'}) => {
+const Source = ({user}) => {
   const {falcor, falcorCache} = useFalcor()
-  const { sourceId, page/*, viewId*/ } = useParams()
+  const { sourceId, page, viewId } = useParams()
   const [ pages, setPages] = useState(Pages)
-  // const [ activeView, setActiveView ] = useState(null)
-  const pgEnv = useSelector(selectPgEnv);
+  const [ activeViewId, setActiveViewId ] = useState(viewId)
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+
 
   const Page = useMemo(() => {
     return page
@@ -28,7 +28,7 @@ const Source = ({user, baseUrl='datasources/'}) => {
 
   useEffect(() => {
     async function fetchData() {
-      console.time("fetch data");
+      //console.time("fetch data");
       const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
       const resp = await falcor.get(lengthPath);
       let data = await falcor.get(
@@ -45,7 +45,7 @@ const Source = ({user, baseUrl='datasources/'}) => {
           "dama", pgEnv, "sources", "byId", sourceId, "meta"
         ]
       );
-      console.timeEnd("fetch data");
+      //console.timeEnd("fetch data");
       //console.log(data)
       return data;
     }
@@ -57,6 +57,26 @@ const Source = ({user, baseUrl='datasources/'}) => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, sourceId, pgEnv]);
+
+
+  useEffect(() => {
+    if(activeViewId && activeViewId !== viewId) {
+      // if active view is set and we get new param 
+      // update active view id
+      setActiveViewId(viewId)
+    }
+
+    if(!activeViewId && views.length > 0) {
+        let authViews = views.filter(v => v?.metadata?.authoritative).length > 0 ? 
+          views.filter(v => v?.metadata?.authoritative) :
+          views
+
+        
+        setActiveViewId(authViews.sort((a,b) => a._created_timestamp - b._created_timestamp)[0].view_id)
+
+    }
+
+  },[views, viewId]);
 
   const source = useMemo(() => {
     let attributes = getAttributes(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { "attributes": {} })["attributes"]);
@@ -83,7 +103,7 @@ const Source = ({user, baseUrl='datasources/'}) => {
   return (
     <div className="max-w-6xl mx-auto">
       <SourcesLayout baseUrl={baseUrl}>
-        <div className='flex w-full p-2 border-b items-center'>
+        {/*<div className='flex w-full p-2 border-b items-center'>
           <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
             {source.display_name || source.name}
           </div>
@@ -97,13 +117,14 @@ const Source = ({user, baseUrl='datasources/'}) => {
               </Link> : ''
             }
           </div>
-        </div>
+        </div>*/}
         <TopNav
           menuItems={Object.values(pages)
+            .filter(d => !d.hidden)
             .map(d => {
               return {
                 name:d.name,
-                path: `${baseUrl}/source/${sourceId}${d.path}` // ${viewId ? '/'+viewId : ''}
+                path: `${baseUrl}/source/${sourceId}${d.path}${activeViewId ? '/'+activeViewId : ''}`
               }
 
             })}
@@ -115,6 +136,7 @@ const Source = ({user, baseUrl='datasources/'}) => {
             views={views} 
             user={user}
             baseUrl={baseUrl}
+            activeViewId={activeViewId}
           />
         </div>
       </SourcesLayout>
