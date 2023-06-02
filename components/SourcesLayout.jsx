@@ -1,16 +1,17 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { Dropdown, withAuth } from '~/modules/avl-components/src'
-import { useSelector } from "react-redux";
 import { Item } from '~/pages/Auth/AuthMenu'
-import { selectPgEnv } from "../store"
+import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
 
 
-const SourcesLayout = ({children, baseUrl='/datasources'}) => {
+const SourcesLayout = ({children }) => {
+  const { baseUrl } = useContext(DamaContext)
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className=''>
-        <Breadcrumbs baseUrl={baseUrl} />
+        <Breadcrumbs />
       </div>
       <div className='flex'>
         <div className='flex-1 '>
@@ -21,9 +22,11 @@ const SourcesLayout = ({children, baseUrl='/datasources'}) => {
   )
 }
 
-export const DataManagerHeader = withAuth(({user, baseUrl='/datasources'}) => {
-  const pgEnv = useSelector(selectPgEnv);
-
+export const DataManagerHeader = withAuth(({user}) => {
+  //const { pgEnv } = React.useContext(DamaContext)
+  //const baseUrl = '/'
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+  
   return (
     <div className='pt-[2px]'>
       { user.authLevel >= 5 ? 
@@ -41,9 +44,9 @@ export const DataManagerHeader = withAuth(({user, baseUrl='/datasources'}) => {
                 <div className='py-1 '> 
                     {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
                 </div>
-                <div className='py-1 '> 
+                {/*<div className='py-1 '> 
                     {Item(`${baseUrl}/settings`, 'fa fa-cog flex-shrink-0  pr-1', 'Datamanager Settings')}
-                </div>
+                </div>*/}
               </div>          
             </Dropdown>
           </div>

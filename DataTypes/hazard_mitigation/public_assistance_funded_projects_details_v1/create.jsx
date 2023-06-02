@@ -3,8 +3,8 @@ import React from 'react'
 
 import { checkApiResponse, getDamaApiRoutePrefix } from "../../../utils/DamaControllerApi";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     const url = new URL(
         `${rtPfx}/hazard_mitigation/pa_v1`
@@ -28,7 +28,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
 
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
     return (

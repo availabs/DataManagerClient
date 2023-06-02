@@ -3,8 +3,8 @@ import React from 'react'
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
 import {useNavigate} from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 import { RenderVersions } from "../../../utils/macros";
 
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewNFIP, viewDDS, viewCounty}) => {
@@ -40,7 +40,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewNFI
 
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
-    const pgEnv = useSelector(selectPgEnv);
+    const { pgEnv } = React.useContext(DamaContext)
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
     const [viewNFIP, setViewNFIP] = React.useState();

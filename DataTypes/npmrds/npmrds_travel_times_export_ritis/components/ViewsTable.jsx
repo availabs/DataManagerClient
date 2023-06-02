@@ -3,19 +3,19 @@
 
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+
 import { useNavigate } from "react-router-dom";
 
 import { getViewsDependenciesForSource } from "~/pages/DataManager/utils/FalcorApi";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 export default function DamaViewsTable() {
   const navigate = useNavigate();
   const { sourceId } = useParams();
   const [viewsMetaWithDeps, setViewsMetaWithDeps] = React.useState(null);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
 
   React.useEffect(() => {
     (async () =>

@@ -1,8 +1,8 @@
 import { Table, useFalcor } from "../../../../../modules/avl-components/src";
 import get from "lodash/get";
 import React, { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "../../../store";
+
+import { DamaContext } from "../../../store";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
 import { fnum, fnumIndex } from "../../../utils/macros"
 import { hazardsMeta } from "../../constants/colors";
@@ -100,7 +100,7 @@ const processData = (data) => data.map(d => ({nri_category: d.nri_category, avai
 
 export const MegaTable = ({source, views}) => {
   const {falcor, falcorCache} = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const [activeView, setActiveView] = useState(views[0].view_id);
   const [hazard, setHazard] = useState('hurricane');
   const hazards = Object.keys(hazardsMeta).map(h => ({key: h, value: h}));

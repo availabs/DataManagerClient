@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useFalcor } from "~/modules/avl-components/src";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
 import get from "lodash/get";
 import SourcesLayout from "../components/SourcesLayout";
 import { useParams } from "react-router-dom";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "../components/attributes";
 
-const SourceThumb = ({ source, baseUrl = "/datasources" }) => {
+const SourceThumb = ({ source }) => {
   const { falcor, falcorCache } = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
 
   useEffect(() => {
     async function fetchData() {
@@ -53,12 +52,12 @@ const SourceThumb = ({ source, baseUrl = "/datasources" }) => {
 };
 
 
-const SourcesList = ({ baseUrl = "/datasources" }) => {
+const SourcesList = () => {
   const { falcor, falcorCache } = useFalcor();
   const [layerSearch, setLayerSearch] = useState("");
   const { cat1, cat2 } = useParams();
 
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv, baseUrl} = React.useContext(DamaContext);
 
   useEffect(() => {
     async function fetchData() {

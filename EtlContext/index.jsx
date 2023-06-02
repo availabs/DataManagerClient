@@ -1,17 +1,17 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+
 
 import { getEtlContext } from "../utils/FalcorApi";
 
-import { selectPgEnv } from "../store";
+import { DamaContext } from "../store";
 
 export function EtlContextEvents() {
   const navigate = useNavigate();
 
   const [etlContext, setEtlContext] = React.useState(undefined);
 
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext)
   const { etlContextId } = useParams();
 
   // console.log({ pgEnv, etlContextId });

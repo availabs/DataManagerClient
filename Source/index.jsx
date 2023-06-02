@@ -9,16 +9,15 @@ import { Pages, DataTypes } from "../DataTypes";
 import SourcesLayout from "../components/SourcesLayout";
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/components/attributes";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 
-const Source = ({user, baseUrl='datasources/'}) => {
+const Source = ({user}) => {
   const {falcor, falcorCache} = useFalcor()
   const { sourceId, page/*, viewId*/ } = useParams()
   const [ pages, setPages] = useState(Pages)
   // const [ activeView, setActiveView ] = useState(null)
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
 
   const Page = useMemo(() => {
     return page
