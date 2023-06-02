@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { get, uniqBy } from "lodash";
-import { useSelector } from "react-redux";
+
 import { useFalcor } from "~/modules/avl-components/src";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 import makeAnimated from "react-select/animated";
 
 import MultiSelect from "./multiSelect";

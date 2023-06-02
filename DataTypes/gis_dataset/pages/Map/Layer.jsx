@@ -17,7 +17,7 @@ const HoverComp = ({ data, layer }) => {
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
-    falcor.get([
+    console.log('hover falcor',[
       'dama',
       pgEnv, 
       'viewsbyId',
@@ -26,6 +26,15 @@ const HoverComp = ({ data, layer }) => {
       id,
       attributes
     ])
+    falcor.get([
+      'dama',
+      pgEnv, 
+      'viewsbyId',
+      activeViewId, 
+      'databyId', 
+      id,
+      attributes
+    ]).then(d => console.log('hover data', d))
   }, [falcor, pgEnv, activeViewId, id, attributes])
     
 
@@ -41,11 +50,14 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, activeViewId, pgEnv]);
 
   
+  console.log('hover2', attrInfo )
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
       <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
         {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
-        {Object.keys(attrInfo).map((k,i) => 
+        {Object.keys(attrInfo)
+          .filter(k => typeof attrInfo[k] !== 'object')
+          .map((k,i) => 
           <div className='flex border-b pt-1' key={i}>
             <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>

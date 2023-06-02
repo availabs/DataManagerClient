@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { get } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
 import { withAuth } from "~/modules/avl-components/src";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 import ListUploads from "./list";
 import Upload from "./view";
 
 const UploadsPage = ({ source }) => {
   const [etlContextStatus, setEtlContextStatus] = useState("RUNNING");
-  const pgEnv = useSelector(selectPgEnv);
+  const {pgEnv} = React.useContext(DamaContext);
   const { viewId, page } = useParams();
   const { falcor, falcorCache } = useFalcor();
 

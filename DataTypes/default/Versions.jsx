@@ -1,10 +1,10 @@
-import React from "react";
+import React, {Fragment} from "react";
 import { withAuth, Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { DamaContext } from "~/pages/DataManager/store";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
 import { formatDate } from "../../utils/macros";
+import { DamaContext } from "~/pages/DataManager/store";
 import Version from "./version";
 import DeleteVersion from "./DeleteVersion";
 
@@ -50,6 +50,8 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
     );
   }
 
+  console.log('views', views)
+
   return (
     <div className="">
       <Table
@@ -57,36 +59,33 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
         columns={[
           {
             Header: "Version Id",
-            accessor: c => <Link to={`/${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
-            align: "left"
+            accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
+            
           },
-          {
-            Header: "Version",
-            accessor: "version"
-          },
+          
           {
             Header: "User",
             accessor: "user_id"
           },
+          // {
+          //   Header: "Updated",
+          //   accessor: c => formatDate(c["_modified_timestamp"])
+          // },
           {
-            Header: "Updated",
-            accessor: c => formatDate(c["_modified_timestamp"])
-          },
-          {
-            Header: "Created",
+            Header: "Uploaded",
             accessor: c => formatDate(c["_created_timestamp"])
           },
-          {
-            Header: "Make Authoritative",
-            accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
-            disableFilters: true,
-          },
-          {
-            Header: " ",
-            accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
-                                         navigate={navigate} />,
-            disableFilters: true
-          }
+          // {
+          //   Header: "Make Authoritative",
+          //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
+          //   disableFilters: true,
+          // },
+          // {
+          //   Header: " ",
+          //   accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
+          //                                navigate={navigate} />,
+          //   disableFilters: true
+          // }
         ]}
       />
 

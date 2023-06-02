@@ -1,5 +1,5 @@
 import Overview from "./Overview";
-// import Metadata from "./Metadata";
+import Metadata from "./Metadata";
 import Versions from "./Versions";
 // import AddVersion from "./AddVersion";
 
@@ -9,15 +9,16 @@ const Pages = {
     path: "",
     component: Overview
   },
-  /*meta: {
-    name: "Metadata",
-    path: "/meta",
-    component: Metadata,
-  },*/
   versions: {
     name: "Versions",
     path: "/versions",
+    hidden: "true",
     component: Versions
+  },
+   meta: {
+    name: "Metadata",
+    path: "/meta",
+    component: Metadata,
   },
   // add_version: {
   //   name: "Add Version",

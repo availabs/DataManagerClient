@@ -13,11 +13,7 @@ import EtlContextEvents from "./EtlContext";
 import { DamaContext } from "./store"
 
 const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false) => {
-  // console.log('load DataManager url:',baseUrl, 'pgenv:', defaultPgEnv)
-  // const onLoadPgEnv = defaultPgEnv;
-  // console.log('set pgenv', defaultPgEnv)
-  // setPgEnv(onLoadPgEnv);
-  // console.log('DamaRoutes', baseUrl, defaultPgEnv)
+  
 
   const HeaderComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>

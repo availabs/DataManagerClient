@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo } from "react";
 import { get } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
-import { useSelector } from "react-redux";
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 export default function Upload({ ctxId }) {
   const { falcor, falcorCache } = useFalcor();
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext);
 
   useEffect(() => {
     async function getCtxById() {
