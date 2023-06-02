@@ -12,35 +12,34 @@ const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e
 const defaultDomain = [0,872,2047,3649,6934,14119,28578]
 const sedVars = {
   totpop: { name: "Total Population", domain: [0,872,2047,3649,6934,14119,28578], range: defaultRange},
-  hhpop: { name: "Households", domain: [1112,1588,2112,2958,56390], range: defaultRange},
-  hhnum: { name: "Household Population", domain: defaultDomain, range: defaultRange},
-  hhsize: { name: "Household Size", domain: defaultDomain, range: defaultRange},
-  hhincx: { name: "Household Income", domain: defaultDomain, range: defaultRange},
-  elf: { name: "Employed Labor Fouce", domain: defaultDomain, range: defaultRange},
-  emptot: { name: "Total Employment", domain: defaultDomain, range: defaultRange},
-  empret: { name: "Retail Employment", domain: defaultDomain, range: defaultRange},
-  empoff: { name: "Office Employment", domain: defaultDomain, range: defaultRange},
-  earnwork: { name: "Earnings", domain: defaultDomain, range: defaultRange},
-  unvenrol: { name: "Universirty Enrollment", domain: defaultDomain, range: defaultRange},
-  k_12_etot: { name: "School Enrollment", domain: defaultDomain, range: defaultRange},
-  gqpop: { name: "Group Quarters Population", domain: defaultDomain, range: defaultRange},
-  gqpopins: { name: "Group Quarters Instituional Population", domain: defaultDomain, range: defaultRange},
-  gqpopstr: { name: "Group Quarters Other Population", domain: defaultDomain, range: defaultRange},
-  gqpopoth: { name: "Group Quarters Homless Population", domain: defaultDomain, range: defaultRange}
-};
-
+  hhpop: { name: "Households", domain: [0,1112,1588,2112,2958,20000, 56390], range: defaultRange},
+  hhnum: { name: "Household Population", domain: [0,2995,4270,5680,7883,64124,177720], range: defaultRange},
+  hhsize: { name: "Household Size", domain: [0,2.3,2.62,2.83,3.08,7], range: defaultRange},
+  hhincx: { name: "Household Income", domain: [0,44787,61304,80355,113880,1109731], range: defaultRange},
+  elf: { name: "Employed Labor Fouce", domain: [0,1351,2054,2782,3910,78160], range: defaultRange},
+  emptot: { name: "Total Employment", domain: [0,560,1005,1699,3555,80093], range: defaultRange},
+  empret: { name: "Retail Employment", domain: [0,30,78,167,385,13225], range: defaultRange},
+  empoff: { name: "Office Employment", domain: [0,66,142,276,670,48061], range: defaultRange},
+  earnwork: { name: "Earnings", domain: [0,35696,40620,45755,53519,202112], range: defaultRange},
+  unvenrol: { name: "Universirty Enrollment", domain: [0,670,2586,8143,51583], range: defaultRange},
+  k_12_etot: { name: "School Enrollment", domain: [0,489,791,1119,1632,42294], range: defaultRange},
+  gqpop: { name: "Group Quarters Population", domain: [0,11,40,200,12050], range: defaultRange},
+  gqpopins: { name: "Group Quarters Instituional Population", domain: [0,22,118,253,5613,12050], range: defaultRange},
+  gqpopstr: { name: "Group Quarters Other Population", domain: [0,7,16,56,5613,10503], range: defaultRange},
+  gqpopoth: { name: "Group Quarters Homless Population", domain: [0,3,11,50,635,1201], range: defaultRange}
+ };
 const sedVarsCounty = {
     "tot_pop": {name: 'Total Population (in 000s)', domain: [0,74,213,481,750,1134,2801], range: defaultRange},
-    "tot_emp": {name: 'Total Employment', domain: defaultDomain, range: defaultRange},
-    "emp_pay": {name: 'Payroll Employment', domain: defaultDomain, range: defaultRange},
-    "emp_prop": {name: 'Proprietors Employment', domain: defaultDomain, range: defaultRange},
-    "hh_pop": {name: 'Household Population', domain: defaultDomain, range: defaultRange},
-    "gq_pop": {name: 'Group Quarters Population', domain: defaultDomain, range: defaultRange},
-    "hh_num": {name: 'Households', domain: defaultDomain, range: defaultRange},
-    "hh_size": {name: 'Household Size', domain: defaultDomain, range: defaultRange},
-    "emplf": {name: 'Employed Labor Force', domain: defaultDomain, range: defaultRange},
-    "lf": {name: 'Labor Force', domain: defaultDomain, range: defaultRange}
-}
+    "tot_emp": {name: 'Total Employment', domain: [0,31,111,243,402,624,3397], range: defaultRange},
+    "emp_pay": {name: 'Payroll Employment', domain: [0,22,74,192,300,483,2997], range: defaultRange},
+    "emp_prop": {name: 'Proprietors Employment', domain: [0,7,33,51,82,161,399], range: defaultRange},
+    "hh_pop": {name: 'Household Population', domain: [0,69,207,473,729,1099,2761], range: defaultRange},
+    "gq_pop": {name: 'Group Quarters Population', domain: [0,1,5,9,20,29,79], range: defaultRange},
+    "hh_num": {name: 'Households', domain: [0,28,86,166,274,398,1044], range: defaultRange},
+    "hh_size": {name: 'Household Size', domain: [0,1.98,2.54,2.69,2.77,2.92,3.26], range: defaultRange},
+    "emplf": {name: 'Employed Labor Force', domain: [0,0,872,2047,3649,6934,14119,28578], range: defaultRange},
+    "lf": {name: 'Labor Force', domain: [0,33,116,237,366,557,1383], range: defaultRange}
+ }
 
 //const years = ["10", "17", "20", "25", "30", "35", "40", "45", "50", "55"];
 
