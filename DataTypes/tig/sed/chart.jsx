@@ -9,8 +9,7 @@ import { useFalcor, withAuth } from "~/modules/avl-components/src";
 import { LineGraph } from "~/modules/avl-graph/src";
 
 const ViewSelector = ({ views }) => {
-  const { viewId, sourceId, page } = useParams();
-  const navigate = useNavigate();
+  const { viewId } = useParams();
 
   return (
     <div className="flex flex-1">

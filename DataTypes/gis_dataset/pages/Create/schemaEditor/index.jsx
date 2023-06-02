@@ -1,31 +1,34 @@
-import React, {
-  useEffect
-} from "react";
+import React, { useEffect } from "react";
 
 import { GisDatasetLayerDatabaseDbSchemaForm } from "./components";
 
-export default function UpdateGisDatasetLayerDatabaseDbSchema({state, dispatch}) {
-  
-  const { 
+export default function UpdateGisDatasetLayerDatabaseDbSchema({
+  state,
+  dispatch,
+}) {
+  const {
     damaSourceId,
     damaServerPath,
-    databaseColumnNames, 
-    gisUploadId, 
-    layerName
-  } = state
+    databaseColumnNames,
+    gisUploadId,
+    layerName,
+  } = state;
 
   useEffect(() => {
     // if a source id exists, get table structure
     (async () => {
       if (damaSourceId && !databaseColumnNames) {
-        const url = `${damaServerPath}/metadata/datasource-latest-view-table-columns?damaSourceId=${damaSourceId}`
+        const url = `${damaServerPath}/metadata/datasource-latest-view-table-columns?damaSourceId=${damaSourceId}`;
         const res = await fetch(url);
         let dbColNames = await res.json();
-        dbColNames = dbColNames.filter(
+        dbColNames = dbColNames?.filter(
           (col) => col !== "wkb_geometry" && col !== "ogc_fid"
         );
-        console.log('update_dbColName', dbColNames)
-        dispatch({type:'update', payload: {databaseColumnNames: dbColNames}})
+        console.log("update_dbColName", dbColNames);
+        dispatch({
+          type: "update",
+          payload: { databaseColumnNames: dbColNames },
+        });
       }
     })();
   }, [databaseColumnNames, damaSourceId, damaServerPath, dispatch]);
@@ -34,8 +37,13 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({state, dispatch})
     // get the table description of the uploaded dataset
     (async () => {
       // if updating source must wait for database columns
-      if ( (damaSourceId && !databaseColumnNames) ||
-        !gisUploadId || !layerName) { return; }
+      if (
+        (damaSourceId && !databaseColumnNames) ||
+        !gisUploadId ||
+        !layerName
+      ) {
+        return;
+      }
 
       const tblDscRes = await fetch(
         `${damaServerPath}/staged-geospatial-dataset/${gisUploadId}/${layerName}/tableDescriptor`
@@ -53,18 +61,22 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({state, dispatch})
         }
       }
 
-      return dispatch({ type: 'update', payload: { tableDescriptor:tblDsc } });
+      return dispatch({ type: "update", payload: { tableDescriptor: tblDsc } });
     })();
-  }, [ damaSourceId, databaseColumnNames, gisUploadId, layerName, damaServerPath, dispatch ]);
+  }, [
+    damaSourceId,
+    databaseColumnNames,
+    gisUploadId,
+    layerName,
+    damaServerPath,
+    dispatch,
+  ]);
 
   if (damaSourceId && !databaseColumnNames) {
     return "";
   }
 
   return (
-    <GisDatasetLayerDatabaseDbSchemaForm 
-      state={state}
-      dispatch={dispatch}
-    />
+    <GisDatasetLayerDatabaseDbSchemaForm state={state} dispatch={dispatch} />
   );
 }

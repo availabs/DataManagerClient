@@ -78,7 +78,7 @@ export default function UploadGisDataset({
 
   useEffect(() => {
     if (state.publishStatus === "PUBLISHED") {
-      if (state.damaSourceId) {
+      if (state.damaSourceId && state.etlContextId) {
         falcor.invalidate([
           "dama",
           pgEnv,
@@ -92,7 +92,7 @@ export default function UploadGisDataset({
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
       console.log('publish done', state, state.damaSourceId)
-      navigate(`/${baseUrl}source/${state.damaSourceId}/versions`)
+      navigate(`/source/${state.damaSourceId}/uploads/${state.etlContextId}`);
     }
   }, [state.publishStatus, state.damaSourceId, pgEnv, navigate]);
 
