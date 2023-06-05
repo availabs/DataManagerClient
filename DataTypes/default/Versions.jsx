@@ -60,9 +60,7 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
           {
             Header: "Version Id",
             accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
-            
           },
-          
           {
             Header: "User",
             accessor: "user_id"

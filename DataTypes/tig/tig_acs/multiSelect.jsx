@@ -1,6 +1,8 @@
 import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 const MultiSelect = ({ options, onChange, value, selectMessage, ...props }) => {
+  const animatedComponents = makeAnimated();
   return (
     <Select
       options={options}
@@ -10,6 +12,7 @@ const MultiSelect = ({ options, onChange, value, selectMessage, ...props }) => {
       closeMenuOnSelect={false}
       isMulti
       placeholder={`-- Select ${selectMessage || ""} --`}
+      components={{ animatedComponents }}
       {...props}
     />
   );

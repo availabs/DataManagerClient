@@ -31,68 +31,6 @@ const censusVariables = [
   { key: "B02001_002E", name: "White alone" },
 ];
 
-export const OptionSelectorComponent = ({
-  options,
-  selectedOptions,
-  onChange,
-}) => {
-  const animatedComponents = makeAnimated();
-  return (
-    <>
-      <MultiSelect
-        value={(selectedOptions || [])
-          .map((values) =>
-            (options || []).find((prod) => prod.value === values)
-          )
-          .filter((prod) => prod && prod.value && prod.label)
-          .map((prod) => ({
-            label: prod?.label,
-            value: prod?.value,
-          }))}
-        closeMenuOnSelect={false}
-        options={options || []}
-        onChange={(value) => {
-          onChange(value?.map((val) => val?.value));
-        }}
-        components={{ animatedComponents }}
-        selectMessage={"Counties"}
-        isSearchable
-      />
-    </>
-  );
-};
-
-export const VariableSelectorComponent = ({
-  options,
-  selectedOptions,
-  onChange,
-}) => {
-  const animatedComponents = makeAnimated();
-  return (
-    <>
-      <MultiSelect
-        value={(selectedOptions || [])
-          .map((values) =>
-            (options || []).find((prod) => prod.value === values.value)
-          )
-          .filter((prod) => prod && prod.value && prod.label)
-          .map((prod) => ({
-            label: prod?.label,
-            value: prod?.value,
-          }))}
-        closeMenuOnSelect={false}
-        options={options || []}
-        onChange={(value) => {
-          onChange(value);
-        }}
-        components={{ animatedComponents }}
-        selectMessage={"Variables"}
-        isSearchable
-      />
-    </>
-  );
-};
-
 const AcsSelection = (props) => {
   const { falcor, falcorCache } = useFalcor();
   const {pgEnv} = React.useContext(DamaContext)
@@ -107,7 +45,6 @@ const AcsSelection = (props) => {
   useEffect(() => {
     (async () => {
       const newEtlCtxRes = await fetch(`${damaServerPath}/etl/new-context-id`);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       const contextId = +(await newEtlCtxRes.text());
 
       if (contextId) {
@@ -120,7 +57,7 @@ const AcsSelection = (props) => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "length"];
       const resp = await falcor.get(lengthPath);
-      return await falcor.get([
+      await falcor.get([
         "dama",
         pgEnv,
         "sources",
@@ -131,20 +68,20 @@ const AcsSelection = (props) => {
       ]);
     }
 
-    return fetchData();
+    fetchData();
   }, [falcor, pgEnv]);
 
   const sourceIds = useMemo(() => {
-    return Object.values(
-      get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {})
-    )
-      .map((v) =>
-        getAttributes(
-          get(falcorCache, v.value, { attributes: {} })["attributes"]
+    return (
+      Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {}))
+        .map((v) =>
+          getAttributes(
+            get(falcorCache, v.value, { attributes: {} })["attributes"]
+          )
         )
-      )
-      .filter((source) => source?.type === "tiger_counties")
-      .map((sid) => sid?.source_id);
+        .filter((source) => source?.type === "tiger_counties")
+        .map((sid) => sid?.source_id) || []
+    );
   }, [falcorCache, pgEnv]);
 
   useEffect(() => {
@@ -161,13 +98,13 @@ const AcsSelection = (props) => {
 
       const resp = await falcor.get(lengthPath);
 
-      let requests = sourceIds.map((source_id) => {
+      let requests = (sourceIds || []).map((s_id) => {
         return [
           "dama",
           pgEnv,
           "sources",
           "byId",
-          source_id,
+          s_id,
           "views",
           "byIndex",
           {
@@ -180,7 +117,7 @@ const AcsSelection = (props) => {
                   pgEnv,
                   "sources",
                   "byId",
-                  source_id,
+                  s_id,
                   "views",
                   "length",
                 ],
@@ -210,7 +147,9 @@ const AcsSelection = (props) => {
         )
       );
 
-      if (view?.length) out = uniqBy([...out, ...view], "view_id");
+      if (view?.length) {
+        out = uniqBy([...out, ...view], "view_id");
+      }
       return out;
     }, []);
   }, [falcorCache, sourceIds, pgEnv]);
@@ -236,7 +175,6 @@ const AcsSelection = (props) => {
       "data",
       "length",
     ]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, selectedView]);
 
   const dataLength = useMemo(() => {
@@ -282,7 +220,6 @@ const AcsSelection = (props) => {
         { chunkSize: 500 }
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, selectedView, dataLength]);
 
   const tableData = useMemo(() => {
@@ -293,7 +230,6 @@ const AcsSelection = (props) => {
         []
       )
     ).map((d) => get(falcorCache, d.value, {}));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, selectedView, falcorCache, dataLength]);
 
   function padNumber(num) {
@@ -309,9 +245,14 @@ const AcsSelection = (props) => {
       value: Number(padNumber(t?.geoid || i)),
       label: `${padNumber(t?.geoid)} -> ${t?.name}`,
     }));
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableData]);
+
+  const censusOptions = useMemo(() => {
+    return (censusVariables || []).map((c, i) => ({
+      label: c?.name,
+      value: c?.key,
+    }));
+  }, [censusVariables]);
 
   return (
     <>
@@ -341,10 +282,24 @@ const AcsSelection = (props) => {
               >
                 Counties
               </label>
-              <OptionSelectorComponent
-                options={tableOptions}
-                selectedOptions={selectedTableViews}
-                onChange={setSelecteTableOptions}
+
+              <MultiSelect
+                value={(selectedTableViews || [])
+                  .map((values) =>
+                    (tableOptions || []).find((prod) => prod.value === values)
+                  )
+                  .filter((prod) => prod && prod.value && prod.label)
+                  .map((prod) => ({
+                    label: prod?.label,
+                    value: prod?.value,
+                  }))}
+                closeMenuOnSelect={false}
+                options={tableOptions || []}
+                onChange={(value) => {
+                  setSelecteTableOptions(value?.map((val) => val?.value));
+                }}
+                selectMessage={"Counties"}
+                isSearchable
               />
 
               <p className="text-gray-600 text-xs italic">
@@ -362,13 +317,25 @@ const AcsSelection = (props) => {
               >
                 Variables
               </label>
-              <VariableSelectorComponent
-                options={(censusVariables || []).map((v) => ({
-                  label: v?.name,
-                  value: v?.key,
-                }))}
-                selectedOptions={selectedVariables}
-                onChange={setSelecteVariableOptions}
+              <MultiSelect
+                value={(selectedVariables || [])
+                  .map((values) =>
+                    (censusOptions || []).find(
+                      (prod) => prod.value === values.value
+                    )
+                  )
+                  .filter((prod) => prod && prod.value && prod.label)
+                  .map((prod) => ({
+                    label: prod?.label,
+                    value: prod?.value,
+                  }))}
+                closeMenuOnSelect={false}
+                options={censusOptions || []}
+                onChange={(value) => {
+                  setSelecteVariableOptions(value);
+                }}
+                selectMessage={"Variables"}
+                isSearchable
               />
               <p className="text-gray-600 text-xs italic">
                 Select Variables for the view
