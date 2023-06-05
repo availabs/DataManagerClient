@@ -102,11 +102,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
   
   
-  // useEffect(() => setTempSymbology((ts => 
-  //   ({...ts, ...get(mapData, `symbology`, {})})
-  // )),[mapData])
-
-  //console.log('render map page', mapData, tempSymbology)
+  
   
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -120,13 +116,14 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
-            sources: get(mapData,'sources',[]), 
+            sources: get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
-  },[source, views, mapData, activeViewId,filters])
+      // add tempSymbology as depen
+  },[source, views, mapData, activeViewId,filters, tempSymbology])
 
-  //console.log('layer mappage', tempSymbology)
+
 
   return (
     <div> 
@@ -139,6 +136,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
           setFilters={setFilters}
           tempSymbology={tempSymbology}
           setTempSymbology={setTempSymbology}
+          activeView={activeView}
           activeViewId={activeViewId}
         />
         <ViewSelector views={views} />
