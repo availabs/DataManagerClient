@@ -1,17 +1,16 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { get } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
 import { withAuth } from "~/modules/avl-components/src";
 
-import { selectPgEnv } from "~/pages/DataManager/store";
+import { DamaContext } from "~/pages/DataManager/store";
 
 import ListUploads from "./list";
 import Upload from "./view";
 
 const UploadsPage = ({ source }) => {
-  const pgEnv = useSelector(selectPgEnv);
+  const { pgEnv } = React.useContext(DamaContext);
   const { viewId, page } = useParams();
   const { falcor, falcorCache } = useFalcor();
 
@@ -24,7 +23,6 @@ const UploadsPage = ({ source }) => {
   useEffect(() => {
     async function getCtxs() {
       sourceId = Number(sourceId);
-
 
       const lengthPath = [
         "dama",
@@ -70,7 +68,6 @@ const UploadsPage = ({ source }) => {
         .filter((f) => Object.keys(f).length > 0)
     );
   }, [falcorCache, sourceId]);
-
 
   return (
     <>

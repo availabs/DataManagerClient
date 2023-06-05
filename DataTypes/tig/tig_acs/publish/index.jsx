@@ -24,16 +24,13 @@ const submitUpload = (props, navigate) => {
       });
 
       const publishFinalEvent = await res.json();
+      const { etl_context_id, source_id } = publishFinalEvent;
 
-      const {
-        payload: { damaViewId, damaSourceId: finalSourceId, etlContextId },
-      } = publishFinalEvent;
-
-      if (damaViewId && finalSourceId && etlContextId) {
-        navigate(`/source/${finalSourceId}`);
+      if (source_id && etl_context_id) {
+        navigate(`/source/${source_id}`);
       }
     } catch (err) {
-      console.error("new Error", err);
+      console.log("error : ", JSON.stringify(err, null, 3));
     }
   };
   runPublish();

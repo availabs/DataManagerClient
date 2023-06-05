@@ -57,7 +57,7 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
         columns={[
           {
             Header: "Version Id",
-            accessor: c => <Link to={`/${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
+            accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["view_id"]} </Link>,
             align: "left"
           },
           {
