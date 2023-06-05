@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, } from "react";
 import { get, uniqBy } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
+
 import { DamaContext } from "~/pages/DataManager/store";
+import makeAnimated from "react-select/animated";
 
 import MultiSelect from "./multiSelect";
 import { Select } from "./singleSelect";
@@ -31,7 +33,7 @@ const censusVariables = [
 
 const AcsSelection = (props) => {
   const { falcor, falcorCache } = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext);
+  const {pgEnv} = React.useContext(DamaContext)
 
   const [selectedView, setSelecteView] = useState(null);
   const [selectedTableViews, setSelecteTableOptions] = useState(null);

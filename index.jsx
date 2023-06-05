@@ -12,16 +12,18 @@ import EtlContextEvents from "./EtlContext";
 
 import { DamaContext } from "./store"
 
-const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false) => {
-  // console.log('load DataManager url:',baseUrl, 'pgenv:', defaultPgEnv)
-  // const onLoadPgEnv = defaultPgEnv;
-  // console.log('set pgenv', defaultPgEnv)
-  // setPgEnv(onLoadPgEnv);
-  // console.log('DamaRoutes', baseUrl, defaultPgEnv)
+const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false, components={}) => {
+  const {
+    Head = DataManagerHeader,
+    List = SourceList,
+    View = SourceView,
+    Create =SourceCreate,
+    Del = SourceDelete
+  } = components
 
   const HeaderComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <DataManagerHeader  />
+      <Head  />
     </DamaContext.Provider>
   )
 
@@ -29,22 +31,22 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
 
   const SourceListComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <SourceList />
+      <List />
     </DamaContext.Provider>
   );
   const SourceViewComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <SourceView />
+      <View />
     </DamaContext.Provider>
   );
   const SourceCreateComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <SourceCreate />
+      <Create />
     </DamaContext.Provider>
   );
   const SourceDeleteComp = () => (
     <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <SourceDelete />
+      <Del />
     </DamaContext.Provider>
   );
 

@@ -26,11 +26,13 @@ const GisDatasetConfig = {
   gisDatasetUpdate: {
     name: "Load New View",
     path: "/gisDatasetUpdate",
+    hidden: true,
     component: CreatePage,
   },
   uploads: {
     name: "Uploads",
     path: "/uploads",
+    hidden: true,
     component: Uploads,
   },
 };
