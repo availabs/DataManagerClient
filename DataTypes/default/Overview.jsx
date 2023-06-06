@@ -1,5 +1,5 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { useFalcor, withAuth, Input, Button } from "~/modules/avl-components/src"
+import { withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
@@ -10,9 +10,8 @@ import { VersionEditor, VersionDownload } from './version'
 
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
-  const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
   
   useEffect(() => {
@@ -39,13 +38,11 @@ const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
             }
           }
       }).then(d => {
-        console.log('set run', d)
         cancel()
       })
     }
   }
 
-  console.log('type', type)
   return (
     type === 'textarea' ? (
       <div className='w-full flex flex-col h-full border border-lime-300'>

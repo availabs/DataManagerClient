@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useFalcor, TopNav, SideNav, withAuth } from "~/modules/avl-components/src";
+import {  TopNav, SideNav, withAuth } from "~/modules/avl-components/src";
 
 
 import get from "lodash/get";
@@ -13,11 +13,10 @@ import { DamaContext } from "~/pages/DataManager/store";
 
 
 const Source = ({user}) => {
-  const {falcor, falcorCache} = useFalcor()
   const { sourceId, page, viewId } = useParams()
   const [ pages, setPages] = useState(Pages)
   const [ activeViewId, setActiveViewId ] = useState(viewId)
-  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
 
 
   const Page = useMemo(() => {

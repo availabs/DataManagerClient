@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link } from "react-router-dom";
 import get from "lodash/get";
-import { useFalcor } from "~/modules/avl-components/src";
 import { DamaContext } from "../store";
 import { getDamaApiRoutePrefix, deleteSource } from "../utils/DamaControllerApi";
 import { useEffect } from "react";
@@ -32,7 +31,7 @@ async function getData({ falcor, pgEnv, sourceId }) {
 }
 
 const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
-  const { falcor } = useFalcor();
+  const { falcor } = React.useContext(DamaContext);
   const navigate = useNavigate();
 
   return (
@@ -137,9 +136,8 @@ const LoadConfirmDelete = (sourceId, pgEnv, baseUrl) => (
 );
 
 export default function Popup() {
-  const { falcor, falcorCache } = useFalcor();
   const { sourceId } = useParams();
-  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
 
   useEffect(() => {
     getData({ falcor, pgEnv, sourceId });

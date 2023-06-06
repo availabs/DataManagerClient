@@ -1,5 +1,5 @@
 import React from "react";
-import { withAuth } from "@availabs/ams";
+import { withAuth } from "~/modules/ams/src";
 
 import { DataManagerHeader } from "./components/SourcesLayout";
 
@@ -8,11 +8,14 @@ import SourceView from "./Source";
 import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 // import Settings from "./Source/settings";
-import EtlContextEvents from "./EtlContext";
+// import EtlContextEvents from "./EtlContext";
+
+import { useFalcor } from '~/modules/avl-falcor'
 
 import { DamaContext } from "./store"
 
-const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false, components={}) => {
+const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false, components={}, navSettigs={}) => {
+  
   const {
     Head = DataManagerHeader,
     List = SourceList,
@@ -21,34 +24,56 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
     Del = SourceDelete
   } = components
 
-  const HeaderComp = () => (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <Head  />
-    </DamaContext.Provider>
-  )
+  const {
+    sideNav = { size: "none"},
+    topNav = {size: "none" }
+  } = navSettigs
 
+  const HeaderComp = () => { 
+    const { falcor, falcorCache } = useFalcor()
+    return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
+        <Head  />
+      </DamaContext.Provider>
+    )
+  }
   const Header = <HeaderComp />
 
-  const SourceListComp = () => (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <List />
-    </DamaContext.Provider>
-  );
-  const SourceViewComp = () => (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <View />
-    </DamaContext.Provider>
-  );
-  const SourceCreateComp = () => (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <Create />
-    </DamaContext.Provider>
-  );
-  const SourceDeleteComp = () => (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-      <Del />
-    </DamaContext.Provider>
-  );
+  const SourceListComp = () => { 
+    const { falcor, falcorCache } = useFalcor()
+    return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+        <List />
+      </DamaContext.Provider>
+    );
+  }
+
+  const SourceViewComp = () => { 
+    const { falcor, falcorCache } = useFalcor()
+    return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+        <View />
+      </DamaContext.Provider>
+    );
+  }
+
+  const SourceCreateComp = () => { 
+    const { falcor, falcorCache } = useFalcor()
+      return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+        <Create />
+      </DamaContext.Provider>
+    );
+  }
+
+  const SourceDeleteComp = () => { 
+    const { falcor, falcorCache } = useFalcor()
+      return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+        <Del />
+      </DamaContext.Provider>
+    );
+  }
 
   return [
     // Source List
@@ -59,10 +84,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: SourceListComp
     },
     {
@@ -72,10 +95,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: SourceListComp
     },
     {
@@ -85,10 +106,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: SourceListComp
     },
     // -- Source View
@@ -99,10 +118,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: withAuth(SourceViewComp)
     },
     {
@@ -112,10 +129,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: withAuth(SourceViewComp)
     }, {
       name: "View Source",
@@ -124,10 +139,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: withAuth(SourceViewComp)
     }, {
       name: "View Source",
@@ -136,10 +149,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: withAuth(SourceViewComp)
     },
     // Source Create
@@ -150,10 +161,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth: true,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: SourceCreateComp
     },
     // Source Delete
@@ -164,10 +173,8 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       auth: true,
       mainNav: false,
       title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
+      sideNav,
+      topNav,
       component: SourceDeleteComp
     },
     //
@@ -184,19 +191,17 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
     //   },
     //   component: Settings
     // },
-    {
-      name: "ETL Context View",
-      path: `${baseUrl}/etl-context/:etlContextId`,
-      exact: true,
-      auth,
-      mainNav: false,
-      title: Header,
-      sideNav: {
-        color: "dark",
-        size: "micro"
-      },
-      component: EtlContextEvents
-    }
+    // {
+    //   name: "ETL Context View",
+    //   path: `${baseUrl}/etl-context/:etlContextId`,
+    //   exact: true,
+    //   auth,
+    //   mainNav: false,
+    //   title: Header,
+    //   sideNav,
+    //   topNav,
+    //   component: EtlContextEvents
+    // }
   ];
 };
 

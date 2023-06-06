@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useFalcor, withAuth, Input, Button } from "~/modules/avl-components/src"
+import { withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "../../store";
@@ -174,9 +174,8 @@ const RenderDependents = ({ dependents = [], viewId, srcMeta, viewMeta }) => {
 
 
 const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
-  const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
 
   useEffect(() => {

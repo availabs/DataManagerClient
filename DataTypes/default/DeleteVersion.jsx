@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
-import { useFalcor } from "../../../../modules/avl-components/src";
 import { DamaContext } from "../../store";
 import { getDamaApiRoutePrefix, deleteView } from "../../utils/DamaControllerApi";
 
@@ -141,9 +140,8 @@ const LoadConfirmDelete = (viewId, sourceId, pgEnv, baseUrl, falcor) => (
 );
 
 export default function Popup() {
-  const { falcor, falcorCache } = useFalcor();
   const { sourceId, viewId } = useParams();
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext);
 
   useEffect(() => {
     getData({ falcor, pgEnv, viewId });

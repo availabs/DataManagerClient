@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
+import { withAuth, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -210,7 +210,7 @@ export default withAuth(MapPage)
 
 const Map = ({layers,tempSymbology}) => {
   const mounted = React.useRef(false);
-  const { falcor } = useFalcor()
+  const {falcor} = React.useContext(DamaContext)
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
     return layers.map(d => d.activeViewId)

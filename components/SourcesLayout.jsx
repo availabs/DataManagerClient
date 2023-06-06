@@ -1,6 +1,7 @@
 import React, {useContext} from 'react';
-import { Dropdown, withAuth } from '~/modules/avl-components/src'
-import { Item } from '~/pages/Auth/AuthMenu'
+import { Dropdown } from '~/modules/avl-components/src'
+import { withAuth } from '~/modules/ams/src'
+import { Item } from '~/pages/auth/AuthMenu'
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
 
@@ -10,6 +11,7 @@ const SourcesLayout = ({children }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
+      hola
       <div className=''>
         <Breadcrumbs />
       </div>
@@ -31,7 +33,7 @@ export const DataManagerHeader = withAuth(({user}) => {
     <div className='pt-[2px]'>
       { user.authLevel >= 5 ? 
         (
-          <div className=' h-full'>
+          <div className='h-full'>
             <Dropdown control={
               <div className='px-2 flex text-lg'>
                 <div className=' font-medium text-gray-800'> Data Manager</div> 
