@@ -1,7 +1,7 @@
 import React, {useContext} from 'react';
 import { Dropdown } from '~/modules/avl-components/src'
 import { withAuth } from '~/modules/ams/src'
-import { Item } from '~/pages/auth/AuthMenu'
+import { Item } from '~/pages/Auth/AuthMenu'
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
 
