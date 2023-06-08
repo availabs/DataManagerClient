@@ -42,7 +42,7 @@ async function getData({ falcor, pgEnv, viewId }) {
 
   await falcor.get(["dama", pgEnv, "sources", "byId", tmpSrcIds, "attributes", ["type", "name"]]);
 
-  await falcor.get(["dama", pgEnv, "views", "byId", tmpViewIds, "attributes", ["version", "metadata", "_modified_timestamp", "last_updated"]]);
+  await falcor.get(["dama", pgEnv, "views", "byId", [viewId,...tmpViewIds], "attributes", ["version", "metadata", "_modified_timestamp", "last_updated"]]);
 }
 
 const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseUrl }) => {
@@ -266,7 +266,7 @@ export const VersionEditor = withAuth(({view, user, columns=null}) => {
   )
 })
 
-function ViewControls () {
+function ViewControls ({view}) {
   const { viewId,sourceId } = useParams();
   const { pgEnv } = React.useContext(DamaContext);
 
@@ -280,6 +280,7 @@ function ViewControls () {
           view_id: viewId
         };
 
+        console.log('creating download')
         const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/createDownload`, 
         {
           method: "POST",
@@ -302,12 +303,12 @@ function ViewControls () {
   return (
     <div>
       <div onClick={createDownload}> Create Download </div>
+      {/*<VersionDownload view={}/>*/}
     </div>
   )
 }
 
 export function  VersionDownload ({view}) {
-  console.log('hola', view, view.metadata)
   if(!view?.metadata?.download) {
     return 'Download Not Available'
   }
@@ -336,8 +337,8 @@ export function  VersionDownload ({view}) {
         >
           <Menu.Items className="absolute z-20 right-0 -mr-1 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div className="py-1">
-              {Object.keys(view.metadata.download).map((item) => (
-                <Menu.Item key={item.name}>
+              {Object.keys(view.metadata.download).map((item,i) => (
+                <Menu.Item key={i}>
                   {({ active }) => (
                     <a
                       href={view.metadata.download[item].replace('$HOST', `${DAMA_HOST}`)}
@@ -360,9 +361,8 @@ export function  VersionDownload ({view}) {
 }
 
 export default function Version() {
-  const { falcor, falcorCache } = useFalcor();
   const { viewId,sourceId } = useParams();
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
 
   useEffect(() => {
     getData({ falcor, pgEnv, viewId });
@@ -406,7 +406,7 @@ export default function Version() {
                   baseUrl={baseUrl}
                 /> : ''}
               </dd>
-              <ViewControls />
+              <ViewControls view={view} />
           </div>
 
         </div>

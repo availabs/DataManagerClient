@@ -4,10 +4,12 @@ import get from 'lodash/get'
 import { LayerContainer } from "~/modules/avl-map/src";
 import ckmeans from '../../utils/ckmeans'
 import { getColorRange } from '../../utils/color-ranges'
+import { DamaContext } from '~/pages/DataManager/store'
 import * as d3scale from "d3-scale"
 
 const HoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor() 
+  const { falcor, falcorCache } = React.useContext(DamaContext)
+
   const {layerName, version} = layer 
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let attributes = React.useMemo(() => get(layer.source, 'metadata', [])

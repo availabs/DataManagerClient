@@ -284,8 +284,7 @@ const Map = ({layers,tempSymbology}) => {
 
 
 const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
-  const { falcor } = useFalcor()
-  const { pgEnv } = React.useContext(DamaContext);
+  const { pgEnv, falcor } = React.useContext(DamaContext);
   
   const save = async () => {
     //console.log('click save 222', attr, value)
@@ -332,9 +331,8 @@ const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
 
 
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
-  const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
   const inputEl = useRef(null);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { withAuth } from "~/modules/ams/src";
+import { withAuth } from "@availabs/ams";
 
 import { DataManagerHeader } from "./components/SourcesLayout";
 
@@ -10,7 +10,7 @@ import SourceDelete from "./Source/delete";
 // import Settings from "./Source/settings";
 // import EtlContextEvents from "./EtlContext";
 
-import { useFalcor } from '~/modules/avl-falcor'
+import { useFalcor } from '~/modules/avl-components/src'
 
 import { DamaContext } from "./store"
 

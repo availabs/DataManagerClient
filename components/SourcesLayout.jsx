@@ -1,6 +1,6 @@
 import React, {useContext} from 'react';
 import { Dropdown } from '~/modules/avl-components/src'
-import { withAuth } from '~/modules/ams/src'
+import { withAuth } from "@availabs/ams";
 import { Item } from '~/pages/Auth/AuthMenu'
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
@@ -11,7 +11,6 @@ const SourcesLayout = ({children }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      hola
       <div className=''>
         <Breadcrumbs />
       </div>
