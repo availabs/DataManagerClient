@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
+import { withAuth, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -208,7 +208,7 @@ export default withAuth(MapPage)
 
 const Map = ({layers,tempSymbology}) => {
   const mounted = React.useRef(false);
-  const { falcor } = useFalcor()
+  const {falcor} = React.useContext(DamaContext)
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
     return layers.filter(d => d).map(d => d.activeViewId)
@@ -284,8 +284,7 @@ const Map = ({layers,tempSymbology}) => {
 
 
 const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
-  const { falcor } = useFalcor()
-  const { pgEnv } = React.useContext(DamaContext);
+  const { pgEnv, falcor } = React.useContext(DamaContext);
   
   const save = async () => {
     //console.log('click save 222', attr, value)
@@ -332,9 +331,8 @@ const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
 
 
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
-  const { falcor } = useFalcor()
   const [value, setValue] = useState('')
-  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
   const inputEl = useRef(null);
 
   useEffect(() => {

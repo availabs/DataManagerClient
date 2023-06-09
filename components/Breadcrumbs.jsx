@@ -1,7 +1,6 @@
 import React, {useMemo, useEffect} from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { useFalcor } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
 import { getAttributes } from './attributes'
@@ -10,8 +9,7 @@ import { DamaContext } from '../store'
 
 export default function BreadCrumbs () {
   const { sourceId, page, cat1, cat2} = useParams()
-  const { falcor , falcorCache} = useFalcor()
-  const { pgEnv, baseUrl } = React.useContext(DamaContext)
+  const { pgEnv, baseUrl, falcor , falcorCache } = React.useContext(DamaContext)
 
   // console.log('BreadCrumbs', baseUrl)
 
