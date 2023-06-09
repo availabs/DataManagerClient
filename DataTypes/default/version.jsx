@@ -308,7 +308,7 @@ function ViewControls () {
 }
 
 export function  VersionDownload ({view}) {
-  console.log('hola', view, view.metadata)
+  // console.log('hola', view, view.metadata)
   if(!view?.metadata?.download) {
     return 'Download Not Available'
   }

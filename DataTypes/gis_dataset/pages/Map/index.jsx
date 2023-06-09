@@ -101,11 +101,13 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
 
   const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
   
-  
-  
-  
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
+      const sources = get(tempSymbology, 'sources', false) || get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
+      layers =  get(tempSymbology, 'layers', false) || get(mapData,'layers',[])
+      if(sources.length === 0 || layers.length === 0 ) {
+        return null
+      }
       return {
             name: source.name,
             pgEnv,
@@ -116,14 +118,12 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
-            sources: get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
-            layers: get(mapData,'layers',[]),
+            sources,
+            layers,
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, tempSymbology])
-
-
 
   return (
     <div> 
@@ -211,7 +211,7 @@ const Map = ({layers,tempSymbology}) => {
   const { falcor } = useFalcor()
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
-    return layers.map(d => d.activeViewId)
+    return layers.filter(d => d).map(d => d.activeViewId)
   },[layers])
 
   React.useEffect( () => {
@@ -242,7 +242,7 @@ const Map = ({layers,tempSymbology}) => {
   },[ currentLayerIds ])
 
   const layerProps = React.useMemo(()=>{
-    let inputViewIds = layers.map(d => d.activeViewId)
+    let inputViewIds = layers.filter(d => d).map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
       if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
         out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])

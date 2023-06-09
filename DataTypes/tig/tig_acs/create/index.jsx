@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useEffect, } from "react";
-import { get, uniqBy } from "lodash";
+import { get, uniqBy, isEqual } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
 
 import { DamaContext } from "~/pages/DataManager/store";
-import makeAnimated from "react-select/animated";
 
 import MultiSelect from "./multiSelect";
 import { Select } from "./singleSelect";
@@ -15,23 +14,23 @@ import {
   ViewAttributes,
   getAttributes,
   SourceAttributes,
-} from "../../../components/attributes";
+} from "../../../../components/attributes";
 
 const censusVariables = [
-  { key: "B02001_001E", name: "Total Population" },
-  { key: "B02001_004E", name: "American Indian and Alaska Native alone" },
-  { key: "B02001_005E", name: "Asian alone" },
-  { key: "B02001_003E", name: "Black or African American alone" },
+  { censusKeys: ["B02001_001E"], name: "Total Population" },
+  { censusKeys: ["B02001_004E"], name: "American Indian and Alaska Native alone" },
+  { censusKeys: ["B02001_005E"], name: "Asian alone" },
+  { censusKeys: ["B02001_003E"], name: "Black or African American alone" },
   {
-    key: "B02001_006E",
+    censusKeys: ["B02001_006E"],
     name: "Native Hawaiian and Other Pacific Islander alone",
   },
-  { key: "B02001_007E", name: "Some other race alone" },
-  { key: "B02001_008E", name: "Two or more races" },
-  { key: "B02001_002E", name: "White alone" },
+  { censusKeys: ["B02001_007E"], name: "Some other race alone" },
+  { censusKeys: ["B02001_008E"], name: "Two or more races" },
+  { censusKeys: ["B02001_002E"], name: "White alone" },
 ];
 
-const AcsSelection = (props) => {
+const Create = (props) => {
   const { falcor, falcorCache } = useFalcor();
   const {pgEnv} = React.useContext(DamaContext)
 
@@ -248,12 +247,13 @@ const AcsSelection = (props) => {
   }, [tableData]);
 
   const censusOptions = useMemo(() => {
-    return (censusVariables || []).map((c, i) => ({
+    return (censusVariables || []).map((c) => ({
       label: c?.name,
-      value: c?.key,
+      value: c?.censusKeys,
     }));
   }, [censusVariables]);
 
+  console.log("censusOptions", censusOptions);
   return (
     <>
       <div className="w-full max-w-lg">
@@ -321,7 +321,8 @@ const AcsSelection = (props) => {
                 value={(selectedVariables || [])
                   .map((values) =>
                     (censusOptions || []).find(
-                      (prod) => prod.value === values.value
+                      // (prod) => prod.value === values.value
+                      (prod) => isEqual(prod.value, values.value)
                     )
                   )
                   .filter((prod) => prod && prod.value && prod.label)
@@ -360,4 +361,4 @@ const AcsSelection = (props) => {
   );
 };
 
-export default AcsSelection;
+export default Create;

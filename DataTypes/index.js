@@ -36,7 +36,7 @@ import gis_dataset from "./gis_dataset";
 // import ncei_storm_events from './hazard_mitigation/ncei_storm_events';
 // import ncei_storm_events_enhanced from "./hazard_mitigation/ncei_storm_events_enhanced";
 // import zone_to_county from "./hazard_mitigation/zone_to_county";
-// import tiger_2017 from "./hazard_mitigation/tiger_2017";
+import tiger_2017 from "./hazard_mitigation/tiger_2017";
 // import usda_crop_insurance_cause_of_loss from "./hazard_mitigation/usda";
 // import usda_crop_insurance_cause_of_loss_enhanced from "./hazard_mitigation/usda_enhanced";
 // import sba_disaster_loan_data_new from "./hazard_mitigation/sba";
@@ -75,7 +75,7 @@ const DataTypes = {
 
   // // hazmit types: geo
   // zone_to_county,
-  // tiger_2017,
+  tiger_2017,
 
   // // // hazmit types: swd
   // ncei_storm_events,
