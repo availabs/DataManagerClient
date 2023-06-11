@@ -58,6 +58,7 @@ export default function UploadGisDataset({
     // schemaEditor state
     databaseColumnNames: databaseColumnNames,
     tableDescriptor: null,
+    mbtilesOptions: null,
 
     // publish state
     publishStatus: "AWAITING",

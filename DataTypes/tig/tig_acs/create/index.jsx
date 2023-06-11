@@ -156,7 +156,7 @@ const Create = (props) => {
   const viewOptions = useMemo(() => {
     return (views || []).map((v) => ({
       id: v.view_id,
-      value: v?.version || "N/A",
+      value: v?.version || v?.table_name || "N/A",
       source_id: v?.source_id,
     }));
   }, [views]);
@@ -253,7 +253,6 @@ const Create = (props) => {
     }));
   }, [censusVariables]);
 
-  console.log("censusOptions", censusOptions);
   return (
     <>
       <div className="w-full max-w-lg">

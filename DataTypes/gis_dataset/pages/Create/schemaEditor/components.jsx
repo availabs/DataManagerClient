@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 
-import debounce from "lodash/debounce";
 import mapValues from "lodash/mapValues";
 // import Dropdown from "react-dropdown";
 // import "react-dropdown/style.css";
@@ -71,8 +70,11 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
   //console.log('databaseColumnNames', databaseColumnNames)
 
   const [omittedFields, setOmittedFields] = useState(null);
+  const [preserveColumns, setPreserveColumns] = useState(null);
   const [defaultMappings, setDefaultMappings] = useState(null);
   const [allChecked, setAllChecked] = useState(true);
+  const [allPreserveColumnsChecked, setallPreserveColumnsChecked] =
+    useState(true);
 
   const tableDescriptorColumnTypes =
     tableDescriptor && tableDescriptor.columnTypes;
@@ -84,6 +86,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
       return acc;
     }, {});
 
+  // console.log("gisDatasetFieldNamesToDbColumns", gisDatasetFieldNamesToDbColumns);
   useEffect(() => {
     if (defaultMappings === null && gisDatasetFieldNamesToDbColumns) {
       setDefaultMappings(gisDatasetFieldNamesToDbColumns);
@@ -97,6 +100,18 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
       );
     }
   }, [gisDatasetFieldNamesToDbColumns, omittedFields]);
+
+  useEffect(() => {
+    if (gisDatasetFieldNamesToDbColumns && !preserveColumns) {
+      const data = tableDescriptorColumnTypes.reduce((acc, { key, col }) => {
+        acc[col] = key || null;
+        return acc;
+      }, {});
+      setPreserveColumns(
+        mapValues(data, (v) => v === null)
+      );
+    }
+  }, [gisDatasetFieldNamesToDbColumns, preserveColumns]);
 
   if (!layerName) {
     return "";
@@ -130,6 +145,16 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     setAllChecked(!e.target.checked);
   };
 
+  const onChangeAllPreserveColumns = (e) => {
+    const updatedVal = mapValues(preserveColumns, () => e.target.checked);
+    setPreserveColumns(updatedVal);
+    setallPreserveColumnsChecked(!e.target.checked);
+    dispatch({
+      type: "update",
+      payload: { mbtilesOptions: { preserveColumns: updatedVal } },
+    });
+  };
+
   const availableDbColNames =
     databaseColumnNames &&
     databaseColumnNames
@@ -150,9 +175,19 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
               <th className="text-center">
                 Omit
                 <input
+                  className="ml-2"
                   type="checkbox"
                   checked={!allChecked}
                   onChange={onChangeAllOmit}
+                />
+              </th>
+              <th className="text-center">
+                Mbtile
+                <input
+                  className="ml-2"
+                  type="checkbox"
+                  checked={!allPreserveColumnsChecked}
+                  onChange={onChangeAllPreserveColumns}
                 />
               </th>
             </tr>
@@ -223,6 +258,35 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
                             },
                           });
                         }
+                      }}
+                    />
+                  </td>
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      checked={preserveColumns[col]}
+                      disabled={
+                        fieldColNameOptions && fieldColNameOptions.length === 0
+                      }
+                      onChange={() => {
+                        const newPreserveColumns = {
+                          ...preserveColumns,
+                          [col]: !preserveColumns[col],
+                        };
+
+                        setPreserveColumns(newPreserveColumns);
+
+                        const isAllPreserveColumnsChecked = Object.values(
+                          newPreserveColumns
+                        ).some((v) => v === false);
+                        setallPreserveColumnsChecked(
+                          isAllPreserveColumnsChecked
+                        );
+
+                        dispatch({
+                          type: "update",
+                          payload: { mbtilesOptions: { preserveColumns: newPreserveColumns } },
+                        });
                       }}
                     />
                   </td>

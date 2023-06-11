@@ -35,7 +35,8 @@ export default function PublishButton({ state, dispatch }) {
     gisUploadId,
     userId,
     customViewAttributes,
-    sourceType
+    sourceType,
+    mbtilesOptions
   } = state
 
   const { 
@@ -48,11 +49,14 @@ export default function PublishButton({ state, dispatch }) {
     return "";
   }
 
-
   const publish = () => {
     const runPublish = async () => { 
       try {
         dispatch({type: 'update', payload: { publishStatus : 'IN_PROGRESS' }})
+
+        if (mbtilesOptions && mbtilesOptions?.preserveColumns && (Object.keys(mbtilesOptions?.preserveColumns) || []).length) {
+          mbtilesOptions.preserveColumns = (Object.keys(mbtilesOptions?.preserveColumns || {}) || []).filter(key => preserveColumns[key] === true);
+        }
 
         const publishData = {
           source_id: damaSourceId || null,
@@ -65,7 +69,8 @@ export default function PublishButton({ state, dispatch }) {
           gisUploadId,
           layerName,
           etlContextId,
-          customViewAttributes
+          customViewAttributes,
+          mbtilesOptions,
         };
 
         const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
@@ -76,46 +81,12 @@ export default function PublishButton({ state, dispatch }) {
             "Content-Type": "application/json",
           },
         });
-
-        //await checkApiResponse(res);
-
-        // const taskContext = await res.json();
-        // console.log("{ etl_context_id, source_id }", taskContext);
-        // dispatch({ type: 'update', payload: { publishStatus : 'IN_PROGRESS',  damaSourceId: taskContext?.source_id }});
-      
-        // awaiting till the final event
-        // const publishFinalEvent = await new Promise((res, rej) => {
-        //   const interval = setInterval(async () => {
-        //     // call api to get the final event
-        //     // if final event then cleatr interval and resolve final event else return;
-
-        //     try {
-        //       const finalEventRes = await fetch(`${state.damaServerPath}/gis-dataset/getTaskFinalEvent/${taskContext?.etl_context_id}`);
-        //       console.log("finalEventRes",  finalEventRes);
-        //       console.log("\n\n\nfinalEventRes----2",  finalEventRes.data, finalEventRes.body);
-        //       const finalEvent = finalEventRes.json();
-        //       if (finalEvent === null) {
-        //         return;  
-        //       }
-        //       clearInterval(interval);
-        //       return res(finalEvent);
-              
-        //     } catch (error) {
-        //       console.error("error is ", error);
-        //     }
-        //   }, 5000);
-        // });
         
-        // OLD
         const publishFinalEvent = await res.json();
         console.log('publishFinalEvent', publishFinalEvent)
 
         const { etl_context_id, source_id } = publishFinalEvent
-        // const {
-        //   payload: { damaViewId, damaSourceId: finalSourceId },
-        // } = publishFinalEvent;
 
-        // console.log('published view id', damaViewId)
         dispatch({ type: 'update', payload: { publishStatus : 'PUBLISHED',  damaSourceId: source_id, etlContextId: etl_context_id }});
       } catch (err) {
         dispatch({
