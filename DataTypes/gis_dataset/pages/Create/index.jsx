@@ -1,13 +1,8 @@
 import React, { useReducer, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { DamaContext } from "~/pages/DataManager/store"
-import { useNavigate } from "react-router-dom";
-// import {  useParams } from "react-router-dom";
-
-import get from 'lodash/get'
-
 import { DAMA_HOST } from "~/config";
-
 import { reducer } from "./components/reducer";
 
 import UploadFileComp from "./uploadFile";
@@ -58,7 +53,7 @@ export default function UploadGisDataset({
     // schemaEditor state
     databaseColumnNames: databaseColumnNames,
     tableDescriptor: null,
-    mbtilesOptions: null,
+    mbtilesOptions: { preserveColumns: {} },
 
     // publish state
     publishStatus: "AWAITING",

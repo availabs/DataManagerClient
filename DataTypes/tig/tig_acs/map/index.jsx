@@ -60,9 +60,6 @@ const ACSMapFilter = ({
     }, {});
   }, [falcorCache, pgEnv, activeViewId, activeView]);
 
-  console.log("counties", counties);
-  console.log("mapGeoToOgc", mapGeoToOgc);
-
   useEffect(() => {
     async function getViewData() {
       await falcor.get([

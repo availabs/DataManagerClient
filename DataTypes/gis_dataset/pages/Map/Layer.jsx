@@ -135,33 +135,33 @@ class GISDatasetLayer extends LayerContainer {
     } = this.props
     
 
-    symbology.sources.forEach(s => {
-      if(!map.getSource(s.id)) {
-        map.addSource(s.id,s.source)
-      }
-    })
-
-    symbology.layers.forEach(l => {
-      if(!map.getLayer(l.id)) {
-        map.addLayer(l)
-        //this.layers.push(map.getLayer(l.id))
-      }
-    })
+    if (symbology) {
+      (symbology?.sources || []).forEach(s => {
+        if(!map.getSource(s.id)) {
+          map.addSource(s.id, s.source)
+        }
+      });
+  
+      (symbology?.layers || []).forEach(l => {
+        if(!map.getLayer(l.id)) {
+          map.addLayer(l)
+          // this.layers.push(map.getLayer(l.id))
+        }
+      })  
+    }
+    
     const activeVariable = get(filters,'activeVar.value', '')
-    console.log('renderLayer', activeViewId, activeVariable, symbology)
+    console.log('renderLayer', activeViewId, activeVariable, symbology);
 
-    Object.keys(symbology)
-      .filter(paintProperty => {
-        let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
-          || get(symbology, `[${paintProperty}][default]`, false)
-          console.log('value', value)
-        return value 
-      })
-      .forEach(paintProperty => {
-        let sym = get(symbology, `[${paintProperty}][${activeVariable}]`, '')
-          || get(symbology, `[${paintProperty}][default]`, '')
+    (Object.keys(symbology).filter((paintProperty) => {
+        let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false) || get(symbology, `[${paintProperty}][default]`, false);
+        return value;
+      }) || [])
+    .forEach((paintProperty) => {
+      let sym =
+        get(symbology, `[${paintProperty}][${activeVariable}]`, "") ||
+        get(symbology, `[${paintProperty}][default]`, "");
 
-        
         //console.log('ss', sym.settings)
         if(sym.settings) {
           this.legend.domain =  sym.settings.domain
