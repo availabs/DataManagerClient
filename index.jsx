@@ -9,7 +9,9 @@ import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
 
-import { useFalcor } from '~/modules/avl-components/src'
+//import { useFalcor } from '~/modules/avl-components/src'
+
+import { useFalcor } from '~/modules/avl-falcor'
 
 import { DamaContext } from "./store"
 

@@ -72,6 +72,7 @@ const UploadsPage = ({ source }) => {
     <>
       <div className="flex">
         <div className="flex-1 pl-3 pr-4 py-2">Upload Views</div>
+
       </div>
       <ListUploads uploads={ctxs} sourceId={sourceId}/>
     </>
