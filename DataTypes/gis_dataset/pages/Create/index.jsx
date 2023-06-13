@@ -1,14 +1,8 @@
 import React, { useReducer, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { DamaContext } from "~/pages/DataManager/store"
-import { useNavigate } from "react-router-dom";
-import { useFalcor } from "~/modules/avl-components/src"
-// import {  useParams } from "react-router-dom";
-
-import get from 'lodash/get'
-
 import { DAMA_HOST } from "~/config";
-
 import { reducer } from "./components/reducer";
 
 import UploadFileComp from "./uploadFile";
@@ -27,10 +21,10 @@ export default function UploadGisDataset({
   databaseColumnNames = null,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
-  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
 
   const navigate = useNavigate()
-  const { falcor } = useFalcor()
+ 
 
   const [state, dispatch] = useReducer(reducer, {
     damaSourceId: sourceId,
@@ -59,6 +53,7 @@ export default function UploadGisDataset({
     // schemaEditor state
     databaseColumnNames: databaseColumnNames,
     tableDescriptor: null,
+    mbtilesOptions: { preserveColumns: {} },
 
     // publish state
     publishStatus: "AWAITING",
