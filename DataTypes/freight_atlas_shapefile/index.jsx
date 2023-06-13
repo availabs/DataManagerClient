@@ -3,7 +3,7 @@ import { Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 // import { useParams } from 'react-router-dom'
 import FreightAtlasLayer from './FreightAtlasLayer'
-import { AvlMap } from "~/modules/avl-map/src"
+import { AvlMap } from "~/modules/avl-maplibre/src"
 import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 
 import Create from './create'
@@ -22,12 +22,7 @@ const Map = ({layers}) => {
         ],
         logoPosition: "bottom-right",
         styles: [
-            {name: "Light",
-                style: 'mapbox://styles/am3081/ckm86j4bw11tj18o5zf8y9pou' },
-            {name: "Blank Road Labels",
-                style: 'mapbox://styles/am3081/cl0ieiesd000514mop5fkqjox'},
-            {name: "Dark",
-                style: 'mapbox://styles/am3081/ckm85o7hq6d8817nr0y6ute5v' }
+            
         ]
     }
     

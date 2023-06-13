@@ -2,7 +2,7 @@ import React from 'react'
 import { useFalcor, Legend } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
-import { LayerContainer } from "~/modules/avl-map/src";
+import { LayerContainer } from "~/modules/avl-maplibre/src";
 import ckmeans from '../../../../utils/ckmeans'
 import { getColorRange } from '../../../../utils/color-ranges'
 import * as d3scale from "d3-scale"
