@@ -11,7 +11,6 @@ const SourcesLayout = ({children }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      hola
       <div className=''>
         <Breadcrumbs />
       </div>
