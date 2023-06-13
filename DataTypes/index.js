@@ -54,6 +54,7 @@ import tiger_2017 from "./hazard_mitigation/tiger_2017";
 // ---------------------------
 import {tig_sed_taz, tig_sed_county} from './tig/sed'
 import tiger_counties from './tig/tiger_counties'
+import tiger_censustrack from './tig/tiger_censustrack'
 import tig_acs from './tig/tig_acs'
 
 
@@ -104,6 +105,7 @@ const DataTypes = {
   tig_sed_taz,
   tig_sed_county,
   tiger_counties,
+  tiger_censustrack,
   tig_acs,
 
   // hazmit types: other data

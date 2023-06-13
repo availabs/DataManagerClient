@@ -11,7 +11,7 @@ const submitUpload = (props, navigate) => {
           type: props?.source?.type || "tig_acs",
         },
         viewMetadata: props?.viewMetadata,
-        viewDependency: props?.viewDependency?.id,
+        viewDependency: props?.viewDependency,
         etlContextId: props?.etlContextId,
       };
 
