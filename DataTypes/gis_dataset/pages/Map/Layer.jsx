@@ -1,8 +1,8 @@
 import React from 'react'
-import { useFalcor, Legend } from "~/modules/avl-components/src"
+import {  Legend } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
-import { LayerContainer } from "~/modules/avl-map/src";
+import { LayerContainer } from "~/modules/avl-maplibre/src";
 import ckmeans from '../../../../utils/ckmeans'
 import { getColorRange } from '../../../../utils/color-ranges'
 import * as d3scale from "d3-scale"
@@ -11,21 +11,20 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor() 
   const { attributes, activeViewId } = layer 
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
-    console.log('hover falcor',[
-      'dama',
-      pgEnv, 
-      'viewsbyId',
-      activeViewId, 
-      'databyId', 
-      id,
-      attributes
-    ])
+    // console.log('hover falcor',[
+    //   'dama',
+    //   pgEnv, 
+    //   'viewsbyId',
+    //   activeViewId, 
+    //   'databyId', 
+    //   id,
+    //   attributes
+    // ])
     falcor.get([
       'dama',
       pgEnv, 
@@ -34,7 +33,7 @@ const HoverComp = ({ data, layer }) => {
       'databyId', 
       id,
       attributes
-    ]).then(d => console.log('hover data', d))
+    ])
   }, [falcor, pgEnv, activeViewId, id, attributes])
     
 
@@ -50,7 +49,7 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, activeViewId, pgEnv]);
 
   
-  console.log('hover2', attrInfo )
+
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
       <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>

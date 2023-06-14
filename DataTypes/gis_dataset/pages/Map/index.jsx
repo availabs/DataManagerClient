@@ -25,6 +25,7 @@ const TILEHOST = getTilehost(DAMA_HOST)
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
+  const {baseUrl} = React.useContext(DamaContext)
   
   return (
     <div className='flex'>
@@ -33,7 +34,7 @@ const ViewSelector = ({views}) => {
         <select  
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`${baseUrl}/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             .sort((a,b) => b.view_id - a.view_id)

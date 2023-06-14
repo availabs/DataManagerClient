@@ -87,7 +87,7 @@ export default function UploadGisDataset({
         falcor.invalidate(["dama", pgEnv, "sources", "length"]);
       }
       console.log('publish done', state, state.damaSourceId)
-      navigate(`/source/${state.damaSourceId}/uploads/${state.etlContextId}`);
+      navigate(`${baseUrl}/source/${state.damaSourceId}/uploads/${state.etlContextId}`);
     }
   }, [state.publishStatus, state.damaSourceId, pgEnv, navigate]);
 

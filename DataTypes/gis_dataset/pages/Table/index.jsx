@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useFalcor, withAuth, Table } from '~/modules/avl-components/src'
+import {  withAuth, Table } from '~/modules/avl-components/src'
 import get from 'lodash/get'
 import { useParams, useNavigate } from 'react-router-dom'
 
@@ -54,9 +54,8 @@ const TablePage = ({
   TableFilter = DefaultTableFilter,
 }) => {
   const { viewId } = useParams();
-  const { falcor, falcorCache } = useFalcor();
   const [filters, setFilters] = useState(filterData);
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(

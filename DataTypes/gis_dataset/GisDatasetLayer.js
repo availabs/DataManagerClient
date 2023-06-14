@@ -2,7 +2,7 @@
 // import get from "lodash/get";
 // import mapboxgl from "mapbox-gl";
 
-import { LayerContainer } from "~/modules/avl-map/src";
+import { LayerContainer } from "~/modules/avl-maplibre/src";
 
 class GisDatasetLayer extends LayerContainer {
   legend = {

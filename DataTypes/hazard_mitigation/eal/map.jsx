@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
-import { AvlMap } from "~/modules/avl-map/src";
+import { AvlMap } from "~/modules/avl-maplibre/src";
 import config from "~/config.json";
 import { EALFactory } from "./layers/EALChoropleth";
 import { CustomSidebar } from "./mapControls";
 import { useParams } from 'react-router-dom'
 import VersionSelect from '../../components/VersionSelect'
+import { DamaContext } from '~/pages/DataManager/store'
 
 const hazards = [
         // "all",
@@ -17,6 +18,7 @@ export const RenderMap = ({source, views}) => {
   //const mapOptions = ;
   const [hazard, setHazard ] = React.useState('hurricane');
   const [paintKey, setPaintKey ] = React.useState('avail_eal');
+  const {falcor} = React.useContext(DamaContext)
   let { viewId } = useParams()
   if(!viewId) {
     viewId = views?.[views?.length - 1]?.view_id;
@@ -79,28 +81,15 @@ export const RenderMap = ({source, views}) => {
         </div>
       </div>
       <AvlMap
-        accessToken={config.MAPBOX_TOKEN}
+        falcor={falcor}
         mapOptions={{
           zoom: 6.2,
           center: [
             -75.95,
             42.89
           ],
-          logoPosition: "bottom-right",
-          styles: [
-            {
-              name: "Light",
-              style: "mapbox://styles/am3081/ckm86j4bw11tj18o5zf8y9pou"
-            },
-            {
-              name: "Blank Road Labels",
-              style: "mapbox://styles/am3081/cl0ieiesd000514mop5fkqjox"
-            },
-            {
-              name: "Dark",
-              style: "mapbox://styles/am3081/ckm85o7hq6d8817nr0y6ute5v"
-            }
-          ]
+          
+          
         }}
         layers={map_layers}
         CustomSidebar={() => <div />}
