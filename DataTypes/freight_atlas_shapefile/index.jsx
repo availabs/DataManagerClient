@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { useFalcor, Button } from "~/modules/avl-components/src"
+import { Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 // import { useParams } from 'react-router-dom'
 import FreightAtlasLayer from './FreightAtlasLayer'
@@ -53,7 +53,8 @@ const Map = ({layers}) => {
 }
 
 const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
-  const { falcor } = useFalcor()
+  const { falcor } = React.useContext(DamaContext)
+
   const [value, setValue] = useState('')
   /*const [loading, setLoading] = useState(false)*/
   const inputEl = useRef(null);
@@ -123,7 +124,8 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
 
 const MapPage = ({source,views, user}) => {
   // const { sourceId } = useParams()
-  const { falcor } = useFalcor()
+  const { falcor } = React.useContext(DamaContext)
+
   // console.log('user auth', user)
   const [ activeView /*, setActiveView*/ ] = useState(0)
   const [ mapData /*, setMapData*/ ] = useState(get(views,`[${activeView}].metadata.tiles`,{}))

@@ -1,9 +1,5 @@
 import React from 'react';
-//import { useFalcor, withAuth } from "~/modules/avl-components/src"
 import { useParams, useNavigate } from 'react-router-dom'
-/*
-import { DamaContext } from "~/pages/DataManager/store"
-*/// import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 
 
 

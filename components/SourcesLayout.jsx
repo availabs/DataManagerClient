@@ -1,6 +1,7 @@
 import React, {useContext} from 'react';
-import { Dropdown, withAuth } from '~/modules/avl-components/src'
-import { Item } from '~/pages/Auth/z'
+import { Dropdown } from '~/modules/avl-components/src'
+import { Item } from '~/pages/Auth/AuthMenu'
+import { withAuth } from "@availabs/ams";
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
 
@@ -31,7 +32,7 @@ export const DataManagerHeader = withAuth(({user}) => {
     <div className='pt-[2px]'>
       { user.authLevel >= 5 ? 
         (
-          <div className=' h-full'>
+          <div className='h-full'>
             <Dropdown control={
               <div className='px-2 flex text-lg'>
                 <div className=' font-medium text-gray-800'> Data Manager</div> 

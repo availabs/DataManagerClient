@@ -1,9 +1,8 @@
 import React from 'react';
-//import { useFalcor, withAuth,TopNav, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
 
-const Metadata = ({source}) => {
+const MetadataTable = ({source}) => {
   const metadata = get(source,'metadata',[])
   
   if (!metadata ||!metadata.map || metadata.length === 0) return <div> Metadata Not Available </div> 
@@ -41,6 +40,19 @@ const Metadata = ({source}) => {
           ))}
           
         </dl>
+      </div>
+    </div>
+  )
+}
+
+const Metadata = ({source, views}) => {
+  return (
+    <div  className="w-full flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+      <div className='col-span-2'>
+        <MetadataTable source={source} />
+      </div>
+      <div>
+        Hello
       </div>
     </div>
   )
