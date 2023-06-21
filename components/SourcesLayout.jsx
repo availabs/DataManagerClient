@@ -1,6 +1,5 @@
 import React, {useContext} from 'react';
 import { Dropdown } from '~/modules/avl-components/src'
-import { withAuth } from "~/modules/ams/src";
 import { Item } from '~/pages/Auth/AuthMenu'
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
@@ -23,14 +22,14 @@ const SourcesLayout = ({children }) => {
   )
 }
 
-export const DataManagerHeader = withAuth(({user}) => {
+export const DataManagerHeader = () => {
   //const { pgEnv } = React.useContext(DamaContext)
   //const baseUrl = '/'
-  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext)
   
   return (
     <div className='pt-[2px]'>
-      { user.authLevel >= 5 ? 
+      { user?.authLevel >= 5 ? 
         (
           <div className='h-full'>
             <Dropdown control={
@@ -56,7 +55,7 @@ export const DataManagerHeader = withAuth(({user}) => {
       }
     </div>
   )
-})
+}
 
 
 export default SourcesLayout

@@ -5,8 +5,8 @@ import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
 import Metadata from './Metadata'
 import { useParams } from "react-router-dom";
-import Versions from './Versions'
-import { VersionEditor, VersionDownload } from './version'
+import Versions from './Version/list'
+import { VersionEditor, VersionDownload } from './Version/version'
 
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {

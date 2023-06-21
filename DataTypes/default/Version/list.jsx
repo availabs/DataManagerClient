@@ -2,11 +2,11 @@ import React, {Fragment} from "react";
 import { withAuth, Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getDamaApiRoutePrefix, makeAuthoritative } from "../../utils/DamaControllerApi";
-import { formatDate } from "../../utils/macros";
+import { getDamaApiRoutePrefix, makeAuthoritative } from "../../../utils/DamaControllerApi";
+import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
 import Version from "./version";
-import DeleteVersion from "./DeleteVersion";
+import DeleteVersion from "./delete";
 
 const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
   return (
@@ -36,8 +36,8 @@ const DeleteButton = ({ viewId, sourceId, meta, navigate }) => {
   );
 };
 
-const Versions = withAuth(({ source, views, user,  meta }) => {
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+const Versions = ({ source, views, meta }) => {
+  const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   const navigate = useNavigate();
   const { sourceId, viewId, vPage } = useParams();
 
@@ -49,8 +49,6 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
       <Version />
     );
   }
-
-  console.log('views', views)
 
   return (
     <div className="">
@@ -89,7 +87,7 @@ const Versions = withAuth(({ source, views, user,  meta }) => {
 
     </div>
   );
-});
+};
 
 
 

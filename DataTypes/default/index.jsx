@@ -1,8 +1,8 @@
 import Overview from "./Overview";
 import Metadata from "./Metadata";
-import Versions from "./Versions";
+import Versions from "./Version/list";
+import AddVersion from "./Version/add";
 import Uploads from "./Uploads";
-// import AddVersion from "./AddVersion";
 
 const Pages = {
   overview: {
@@ -27,11 +27,12 @@ const Pages = {
     hidden: true,
     component: Uploads,
   },
-  // add_version: {
-  //   name: "Add Version",
-  //   path: "/add_version",
-  //   component: AddVersion
-  // }
+  add_version: {
+    name: "Add Version",
+    path: "/add_version",
+    hidden: true,
+    component: AddVersion
+  }
 };
 
 export default Pages;
