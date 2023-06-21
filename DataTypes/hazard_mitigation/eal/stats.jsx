@@ -1,4 +1,4 @@
-import { Table, useFalcor } from "../../../../../modules/avl-components/src";
+import { Table } from "../../../../../modules/avl-components/src";
 import get from "lodash/get";
 import React, { useEffect, useState } from "react";
 
@@ -98,8 +98,7 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
 const processData = (data) => data.map(d => ({nri_category: d.nri_category, avail_eal: d.avail_eal, nri_eal: d.nri_eal, diff: ((d.avail_eal - d.nri_eal)/ d.nri_eal) * 100}))
 
 export const Stats = ({source, views}) => {
-  const {falcor, falcorCache} = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
   const [activeView, setActiveView] = useState(views[0].view_id);
   const [compareView, setCompareView] = useState(views[0].view_id);
   const [compareMode, setCompareMode] = useState(undefined);

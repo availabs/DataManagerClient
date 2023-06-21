@@ -1,7 +1,7 @@
 import MapPage from "./pages/Map";
 import CreatePage from "./pages/Create";
 import Table from "./pages/Table";
-import Uploads from "./pages/Uploads";
+// import Uploads from "./pages/Uploads";
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
@@ -23,18 +23,11 @@ const GisDatasetConfig = {
     name: "Create",
     component: CreatePage,
   },
-  gisDatasetUpdate: {
-    name: "Load New View",
-    path: "/gisDatasetUpdate",
-    hidden: true,
-    component: CreatePage,
-  },
-  uploads: {
-    name: "Uploads",
-    path: "/uploads",
-    hidden: true,
-    component: Uploads,
-  },
+  // add_version: {
+  //   name: "Add Version",
+  //   path: "/add_version",
+  //   component: CreatePage,
+  // }
 };
 
 export default GisDatasetConfig;

@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
-import { DamaContext } from "../../store";
-import { getDamaApiRoutePrefix, deleteView } from "../../utils/DamaControllerApi";
+import { DamaContext } from "../../../store";
+import { getDamaApiRoutePrefix, deleteView } from "../../../utils/DamaControllerApi";
 
 async function getData({ falcor, pgEnv, viewId }) {
   const data = await falcor.get(

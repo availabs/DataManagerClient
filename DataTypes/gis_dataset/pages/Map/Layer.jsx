@@ -1,8 +1,8 @@
 import React from 'react'
-import { useFalcor, Legend } from "~/modules/avl-components/src"
+import {  Legend } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
-import { LayerContainer } from "~/modules/avl-map/src";
+import { LayerContainer } from "~/modules/avl-maplibre/src";
 import ckmeans from '../../../../utils/ckmeans'
 import { getColorRange } from '../../../../utils/color-ranges'
 import * as d3scale from "d3-scale"
@@ -11,21 +11,20 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor() 
   const { attributes, activeViewId } = layer 
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
-    console.log('hover falcor',[
-      'dama',
-      pgEnv, 
-      'viewsbyId',
-      activeViewId, 
-      'databyId', 
-      id,
-      attributes
-    ])
+    // console.log('hover falcor',[
+    //   'dama',
+    //   pgEnv, 
+    //   'viewsbyId',
+    //   activeViewId, 
+    //   'databyId', 
+    //   id,
+    //   attributes
+    // ])
     falcor.get([
       'dama',
       pgEnv, 
@@ -34,7 +33,7 @@ const HoverComp = ({ data, layer }) => {
       'databyId', 
       id,
       attributes
-    ]).then(d => console.log('hover data', d))
+    ])
   }, [falcor, pgEnv, activeViewId, id, attributes])
     
 
@@ -50,7 +49,7 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, activeViewId, pgEnv]);
 
   
-  console.log('hover2', attrInfo )
+
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
       <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
@@ -133,21 +132,35 @@ class GISDatasetLayer extends LayerContainer {
       activeViewId,
       symbology
     } = this.props
+    
 
+    if (symbology) {
+      (symbology?.sources || []).forEach(s => {
+        if(!map.getSource(s.id)) {
+          map.addSource(s.id, s.source)
+        }
+      });
+  
+      (symbology?.layers || []).forEach(l => {
+        if(!map.getLayer(l.id)) {
+          map.addLayer(l)
+          // this.layers.push(map.getLayer(l.id))
+        }
+      })  
+    }
+    
     const activeVariable = get(filters,'activeVar.value', '')
-    //console.log('renderLayer', activeViewId, activeVariable, symbology)
+    console.log('renderLayer', activeViewId, activeVariable, symbology);
 
-    Object.keys(symbology)
-      .filter(paintProperty => {
-        let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
-          || get(symbology, `[${paintProperty}][default]`, false)
-        return value 
-      })
-      .forEach(paintProperty => {
-        let sym = get(symbology, `[${paintProperty}][${activeVariable}]`, '')
-          || get(symbology, `[${paintProperty}][default]`, '')
+    (Object.keys(symbology).filter((paintProperty) => {
+        let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false) || get(symbology, `[${paintProperty}][default]`, false);
+        return value;
+      }) || [])
+    .forEach((paintProperty) => {
+      let sym =
+        get(symbology, `[${paintProperty}][${activeVariable}]`, "") ||
+        get(symbology, `[${paintProperty}][default]`, "");
 
-        
         //console.log('ss', sym.settings)
         if(sym.settings) {
           this.legend.domain =  sym.settings.domain
@@ -159,8 +172,9 @@ class GISDatasetLayer extends LayerContainer {
           this.updateState({showLegend: false})
         }
 
-        //console.log('paintProperty',paintProperty, value)
+       
         if(sym.value) { 
+          console.log('paintProperty',this.layers[0].id ,paintProperty, sym.value)
           map.setPaintProperty(
             this.layers[0].id, 
             paintProperty,

@@ -25,6 +25,7 @@ const TILEHOST = getTilehost(DAMA_HOST)
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
+  const {baseUrl} = React.useContext(DamaContext)
   
   return (
     <div className='flex'>
@@ -33,7 +34,7 @@ const ViewSelector = ({views}) => {
         <select  
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`${baseUrl}/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             .sort((a,b) => b.view_id - a.view_id)
@@ -101,11 +102,13 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
 
   const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
   
-  
-  
-  
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
+      const sources = get(tempSymbology, 'sources', false) || get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
+      layers =  get(tempSymbology, 'layers', false) || get(mapData,'layers',[])
+      if(sources.length === 0 || layers.length === 0 ) {
+        return null
+      }
       return {
             name: source.name,
             pgEnv,
@@ -116,14 +119,12 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
-            sources: get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
-            layers: get(mapData,'layers',[]),
+            sources,
+            layers,
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, tempSymbology])
-
-
 
   return (
     <div> 
@@ -211,7 +212,7 @@ const Map = ({layers,tempSymbology}) => {
   const {falcor} = React.useContext(DamaContext)
   const [layerData, setLayerData] = React.useState([])
   const  currentLayerIds = React.useMemo(() => {
-    return layers.map(d => d.activeViewId)
+    return layers.filter(d => d).map(d => d.activeViewId)
   },[layers])
 
   React.useEffect( () => {
@@ -242,7 +243,7 @@ const Map = ({layers,tempSymbology}) => {
   },[ currentLayerIds ])
 
   const layerProps = React.useMemo(()=>{
-    let inputViewIds = layers.map(d => d.activeViewId)
+    let inputViewIds = layers.filter(d => d).map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
       if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
         out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])

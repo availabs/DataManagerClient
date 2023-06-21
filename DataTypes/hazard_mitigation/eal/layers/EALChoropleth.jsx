@@ -1,7 +1,7 @@
 import { scaleLinear, scaleOrdinal, scaleThreshold } from "d3-scale";
 import get from "lodash/get";
 //import center from "@turf/center";
-import { LayerContainer } from "~/modules/avl-map/src";
+import { LayerContainer } from "~/modules/avl-maplibre/src";
 import { getColorRange } from "~/modules/avl-components/src";
 import ckmeans from "../../../../utils/ckmeans";
 import { fnum } from "../../../../utils/macros"
@@ -103,7 +103,7 @@ class EALChoroplethOptions extends LayerContainer {
       id: "counties",
       source: {
         "type": "vector",
-        "url": "mapbox://am3081.a8ndgl5n"
+        "url": "https://dama-dev.availabs.org/tiles/data/hazmit_dama_s344_v694_1686676399487.json"
       }
     }
   ];
@@ -112,13 +112,13 @@ class EALChoroplethOptions extends LayerContainer {
     {
       "id": "counties",
       "source": "counties",
-      "source-layer": "counties",
+      "source-layer": "s344_v694",
       "type": "fill"
     },
     {
       "id": "counties-line",
       "source": "counties",
-      "source-layer": "counties",
+      "source-layer": "s344_v694",
       "type": "line",
       paint: {
         "line-width": [

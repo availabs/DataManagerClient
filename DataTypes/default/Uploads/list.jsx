@@ -1,71 +1,74 @@
-import React, { useEffect, useMemo } from "react";
-import { get } from "lodash";
-import { DamaContext } from "~/pages/DataManager/store";
+import { useNavigate } from "react-router-dom";
 
-export default function Upload({ ctxId }) {
-  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
-
-  useEffect(() => {
-    async function getCtxById() {
-      await falcor.get(["dama", pgEnv, "etlContexts", "byEtlContextId", ctxId]);
-    }
-    getCtxById();
-  }, [falcor, pgEnv, ctxId]);
-
-  const ctx = useMemo(() => {
-    return get(falcorCache, [
-      "dama",
-      pgEnv,
-      "etlContexts",
-      "byEtlContextId",
-      ctxId,
-      "value",
-    ]);
-  }, [falcorCache]);
-
+const ListUploads = ({ uploads = [], sourceId = null }) => {
+  const navigate = useNavigate();
   return (
     <div className="w-full p-4 bg-white shadow mb-4">
-      {ctx && ctx?.events && ctx?.events?.length ? (
+      {uploads && uploads.length ? (
         <>
           <div className="py-4 sm:py-2 mt-2 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 border-b-2">
-            {["Id", "Event Type", "Timestamp"].map((key) => (
+            {[
+              "Id",
+              "Status",
+              "Initial Event Id",
+              "Latest Event Id",
+              "Last Updated",
+            ].map((key) => (
               <dt key={key} className="text-sm font-medium text-gray-600">
                 {key}
               </dt>
             ))}
           </div>
           <dl className="sm:divide-y sm:divide-gray-200 odd:bg-white even:bg-slate-50">
-            {(ctx?.events || []).map((d, i) => (
+            {(uploads || []).map((d, i) => (
               <div
                 key={`${i}_0`}
                 className="py-4 sm:py-5 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 cursor-pointer hover:bg-slate-200"
+                onClick={() =>
+                  navigate(`/source/${sourceId}/uploads/${d?.etl_context_id}`)
+                }
               >
                 <dd
                   key={`${i}_1`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d?.event_id}
+                  {d?.etl_context_id}
                 </dd>
+
                 <dd
                   key={`${i}_2`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d?.type?.split(":").pop()}
+                  {d?.etl_status}
                 </dd>
 
                 <dd
                   key={`${i}_3`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d._created_timestamp}
+                  {d?.initial_event_id}
+                </dd>
+                <dd
+                  key={`${i}_4`}
+                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
+                >
+                  {d?.latest_event_id}
+                </dd>
+                <dd
+                  key={`${i}_5`}
+                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
+                >
+                  {d?._modified_timestamp?.value}
                 </dd>
               </div>
             ))}
           </dl>
         </>
       ) : (
-        <div className="text-center">{"No Events found"}</div>
+        <div className="text-center">{"No Uploads found"}</div>
       )}
     </div>
   );
-}
+};
+
+export default ListUploads;

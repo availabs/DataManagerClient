@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {  TopNav, SideNav, withAuth } from "~/modules/avl-components/src";
+import {  TopNav, SideNav } from "~/modules/avl-components/src";
 
 
 import get from "lodash/get";
@@ -12,11 +12,11 @@ import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataMan
 import { DamaContext } from "~/pages/DataManager/store";
 
 
-const Source = ({user}) => {
+const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
   const [ pages, setPages] = useState(Pages)
   const [ activeViewId, setActiveViewId ] = useState(viewId)
-  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
+  const {pgEnv, baseUrl, falcor, falcorCache, user} = React.useContext(DamaContext)
 
 
   const Page = useMemo(() => {
@@ -144,4 +144,4 @@ const Source = ({user}) => {
 };
 
 
-export default withAuth(Source);
+export default Source;

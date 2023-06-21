@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/components/attributes'
-import { DamaContext } from "../../store";
+import { DamaContext } from "../../../store";
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { DAMA_HOST } from '~/config'
@@ -217,10 +217,10 @@ const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
   )
 }
 
-export const VersionEditor = withAuth(({view, user, columns=null}) => {
+export const VersionEditor = ({view,columns=null}) => {
   const [editing, setEditing] = React.useState(null)
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
-  console.log(view)
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
+  //console.log(view)
 
   return (
     <div className="overflow-hidden">
@@ -232,7 +232,7 @@ export const VersionEditor = withAuth(({view, user, columns=null}) => {
             .map((attr,i) => {
               let val = typeof view[attr] === 'object' ? JSON.stringify(view[attr]?.value) : view[attr]
               //val = attr === '_created_timestamp' ? new Date(val).toLocaleString("en-US",{ dateStyle: "short" }) : val
-              console.log('val', val, typeof val)
+              //console.log('val', val, typeof val)
               return (
                 <div key={i} className='flex justify-between group'>
                   <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -264,7 +264,7 @@ export const VersionEditor = withAuth(({view, user, columns=null}) => {
       </div>
     </div>
   )
-})
+}
 
 function ViewControls ({view}) {
   const { viewId,sourceId } = useParams();

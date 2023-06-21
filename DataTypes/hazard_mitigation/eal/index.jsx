@@ -3,14 +3,9 @@ import Create from './create'
 import { Stats } from "./stats"
 import { MegaTable } from "./table"
 import { RenderMap } from "./map";
-import AddVersion from "../../default/AddVersion";
 
 const NceiStormEventsConfig = {
-    add_version: {
-        name: "Add Version",
-        path: "/add_version",
-        component: AddVersion
-    },
+    
     stats: {
         name: 'Stats',
         path: '/stats',

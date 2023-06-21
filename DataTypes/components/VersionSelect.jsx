@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom'
+import { DamaContext } from '~/pages/DataManager/store'
 
 
 
@@ -7,7 +8,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
+  const {baseUrl} = React.useContext(DamaContext)
   
+  console.log('ViewSelector', baseUrl)
+
   return (
     <div className='flex flex-1'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Version : </div>
@@ -15,7 +19,7 @@ const ViewSelector = ({views}) => {
         <select  
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => navigate(`/datasources/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`${baseUrl}/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             .sort((a,b) => b.view_id - a.view_id)

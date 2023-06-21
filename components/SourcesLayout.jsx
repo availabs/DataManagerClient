@@ -23,14 +23,14 @@ const SourcesLayout = ({children }) => {
   )
 }
 
-export const DataManagerHeader = withAuth(({user}) => {
+export const DataManagerHeader = () => {
   //const { pgEnv } = React.useContext(DamaContext)
   //const baseUrl = '/'
-  const {pgEnv, baseUrl} = React.useContext(DamaContext)
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext)
   
   return (
     <div className='pt-[2px]'>
-      { user.authLevel >= 5 ? 
+      { user?.authLevel >= 5 ? 
         (
           <div className='h-full'>
             <Dropdown control={
@@ -56,7 +56,7 @@ export const DataManagerHeader = withAuth(({user}) => {
       }
     </div>
   )
-})
+}
 
 
 export default SourcesLayout

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Create from "./create";
-import AddVersion from "../../default/AddVersion";
 
 import { DamaContext } from "../../../store";
 import { Table, useFalcor } from "../../../../../modules/avl-components/src";
@@ -293,11 +292,7 @@ const Stats = ({ source, views }) => {
 };
 
 const NceiStormEventsConfig = {
-  add_version: {
-    name: "Add Version",
-    path: "/add_version",
-    component: AddVersion
-  },
+  
   stats: {
     name: "Stats",
     path: "/stats",
