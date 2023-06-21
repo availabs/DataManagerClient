@@ -60,9 +60,10 @@ export const tig_sed_taz = {
       />
     ),
   },
-  gisDatasetUpdate: {
-    name: "Upload",
-    path: "/gisDatasetUpdate",
+  add_version: {
+    name: "Add Version",
+    path: "/add_version",
+    hidden: true,
     component: (props) => (
       <CreatePage
         {...props}
@@ -120,9 +121,10 @@ export const tig_sed_county = {
       />
     ),
   },
-  gisDatasetUpdate: {
-    name: "Upload",
-    path: "/gisDatasetUpdate",
+  add_version: {
+    name: "Add Version",
+    path: "/add_version",
+    hidden:true,
     component: (props) => (
       <CreatePage
         {...props}
