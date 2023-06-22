@@ -17,6 +17,12 @@ import dbColsCounty from "./dbColsCounty.json";
 
 
 export const tig_sed_taz = {
+  overview: {
+    name: "Overview",
+    path: "",
+    tag: 'test',
+    component: () => <div> SED TAZ Overview</div>
+  },
   map: {
     name: "Map",
     path: "/map",

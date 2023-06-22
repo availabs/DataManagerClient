@@ -26,28 +26,31 @@ async function getData({ falcor, pgEnv, sourceId }) {
     });
 
   await falcor.get(["dama", pgEnv, "sources", "byId", [...tmpSrcIds, sourceId], "attributes", ["type", "name", "display_name"]]);
-
   await falcor.get(["dama", pgEnv, "views", "byId", tmpViewIds, "attributes", ["version", "metadata", "_modified_timestamp", "last_updated"]]);
 }
 
-const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
-  const { falcor } = React.useContext(DamaContext);
+const DeleteButton = ({ text, sourceId }) => {
+  const { falcor, baseUrl, pgEnv } = React.useContext(DamaContext);
   const navigate = useNavigate();
+
+  async function deleteSourceClick () {
+    console.log('click delete')
+    await deleteSource(`${getDamaApiRoutePrefix(pgEnv)}`, sourceId);
+    falcor.invalidate(
+      ['dama',pgEnv, 'sources', 'length'],
+      ['dama',pgEnv, 'sources', 'byIndex'],
+      ['dama',pgEnv, 'sources', 'byId', sourceId],
+    )
+    console.log('deleted')
+    navigate(baseUrl);
+  }
 
   return (
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
-      onClick={async () => {
-        await deleteSource(`${getDamaApiRoutePrefix(pgEnv)}`, sourceId);
-        falcor.invalidate(
-          ['dama',pgEnv, 'sources', 'length'],
-          ['dama',pgEnv, 'sources', 'byIndex'],
-          ['dama',pgEnv, 'sources', 'byId', sourceId],
-        )
-        navigate(baseUrl);
-      }}
+      onClick={deleteSourceClick} 
     >
-      {text}
+      Confirm Delete
     </button>
   );
 };
@@ -119,7 +122,7 @@ const LoadDependentViews = (dependents, srcMeta, viewMeta, sourceId, pgEnv, base
     <div className={"pb-4 flex justify-between"}>
       <label>The Source has following dependents:</label>
 
-      <DeleteButton text={"Delete anyway"} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+      <DeleteButton text={"Delete anyway"} sourceId={sourceId} />
     </div>
 
     <div className={"bg-red-50"}>
@@ -127,11 +130,10 @@ const LoadDependentViews = (dependents, srcMeta, viewMeta, sourceId, pgEnv, base
     </div>
   </>);
 
-const LoadConfirmDelete = (sourceId, pgEnv, baseUrl) => (
+const LoadConfirmDelete = ({sourceId}) => (
   <div className={"pb-4 flex justify-between"}>
     <label>No dependents found.</label>
-
-    <DeleteButton text={"Confirm Delete"} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+    <DeleteButton text={"Confirm Delete"} sourceId={sourceId} />
   </div>
 );
 
@@ -149,12 +151,18 @@ export default function Popup() {
     srcMeta = get(falcorCache, ["dama", pgEnv, "sources", "byId"], {}),
     viewMeta = get(falcorCache, ["dama", pgEnv, "views", "byId"], {});
 
+
+
   return (
     <div>
       <SourcesLayout>
         <div className="w-full p-4 bg-white my-1 block border shadow">
           <div className={"pb-4 font-bold"}>Delete <i>{display_name}</i></div>
-          {dependents.length ? LoadDependentViews(dependents, srcMeta, viewMeta, sourceId, pgEnv, baseUrl) : LoadConfirmDelete(sourceId, pgEnv, baseUrl)}
+          {LoadConfirmDelete(sourceId)}
+          {/*{
+            dependents.length ? 
+              LoadDependentViews(dependents, srcMeta, viewMeta, sourceId) : 
+                        }*/}
         </div>
       </SourcesLayout>
     </div>

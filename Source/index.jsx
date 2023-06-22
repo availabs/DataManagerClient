@@ -16,13 +16,13 @@ const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
   const [ pages, setPages] = useState(Pages)
   const [ activeViewId, setActiveViewId ] = useState(viewId)
-  const {pgEnv, baseUrl, falcor, falcorCache, user} = React.useContext(DamaContext)
+  const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
 
 
   const Page = useMemo(() => {
     return page
-      ? get(pages, `[${page}].component`, Pages["overview"].component)
-      : Pages["overview"].component;
+      ? get(pages, `[${page}].component`, pages["overview"].component)
+      : pages["overview"].component;
   }, [page, pages]);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ const Source = ({}) => {
 
       // check for pages to add 
       let typePages = Object.keys(DataTypes[attributes.type]).reduce((a, c) => {
-        if (DataTypes[attributes.type][c].path) {
+        if (DataTypes[attributes.type][c].path || c === 'overview') {
           a[c] = DataTypes[attributes.type][c];
         }
         return a;
@@ -119,11 +119,15 @@ const Source = ({}) => {
         </div>*/}
         <TopNav
           menuItems={Object.values(pages)
-            .filter(d => !d.hidden)
+            .filter(d => {
+              const authLevel = d?.authLevel || -1
+              const userAuth = user.authLevel || -1
+              return !d.hidden && (authLevel <= userAuth)
+            }) 
             .map(d => {
               return {
                 name:d.name,
-                path: `${baseUrl}/source/${sourceId}${d.path}${activeViewId ? '/'+activeViewId : ''}`
+                path: `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}`
               }
 
             })}
