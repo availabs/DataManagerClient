@@ -29,7 +29,7 @@ const SourceThumb = ({ source }) => {
     <div className="w-full p-4 bg-white my-1 hover:bg-blue-50 block border shadow flex justify-between">
       <div>
         <Link to={`${baseUrl}/source/${source.source_id}`} className="text-xl font-medium w-full block">
-          <span>{source.display_name || source.name}</span>
+          <span>{source.name}</span>
         </Link>
         <div>
           {(get(source, "categories", []) || [])
@@ -143,7 +143,7 @@ const SourcesList = () => {
             return output;
           })
           .filter(source => {
-            let searchTerm = (source.display_name + " " + get(source, "categories[0]", []).join(" "));
+            let searchTerm = (source.name + " " + get(source, "categories[0]", []).join(" "));
             return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase());
           })
           .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} />)
