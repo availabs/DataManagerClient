@@ -11,44 +11,44 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
-  const { attributes, activeViewId } = layer 
+  const { attributes, activeViewId } = layer
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
     // console.log('hover falcor',[
     //   'dama',
-    //   pgEnv, 
+    //   pgEnv,
     //   'viewsbyId',
-    //   activeViewId, 
-    //   'databyId', 
+    //   activeViewId,
+    //   'databyId',
     //   id,
     //   attributes
     // ])
     falcor.get([
       'dama',
-      pgEnv, 
+      pgEnv,
       'viewsbyId',
-      activeViewId, 
-      'databyId', 
+      activeViewId,
+      'databyId',
       id,
       attributes
     ])
   }, [falcor, pgEnv, activeViewId, id, attributes])
-    
+
 
   const attrInfo = React.useMemo(() => {
     return get(falcorCache, [
         'dama',
-        pgEnv, 
+        pgEnv,
         'viewsbyId',
-        activeViewId, 
-        'databyId', 
+        activeViewId,
+        'databyId',
         id
       ], {});
   }, [id, falcorCache, activeViewId, pgEnv]);
 
-  
+
 
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
@@ -56,12 +56,12 @@ const HoverComp = ({ data, layer }) => {
         {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
         {Object.keys(attrInfo)
           .filter(k => typeof attrInfo[k] !== 'object')
-          .map((k,i) => 
+          .map((k,i) =>
           <div className='flex border-b pt-1' key={i}>
             <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>
           </div>
-        )} 
+        )}
     </div>
   )
 }
@@ -86,9 +86,9 @@ class GISDatasetLayer extends LayerContainer {
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
       //console.log(feature)
-      
+
       let data = [feature.id,  layerId]
-      
+
       return data
     },
     HoverComp: this.hoverComp || HoverComp
@@ -103,17 +103,17 @@ class GISDatasetLayer extends LayerContainer {
               <Legend {...this.legend} />
             </div>
           )
-        }, 
+        },
         show: (layer) => {
-          console.log('show', layer, layer.state.showLegend)
+          // console.log('show', layer, layer.state.showLegend)
           return layer.state.showLegend
         }
-      }  
+      }
   ];
 
   init(map, falcor) {
-    console.log('init freight atlas layer', this.id, this.activeViewId, this)
-    
+    // console.log('init freight atlas layer', this.id, this.activeViewId, this)
+
   }
 
   getColorScale(domain, numBins=5, color='Reds') {
@@ -132,7 +132,7 @@ class GISDatasetLayer extends LayerContainer {
       activeViewId,
       symbology
     } = this.props
-    
+
 
     if (symbology) {
       (symbology?.sources || []).forEach(s => {
@@ -140,15 +140,15 @@ class GISDatasetLayer extends LayerContainer {
           map.addSource(s.id, s.source)
         }
       });
-  
+
       (symbology?.layers || []).forEach(l => {
         if(!map.getLayer(l.id)) {
           map.addLayer(l)
           // this.layers.push(map.getLayer(l.id))
         }
-      })  
+      })
     }
-    
+
     const activeVariable = get(filters,'activeVar.value', '')
     console.log('renderLayer', activeViewId, activeVariable, symbology);
 
@@ -172,18 +172,18 @@ class GISDatasetLayer extends LayerContainer {
           this.updateState({showLegend: false})
         }
 
-       
-        if(sym.value) { 
+
+        if(sym.value) {
           console.log('paintProperty',this.layers[0].id ,paintProperty, sym.value)
           map.setPaintProperty(
-            this.layers[0].id, 
+            this.layers[0].id,
             paintProperty,
             sym.value
           )
         }
       })
   }
-   
+
 }
 
 const GISDatasetLayerFactory = (options = {}) => new GISDatasetLayer(options);
@@ -196,7 +196,7 @@ export default GISDatasetLayerFactory
 //       return 'fill-color';
 //   case: 'line':
 //     return 'line-color';
-//   case: 
-  
+//   case:
+
 //   }
 // }
