@@ -1,11 +1,13 @@
-import React from 'react';
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { useParams, useNavigate, Link } from "react-router-dom";
 import get from "lodash/get";
+
 import { DamaContext } from "../store";
-import { getDamaApiRoutePrefix, deleteSource } from "../utils/DamaControllerApi";
-import { useEffect } from "react";
 import SourcesLayout from "../components/SourcesLayout";
-import { useNavigate } from "react-router-dom";
+
+import { DAMA_HOST } from "~/config";
+
+
 
 async function getData({ falcor, pgEnv, sourceId }) {
 
@@ -26,28 +28,40 @@ async function getData({ falcor, pgEnv, sourceId }) {
     });
 
   await falcor.get(["dama", pgEnv, "sources", "byId", [...tmpSrcIds, sourceId], "attributes", ["type", "name", "display_name"]]);
-
   await falcor.get(["dama", pgEnv, "views", "byId", tmpViewIds, "attributes", ["version", "metadata", "_modified_timestamp", "last_updated"]]);
 }
 
-const DeleteButton = ({ text, sourceId, pgEnv, baseUrl }) => {
-  const { falcor } = React.useContext(DamaContext);
+const DeleteButton = ({ text }) => {
+  const { falcor, baseUrl, pgEnv } = React.useContext(DamaContext);
+  const { sourceId } = useParams();
   const navigate = useNavigate();
+
+  async function deleteSourceClick () {
+    const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/deleteDamaSource`, {
+      method: "POST",
+      body: JSON.stringify({ "source_id": sourceId }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    const sourceDelRes = await res.json();
+    console.log('delete response', sourceDelRes)
+    falcor.invalidate(
+      ['dama',pgEnv, 'sources', 'length'],
+      ['dama',pgEnv, 'sources', 'byIndex'],
+      ['dama',pgEnv, 'sources', 'byId', sourceId],
+    )
+    console.log('navigate to', baseUrl)
+    navigate(baseUrl || '/');
+  }
 
   return (
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
-      onClick={async () => {
-        await deleteSource(`${getDamaApiRoutePrefix(pgEnv)}`, sourceId);
-        falcor.invalidate(
-          ['dama',pgEnv, 'sources', 'length'],
-          ['dama',pgEnv, 'sources', 'byIndex'],
-          ['dama',pgEnv, 'sources', 'byId', sourceId],
-        )
-        navigate(baseUrl);
-      }}
+      onClick={deleteSourceClick} 
     >
-      {text}
+      Confirm Delete
     </button>
   );
 };
@@ -119,7 +133,7 @@ const LoadDependentViews = (dependents, srcMeta, viewMeta, sourceId, pgEnv, base
     <div className={"pb-4 flex justify-between"}>
       <label>The Source has following dependents:</label>
 
-      <DeleteButton text={"Delete anyway"} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+      <DeleteButton text={"Delete anyway"} sourceId={sourceId} />
     </div>
 
     <div className={"bg-red-50"}>
@@ -127,18 +141,19 @@ const LoadDependentViews = (dependents, srcMeta, viewMeta, sourceId, pgEnv, base
     </div>
   </>);
 
-const LoadConfirmDelete = (sourceId, pgEnv, baseUrl) => (
+const LoadConfirmDelete = () => (
   <div className={"pb-4 flex justify-between"}>
     <label>No dependents found.</label>
-
-    <DeleteButton text={"Confirm Delete"} sourceId={sourceId} pgEnv={pgEnv} baseUrl={baseUrl} />
+    <DeleteButton text={"Confirm Delete"} />
   </div>
 );
 
-export default function Popup() {
-  const { sourceId } = useParams();
+export default function DeleteSourcePage () {
+  
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
+  const { sourceId } = useParams();
 
+  console.log('delete page', sourceId)
   useEffect(() => {
     getData({ falcor, pgEnv, sourceId });
   }, [sourceId, pgEnv, falcor]);
@@ -149,12 +164,18 @@ export default function Popup() {
     srcMeta = get(falcorCache, ["dama", pgEnv, "sources", "byId"], {}),
     viewMeta = get(falcorCache, ["dama", pgEnv, "views", "byId"], {});
 
+
+
   return (
     <div>
       <SourcesLayout>
         <div className="w-full p-4 bg-white my-1 block border shadow">
           <div className={"pb-4 font-bold"}>Delete <i>{display_name}</i></div>
-          {dependents.length ? LoadDependentViews(dependents, srcMeta, viewMeta, sourceId, pgEnv, baseUrl) : LoadConfirmDelete(sourceId, pgEnv, baseUrl)}
+          {LoadConfirmDelete()}
+          {/*{
+            dependents.length ? 
+              LoadDependentViews(dependents, srcMeta, viewMeta, sourceId) : 
+                        }*/}
         </div>
       </SourcesLayout>
     </div>
