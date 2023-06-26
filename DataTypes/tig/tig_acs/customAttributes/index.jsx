@@ -11,7 +11,7 @@ export const AcsCustomAttribute = ({
     const vals = Object.keys(customAcsSelection || {});
     const newYear = Math.max(Math.max(...vals), 2010);
     customAcsSelection = Object.assign({}, customAcsSelection, {
-      [newYear + 10]: null,
+      [newYear + 10]: options && options[0],
     });
     onChange(customAcsSelection);
   };

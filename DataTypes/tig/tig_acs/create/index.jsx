@@ -292,7 +292,7 @@ const Create = (props) => {
     return uniqBy(
       [selectedView, ...Object.values(customAcsSelection || {})],
       "id"
-    ).filter((v) => !!v).map(s => s?.id);
+    ).filter(v => !!v).map(s => s?.id);
   }, [selectedView, customAcsSelection]);
 
   return (
@@ -379,7 +379,6 @@ const Create = (props) => {
                 value={(selectedVariables || [])
                   .map((values) =>
                     (censusOptions || []).find(
-                      // (prod) => prod.value === values.value
                       (prod) => isEqual(prod.value, values.value)
                     )
                   )

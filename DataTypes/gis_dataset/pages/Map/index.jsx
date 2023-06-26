@@ -144,7 +144,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
       </div>
       <div className='w-ful h-[900px]'>
         <Map 
-          layers={[layer]}  
+          layers={[layer]}
           tempSymbology={tempSymbology}
         />
       </div>
