@@ -5,6 +5,8 @@ import { regionalData } from "../constants/index";
 import ckmeans from '../../../utils/ckmeans'
 import * as d3scale from "d3-scale"
 import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
+import { toPng } from "html-to-image"
+import download from "downloadjs"
 
 
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
@@ -33,8 +35,8 @@ const areas = [
 
 
 
-const SedChartFilterCounty = ({ source, filters, setFilters }) => {
-  
+const SedChartFilterCounty = ({ source, filters, setFilters, node }) => {
+
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let area = useMemo(() => get(filters, "area.value", ""), [filters]);
   let summarize = useMemo(() => get(filters, "summarize.value", ""), [filters]);
@@ -66,8 +68,25 @@ const SedChartFilterCounty = ({ source, filters, setFilters }) => {
     }
   }, []);
 
+  const downloadImage = React.useCallback(() => {
+    if (!node) return;
+    const name = get(sedVars, [activeVar, "name"], null);
+    if (!name) return;
+    toPng(node, { backgroundColor: "#fff" })
+      .then(dataUrl => {
+        download(dataUrl, `${ name }.png`, "image/png");
+      });
+  }, [node, activeVar]);
+
   return (
     <div className="flex border-blue-100">
+      <div>
+        <Button themeOptions={{size:'sm', color: 'primary'}}
+          onClick={ downloadImage }
+        >
+          Download
+        </Button>
+      </div>
       <div className="py-3.5 px-2 text-sm text-gray-400">Area: </div>
       <div className="flex-1" style={{ width: "min-content" }}>
         <select
@@ -228,7 +247,7 @@ const SedChartTransformCounty = (tableData, attributes, filters, years, flag) =>
   /* [
     {
       name: New York County,
-      data: [{ 
+      data: [{
         x: 15, // year
         y: 35636 //value of totpop_15
       },

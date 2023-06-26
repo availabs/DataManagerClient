@@ -13,8 +13,8 @@ import { DAMA_HOST } from "~/config"
 //import { DAMA_HOST } from "~/config"
 
 const getTilehost = (DAMA_HOST) =>
-  DAMA_HOST === 'http://localhost:3369' ? 
-  'http://localhost:3370' : 
+  DAMA_HOST === 'http://localhost:3369' ?
+  'http://localhost:3370' :
   DAMA_HOST + '/tiles'
 
 const TILEHOST = getTilehost(DAMA_HOST)
@@ -25,12 +25,12 @@ const TILEHOST = getTilehost(DAMA_HOST)
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
-  
+
   return (
     <div className='flex'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Version : </div>
       <div className='flex-1'>
-        <select  
+        <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
           onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
@@ -58,13 +58,13 @@ const DefaultMapFilter = ({source, filters, setFilters}) => {
     <div className='flex flex-1'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
       <div className='flex-1'>
-        <select  
+        <select
             className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
             value={filters?.activeVar?.value}
             onChange={(e) => setFilters({'activeVar' :{ value: e.target.value}})}
           >
             <option  className="ml-2  truncate" value={null}>
-              none    
+              none
             </option>
             {variables?.map((v,i) => (
               <option key={i} className="ml-2  truncate" value={v}>
@@ -100,14 +100,14 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
 
   const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
-  
-  
-  // useEffect(() => setTempSymbology((ts => 
+
+
+  // useEffect(() => setTempSymbology((ts =>
   //   ({...ts, ...get(mapData, `symbology`, {})})
   // )),[mapData])
 
   //console.log('render map page', mapData, tempSymbology)
-  
+
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
       return {
@@ -120,7 +120,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
-            sources: get(mapData,'sources',[]), 
+            sources: get(mapData,'sources',[]),
             layers: get(mapData,'layers',[]),
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
@@ -129,27 +129,28 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   //console.log('layer mappage', tempSymbology)
 
   return (
-    <div> 
+    <div>
       <div className='flex'>
         <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
-        <MapFilter 
+        <MapFilter
           source={source}
           metaData={metaData}
-          filters={filters} 
+          filters={filters}
           setFilters={setFilters}
           tempSymbology={tempSymbology}
           setTempSymbology={setTempSymbology}
           activeViewId={activeViewId}
+          layer={layer}
         />
         <ViewSelector views={views} />
       </div>
       <div className='w-ful h-[900px]'>
-        <Map 
-          layers={[layer]}  
+        <Map
+          layers={[layer]}
           tempSymbology={tempSymbology}
         />
       </div>
-      {user.authLevel >= 5 ? 
+      {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {['sources','layers']
@@ -160,21 +161,21 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
                   <div  className="flex-1 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-4">
-                      {editing === attr ? 
+                      {editing === attr ?
                         <div className='pt-3 pr-8'>
-                          <Edit 
-                            startValue={val} 
+                          <Edit
+                            startValue={val}
                             attr={attr}
                             viewId={activeViewId}
                             parentData={get(activeView,`metadata`,{tiles:{}})}
                             cancel={() => setEditing(null)}
                           />
-                        </div> :  
+                        </div> :
                         <div className='py-3 pl-2 pr-8'>
                           <pre className='bg-gray-100 tracking-tighter overflow-auto scrollbar-xs'>
                             {val}
                           </pre>
-                        </div> 
+                        </div>
                       }
                     </dd>
                   </div>
@@ -187,13 +188,13 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             })
           }
         </dl>
-        {/*<Symbology 
-          layer={layer}  
+        {/*<Symbology
+          layer={layer}
           onChange={setTempSymbology}
         />
         <div className='flex'>
           <div className='flex-1' />
-          <SaveSymbologyButton 
+          <SaveSymbologyButton
             metaData={metaData}
             symbology={tempSymbology}
             viewId={activeViewId}
@@ -201,7 +202,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
         </div>*/}
       </div> : ''}
     </div>
-  ) 
+  )
 }
 
 export default withAuth(MapPage)
@@ -217,14 +218,14 @@ const Map = ({layers,tempSymbology}) => {
   },[layers])
 
   React.useEffect( () => {
-    const updateLayers = async () => {      
+    const updateLayers = async () => {
       if(mounted.current) {
         setLayerData(l => {
             // use functional setState
             // to get info about previous layerData (l)
             let activeLayerIds = l?.map(d => d.activeViewId)?.filter(d => d)
             //console.log('updatelayers', currentLayerIds, l, layers)
-            
+
             let output = layers?.filter(d => d)
                 .filter(d => !activeLayerIds.includes(d.activeViewId))
                 .map(l => GISDatasetLayer(l))
@@ -233,7 +234,7 @@ const Map = ({layers,tempSymbology}) => {
 
             return [
               // remove layers not in list anymore
-              ...l?.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)), 
+              ...l?.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)),
               // add newly initialized layers
               ...output
             ]
@@ -255,8 +256,8 @@ const Map = ({layers,tempSymbology}) => {
   },[layers, layerData, tempSymbology])
 
   return (
-      
-      <div className='w-full h-full' ref={mounted}>   
+
+      <div className='w-full h-full' ref={mounted}>
         <AvlMap
           accessToken={ config.MAPBOX_TOKEN }
           falcor={falcor}
@@ -267,20 +268,20 @@ const Map = ({layers,tempSymbology}) => {
                40.79
             ],
             styles: [
-//              config.google_streets_style,               
+//              config.google_streets_style,
 //              config.google_sattelite_style,
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },
-                   
+
             ]
           }}
           layers={layerData}
           layerProps={layerProps}
-          CustomSidebar={() => <div/>}
+          Sidebar={ false }
         />
       </div>
-     
+
   )
 }
 
@@ -288,7 +289,7 @@ const Map = ({layers,tempSymbology}) => {
 const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
   const { falcor } = useFalcor()
   const { pgEnv } = React.useContext(DamaContext);
-  
+
   const save = async () => {
     //console.log('click save 222', attr, value)
     if(viewId) {
@@ -305,7 +306,7 @@ const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
                   views: {
                     byId:{
                       [viewId] : {
-                        attributes : { 
+                        attributes : {
                           metadata: JSON.stringify(val)
                         }
                       }
@@ -321,8 +322,8 @@ const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
       }
     }
   }
-  return( 
-    <button 
+  return(
+    <button
       className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
       onClick={save}
     >
@@ -346,7 +347,7 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
 
   useEffect(() => {
     inputEl.current.style.height = 'inherit';
-    inputEl.current.style.height = `${inputEl.current.scrollHeight}px`; 
+    inputEl.current.style.height = `${inputEl.current.scrollHeight}px`;
   },[value])
 
   const save = async (attr, value) => {
@@ -367,7 +368,7 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
                   views: {
                     byId:{
                       [viewId] : {
-                        attributes : { 
+                        attributes : {
                           metadata: JSON.stringify(val)
                         }
                       }
@@ -389,9 +390,9 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
     <div className='w-full'>
       <div className='w-full flex'>
         <textarea
-          ref={inputEl} 
-          className='flex-1 px-2 shadow text-base bg-blue-100 focus:ring-blue-700 focus:border-blue-500  border-gray-300 rounded-none rounded-l-md' 
-          value={value} 
+          ref={inputEl}
+          className='flex-1 px-2 shadow text-base bg-blue-100 focus:ring-blue-700 focus:border-blue-500  border-gray-300 rounded-none rounded-l-md'
+          value={value}
           onChange={e => setValue(e.target.value)}
         />
       </div>

@@ -10,9 +10,9 @@ import { DamaContext } from "~/pages/DataManager/store";
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
-  
+
   return (
-    <div className="flex flex-1">
+    <div className="flex">
       <div className="py-3.5 px-2 text-sm text-gray-400">Version : </div>
       <div className="flex-1">
         <select
@@ -141,13 +141,12 @@ const TablePage = ({
     [tableData, attributes, transform, filters, years, source]
   );
 
-  console.log("dataLength", dataLength);
-
   return (
     <div>
       <div className="flex">
         <div className="flex-1 pl-3 pr-4 py-2">Table View</div>
-        <TableFilter filters={filters} setFilters={setFilters} source={source} />
+        <TableFilter filters={filters} setFilters={setFilters} source={source}
+          data={data} columns={columns}/>
         <ViewSelector views={views} />
       </div>
       <div className="max-w-6xl">

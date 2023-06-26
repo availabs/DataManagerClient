@@ -2,10 +2,14 @@ import React, { useMemo, useEffect} from "react";
 import get from "lodash/get";
 
 import { DamaContext } from "~/pages/DataManager/store"
-import { useFalcor } from "~/modules/avl-components/src"
+import { useFalcor, Button } from "~/modules/avl-components/src"
 import * as d3scale from "d3-scale"
+import { range as d3range } from "d3-array"
 import ckmeans from '../../../utils/ckmeans'
 import cloneDeep from 'lodash/cloneDeep'
+
+import download from "downloadjs"
+import { download as shpDownload } from "~/utils/shp-write"
 
 [1112,1588,2112,2958,56390]
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
@@ -43,14 +47,15 @@ const sedVarsCounty = {
 
 //const years = ["10", "17", "20", "25", "30", "35", "40", "45", "50", "55"];
 
-const SedMapFilter = ({ 
-    source, 
-    metaData, 
-    filters, 
-    setFilters, 
+const SedMapFilter = ({
+    source,
+    metaData,
+    filters,
+    setFilters,
     setTempSymbology,
     tempSymbology,
-    activeViewId 
+    activeViewId,
+    layer
   }) => {
   const {falcor, falcorCache} = useFalcor();
   const { pgEnv } = React.useContext(DamaContext)
@@ -76,8 +81,8 @@ const SedMapFilter = ({
     const updateSymbology = () => {
       falcor.get(['dama',pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
         .then(d => {
-          let length = get(d, 
-            ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'], 
+          let length = get(d,
+            ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'],
           0)
 
           // console.log('length',length)
@@ -86,13 +91,13 @@ const SedMapFilter = ({
             pgEnv,
             'viewsbyId',
             activeViewId,
-            'databyIndex', 
+            'databyIndex',
             [...Array(length).keys()],
             activeVar
           ])
         }).then(() => {
-            const dataById = get(falcorCache, 
-              ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'], 
+            const dataById = get(falcorCache,
+              ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'],
             {})
 
             //console.log('getColorScale', dataById, falcorCache)
@@ -111,10 +116,10 @@ const SedMapFilter = ({
             if(!newSymbology['fill-color']) {
               newSymbology['fill-color'] = {}
             }
-            newSymbology['fill-color'][activeVar] = { 
+            newSymbology['fill-color'][activeVar] = {
               type: 'scale-threshold',
               settings: {
-                range: varList[varType].range, 
+                range: varList[varType].range,
                 domain: varList[varType].domain,
                 title: varList[varType].name
               },
@@ -122,14 +127,14 @@ const SedMapFilter = ({
             }
 
             //console.log('newSymbology', newSymbology)
-            
+
             setTempSymbology(newSymbology)
 
         })
     }
     if(activeVar.length > 0){
       updateSymbology()
-    } 
+    }
   },[activeVar, varType, year,falcorCache])
 
   React.useEffect(() => {
@@ -141,10 +146,15 @@ const SedMapFilter = ({
       });
     }
   }, []);
-  //console.log(varType, year, activeVar);
+
 
   return (
     <div className="flex flex-1 border-blue-100">
+      <MapDataDownloader
+        variable={ get(varList, [varType, "name"]) }
+        activeViewId={ activeViewId }
+        activeVar={ activeVar }
+        year={ get(metaData, ["years", year]) }/>
       <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
       <div className="flex-1">
         <select
@@ -191,9 +201,74 @@ const SedMapFilter = ({
   );
 };
 
-const SedTableFilter = ({ source, filters, setFilters }) => {
+const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
+  const { falcor, falcorCache } = useFalcor()
+
+  const { pgEnv } = React.useContext(DamaContext);
+
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    setLoading(true);
+    if (!(pgEnv && activeViewId && activeVar)) return;
+    falcor.get([
+      'dama',
+      pgEnv,
+      'viewsbyId',
+      activeViewId,
+      'databyId',
+      d3range(0, 31),
+      [activeVar, "wkb_geometry", "county"]
+    ]).then(() => setLoading(false))
+  }, [falcor, pgEnv, activeViewId, activeVar])
+
+  const downloadData = React.useCallback(() => {
+    const path = ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"];
+    const collection = {
+      type: "FeatureCollection",
+      features: d3range(0, 31).map(id => {
+        const data = get(falcorCache, [...path, id], {});
+        const value = get(data, activeVar, null);
+        const county = get(data, "county", "unknown");
+        const geom = get(data, "wkb_geometry", "");
+        return {
+          type: "Feature",
+          properties: {
+            [variable]: value,
+            county,
+            year
+          },
+          geometry: JSON.parse(geom)
+        }
+      })
+    }
+    const options = {
+      folder: "shapefiles",
+      file: variable,
+      types: {
+        point: 'points',
+        polygon: 'polygons',
+        line: 'lines'
+      }
+    }
+    shpDownload(collection, options);
+  }, [falcorCache, pgEnv, activeViewId, variable, activeVar, year]);
+
+  return (
+    <div>
+      <Button themeOptions={{size:'sm', color: 'primary'}}
+        onClick={ downloadData }
+        disabled={ loading }
+      >
+        Download
+      </Button>
+    </div>
+  )
+}
+
+const SedTableFilter = ({ source, filters, setFilters, data, columns }) => {
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
-  console.log("SedTableFilter", filters);
+  // console.log("SedTableFilter", filters);
   React.useEffect(() => {
     if (!get(filters, "activeVar.value", "")) {
       setFilters({
@@ -206,10 +281,29 @@ const SedTableFilter = ({ source, filters, setFilters }) => {
     return source.type === 'tig_sed_county' ? sedVarsCounty : sedVars
   },[source.type])
 
+// console.log("data, columns", data, columns, varList[activeVar].name)
+
+  const downloadData = React.useCallback(() => {
+    const mapped = data.map(d => {
+      return columns.map(c => {
+        return d[c.accessor];
+      }).join(",")
+    })
+    mapped.unshift(columns.map(c => c.Header).join(","));
+    download(mapped.join("\n"), `${ varList[activeVar].name }.csv`, "text/csv");
+  }, [data, columns, varList, activeVar]);
+
   //console.log(, year,activeVar)
 
   return (
     <div className="flex flex-1 border-blue-100">
+      <div>
+        <Button themeOptions={{size:'sm', color: 'primary'}}
+          onClick={ downloadData }
+        >
+          Download
+        </Button>
+      </div>
       <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
       <div className="flex-1">
         <select
@@ -259,7 +353,7 @@ const SedTableTransform = (tableData, attributes, filters, years,source) => {
 };
 
 const SedHoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor() 
+  const { falcor, falcorCache } = useFalcor()
   const { source: { type }, attributes, activeViewId, props: { filters, activeView: {metadata: { years } } }  } = layer
 
   const { pgEnv } = React.useContext(DamaContext)
@@ -271,41 +365,39 @@ const SedHoverComp = ({ data, layer }) => {
   React.useEffect(() => {
     falcor.get([
       'dama',
-      pgEnv, 
+      pgEnv,
       'viewsbyId',
-      activeViewId, 
-      'databyId', 
+      activeViewId,
+      'databyId',
       id,
       attributes
     ])
   }, [falcor, pgEnv, activeViewId, id, attributes])
-    
+
 
   const attrInfo = React.useMemo(() => {
     return get(falcorCache, [
         'dama',
-        pgEnv, 
+        pgEnv,
         'viewsbyId',
-        activeViewId, 
-        'databyId', 
+        activeViewId,
+        'databyId',
         id
       ], {});
   }, [id, falcorCache, activeViewId, pgEnv]);
 
 
 
-  let year = years[activeVar.split('_')[1] || 0]
-  let varName = type === 'tig_sed_taz' ? 
+  let year = years[activeVar.split('_')[2] || 0]
+  let varName = type === 'tig_sed_taz' ?
     sedVars[activeVar.split('_')[0] || 'tot_pop']?.name || '' :
-    sedVarsCounty[activeVar.slice(0,-2) || 'totpop']?.name || '' 
-
-    //console.log(type, sedVarsCounty[activeVar.slice(-2) || 'totpop']?.name || '' , activeVar.slice(0,-2) )
+    sedVarsCounty[activeVar.slice(0,-2) || 'totpop']?.name || ''
 
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
      {varName} {year}
       <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
-          { type === 'tig_sed_taz' ? 
+          { type === 'tig_sed_taz' ?
             <div className='flex border-b pt-1' >
             <div className='flex-1 font-medium text-sm pl-1'>TAZ</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.['taz']}</div>
@@ -318,7 +410,7 @@ const SedHoverComp = ({ data, layer }) => {
             <div className='flex-1 font-medium text-sm pl-1'>Value</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{get(attrInfo, activeVar,'').toLocaleString()}</div>
           </div>
-        
+
     </div>
   )
 }

@@ -11,45 +11,45 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 
 const HoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor() 
-  const { attributes, activeViewId } = layer 
+  const { falcor, falcorCache } = useFalcor()
+  const { attributes, activeViewId } = layer
   const { pgEnv } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
     console.log('hover falcor',[
       'dama',
-      pgEnv, 
+      pgEnv,
       'viewsbyId',
-      activeViewId, 
-      'databyId', 
+      activeViewId,
+      'databyId',
       id,
       attributes
     ])
     falcor.get([
       'dama',
-      pgEnv, 
+      pgEnv,
       'viewsbyId',
-      activeViewId, 
-      'databyId', 
+      activeViewId,
+      'databyId',
       id,
       attributes
     ]).then(d => console.log('hover data', d))
   }, [falcor, pgEnv, activeViewId, id, attributes])
-    
+
 
   const attrInfo = React.useMemo(() => {
     return get(falcorCache, [
         'dama',
-        pgEnv, 
+        pgEnv,
         'viewsbyId',
-        activeViewId, 
-        'databyId', 
+        activeViewId,
+        'databyId',
         id
       ], {});
   }, [id, falcorCache, activeViewId, pgEnv]);
 
-  
+
   console.log('hover2', attrInfo )
   return (
     <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
@@ -57,12 +57,12 @@ const HoverComp = ({ data, layer }) => {
         {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
         {Object.keys(attrInfo)
           .filter(k => typeof attrInfo[k] !== 'object')
-          .map((k,i) => 
+          .map((k,i) =>
           <div className='flex border-b pt-1' key={i}>
             <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
             <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>
           </div>
-        )} 
+        )}
     </div>
   )
 }
@@ -87,9 +87,9 @@ class GISDatasetLayer extends LayerContainer {
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
       //console.log(feature)
-      
+
       let data = [feature.id,  layerId]
-      
+
       return data
     },
     HoverComp: this.hoverComp || HoverComp
@@ -104,17 +104,17 @@ class GISDatasetLayer extends LayerContainer {
               <Legend {...this.legend} />
             </div>
           )
-        }, 
+        },
         show: (layer) => {
-          console.log('show', layer, layer.state.showLegend)
+          // console.log('show', layer, layer.state.showLegend)
           return layer.state.showLegend
         }
-      }  
+      }
   ];
 
   init(map, falcor) {
-    console.log('init freight atlas layer', this.id, this.activeViewId, this)
-    
+    // console.log('init freight atlas layer', this.id, this.activeViewId, this)
+
   }
 
   getColorScale(domain, numBins=5, color='Reds') {
@@ -141,13 +141,13 @@ class GISDatasetLayer extends LayerContainer {
       .filter(paintProperty => {
         let value = get(symbology, `[${paintProperty}][${activeVariable}]`, false)
           || get(symbology, `[${paintProperty}][default]`, false)
-        return value 
+        return value
       })
       .forEach(paintProperty => {
         let sym = get(symbology, `[${paintProperty}][${activeVariable}]`, '')
           || get(symbology, `[${paintProperty}][default]`, '')
 
-        
+
         //console.log('ss', sym.settings)
         if(sym.settings) {
           this.legend.domain =  sym.settings.domain
@@ -160,16 +160,16 @@ class GISDatasetLayer extends LayerContainer {
         }
 
         //console.log('paintProperty',paintProperty, value)
-        if(sym.value) { 
+        if(sym.value) {
           map.setPaintProperty(
-            this.layers[0].id, 
+            this.layers[0].id,
             paintProperty,
             sym.value
           )
         }
       })
   }
-   
+
 }
 
 const GISDatasetLayerFactory = (options = {}) => new GISDatasetLayer(options);
@@ -182,7 +182,7 @@ export default GISDatasetLayerFactory
 //       return 'fill-color';
 //   case: 'line':
 //     return 'line-color';
-//   case: 
-  
+//   case:
+
 //   }
 // }
