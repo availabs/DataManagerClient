@@ -1,11 +1,13 @@
-import React from 'react';
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { useParams, useNavigate, Link } from "react-router-dom";
 import get from "lodash/get";
+
 import { DamaContext } from "../store";
-import { getDamaApiRoutePrefix, deleteSource } from "../utils/DamaControllerApi";
-import { useEffect } from "react";
 import SourcesLayout from "../components/SourcesLayout";
-import { useNavigate } from "react-router-dom";
+
+import { DAMA_HOST } from "~/config";
+
+
 
 async function getData({ falcor, pgEnv, sourceId }) {
 
@@ -29,20 +31,29 @@ async function getData({ falcor, pgEnv, sourceId }) {
   await falcor.get(["dama", pgEnv, "views", "byId", tmpViewIds, "attributes", ["version", "metadata", "_modified_timestamp", "last_updated"]]);
 }
 
-const DeleteButton = ({ text, sourceId }) => {
+const DeleteButton = ({ text }) => {
   const { falcor, baseUrl, pgEnv } = React.useContext(DamaContext);
+  const { sourceId } = useParams();
   const navigate = useNavigate();
 
   async function deleteSourceClick () {
-    console.log('click delete')
-    await deleteSource(`${getDamaApiRoutePrefix(pgEnv)}`, sourceId);
+    const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/deleteDamaSource`, {
+      method: "POST",
+      body: JSON.stringify({ "source_id": sourceId }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    const sourceDelRes = await res.json();
+    console.log('delete response', sourceDelRes)
     falcor.invalidate(
       ['dama',pgEnv, 'sources', 'length'],
       ['dama',pgEnv, 'sources', 'byIndex'],
       ['dama',pgEnv, 'sources', 'byId', sourceId],
     )
-    console.log('deleted')
-    navigate(baseUrl);
+    console.log('navigate to', baseUrl)
+    navigate(baseUrl || '/');
   }
 
   return (
@@ -130,17 +141,19 @@ const LoadDependentViews = (dependents, srcMeta, viewMeta, sourceId, pgEnv, base
     </div>
   </>);
 
-const LoadConfirmDelete = ({sourceId}) => (
+const LoadConfirmDelete = () => (
   <div className={"pb-4 flex justify-between"}>
     <label>No dependents found.</label>
-    <DeleteButton text={"Confirm Delete"} sourceId={sourceId} />
+    <DeleteButton text={"Confirm Delete"} />
   </div>
 );
 
-export default function Popup() {
-  const { sourceId } = useParams();
+export default function DeleteSourcePage () {
+  
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
+  const { sourceId } = useParams();
 
+  console.log('delete page', sourceId)
   useEffect(() => {
     getData({ falcor, pgEnv, sourceId });
   }, [sourceId, pgEnv, falcor]);
@@ -158,7 +171,7 @@ export default function Popup() {
       <SourcesLayout>
         <div className="w-full p-4 bg-white my-1 block border shadow">
           <div className={"pb-4 font-bold"}>Delete <i>{display_name}</i></div>
-          {LoadConfirmDelete(sourceId)}
+          {LoadConfirmDelete()}
           {/*{
             dependents.length ? 
               LoadDependentViews(dependents, srcMeta, viewMeta, sourceId) : 

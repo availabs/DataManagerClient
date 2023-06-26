@@ -71,7 +71,7 @@ const UploadsPage = ({ source }) => {
   return (
     <>
       <div className="flex">
-        <div className="flex-1 pl-3 pr-4 py-2">Upload Views</div>
+        <div className="flex-1 pl-3 pr-4 py-2">Actions</div>
 
       </div>
       <ListUploads uploads={ctxs} sourceId={sourceId}/>
@@ -79,4 +79,4 @@ const UploadsPage = ({ source }) => {
   );
 };
 
-export default withAuth(UploadsPage);
+export default UploadsPage;

@@ -1,18 +1,14 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { withAuth, Input, Button } from "~/modules/avl-components/src"
-import get from 'lodash/get'
-import { SourceAttributes } from '~/pages/DataManager/components/attributes'
+import { Button } from "~/modules/avl-components/src"
 import { DamaContext } from "~/pages/DataManager/store"
 import { useParams, Link } from "react-router-dom";
 
+import Uploads from '../Uploads'
 
 
-
-
-
-const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
+const AdminPage = ({source, views, activeViewId, }) => {
   const [editing, setEditing] = React.useState(null)
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
   return (
     <div>
@@ -30,30 +26,39 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
             Access Controls
           </div>
         </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
+        <div className="w-72 ">
+          <div> Admin Actions </div>
+          <div className="w-full p-1 flex">
             <Link 
-                className={"bg-red-100 border w-64 border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
+                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
+                to={`${baseUrl}/source/${source.source_id}/add_version`}> 
+                  Add Version <i className='fad fa-upload' />
+            </Link>
+          </div>
+          <div className='flex w-full p-1'>
+            <div className='flex-1 text-center shadow p-4 border'>
+              Visibility 
+            </div>
+          </div>
+          <div className="w-full p-1 flex">
+            <Link 
+                className={"w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
                 to={`${baseUrl}/delete/source/${source.source_id}`}> 
                   Delete <i className='fad fa-trash' />
-              </Link>
-          </dl>
+            </Link>
+          </div>
           
-          {/*<div className='py-10 px-2'>
-            <div className='text-gray-500 py-8 px-5'>Metadata</div>
-            <div className=''>
-              <Metadata source={source} />
-            </div>
-          </div>*/}
+          
+          
         </div>
 
       </div>
       <div className='py-10 px-2'>
-        Bottom   
+        <Uploads />  
       </div>
     </div>
   )
-})
+}
 
 
-export default OverviewEdit    
+export default AdminPage    

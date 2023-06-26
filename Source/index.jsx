@@ -124,6 +124,7 @@ const Source = ({}) => {
               const userAuth = user.authLevel || -1
               return !d.hidden && (authLevel <= userAuth)
             }) 
+            .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
             .map(d => {
               return {
                 name:d.name,
