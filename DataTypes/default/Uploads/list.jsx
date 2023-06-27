@@ -65,7 +65,7 @@ const ListUploads = ({ uploads = [], sourceId = null }) => {
           </dl>
         </>
       ) : (
-        <div className="text-center">{"No Uploads found"}</div>
+        <div className="text-center">{"No Actions found"}</div>
       )}
     </div>
   );

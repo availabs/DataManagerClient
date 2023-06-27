@@ -4,7 +4,6 @@ import {useFalcor} from "~/modules/avl-components/src";
 import get from "lodash/get";
 
 import { DamaContext } from "../../../store";
-import AddVersion from "../../default/AddVersion";
 
 const Table = ({source}) => {
   return <div> Table View </div>  
@@ -156,11 +155,6 @@ const Stats = ({source, views}) => {
 
 const FreightAtlashShapefileConfig = {
 
-  add_version: {
-    name: "Add Version",
-    path: "/add_version",
-    component: AddVersion
-  },
   sourceCreate: {
     name: 'Create',
     component: Create

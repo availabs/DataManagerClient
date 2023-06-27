@@ -10,9 +10,9 @@ import * as d3scale from "d3-scale";
 import { DamaContext } from "~/pages/DataManager/store";
 
 const HoverComp = ({ data, layer }) => {
-  const { attributes, activeViewId } = layer;
-  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
-  const id = React.useMemo(() => get(data, "[0]", null), [data]);
+  const { attributes, activeViewId } = layer
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
+  const id = React.useMemo(() => get(data, '[0]', null), [data])
 
   React.useEffect(() => {
     // console.log('hover falcor',[
@@ -25,40 +25,42 @@ const HoverComp = ({ data, layer }) => {
     //   attributes
     // ])
     falcor.get([
-      "dama",
+      'dama',
       pgEnv,
-      "viewsbyId",
+      'viewsbyId',
       activeViewId,
-      "databyId",
+      'databyId',
       id,
-      attributes,
-    ]);
-  }, [falcor, pgEnv, activeViewId, id, attributes]);
+      attributes
+    ])
+  }, [falcor, pgEnv, activeViewId, id, attributes])
+
 
   const attrInfo = React.useMemo(() => {
-    return get(
-      falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id],
-      {}
-    );
+    return get(falcorCache, [
+        'dama',
+        pgEnv,
+        'viewsbyId',
+        activeViewId,
+        'databyId',
+        id
+      ], {});
   }, [id, falcorCache, activeViewId, pgEnv]);
 
+
+
   return (
-    <div className="bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll">
-      <div className="font-medium pb-1 w-full border-b ">
-        {layer.source.display_name}
-      </div>
-      {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
-      {Object.keys(attrInfo)
-        .filter((k) => typeof attrInfo[k] !== "object")
-        .map((k, i) => (
-          <div className="flex border-b pt-1" key={i}>
-            <div className="flex-1 font-medium text-sm pl-1">{k}</div>
-            <div className="flex-1 text-right font-thin pl-4 pr-1">
-              {attrInfo?.[k]}
-            </div>
+    <div className='bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll'>
+      <div className='font-medium pb-1 w-full border-b '>{layer.source.display_name}</div>
+        {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ''}
+        {Object.keys(attrInfo)
+          .filter(k => typeof attrInfo[k] !== 'object')
+          .map((k,i) =>
+          <div className='flex border-b pt-1' key={i}>
+            <div className='flex-1 font-medium text-sm pl-1'>{k}</div>
+            <div className='flex-1 text-right font-thin pl-4 pr-1'>{attrInfo?.[k]}</div>
           </div>
-        ))}
+        )}
     </div>
   );
 };
@@ -83,32 +85,33 @@ class GISDatasetLayer extends LayerContainer {
       let feature = features[0];
       //console.log(feature)
 
-      let data = [feature.id, layerId];
+      let data = [feature.id,  layerId]
 
-      return data;
+      return data
     },
     HoverComp: this.hoverComp || HoverComp,
   };
 
   infoBoxes = [
-    {
-      Component: () => {
-        return (
-          <div className="bg-white w-[320px] p-2">
-            <div className="pb-1 text-sm font-medium">{this.legend.title}</div>
-            <Legend {...this.legend} />
-          </div>
-        );
-      },
-      show: (layer) => {
-        console.log("show", layer, layer.state.showLegend);
-        return layer.state.showLegend;
-      },
-    },
+      {
+        Component: () => {
+          return (
+            <div className='bg-white w-[320px] p-2'>
+              <div className='pb-1 text-sm font-medium'>{this.legend.title}</div>
+              <Legend {...this.legend} />
+            </div>
+          )
+        },
+        show: (layer) => {
+          // console.log('show', layer, layer.state.showLegend)
+          return layer.state.showLegend
+        }
+      }
   ];
 
   init(map, falcor) {
-    console.log("init freight atlas layer", this.id, this.activeViewId, this);
+    // console.log('init freight atlas layer', this.id, this.activeViewId, this)
+
   }
 
   getColorScale(domain, numBins = 5, color = "Reds") {
@@ -123,7 +126,12 @@ class GISDatasetLayer extends LayerContainer {
   }
 
   render(map) {
-    const { filters, activeViewId, symbology } = this.props;
+    const {
+      filters,
+      activeViewId,
+      symbology
+    } = this.props
+
 
     if (symbology) {
       (symbology?.sources || []).forEach((s) => {
@@ -177,10 +185,14 @@ class GISDatasetLayer extends LayerContainer {
           this.updateState({ showLegend: false });
         }
 
-        if (sym.value) {
-          let updateLayer = layer_id || this.layers[0].id;
-          console.log("paintProperty", updateLayer, paintProperty, sym.value);
-          map.setPaintProperty(updateLayer, paintProperty, sym.value);
+
+        if(sym.value) {
+          console.log('paintProperty',this.layers[0].id ,paintProperty, sym.value)
+          map.setPaintProperty(
+            this.layers[0].id,
+            paintProperty,
+            sym.value
+          )
         }
       });
     });

@@ -4,7 +4,6 @@ import {useFalcor} from "~/modules/avl-components/src";
 import get from "lodash/get";
 
 import { DamaContext } from "../../../store";
-import AddVersion from "../../default/AddVersion";
 import { fnum } from "../../../utils/macros"
 
 const RenderVersions = (domain, value, onchange) => (
@@ -161,11 +160,6 @@ const Stats = ({source, views}) => {
 }
 
 const NceiStormEventsConfig = {
-    add_version: {
-        name: "Add Version",
-        path: "/add_version",
-        component: AddVersion
-    },
     stats: {
         name: 'Stats',
         path: '/stats',

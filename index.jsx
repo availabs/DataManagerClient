@@ -1,5 +1,4 @@
 import React from "react";
-import { withAuth } from "~/modules/ams/src";
 
 import { DataManagerHeader } from "./components/SourcesLayout";
 
@@ -9,9 +8,12 @@ import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
 
-//import { useFalcor } from '~/modules/avl-components/src'
+import { useFalcor } from '~/modules/avl-components/src'
+import { withAuth } from '@availabs/ams'
 
-import { useFalcor } from '~/modules/avl-falcor'
+// import { useFalcor } from '~/modules/avl-falcor'
+// import { withAuth } from "~/modules/ams/src";
+
 
 import { DamaContext } from "./store"
 
@@ -40,41 +42,43 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
   }
   const Header = <HeaderComp />
 
-  const SourceListComp = () => { 
+  const SourceListComp = withAuth(({user}) => { 
     const { falcor, falcorCache } = useFalcor()
     return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+      <DamaContext.Provider 
+        value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}
+      >
         <List />
       </DamaContext.Provider>
     );
-  }
+  })
 
-  const SourceViewComp = () => { 
+  const SourceViewComp = withAuth(({user}) => { 
     const { falcor, falcorCache } = useFalcor()
     return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
         <View />
       </DamaContext.Provider>
     );
-  }
+  })
 
-  const SourceCreateComp = () => { 
+  const SourceCreateComp = withAuth(({user}) => { 
     const { falcor, falcorCache } = useFalcor()
       return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
         <Create />
       </DamaContext.Provider>
     );
-  }
+  })
 
-  const SourceDeleteComp = () => { 
+  const SourceDeleteComp = withAuth(({user}) => { 
     const { falcor, falcorCache } = useFalcor()
       return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache}}>
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
         <Del />
       </DamaContext.Provider>
     );
-  }
+  })
 
   return [
     // Source List
@@ -121,7 +125,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       title: Header,
       sideNav,
       topNav,
-      component: withAuth(SourceViewComp)
+      component: SourceViewComp
     },
     {
       name: "View Source",
@@ -132,7 +136,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       title: Header,
       sideNav,
       topNav,
-      component: withAuth(SourceViewComp)
+      component: SourceViewComp
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId`,
@@ -142,7 +146,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       title: Header,
       sideNav,
       topNav,
-      component: withAuth(SourceViewComp)
+      component: SourceViewComp
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
@@ -152,7 +156,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       title: Header,
       sideNav,
       topNav,
-      component: withAuth(SourceViewComp)
+      component: SourceViewComp
     },
     // Source Create
     {
@@ -177,32 +181,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
       sideNav,
       topNav,
       component: SourceDeleteComp
-    },
-    //
-    // {
-    //   name: "Settings",
-    //   path: `${baseUrl}/settings`,
-    //   exact: true,
-    //   auth: true,
-    //   mainNav: false,
-    //   title: Header,
-    //   sideNav: {
-    //     color: "dark",
-    //     size: "micro"
-    //   },
-    //   component: Settings
-    // },
-    // {
-    //   name: "ETL Context View",
-    //   path: `${baseUrl}/etl-context/:etlContextId`,
-    //   exact: true,
-    //   auth,
-    //   mainNav: false,
-    //   title: Header,
-    //   sideNav,
-    //   topNav,
-    //   component: EtlContextEvents
-    // }
+    }
   ];
 };
 

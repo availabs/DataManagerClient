@@ -18,7 +18,7 @@ const ViewSelector = ({ views }) => {
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-         
+
         >
           {views
             .sort((a, b) => b.view_id - a.view_id)
@@ -135,41 +135,43 @@ const TablePage = ({
     [tableData, attributes, transform, filters]
   );
 
+  const [ref, setRef] = React.useState(null);
+
   return (
     <div>
       <div className="flex">
         <div className="flex-1 pl-3 pr-4 py-2">Table View</div>
-        <TableFilter filters={filters} setFilters={setFilters} />
+        <TableFilter filters={filters} setFilters={setFilters}
+          node={ ref }/>
         <ViewSelector views={views} />
       </div>
-      <div style={{ height: "600px" }}>
+      <div style={{ height: "600px" }} ref={ setRef }>
         {data?.length ? (
-          <>
-            <LineGraph
-              data={data}
-              axisBottom={{ tickDensity: 1 }}
-              axisLeft={{
-                lzabel: "Values",
-                showGridLines: false,
-                tickDensity: 1,
-              }}
-              axisRight={{
-                label: "Year",
-                showGridLines: false,
-              }}
-              hoverComp={{
-                idFormat: (id, data) => data.name,
-                yFormat: ",.2f",
-                showTotals: false,
-              }}
-              margin={{
-                top: 20,
-                bottom: 25,
-                left: 80,
-                right: 30,
-              }}
-            />
-          </>
+          <LineGraph
+            colors={["#009","#900"]}
+            data={data}
+            axisBottom={{ tickDensity: 1 }}
+            axisLeft={{
+              lzabel: "Values",
+              showGridLines: false,
+              tickDensity: 1,
+            }}
+            axisRight={{
+              label: "Year",
+              showGridLines: false,
+            }}
+            hoverComp={{
+              idFormat: (id, data) => data.name,
+              yFormat: ",.2f",
+              showTotals: false,
+            }}
+            margin={{
+              top: 20,
+              bottom: 25,
+              left: 80,
+              right: 30,
+            }}
+          />
         ) : (
           <div
             className="text-center justify-content-center"

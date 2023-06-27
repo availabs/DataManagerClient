@@ -1,8 +1,10 @@
 import Overview from "./Overview";
 import Metadata from "./Metadata";
-import Versions from "./Versions";
+import Versions from "./Version/list";
+import AddVersion from "./Version/add";
 import Uploads from "./Uploads";
-// import AddVersion from "./AddVersion";
+import Admin from "./Admin"
+
 
 const Pages = {
   overview: {
@@ -19,6 +21,7 @@ const Pages = {
   meta: {
     name: "Metadata",
     path: "/meta",
+    hidden: true,
     component: Metadata,
   },
   uploads: {
@@ -27,11 +30,18 @@ const Pages = {
     hidden: true,
     component: Uploads,
   },
-  // add_version: {
-  //   name: "Add Version",
-  //   path: "/add_version",
-  //   component: AddVersion
-  // }
+  add_version: {
+    name: "Add Version",
+    path: "/add_version",
+    hidden: true,
+    component: AddVersion
+  },
+  admin: {
+    name: "Admin",
+    path: "/admin",
+    authLevel: 10,
+    component: Admin
+  }
 };
 
 export default Pages;

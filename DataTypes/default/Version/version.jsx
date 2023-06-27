@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/components/attributes'
-import { DamaContext } from "../../store";
+import { DamaContext } from "../../../store";
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { DAMA_HOST } from '~/config'
@@ -217,9 +217,9 @@ const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
   )
 }
 
-export const VersionEditor = withAuth(({view, user, columns=null}) => {
+export const VersionEditor = ({view,columns=null}) => {
   const [editing, setEditing] = React.useState(null)
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
   //console.log(view)
 
   return (
@@ -264,7 +264,7 @@ export const VersionEditor = withAuth(({view, user, columns=null}) => {
       </div>
     </div>
   )
-})
+}
 
 function ViewControls ({view}) {
   const { viewId,sourceId } = useParams();
