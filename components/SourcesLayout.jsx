@@ -1,6 +1,7 @@
 import React, {useContext} from 'react';
 import { Dropdown } from '~/modules/avl-components/src'
 import { Item } from '~/pages/Auth/AuthMenu'
+import { withAuth } from "@availabs/ams";
 import { DamaContext } from '../store'
 import Breadcrumbs from './Breadcrumbs'
 
@@ -23,8 +24,8 @@ const SourcesLayout = ({children }) => {
 }
 
 export const DataManagerHeader = () => {
-  //const { pgEnv } = React.useContext(DamaContext)
-  //const baseUrl = '/'
+  // const { pgEnv } = React.useContext(DamaContext)
+  // const baseUrl = '/'
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext)
   
   return (
