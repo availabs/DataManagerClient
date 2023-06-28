@@ -40,6 +40,7 @@ import usda_crop_insurance_cause_of_loss from "./hazard_mitigation/usda";
 import usda_crop_insurance_cause_of_loss_enhanced from "./hazard_mitigation/usda_enhanced";
 import sba_disaster_loan_data_new from "./hazard_mitigation/sba";
 import nri from "./hazard_mitigation/nri";
+import nri_tracts from "./hazard_mitigation/nri_tracts/index.jsx";
 import per_basis from "./hazard_mitigation/per_basis_swd";
 import per_basis_fusion from "./hazard_mitigation/per_basis_fusion";
 import hlr from "./hazard_mitigation/hlr";
@@ -79,25 +80,6 @@ const DataTypes = {
   ncei_storm_events,
   ncei_storm_events_enhanced,
 
-
-  // // // hazmit types: other data
-  usda_crop_insurance_cause_of_loss,
-  sba_disaster_loan_data_new,
-  nri,
-
-  // // // hazmit types: open fema data types
-  disaster_declarations_summaries_v2,
-  //fema_nfip_claims_v1,
-  individuals_and_households_program_valid_registrations_v1,
-  public_assistance_funded_projects_details_v1,
-
-  
-  // // // hazmit types: AVAIL processing
-  per_basis,
-  hlr,
-  eal,
-  fusion,
-
   //TIG
   tig_sed_taz,
   tig_sed_county,
@@ -109,6 +91,7 @@ const DataTypes = {
   usda_crop_insurance_cause_of_loss_enhanced,
   sba_disaster_loan_data_new,
   nri,
+  nri_tracts,
 
   // // hazmit types: open fema data types
   disaster_declarations_summaries_v2,
