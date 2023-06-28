@@ -27,12 +27,14 @@ const Pages = {
   uploads: {
     name: "Uploads",
     path: "/uploads",
+    authLevel: 5,
     hidden: true,
     component: Uploads,
   },
   add_version: {
     name: "Add Version",
     path: "/add_version",
+    authLevel: 5,
     hidden: true,
     component: AddVersion
   },
