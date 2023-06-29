@@ -7,6 +7,7 @@ import {
   range,
   uniqBy,
   set,
+  unset,
 } from "lodash";
 
 import ckmeans from "../../../../utils/ckmeans";
@@ -36,6 +37,9 @@ const ACSMapFilter = ({
   const max = new Date().getUTCFullYear();
   const yearRange = range(2010, max + 1);
 
+  console.log("activeView", activeView);
+  console.log("activeViewId", activeViewId);
+
   const [activeVar, geometry, year] = useMemo(() => {
     return [
       filters?.activeVar?.value,
@@ -44,6 +48,7 @@ const ACSMapFilter = ({
     ];
   }, [filters]);
 
+  console.log("activeVar, geometry, year", activeVar, geometry, year);
   const viewYear = useMemo(() => year - (year % 10), [year]);
 
   const {
@@ -55,7 +60,10 @@ const ACSMapFilter = ({
     [activeView, activeViewId]
   );
 
-  const [countyViewId, trackViewIds] = useMemo(() => {
+  console.log("counties", counties);
+  console.log("variables", variables);
+  console.log("customDependency", customDependency);
+  const [countyViewId] = useMemo(() => {
     const uniqueTrackIds = Object.values(customDependency).reduce(
       (ids, cur) => {
         if (!ids.includes(cur.id)) {
@@ -77,6 +85,13 @@ const ACSMapFilter = ({
       ((variables || []).find((d) => d.label === activeVar) || {}).value || [],
     [activeVar, variables]
   );
+
+  if (!activeVar) {
+    setFilters({
+      ...filters,
+      activeVar: { value: variables[0]?.label || null },
+    });
+  }
 
   useEffect(() => {
     async function getViewData() {
@@ -105,59 +120,11 @@ const ACSMapFilter = ({
             return a;
           }, []);
           setSubGeoIds(d);
-          falcor.chunk(["acs", subGeoids, year, "tracts"]);
         });
     }
 
     getViewData();
-  }, [counties, year]);
-
-  // /**
-  //  * This is depends on the Delected view...
-  //  */
-  // useEffect(() => {
-  //   let rawView = get(
-  //     falcorCache,
-  //     [
-  //       "dama",
-  //       pgEnv,
-  //       "views",
-  //       "byId",
-  //       activeView?.view_dependencies[0],
-  //       "attributes",
-  //     ],
-  //     {}
-  //   );
-
-  //   const ogcFids = Object.values(mapGeoToOgc);
-  //   let { sources, layers } = get(rawView, ["metadata", "value", "tiles"], {});
-
-  //   const newSymbology = cloneDeep(tempSymbology || {}) || {
-  //     sources: sources || [],
-  //     layers: layers || [],
-  //   };
-
-  //   (sources || []).forEach(
-  //     (s) => (s.source.url = s?.source?.url?.replace("$HOST", TILEHOST))
-  //   );
-
-  //   if (!newSymbology.hasOwnProperty("sources")) {
-  //     newSymbology["sources"] = sources || [];
-  //   }
-  //   if (!newSymbology.hasOwnProperty("layers")) {
-  //     newSymbology["layers"] = layers || [];
-  //   }
-
-  //   if (layers && layers[0]) {
-  //     layers[0].filter = [
-  //       "all",
-  //       ["match", ["get", "ogc_fid"], [...ogcFids], true, false],
-  //     ];
-  //     newSymbology["layers"] = layers;
-  //   }
-
-  //   setTempSymbology(newSymbology);
-  // }, [falcorCache, pgEnv, activeViewId, activeView]);
+  }, [falcorCache, counties, year]);
 
   useEffect(() => {
     const newSymbology = cloneDeep(tempSymbology || {});
@@ -205,99 +172,39 @@ const ACSMapFilter = ({
 
   useEffect(() => {
     async function getACSData() {
-      await falcor.get(["acs", [...counties], year, censusConfig]);
+      const geoids = geometry === "COUNTY" ? counties : subGeoids;
+      if (geoids.length > 0) {
+        falcor.chunk(["acs", geoids, year, censusConfig]);
+      }
     }
     getACSData();
-  }, [counties, censusConfig, year, geometry]);
+  }, [counties, censusConfig, activeVar, year, geometry]);
 
-  // useEffect(() => {
-  //   const valueMap = (counties || []).reduce((a, c) => {
-  //     let value = (censusConfig || []).reduce((aa, cc) => {
-  //       const v = get(falcorCache, ["acs", c, 2019, cc], -666666666);
-  //       if (v !== -666666666) {
-  //         aa += v;
-  //       }
-  //       return aa;
-  //     }, 0);
-  //     a[c] = value;
-  //     return a;
-  //   }, {});
-
-  //   const domain =
-  //     ckmeans(Object.values(valueMap), Math.min(counties.length - 1, 5)) || [];
-  //   const range = getColorRange(5, "YlOrRd", false);
-
-  //   function colorScale(domain, value) {
-  //     let color = "rgba(0,0,0,0)";
-  //     domain.forEach((v, i) => {
-  //       if (value >= v && value <= domain[i + 1]) {
-  //         color = range[i];
-  //       }
-  //     });
-  //     return color;
-  //   }
-
-  //   const colors = {};
-  //   Object.keys(valueMap).forEach((geoid) => {
-  //     colors[mapGeoToOgc[geoid]] = colorScale(domain, valueMap[geoid]);
-  //   });
-
-  //   let output = [
-  //     "case",
-  //     ["has", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
-  //     ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
-  //     "#000",
-  //   ];
-
-  //   let newSymbology = Object.assign({}, cloneDeep(tempSymbology), {
-  //     "fill-color": {},
-  //   });
-
-  //   if (!newSymbology.hasOwnProperty("fill-color")) {
-  //     newSymbology["fill-color"] = {};
-  //   }
-
-  //   if (activeVar) {
-  //     newSymbology["fill-color"][activeVar] = {
-  //       type: "scale-threshold",
-  //       settings: {
-  //         range: range,
-  //         domain: domain,
-  //         title: variable,
-  //       },
-  //       value: output,
-  //     };
-  //   }
-
-  //   if (!isEqual(tempSymbology, newSymbology)) {
-  //     setTempSymbology(newSymbology);
-  //   }
-  // }, [variable, falcorCache, mapGeoToOgc]);
-
-  function extractIntegerAfterV(str) {
+  function getVersionId(str) {
     const match = str.match(/v(\d+)/);
-
     if (match && match[1]) {
       return parseInt(match[1], 10);
     }
-
     return null;
   }
 
   useEffect(() => {
     let activeLayer;
+    let geoids;
     if (geometry === "COUNTY") {
       activeLayer = (tempSymbology["layers"] || []).find(
-        (v) => countyViewId === extractIntegerAfterV(v?.id)
+        (v) => countyViewId === getVersionId(v?.id)
       );
+      geoids = counties;
     } else if (geometry === "TRACT") {
       const selectedView = customDependency[`${viewYear}`];
       activeLayer = (tempSymbology["layers"] || []).find(
-        (v) => selectedView.id === extractIntegerAfterV(v?.id)
+        (v) => selectedView.id === getVersionId(v?.id)
       );
+      geoids = subGeoids;
     }
 
-    const valueMap = (counties || []).reduce((a, c) => {
+    const valueMap = (geoids || []).reduce((a, c) => {
       let value = (censusConfig || []).reduce((aa, cc) => {
         const v = get(falcorCache, ["acs", c, year, cc], -666666666);
         if (v !== -666666666) {
@@ -309,8 +216,7 @@ const ACSMapFilter = ({
       return a;
     }, {});
 
-    const domain =
-      ckmeans(Object.values(valueMap), Math.min(counties.length - 1, 5)) || [];
+    const domain = ckmeans(Object.values(valueMap), 5) || [];
     const range = getColorRange(5, "YlOrRd", false);
 
     function colorScale(domain, value) {
@@ -336,9 +242,9 @@ const ACSMapFilter = ({
     ];
 
     let newSymbology = Object.assign({}, cloneDeep(tempSymbology));
-
     if (activeVar && activeLayer) {
       (newSymbology?.layers || []).forEach((l) => {
+        unset(newSymbology, `${l?.id}`);
         set(newSymbology, `${l?.id}.fill-color.${activeVar}`, {
           value: "rgba(0,0,0,0)",
         });
@@ -358,7 +264,16 @@ const ACSMapFilter = ({
     if (!isEqual(tempSymbology, newSymbology)) {
       setTempSymbology(newSymbology);
     }
-  }, [activeVar, falcorCache, geometry, year, tempSymbology]);
+  }, [
+    tempSymbology,
+    activeViewId,
+    censusConfig,
+    falcorCache,
+    activeView,
+    activeVar,
+    geometry,
+    year,
+  ]);
 
   return (
     <div className="flex flex-1 border-blue-100">
@@ -374,9 +289,6 @@ const ACSMapFilter = ({
             });
           }}
         >
-          <option className="ml-2  truncate" value={null}>
-            none
-          </option>
           {(variables || []).map((k, i) => (
             <option key={i} className="ml-2 truncate" value={k?.label}>
               {k?.label}
@@ -400,7 +312,7 @@ const ACSMapFilter = ({
           }}
         >
           {["COUNTY", "TRACT"].map((v, i) => (
-            <option key={i} className="ml-2  truncate" value={v}>
+            <option key={i} className="ml-2 truncate" value={v}>
               {v}
             </option>
           ))}
