@@ -268,7 +268,7 @@ export const VersionEditor = ({view,columns=null}) => {
 
 function ViewControls ({view}) {
   const { viewId,sourceId } = useParams();
-  const { pgEnv } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
 
   const createDownload = () => {
@@ -301,9 +301,28 @@ function ViewControls ({view}) {
     runPublish()
   }
   return (
-    <div>
-      <div onClick={createDownload}> Create Download </div>
-      {/*<VersionDownload view={}/>*/}
+    <div className="w-72 ">
+        { user.authLevel >= 10 ? (
+          <div className='w-full'>
+            <div> Admin Actions </div>
+            <div className="w-full p-1 flex">
+              <Link 
+                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
+                onClick={createDownload} 
+              > 
+                Create Download 
+              </Link>
+            </div>
+            
+            <div className="w-full p-1 flex">
+              <Link 
+                  className={"w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
+                  to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}> 
+                    Delete View <i className='fad fa-trash' />
+              </Link>
+            </div>
+          </div>
+      ) : '' }
     </div>
   )
 }
@@ -312,16 +331,16 @@ export function  VersionDownload ({view}) {
   if(!view?.metadata?.download) {
     return 'Download Not Available'
   }
-
+  
   return (
     <div className="inline-flex rounded-md shadow-sm">
       <button
         type="button"
-        className="relative inline-flex items-center rounded-l-md bg-white px-10 py-2 text-md font-semibold text-blue-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+        className="relative inline-flex items-center rounded-l-md bg-white px-10 py-[12px] text-md font-semibold text-blue-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
       >
         Download
       </button>
-      <Menu as="div" className="relative -ml-px block">
+      <Menu as="div" className="absolute ml-32 block">
         <Menu.Button className="relative inline-flex items-center rounded-r-md bg-white px-2 py-3 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10">
           <span className="sr-only">Open options</span>
           <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />

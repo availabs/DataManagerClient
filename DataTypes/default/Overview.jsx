@@ -156,9 +156,7 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
             <div className='w-full flex p-4'>
               <div className='flex-1' />
 
-              <VersionDownload
-                view={views.filter(d => d.view_id === activeViewId )?.[0] || {}} 
-              />
+              
             </div>
           </dl>
           
