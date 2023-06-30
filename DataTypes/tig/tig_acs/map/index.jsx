@@ -216,8 +216,16 @@ const ACSMapFilter = ({
       return a;
     }, {});
 
-    const domain = ckmeans(Object.values(valueMap), 5) || [];
+    const ckmeansLen = Math.min((Object.values(valueMap) || []).length, 5);
+    const domain = ckmeans(Object.values(valueMap), ckmeansLen) || [];
     const range = getColorRange(5, "YlOrRd", false);
+
+    if (!(domain && domain?.length > 5)) {
+      const n = domain?.length || 0;
+      for (let i = n; i < 5; i++) {
+        domain.push(domain[i - 1] || 0);
+      }
+    }
 
     function colorScale(domain, value) {
       let color = "rgba(0,0,0,0)";
