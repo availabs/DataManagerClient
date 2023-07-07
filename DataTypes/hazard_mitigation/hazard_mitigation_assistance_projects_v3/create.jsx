@@ -7,10 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { DamaContext } from "../../../store";
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate}) => {
     const url = new URL(
-        `${rtPfx}/hazard_mitigation/hmgp_summaries_v2`
+        `${rtPfx}/hazard_mitigation/hmgp_projects_v2`
     );
 
-    url.searchParams.append("table_name", 'hazard_mitigation_grant_program_disaster_summaries_v2');
+    url.searchParams.append("table_name", 'hazard_mitigation_assistance_projects_v3');
     url.searchParams.append("source_name", source.name);
     url.searchParams.append("existing_source_id", source.source_id);
     url.searchParams.append("version", newVersion);
