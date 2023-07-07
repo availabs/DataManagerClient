@@ -25,7 +25,7 @@ export const LayerAnalysisSection = ({state}) => {
 
   const { layerGeometriesAnalysis } = layerAnalysis;
 
-  const {  countsByPostGisType, /* featuresCount, commonPostGisGeometryType */ } =
+  const {  countsByPostGisType={}, /* featuresCount, commonPostGisGeometryType */ } =
     layerGeometriesAnalysis;
 
   // const plSfx = featuresCount > 1 ? "s" : "";

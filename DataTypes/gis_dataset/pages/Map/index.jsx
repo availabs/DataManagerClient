@@ -90,12 +90,21 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
-    out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    out.sources.forEach(s => {
+      if(s?.source?.url) {
+        s.source.url = s.source.url.replace('$HOST', TILEHOST)
+      }
+    })
     return out
   }, [activeView])
   const metaData = useMemo(() => {
     let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
-    get(out,'tiles.sources',[]).forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    get(out,'tiles.sources',[])
+      .forEach(s => {
+        if(s?.source?.url) {
+          s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        }
+      })
     return out
   }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])

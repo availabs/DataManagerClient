@@ -81,7 +81,7 @@ class GISDatasetLayer extends LayerContainer {
     layers: this.layers?.map((d) => d.id),
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
-      //console.log(feature)
+      console.log('hover feature',feature)
 
       let data = [feature.id, layerId];
 
