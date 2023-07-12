@@ -5,13 +5,13 @@ const submitUpload = (props, navigate) => {
   const runPublish = async () => {
     try {
       const publishData = {
-        source_id: null,
+        source_id: props?.source?.source_id || null,
         source_values: {
           name: props?.source?.name || "New Source",
           type: props?.source?.type || "tig_acs",
         },
         viewMetadata: props?.viewMetadata,
-        viewDependency: props?.viewDependency?.id,
+        viewDependency: props?.viewDependency,
         etlContextId: props?.etlContextId,
       };
 

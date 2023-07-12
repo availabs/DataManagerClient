@@ -5,7 +5,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../../utils/DamaControllerApi";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
-import Version from "./version";
+import Version, { VersionDownload } from "./version";
+
 import DeleteVersion from "./delete";
 
 const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
@@ -50,39 +51,81 @@ const Versions = ({ source, views, meta }) => {
     );
   }
 
+  // const columns = React.useMemo(() => {
+  //   return [
+  //     {
+  //       Header: "Version Id",
+  //       accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
+  //     },
+  //     {
+  //       Header: "User",
+  //       accessor: "user_id"
+  //     },
+  //     // {
+  //     //   Header: "Updated",
+  //     //   accessor: c => formatDate(c["_modified_timestamp"])
+  //     // },
+  //     {
+  //       Header: "Uploaded",
+  //       accessor: c => formatDate(c["_created_timestamp"])
+  //     },
+  //     // {
+  //     //   Header: "Make Authoritative",
+  //     //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
+  //     //   disableFilters: true,
+  //     // },
+  //     {
+  //       Header: " ",
+  //       accessor: c => {
+  //         console.log('downlaod view',c)
+  //         return 
+  //           <VersionDownload
+  //             view={c} 
+  //           />
+  //       },
+  //       disableFilters: true
+  //     }
+  //   ]
+  // },[source])
+
   return (
     <div className="">
       <Table
         data={views}
         columns={[
-          {
-            Header: "Version Id",
-            accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
-          },
-          {
-            Header: "User",
-            accessor: "user_id"
-          },
-          // {
-          //   Header: "Updated",
-          //   accessor: c => formatDate(c["_modified_timestamp"])
-          // },
-          {
-            Header: "Uploaded",
-            accessor: c => formatDate(c["_created_timestamp"])
-          },
-          // {
-          //   Header: "Make Authoritative",
-          //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
-          //   disableFilters: true,
-          // },
-          // {
-          //   Header: " ",
-          //   accessor: c => <DeleteButton viewId={c["view_id"]} sourceId={c["source_id"]} meta={c["metadata"]}
-          //                                navigate={navigate} />,
-          //   disableFilters: true
-          // }
-        ]}
+      {
+        Header: "Version Id",
+        accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
+      },
+      {
+        Header: "User",
+        accessor: "user_id"
+      },
+      // {
+      //   Header: "Updated",
+      //   accessor: c => formatDate(c["_modified_timestamp"])
+      // },
+      {
+        Header: "Uploaded",
+        accessor: c => formatDate(c["_created_timestamp"])
+      },
+      // {
+      //   Header: "Make Authoritative",
+      //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
+      //   disableFilters: true,
+      // },
+      {
+        Header: " Download",
+        accessor: c => {
+          return (
+            <VersionDownload
+              view={c} 
+            />
+          )
+        },
+        disableFilters: true
+      }
+    ]}
       />
 
     </div>

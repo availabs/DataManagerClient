@@ -56,6 +56,8 @@ export default function PublishButton({ state, dispatch }) {
 
         if (mbtilesOptions && mbtilesOptions?.preserveColumns && (Object.keys(mbtilesOptions?.preserveColumns || {}) || []).length) {
           mbtilesOptions.preserveColumns = (Object.keys(mbtilesOptions?.preserveColumns || {}) || []).filter(key => mbtilesOptions?.preserveColumns[key] === true);
+        } else {
+          mbtilesOptions.preserveColumns = [];
         }
 
         const publishData = {

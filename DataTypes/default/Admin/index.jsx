@@ -8,6 +8,7 @@ import Uploads from '../Uploads'
 
 const AdminPage = ({source, views, activeViewId, }) => {
   const [editing, setEditing] = React.useState(null)
+  const { sourceId } = useParams()
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
   return (
@@ -54,7 +55,7 @@ const AdminPage = ({source, views, activeViewId, }) => {
 
       </div>
       <div className='py-10 px-2'>
-        <Uploads />  
+        <Uploads sourceId={sourceId} />  
       </div>
     </div>
   )

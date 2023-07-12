@@ -9,7 +9,7 @@ import ckmeans from '../../../utils/ckmeans'
 import cloneDeep from 'lodash/cloneDeep'
 
 import download from "downloadjs"
-import { download as shpDownload } from "~/utils/shp-write"
+import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
 
 [1112,1588,2112,2958,56390]
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
@@ -31,7 +31,7 @@ const sedVars = {
   gqpopins: { name: "Group Quarters Instituional Population", domain: [0,22,118,253,5613,12050], range: defaultRange},
   gqpopstr: { name: "Group Quarters Other Population", domain: [0,7,16,56,5613,10503], range: defaultRange},
   gqpopoth: { name: "Group Quarters Homless Population", domain: [0,3,11,50,635,1201], range: defaultRange}
- };
+};
 const sedVarsCounty = {
     "tot_pop": {name: 'Total Population (in 000s)', domain: [0,74,213,481,750,1134,2801], range: defaultRange},
     "tot_emp": {name: 'Total Employment', domain: [0,31,111,243,402,624,3397], range: defaultRange},
@@ -43,7 +43,7 @@ const sedVarsCounty = {
     "hh_size": {name: 'Household Size', domain: [0,1.98,2.54,2.69,2.77,2.92,3.26], range: defaultRange},
     "emplf": {name: 'Employed Labor Force', domain: [0,0,872,2047,3649,6934,14119,28578], range: defaultRange},
     "lf": {name: 'Labor Force', domain: [0,33,116,237,366,557,1383], range: defaultRange}
- }
+}
 
 //const years = ["10", "17", "20", "25", "30", "35", "40", "45", "50", "55"];
 

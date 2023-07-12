@@ -9,11 +9,11 @@ import { DamaContext } from "~/pages/DataManager/store";
 import ListUploads from "./list";
 import Upload from "./view";
 
-const UploadsPage = ({ source }) => {
+const UploadsPage = ({  }) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
-  const { viewId, page } = useParams();
+  const { viewId, page, sourceId } = useParams();
   
-  let { source_id: sourceId } = source || {};
+  //let { source_id: sourceId } = source || {};
 
   if (page === "uploads" && viewId) {
     return <Upload ctxId={viewId} />;
@@ -21,7 +21,8 @@ const UploadsPage = ({ source }) => {
 
   useEffect(() => {
     async function getCtxs() {
-      sourceId = Number(sourceId);
+      //sourceId = Number(sourceId);
+      //conso
 
       const lengthPath = [
         "dama",
