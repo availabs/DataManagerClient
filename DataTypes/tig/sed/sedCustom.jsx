@@ -112,6 +112,8 @@ const SedMapFilter = ({
             },{})
             let output = ["get",["to-string",["get","ogc_fid"]], ["literal", colors]]
 
+console.log("tempSymbology", tempSymbology)
+
             let newSymbology = cloneDeep(tempSymbology) || {'fill-color':{}}
             if(!newSymbology['fill-color']) {
               newSymbology['fill-color'] = {}
