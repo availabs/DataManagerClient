@@ -13,9 +13,9 @@ import { DAMA_HOST } from "~/config"
 //import { DAMA_HOST } from "~/config"
 
 const getTilehost = (DAMA_HOST) =>
-  DAMA_HOST === 'http://localhost:3369' ?
-  'http://localhost:3370' :
-  DAMA_HOST + '/tiles'
+  DAMA_HOST === "http://localhost:3369"
+    ? "http://localhost:3370"
+    : DAMA_HOST + "/tiles";
 
 const TILEHOST = getTilehost(DAMA_HOST)
 
@@ -84,7 +84,10 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
-  const [ filters, setFilters ] = useState(filterData)
+  const [ filters, _setFilters ] = useState(filterData)
+  const setFilters = React.useCallback(filters => {
+    _setFilters(prev => ({ ...prev, ...filters }))
+  }, []);
   const activeView = React.useMemo(() => {
     return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])

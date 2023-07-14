@@ -1,6 +1,8 @@
 import React, { useMemo, useEffect} from "react";
 import get from "lodash/get";
 
+import { useSearchParams } from "react-router-dom";
+
 import { DamaContext } from "~/pages/DataManager/store"
 import { useFalcor, Button } from "~/modules/avl-components/src"
 import * as d3scale from "d3-scale"
@@ -14,7 +16,7 @@ import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
 [1112,1588,2112,2958,56390]
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 const defaultDomain = [0,872,2047,3649,6934,14119,28578]
-const sedVars = {
+export const sedVars = {
   totpop: { name: "Total Population", domain: [0,872,2047,3649,6934,14119,28578], range: defaultRange},
   hhpop: { name: "Households", domain: [0,1112,1588,2112,2958,20000, 56390], range: defaultRange},
   hhnum: { name: "Household Population", domain: [0,2995,4270,5680,7883,64124,177720], range: defaultRange},
@@ -32,7 +34,7 @@ const sedVars = {
   gqpopstr: { name: "Group Quarters Other Population", domain: [0,7,16,56,5613,10503], range: defaultRange},
   gqpopoth: { name: "Group Quarters Homless Population", domain: [0,3,11,50,635,1201], range: defaultRange}
 };
-const sedVarsCounty = {
+export const sedVarsCounty = {
     "tot_pop": {name: 'Total Population (in 000s)', domain: [0,74,213,481,750,1134,2801], range: defaultRange},
     "tot_emp": {name: 'Total Employment', domain: [0,31,111,243,402,624,3397], range: defaultRange},
     "emp_pay": {name: 'Payroll Employment', domain: [0,22,74,192,300,483,2997], range: defaultRange},
@@ -112,21 +114,38 @@ const SedMapFilter = ({
             },{})
             let output = ["get",["to-string",["get","ogc_fid"]], ["literal", colors]]
 
-console.log("tempSymbology", tempSymbology)
+// console.log("tempSymbology", tempSymbology, layer)
 
-            let newSymbology = cloneDeep(tempSymbology) || {'fill-color':{}}
-            if(!newSymbology['fill-color']) {
-              newSymbology['fill-color'] = {}
-            }
-            newSymbology['fill-color'][activeVar] = {
-              type: 'scale-threshold',
-              settings: {
-                range: varList[varType].range,
-                domain: varList[varType].domain,
-                title: varList[varType].name
-              },
-              value: output
-            }
+            const newSymbology = layer.layers.reduce((a, c) => {
+              a[c.id] = {
+                "fill-color": {
+                  [activeVar]: {
+                    type: 'scale-threshold',
+                    settings: {
+                      range: varList[varType].range,
+                      domain: varList[varType].domain,
+                      title: varList[varType].name
+                    },
+                    value: output
+                  }
+                }
+              };
+              return a;
+            }, {});
+
+            // let newSymbology = cloneDeep(tempSymbology) || {'fill-color':{}}
+            // if(!newSymbology['fill-color']) {
+            //   newSymbology['fill-color'] = {}
+            // }
+            // newSymbology['fill-color'][activeVar] = {
+            //   type: 'scale-threshold',
+            //   settings: {
+            //     range: varList[varType].range,
+            //     domain: varList[varType].domain,
+            //     title: varList[varType].name
+            //   },
+            //   value: output
+            // }
 
             //console.log('newSymbology', newSymbology)
 
@@ -139,16 +158,23 @@ console.log("tempSymbology", tempSymbology)
     }
   },[activeVar, varType, year,falcorCache])
 
+  const [searchParams] = useSearchParams();
+  const searchVar = searchParams.get("variable")
   React.useEffect(() => {
     //console.log("SedMapFilter", activeVar);
     if (!activeVar) {
-      setFilters({
-        ...filters,
-        activeVar: { value: source.type === 'tig_sed_county' ? 'tot_pop_0' : "totpop_0" },
-      });
+      if (searchVar) {
+        setFilters({
+          activeVar: { value: `${ searchVar }_0` },
+        });
+      }
+      else {
+        setFilters({
+          activeVar: { value: source.type === 'tig_sed_county' ? 'tot_pop_0' : "totpop_0" },
+        });
+      }
     }
-  }, []);
-
+  }, [activeVar, setFilters, searchVar]);
 
   return (
     <div className="flex flex-1 border-blue-100">
@@ -164,7 +190,6 @@ console.log("tempSymbology", tempSymbology)
           value={varType}
           onChange={(e) =>
             setFilters({
-              ...filters,
               activeVar: { value: `${e.target.value}_${year}` },
             })
           }
@@ -187,7 +212,6 @@ console.log("tempSymbology", tempSymbology)
           value={year}
           onChange={(e) =>
             setFilters({
-              ...filters,
               activeVar: { value: `${varType}_${e.target.value}` },
             })
           }
@@ -213,22 +237,27 @@ const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
   React.useEffect(() => {
     setLoading(true);
     if (!(pgEnv && activeViewId && activeVar)) return;
-    falcor.get([
-      'dama',
-      pgEnv,
-      'viewsbyId',
-      activeViewId,
-      'databyId',
-      d3range(0, 31),
-      [activeVar, "wkb_geometry", "county"]
-    ]).then(() => setLoading(false))
+    falcor.get(['dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'])
+      .then(res => {
+        const length = get(res, ['json', 'dama', pgEnv, 'viewsbyId' ,activeViewId, 'data', 'length'], 0)
+        return  falcor.get([
+          'dama',
+          pgEnv,
+          'viewsbyId',
+          activeViewId,
+          'databyId',
+          d3range(0, length),
+          [activeVar, "wkb_geometry", "county"]
+        ]).then(() => setLoading(false))
+      })
   }, [falcor, pgEnv, activeViewId, activeVar])
 
   const downloadData = React.useCallback(() => {
+    const length = get(falcorCache, ['dama', pgEnv, 'viewsbyId', activeViewId, 'data', 'length'], 0);
     const path = ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"];
     const collection = {
       type: "FeatureCollection",
-      features: d3range(0, 31).map(id => {
+      features: d3range(0, length).map(id => {
         const data = get(falcorCache, [...path, id], {});
         const value = get(data, activeVar, null);
         const county = get(data, "county", "unknown");
@@ -271,14 +300,25 @@ const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
 const SedTableFilter = ({ source, filters, setFilters, data, columns }) => {
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   // console.log("SedTableFilter", filters);
+
+  const [searchParams] = useSearchParams();
+  const searchVar = searchParams.get("variable");
   React.useEffect(() => {
-    if (!get(filters, "activeVar.value", "")) {
-      setFilters({
-        ...filters,
-        activeVar: { value: source?.type === 'tig_sed_county' ? 'tot_pop' : "totpop" },
-      });
+    //console.log("SedMapFilter", activeVar);
+    if (!activeVar) {
+      if (searchVar) {
+        setFilters({
+          activeVar: { value: `${ searchVar }` },
+        });
+      }
+      else {
+        setFilters({
+          activeVar: { value: source.type === 'tig_sed_county' ? 'tot_pop' : "totpop" },
+        });
+      }
     }
-  }, []);
+  }, [activeVar, setFilters, searchVar]);
+
   let varList = useMemo(() => {
     return source.type === 'tig_sed_county' ? sedVarsCounty : sedVars
   },[source.type])

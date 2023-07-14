@@ -176,6 +176,8 @@ class GISDatasetLayer extends LayerContainer {
               ""
             );
 
+// console.log("FOR EACH:", paintProperty, sym)
+
           if (sym.settings) {
             this.legend.domain = sym.settings.domain;
             this.legend.range = sym.settings.range;
@@ -196,6 +198,7 @@ class GISDatasetLayer extends LayerContainer {
             //   sym.value
             // );
             const layer = layer_id || this.layers[0].id;
+// console.log("PAINT:", layer, paintProperty, sym.value)
             map.setPaintProperty(layer, paintProperty, sym.value);
           }
         });
