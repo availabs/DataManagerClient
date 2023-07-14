@@ -14,6 +14,8 @@ const CallServer = async ({
   tigerTable,
   newVersion,
   navigate,
+  setVar,
+  setSourceValues,
 }) => {
   const url = new URL(`${rtPfx}/hazard_mitigation/tigerDownloadAction`);
 
@@ -26,12 +28,18 @@ const CallServer = async ({
 
   await checkApiResponse(stgLyrDataRes);
 
-  const { etl_context_id, source_id } = await stgLyrDataRes.json();
+  const { etl_context_id, source_id, isNewSource } = await stgLyrDataRes.json();
 
-  if (source_id && etl_context_id) {
-    navigate(`/source/${source_id}/uploads/${etl_context_id}`);
+  if (!isNewSource) {
+    setVar(false);
+    setSourceValues({ etl_context_id, source_id });
+  } else {
+    if (source_id && etl_context_id) {
+      navigate(`/source/${source_id}/uploads/${etl_context_id}`);
+    } else {
+      navigate(`/source/${source_id}/versions`);
+    }
   }
-  navigate(`/source/${source_id}/versions`);
 };
 
 const RenderTigerTables = ({ value, setValue, domain }) => {
@@ -70,6 +78,11 @@ const Create = ({ source, newVersion, baseUrl }) => {
   const navigate = useNavigate();
   const { pgEnv } = useContext(DamaContext);
   const [tigerTable, setTigerTable] = useState();
+  const [isNewSource, setVar] = useState(true);
+  const [sourceValues, setSourceValues] = useState({
+    etl_context_id: null,
+    source_id: null,
+  });
 
   const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
@@ -90,12 +103,35 @@ const Create = ({ source, newVersion, baseUrl }) => {
             tigerTable,
             newVersion,
             navigate,
+            setVar,
+            setSourceValues,
           })
         }
         disabled={!tigerTable}
       >
         Add New Source
       </button>
+
+      {!isNewSource ? (
+        <>
+          <br />
+          <span> Source is already created </span>
+          <button
+            className={`align-right p-2 border-2 border-gray-200`}
+            onClick={() => {
+              if (sourceValues?.source_id && sourceValues?.etl_context_id) {
+                navigate(
+                  `/source/${sourceValues?.source_id}/uploads/${sourceValues?.etl_context_id}`
+                );
+              } else {
+                navigate(`/source/${sourceValues?.source_id}`);
+              }
+            }}
+          >
+            Check Progress...
+          </button>
+        </>
+      ) : null}
     </div>
   );
 };

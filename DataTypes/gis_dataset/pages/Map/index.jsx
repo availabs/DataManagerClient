@@ -51,9 +51,9 @@ const ViewSelector = ({views}) => {
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({source, filters, setFilters}) => {
   const variables = get(source,'metadata',[])
-    .filter(d => ['number'].includes(d.type))
-    .sort((a,b) => a.name - b.name)
-    .map(d => d.name)
+    ?.filter(d => ['number'].includes(d.type))
+    ?.sort((a,b) => a.name - b.name)
+    ?.map(d => d.name)
 
   return (
     <div className='flex flex-1'>
