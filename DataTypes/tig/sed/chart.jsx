@@ -55,7 +55,10 @@ const TablePage = ({
 }) => {
   const { viewId } = useParams();
   const { falcor, falcorCache } = useFalcor();
-  const [filters, setFilters] = useState(filterData);
+  const [filters, _setFilters] = useState(filterData);
+  const setFilters = React.useCallback(filters => {
+    _setFilters(prev => ({ ...prev, ...filters }));
+  }, []);
   const { pgEnv } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {

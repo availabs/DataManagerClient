@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 
+
 import {
   GisDatasetUploadErrorMessage,
   GisDatasetFileMeta,
@@ -42,6 +43,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       console.log('sending upload finished ')
       // update state from request
       const [{ id }] = await res.json();
+      console.log('response', id)
       dispatch({type: 'update', payload: {polling:false, gisUploadId: id}})
 
     } catch (err) {

@@ -44,7 +44,6 @@ export default function SelectLayer({state, dispatch}) {
         }
         fetchData(gisUploadId, layerName)
       } catch (err) {
-        // console.(err);
         dispatch({type: 'update', payload: {lyrAnlysErrMsg: err.message}});
       }
     }
