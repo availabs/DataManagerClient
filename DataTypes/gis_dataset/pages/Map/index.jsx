@@ -13,9 +13,9 @@ import { DAMA_HOST } from "~/config"
 //import { DAMA_HOST } from "~/config"
 
 const getTilehost = (DAMA_HOST) =>
-  DAMA_HOST === 'http://localhost:3369' ?
-  'http://localhost:3370' :
-  DAMA_HOST + '/tiles'
+  DAMA_HOST === "http://localhost:3369"
+    ? "http://localhost:3370"
+    : DAMA_HOST + "/tiles";
 
 const TILEHOST = getTilehost(DAMA_HOST)
 
@@ -51,9 +51,9 @@ const ViewSelector = ({views}) => {
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({source, filters, setFilters}) => {
   const variables = get(source,'metadata',[])
-    .filter(d => ['number'].includes(d.type))
-    .sort((a,b) => a.name - b.name)
-    .map(d => d.name)
+    ?.filter(d => ['number'].includes(d.type))
+    ?.sort((a,b) => a.name - b.name)
+    ?.map(d => d.name)
 
   return (
     <div className='flex flex-1'>
@@ -84,18 +84,30 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
-  const [ filters, setFilters ] = useState(filterData)
+  const [ filters, _setFilters ] = useState(filterData)
+  const setFilters = React.useCallback(filters => {
+    _setFilters(prev => ({ ...prev, ...filters }))
+  }, []);
   const activeView = React.useMemo(() => {
     return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
-    out.sources.forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    out.sources.forEach(s => {
+      if(s?.source?.url) {
+        s.source.url = s.source.url.replace('$HOST', TILEHOST)
+      }
+    })
     return out
   }, [activeView])
   const metaData = useMemo(() => {
     let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
-    get(out,'tiles.sources',[]).forEach(s => s.source.url = s.source.url.replace('$HOST', TILEHOST))
+    get(out,'tiles.sources',[])
+      .forEach(s => {
+        if(s?.source?.url) {
+          s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        }
+      })
     return out
   }, [activeView])
   const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])

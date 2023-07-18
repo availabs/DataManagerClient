@@ -5,6 +5,10 @@ import { regionalData } from "../constants/index";
 import ckmeans from '../../../utils/ckmeans'
 import * as d3scale from "d3-scale"
 import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
+import { toPng } from "html-to-image"
+import download from "downloadjs"
+
+import { useSearchParams } from "react-router-dom";
 
 const sedVars = {
   totpop: { name: "Total Population" },
@@ -37,41 +41,59 @@ const areas = [
 
 
 
-const SedChartFilter = ({ source, filters, setFilters }) => {
-  
+const SedChartFilter = ({ source, filters, setFilters, node }) => {
+
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let area = useMemo(() => get(filters, "area.value", ""), [filters]);
   let summarize = useMemo(() => get(filters, "summarize.value", ""), [filters]);
 
+  const [searchParams] = useSearchParams();
+  const searchVar = searchParams.get("variable");
   React.useEffect(() => {
-    if (!get(filters, "activeVar.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "totpop" },
-        summarize: { value: "region" },
-      });
+    if (!activeVar) {
+      if (searchVar) {
+        setFilters({
+          activeVar: { value: `${ searchVar }` },
+        });
+      }
+      else {
+        setFilters({
+          activeVar: { value: "totpop" },
+        });
+      }
     }
+  }, [activeVar, setFilters, searchVar]);
+
+  React.useEffect(() => {
+    const update = {};
     if (!get(filters, "area.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "totpop" },
-        summarize: { value: "region" },
-      });
+      update.area = { value: "all" };
     }
     if (!get(filters, "summarize.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "totpop" },
-        summarize: { value: "region" },
-      });
+      update.summarize = { value: "region" };
     }
+    setFilters(update);
   }, []);
+
+  const downloadImage = React.useCallback(() => {
+    if (!node) return;
+    const name = get(sedVars, [activeVar, "name"], null);
+    if (!name) return;
+    toPng(node, { backgroundColor: "#fff" })
+      .then(dataUrl => {
+        download(dataUrl, `${ name }.png`, "image/png");
+      });
+  }, [node, activeVar]);
 
   return (
     <div className="flex border-blue-100">
+      <div>
+        <Button themeOptions={{size:'sm', color: 'primary'}}
+          onClick={ downloadImage }
+        >
+          Download
+        </Button>
+      </div>
       <div className="py-3.5 px-2 text-sm text-gray-400">Area: </div>
       <div className="flex-1" style={{ width: "min-content" }}>
         <select
@@ -232,7 +254,7 @@ const SedChartTransform = (tableData, attributes, filters, years, flag) => {
   /* [
     {
       name: New York County,
-      data: [{ 
+      data: [{
         x: 15, // year
         y: 35636 //value of totpop_15
       },

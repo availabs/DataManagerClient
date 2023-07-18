@@ -1,10 +1,19 @@
-import React, { useMemo, useEffect } from "react";
-import ckmeans from "~/pages/DataManager/utils/ckmeans";
+import React, { useMemo, useEffect, useState } from "react";
+import {
+  get,
+  cloneDeep,
+  isEqual,
+  flattenDeep,
+  range,
+  uniqBy,
+  set,
+  unset,
+} from "lodash";
+
+import ckmeans from "../../../../utils/ckmeans";
 import { getColorRange } from "~/modules/avl-components/src";
 import { useFalcor } from "~/modules/avl-components/src";
 import { DamaContext } from "~/pages/DataManager/store";
-import { get, cloneDeep, isEqual } from "lodash";
-
 import { DAMA_HOST } from "~/config";
 
 const getTilehost = (DAMA_HOST) =>
@@ -15,8 +24,6 @@ const getTilehost = (DAMA_HOST) =>
 const TILEHOST = getTilehost(DAMA_HOST);
 
 const ACSMapFilter = ({
-  source,
-  metaData,
   filters,
   setFilters,
   setTempSymbology,
@@ -24,41 +31,67 @@ const ACSMapFilter = ({
   activeView,
   activeViewId,
 }) => {
+  const [subGeoids, setSubGeoIds] = useState([]);
   const { falcor, falcorCache } = useFalcor();
   const { pgEnv } = React.useContext(DamaContext);
-  let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
+  const max = new Date().getUTCFullYear();
+  const yearRange = range(2010, max + 1);
 
-  const { counties, variables } = useMemo(() => {
-    return get(activeView, "metadata", {});
+  console.log("activeView", activeView);
+  console.log("activeViewId", activeViewId);
+
+  const [activeVar, geometry, year] = useMemo(() => {
+    return [
+      filters?.activeVar?.value,
+      filters?.geometry?.value || "COUNTY",
+      filters?.year?.value || 2019,
+    ];
+  }, [filters]);
+
+  console.log("activeVar, geometry, year", activeVar, geometry, year);
+  const viewYear = useMemo(() => year - (year % 10), [year]);
+
+  const {
+    counties = [],
+    variables = [],
+    customDependency = {},
+  } = useMemo(
+    () => get(activeView, "metadata", {}),
+    [activeView, activeViewId]
+  );
+
+  console.log("counties", counties);
+  console.log("variables", variables);
+  console.log("customDependency", customDependency);
+  const [countyViewId] = useMemo(() => {
+    const uniqueTrackIds = Object.values(customDependency).reduce(
+      (ids, cur) => {
+        if (!ids.includes(cur.id)) {
+          (ids || []).push(cur.id);
+        }
+        return ids;
+      },
+      []
+    );
+    const countyViewId =
+      (activeView?.view_dependencies || []).find(
+        (v_id) => !uniqueTrackIds.includes(v_id)
+      ) || null;
+    return [countyViewId, uniqueTrackIds];
   }, [activeView, activeViewId]);
 
-  const censusConfig = useMemo(() => {
-    return (
-      ((variables || []).find((d) => d.label === activeVar) || {}).value || []
-    );
-  }, [activeVar, variables]);
+  const censusConfig = useMemo(
+    () =>
+      ((variables || []).find((d) => d.label === activeVar) || {}).value || [],
+    [activeVar, variables]
+  );
 
-  const mapGeoToOgc = useMemo(() => {
-    let d = get(
-      falcorCache,
-      [
-        "dama",
-        pgEnv,
-        "viewsbyId",
-        activeView?.view_dependencies[0],
-        "options",
-        JSON.stringify({
-          filter: { geoid: counties },
-        }),
-        "databyIndex",
-      ],
-      {}
-    );
-
-    return (Object.values(d) || []).reduce((acc, cur) => {
-      return Object.assign({}, acc, { [cur?.geoid]: cur?.ogc_fid });
-    }, {});
-  }, [falcorCache, pgEnv, activeViewId, activeView]);
+  if (!activeVar) {
+    setFilters({
+      ...filters,
+      activeVar: { value: variables[0]?.label || null },
+    });
+  }
 
   useEffect(() => {
     async function getViewData() {
@@ -67,85 +100,113 @@ const ACSMapFilter = ({
         pgEnv,
         "views",
         "byId",
-        [activeView?.view_dependencies[0]],
+        activeView?.view_dependencies,
         "attributes",
         "metadata",
       ]);
+    }
+    getViewData();
+  }, [pgEnv, geometry, activeViewId, activeView]);
 
-      await falcor.get([
-        "dama",
-        pgEnv,
-        "viewsbyId",
-        [activeView?.view_dependencies[0]],
-        "options",
-        JSON.stringify({
-          filter: { geoid: [...counties] },
-        }),
-        "databyIndex",
-        { from: 0, to: counties.length - 1 },
-        ["geoid", "ogc_fid"],
-      ]);
+  useEffect(() => {
+    async function getViewData() {
+      await falcor
+        .get(["geo", counties.map(String), [year], "tracts"])
+        .then(() => {
+          const d = (counties || []).reduce((a, c) => {
+            a.push(
+              ...get(falcorCache, ["geo", c, year, "tracts", "value"], [])
+            );
+            return a;
+          }, []);
+          setSubGeoIds(d);
+        });
     }
 
     getViewData();
-  }, [pgEnv, activeViewId, activeView]);
+  }, [falcorCache, counties, year]);
 
   useEffect(() => {
-    let rawView = get(
-      falcorCache,
-      [
-        "dama",
-        pgEnv,
-        "views",
-        "byId",
-        activeView?.view_dependencies[0],
-        "attributes",
-      ],
-      {}
+    const newSymbology = cloneDeep(tempSymbology || {});
+    (activeView?.view_dependencies || []).forEach((v) => {
+      const rawView = get(
+        falcorCache,
+        ["dama", pgEnv, "views", "byId", v, "attributes"],
+        {}
+      );
+
+      let { sources, layers } = get(
+        rawView,
+        ["metadata", "value", "tiles"],
+        {}
+      );
+
+      if (sources && sources.length) {
+        (sources || []).forEach((s) => {
+          if (s && s.source)
+            s.source.url = s?.source?.url?.replace("$HOST", TILEHOST);
+        });
+      }
+
+      if (!newSymbology.hasOwnProperty("sources")) {
+        newSymbology["sources"] = sources || [];
+      } else {
+        if (sources) newSymbology["sources"].push(flattenDeep(sources));
+      }
+
+      if (!newSymbology.hasOwnProperty("layers")) {
+        newSymbology["layers"] = layers || [];
+      } else {
+        if (layers) newSymbology["layers"].push(flattenDeep(layers));
+      }
+    });
+
+    newSymbology["sources"] = uniqBy(
+      flattenDeep(newSymbology["sources"]),
+      "id"
     );
-
-    const ogcFids = Object.values(mapGeoToOgc);
-
-    let { sources, layers } = get(rawView, ["metadata", "value", "tiles"], {});
-
-    const newSymbology = cloneDeep(tempSymbology || {}) || {
-      sources: sources || [],
-      layers: layers || [],
-    };
-
-    (sources || []).forEach(
-      (s) => (s.source.url = s?.source?.url?.replace("$HOST", TILEHOST))
-    );
-
-    if (!newSymbology.hasOwnProperty("sources")) {
-      newSymbology["sources"] = sources || [];
-    }
-    if (!newSymbology.hasOwnProperty("layers")) {
-      newSymbology["layers"] = layers || [];
-    }
-
-    if (layers && layers[0]) {
-      layers[0].filter = [
-        "all",
-        ["match", ["get", "ogc_fid"], [...ogcFids], true, false],
-      ];
-      newSymbology["layers"] = layers;
-    }
+    newSymbology["layers"] = uniqBy(flattenDeep(newSymbology["layers"]), "id");
 
     setTempSymbology(newSymbology);
   }, [falcorCache, pgEnv, activeViewId, activeView]);
 
   useEffect(() => {
     async function getACSData() {
-      await falcor.get(["acs", [...counties], 2019, censusConfig]);
+      const geoids = geometry === "COUNTY" ? counties : subGeoids;
+      if (geoids.length > 0) {
+        falcor.chunk(["acs", geoids, year, censusConfig]);
+      }
     }
     getACSData();
-  }, [activeVar, counties, censusConfig]);
+  }, [counties, censusConfig, activeVar, year, geometry]);
+
+  function getVersionId(str) {
+    const match = str.match(/v(\d+)/);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
+    return null;
+  }
 
   useEffect(() => {
-    const valueMap = (counties || []).reduce((a, c) => {
+    let activeLayer;
+    let geoids;
+    if (geometry === "COUNTY") {
+      activeLayer = (tempSymbology["layers"] || []).find(
+        (v) => countyViewId === getVersionId(v?.id)
+      );
+      geoids = counties;
+    } else if (geometry === "TRACT") {
+      const selectedView = customDependency[`${viewYear}`];
+      activeLayer = (tempSymbology["layers"] || []).find(
+        (v) => selectedView.id === getVersionId(v?.id)
+      );
+      geoids = subGeoids;
+    }
+
+    const valueMap = (geoids || []).reduce((a, c) => {
       let value = (censusConfig || []).reduce((aa, cc) => {
-        const v = get(falcorCache, ["acs", c, 2019, cc], -666666666);
+        const v = get(falcorCache, ["acs", c, year, cc], -666666666);
         if (v !== -666666666) {
           aa += v;
         }
@@ -155,19 +216,21 @@ const ACSMapFilter = ({
       return a;
     }, {});
 
-    console.log("valueMap\n\n", valueMap);
-    const domain = (
-      ckmeans(Object.values(valueMap), Math.min(counties.length - 1, 5)) || []
-    ).reduce((acc, d, dI) => {
-      if (dI === 0) {
-        acc.push(d[0], d[d.length - 1]);
-      } else {
-        acc.push(d[d.length - 1]);
-      }
-      return acc;
-    }, []);
-
+    const ckmeansLen = Math.min((Object.values(valueMap) || []).length, 5);
+    const values = Object.values(valueMap || {})
+    let domain = [0,10,25,50,75,100]
+    if(ckmeansLen <= values.length){
+      domain = ckmeans(values, ckmeansLen) || [];
+    }
     const range = getColorRange(5, "YlOrRd", false);
+
+    if (!(domain && domain?.length > 5)) {
+      const n = domain?.length || 0;
+      for (let i = n; i < 5; i++) {
+        domain.push(domain[i - 1] || 0);
+      }
+    }
+
     function colorScale(domain, value) {
       let color = "rgba(0,0,0,0)";
       (domain || []).forEach((v, i) => {
@@ -180,24 +243,26 @@ const ACSMapFilter = ({
 
     const colors = {};
     Object.keys(valueMap).forEach((geoid) => {
-      colors[mapGeoToOgc[geoid]] = colorScale(domain, valueMap[geoid]);
+      colors[geoid] = colorScale(domain, valueMap[geoid]);
     });
 
     let output = [
       "case",
-      ["has", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
-      ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
-      "#000",
+      ["has", ["to-string", ["get", "geoid"]], ["literal", colors]],
+      ["get", ["to-string", ["get", "geoid"]], ["literal", colors]],
+      "rgba(0,0,0,0)",
     ];
 
-    let newSymbology = Object.assign({}, cloneDeep(tempSymbology), {
-      "fill-color": {},
-    });
-    if (!newSymbology.hasOwnProperty("fill-color")) {
-      newSymbology["fill-color"] = {};
-    }
-    if (activeVar) {
-      newSymbology["fill-color"][activeVar] = {
+    let newSymbology = Object.assign({}, cloneDeep(tempSymbology));
+    if (activeVar && activeLayer) {
+      (newSymbology?.layers || []).forEach((l) => {
+        unset(newSymbology, `${l?.id}`);
+        set(newSymbology, `${l?.id}.fill-color.${activeVar}`, {
+          value: "rgba(0,0,0,0)",
+        });
+      });
+
+      newSymbology[activeLayer.id]["fill-color"][activeVar] = {
         type: "scale-threshold",
         settings: {
           range: range,
@@ -211,7 +276,16 @@ const ACSMapFilter = ({
     if (!isEqual(tempSymbology, newSymbology)) {
       setTempSymbology(newSymbology);
     }
-  }, [activeVar, falcorCache, mapGeoToOgc]);
+  }, [
+    tempSymbology,
+    activeViewId,
+    censusConfig,
+    falcorCache,
+    activeView,
+    activeVar,
+    geometry,
+    year,
+  ]);
 
   return (
     <div className="flex flex-1 border-blue-100">
@@ -227,36 +301,61 @@ const ACSMapFilter = ({
             });
           }}
         >
-          <option className="ml-2  truncate" value={null}>
-            none
-          </option>
           {(variables || []).map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={k?.label}>
+            <option key={i} className="ml-2 truncate" value={k?.label}>
               {k?.label}
             </option>
           ))}
         </select>
       </div>
 
-      {/* <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
-      <div className="">
+      <div className="py-3.5 px-2 text-sm text-gray-400">Type: </div>
+      <div className="flex-1">
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={year}
-          onChange={(e) =>
+          value={geometry}
+          onChange={(e) => {
             setFilters({
               ...filters,
-              activeVar: { value: `${varType}_${e.target.value}` },
-            })
-          }
+              geometry: {
+                value: `${e.target.value}`,
+              },
+            });
+          }}
         >
-          {(metaData?.years || ["2010"]).map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={i}>
-              {k}
+          {["COUNTY", "TRACT"].map((v, i) => (
+            <option key={i} className="ml-2 truncate" value={v}>
+              {v}
             </option>
           ))}
         </select>
-      </div> */}
+      </div>
+
+      {(Object.keys(customDependency) || []).length ? (
+        <>
+          <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
+          <div className="">
+            <select
+              className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+              value={year}
+              onChange={(e) => {
+                setFilters({
+                  ...filters,
+                  year: {
+                    value: `${e.target.value}`,
+                  },
+                });
+              }}
+            >
+              {(yearRange || []).map((k, i) => (
+                <option key={i} className="ml-2 truncate" value={k}>
+                  {`${k}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 };

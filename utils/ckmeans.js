@@ -138,7 +138,7 @@ function fillMatrixColumn(imin, imax, column, matrix, backtrackMatrix, sumX, sum
 }
 
 function fillMatrices(data, matrix, backtrackMatrix) {
-  var nValues = matrix[0].length;
+  var nValues = matrix[0]?.length || 0;
   var sumX = new Array(nValues);
   var sumXsq = new Array(nValues);
 
@@ -246,7 +246,7 @@ function ckmeans(data, nClusters) {
   // once they're generated we can solve for the best clustering groups
   // very quickly.
   var clusters = [];
-  var clusterRight = backtrackMatrix[0].length - 1;
+  var clusterRight = (backtrackMatrix[0]?.length || 0) - 1 ;
 
   // Backtrack the clusters from the dynamic programming matrix. This
   // starts at the bottom-right corner of the matrix (if the top-left is 0, 0),

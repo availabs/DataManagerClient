@@ -3,7 +3,7 @@ import {  TopNav, SideNav } from "~/modules/avl-components/src";
 
 
 import get from "lodash/get";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { Pages, DataTypes } from "../DataTypes";
 
 import SourcesLayout from "../components/SourcesLayout";
@@ -60,17 +60,17 @@ const Source = ({}) => {
 
   useEffect(() => {
     if(activeViewId && activeViewId !== viewId) {
-      // if active view is set and we get new param 
+      // if active view is set and we get new param
       // update active view id
       setActiveViewId(viewId)
     }
 
     if(!activeViewId && views.length > 0) {
-        let authViews = views.filter(v => v?.metadata?.authoritative).length > 0 ? 
+        let authViews = views.filter(v => v?.metadata?.authoritative).length > 0 ?
           views.filter(v => v?.metadata?.authoritative) :
           views
 
-        
+
         setActiveViewId(authViews.sort((a,b) => a._created_timestamp - b._created_timestamp)[0].view_id)
 
     }
@@ -81,7 +81,7 @@ const Source = ({}) => {
     let attributes = getAttributes(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { "attributes": {} })["attributes"]);
     if (DataTypes[attributes.type]) {
 
-      // check for pages to add 
+      // check for pages to add
       let typePages = Object.keys(DataTypes[attributes.type]).reduce((a, c) => {
         if (DataTypes[attributes.type][c].path || c === 'overview') {
           a[c] = DataTypes[attributes.type][c];
@@ -97,6 +97,15 @@ const Source = ({}) => {
     return attributes;
   }, [falcorCache, sourceId, pgEnv]);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const makeUrl = React.useCallback(d => {
+    const params = [];
+    searchParams.forEach((value, key) => {
+      params.push(`${ key }=${ value }`);
+    })
+    return `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
+  }, [baseUrl, sourceId, activeViewId, searchParams])
 
 
   return (
@@ -108,10 +117,10 @@ const Source = ({}) => {
           </div>
           <div className='flex-1'></div>
           <div className='py-2'>
-            { user && user.authLevel >= 10 ? 
-              <Link 
+            { user && user.authLevel >= 10 ?
+              <Link
                 className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
-                to={`${baseUrl}/delete/source/${source.source_id}/`}> 
+                to={`${baseUrl}/delete/source/${source.source_id}/`}>
                   <i className='fad fa-trash' />
               </Link> : ''
             }
@@ -123,21 +132,23 @@ const Source = ({}) => {
               const authLevel = d?.authLevel || -1
               const userAuth = user.authLevel || -1
               return !d.hidden && (authLevel <= userAuth)
-            }) 
+            })
             .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
             .map(d => {
               return {
                 name:d.name,
-                path: `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}`
+                path: makeUrl(d)
               }
 
             })}
           themeOptions={{ size: "inline" }}
         />
         <div className='w-full p-4 bg-white shadow mb-4'>
-          <Page 
-            source={source} 
-            views={views} 
+          <Page
+            searchParams={ searchParams }
+            setSearchParams={ setSearchParams }
+            source={source}
+            views={views}
             user={user}
             baseUrl={baseUrl}
             activeViewId={activeViewId}
