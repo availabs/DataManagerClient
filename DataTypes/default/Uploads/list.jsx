@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { DamaContext } from "~/pages/DataManager/store";
 
 const ListUploads = ({ uploads = [], sourceId = null }) => {
   const navigate = useNavigate();
+  const { baseUrl } = React.useContext(DamaContext);
   return (
     <div className="w-full p-4 bg-white shadow mb-4">
       {uploads && uploads.length ? (
@@ -25,7 +27,7 @@ const ListUploads = ({ uploads = [], sourceId = null }) => {
                 key={`${i}_0`}
                 className="py-4 sm:py-5 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 cursor-pointer hover:bg-slate-200"
                 onClick={() =>
-                  navigate(`/source/${sourceId}/uploads/${d?.etl_context_id}`)
+                  navigate(`${baseUrl}/source/${sourceId}/uploads/${d?.etl_context_id}`)
                 }
               >
                 <dd

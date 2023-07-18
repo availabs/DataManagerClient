@@ -2,7 +2,7 @@ import write from './write'
 import geojson from './geojson'
 import prj from './prj'
 import JSZip from 'jszip'
-import get from 'lodash.get'
+import get from 'lodash/get'
 
 export default function zip (gj, options, aliasString, tmcMetaString) {
     var zip = new JSZip(),
