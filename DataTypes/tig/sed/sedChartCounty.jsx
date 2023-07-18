@@ -8,6 +8,8 @@ import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
 import { toPng } from "html-to-image"
 import download from "downloadjs"
 
+import { useSearchParams } from "react-router-dom";
+
 
 const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 const defaultDomain = [0,872,2047,3649,6934,14119,28578]
@@ -41,31 +43,59 @@ const SedChartFilterCounty = ({ source, filters, setFilters, node }) => {
   let area = useMemo(() => get(filters, "area.value", ""), [filters]);
   let summarize = useMemo(() => get(filters, "summarize.value", ""), [filters]);
 
+  // React.useEffect(() => {
+  //   if (!get(filters, "activeVar.value", null)) {
+  //     setFilters({
+  //       ...filters,
+  //       area: { value: "all" },
+  //       activeVar: { value: "tot_pop" },
+  //       summarize: { value: "region" },
+  //     });
+  //   }
+  //   if (!get(filters, "area.value", null)) {
+  //     setFilters({
+  //       ...filters,
+  //       area: { value: "all" },
+  //       activeVar: { value: "tot_pop" },
+  //       summarize: { value: "region" },
+  //     });
+  //   }
+  //   if (!get(filters, "summarize.value", null)) {
+  //     setFilters({
+  //       ...filters,
+  //       area: { value: "all" },
+  //       activeVar: { value: "tot_pop" },
+  //       summarize: { value: "region" },
+  //     });
+  //   }
+  // }, []);
+
+  const [searchParams] = useSearchParams();
+  const searchVar = searchParams.get("variable");
   React.useEffect(() => {
-    if (!get(filters, "activeVar.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "tot_pop" },
-        summarize: { value: "region" },
-      });
+    if (!activeVar) {
+      if (searchVar) {
+        setFilters({
+          activeVar: { value: `${ searchVar }` },
+        });
+      }
+      else {
+        setFilters({
+          activeVar: { value: "tot_pop" },
+        });
+      }
     }
+  }, [activeVar, setFilters, searchVar]);
+
+  React.useEffect(() => {
+    const update = {};
     if (!get(filters, "area.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "tot_pop" },
-        summarize: { value: "region" },
-      });
+      update.area = { value: "all" };
     }
     if (!get(filters, "summarize.value", null)) {
-      setFilters({
-        ...filters,
-        area: { value: "all" },
-        activeVar: { value: "tot_pop" },
-        summarize: { value: "region" },
-      });
+      update.summarize = { value: "region" };
     }
+    setFilters(update);
   }, []);
 
   const downloadImage = React.useCallback(() => {
