@@ -1,11 +1,10 @@
-export const point = justType('Point', 'POINT');
-export const multiline = justType('MultiLineString', 'POLYLINE');
-export const line = justType('LineString', 'POLYLINE');
-export const polygon = justType('Polygon', 'POLYGON');
+export const point = justTypes(['Point'], 'POINT');
+export const line = justTypes(['MultiLineString', 'LineString'], 'POLYLINE');
+export const polygon = justTypes(['Polygon', 'MultiPolygon'], 'POLYGON');
 
-function justType(type, TYPE) {
+function justTypes(types, TYPE) {
     return function(gj) {
-        var oftype = gj.features.filter(isType(type));
+        var oftype = gj.features.filter(isTypes(types));
         return {
             geometries: (TYPE === 'POLYGON' || TYPE === 'POLYLINE') ? [oftype.map(justCoords)] : oftype.map(justCoords),
             properties: oftype.map(justProps),
@@ -28,13 +27,12 @@ function justProps(t) {
     return t.properties;
 }
 
-function isType(t) {
-    return function(f) { return f.geometry.type === t; };
+function isTypes(t) {
+    return function(f) { return t.includes(f.geometry.type); };
 }
 
 export default {
     point,
-    multiline,
     line,
     polygon
 }

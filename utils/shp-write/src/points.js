@@ -53,5 +53,6 @@ export default {
     write,
     parts,
     shxLength,
-    shpLength
+    shpLength,
+    extent
 }
