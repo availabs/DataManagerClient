@@ -217,7 +217,11 @@ const ACSMapFilter = ({
     }, {});
 
     const ckmeansLen = Math.min((Object.values(valueMap) || []).length, 5);
-    const domain = ckmeans(Object.values(valueMap), ckmeansLen) || [];
+    const values = Object.values(valueMap || {})
+    let domain = [0,10,25,50,75,100]
+    if(ckmeansLen <= values.length){
+      domain = ckmeans(values, ckmeansLen) || [];
+    }
     const range = getColorRange(5, "YlOrRd", false);
 
     if (!(domain && domain?.length > 5)) {
