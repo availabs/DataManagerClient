@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useContext, useState, useMemo, useEffect } from "react";
 import { get, uniq, uniqBy, isEqual, flattenDeep } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
 
@@ -37,7 +37,7 @@ const censusVariables = [
 
 const Create = (props) => {
   const { falcor, falcorCache } = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext);
+  const { pgEnv } = useContext(DamaContext);
 
   const [selectedView, setSelecteView] = useState(null);
   const [customAcsSelection, setcustomAcsSelection] = useState(null);
@@ -84,11 +84,12 @@ const Create = (props) => {
             get(falcorCache, v.value, { attributes: {} })["attributes"]
           )
         )
-        .filter(
-          (source) =>
-            source?.type === "tiger_counties" ||
-            source?.type === "tiger_censustrack"
-        )
+        // .filter(
+        //   (source) =>
+        //     source?.type === "tiger_counties" ||
+        //     source?.type === "tiger_censustrack"
+        // )
+        .filter((source) => source?.type?.indexOf("tl_") !== -1)
         .reduce((acc, source) => {
           const { source_id, type } = source;
           acc[type] = acc[type] ?? [];
@@ -168,7 +169,7 @@ const Create = (props) => {
   }, [falcorCache, sourceGroup, pgEnv]);
 
   const views = useMemo(() => {
-    return viewGroup && flattenDeep(viewGroup["tiger_counties"] || []);
+    return viewGroup && flattenDeep(viewGroup["tl_county"] || []);
   }, [viewGroup]);
 
   const viewOptions = useMemo(() => {
@@ -180,7 +181,7 @@ const Create = (props) => {
   }, [views]);
 
   const customViews = useMemo(() => {
-    return viewGroup && flattenDeep(viewGroup["tiger_censustrack"] || []);
+    return viewGroup && flattenDeep(viewGroup["tl_tract"] || []);
   }, [viewGroup]);
 
   const customViewOptions = useMemo(() => {
@@ -292,7 +293,9 @@ const Create = (props) => {
     return uniqBy(
       [selectedView, ...Object.values(customAcsSelection || {})],
       "id"
-    ).filter(v => !!v).map(s => s?.id);
+    )
+      .filter((v) => !!v)
+      .map((s) => s?.id);
   }, [selectedView, customAcsSelection]);
 
   return (
@@ -378,8 +381,8 @@ const Create = (props) => {
               <MultiSelect
                 value={(selectedVariables || [])
                   .map((values) =>
-                    (censusOptions || []).find(
-                      (prod) => isEqual(prod.value, values.value)
+                    (censusOptions || []).find((prod) =>
+                      isEqual(prod.value, values.value)
                     )
                   )
                   .filter((prod) => prod && prod.value && prod.label)
