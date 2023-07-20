@@ -2,8 +2,8 @@ import types from './types'
 import dbf from 'dbf'
 import prj from './prj'
 //import ext from './extent'
-import getFields from './fields'
-import assert from 'assert'
+// import getFields from './fields'
+// import assert from 'assert'
 import pointWriter from './points'
 import polyWriter from './poly'
 
@@ -18,9 +18,9 @@ var recordHeaderLength = 8;
 
 
 // Low-level writing interface
-export function write(rows, geometry_type, geometries, callback) {
+function write(rows, geometry_type, geometries, callback) {
 
-    var TYPE = types.geometries[geometry_type],
+    var TYPE = types[geometry_type],
         writer = writers[TYPE],
         parts = writer.parts(geometries, TYPE),
         shpLength = 100 + (parts - geometries.length) * 4 + writer.shpLength(geometries),
@@ -67,6 +67,4 @@ function writeExtent(extent, view) {
     view.setFloat64(60, extent.ymax, true);
 }
 
-export default {
-    write
-}
+export default write

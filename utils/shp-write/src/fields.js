@@ -1,4 +1,4 @@
-import { jstypes as types }  from './types'
+import types from './types'
 
 
 export function geojson(features) {

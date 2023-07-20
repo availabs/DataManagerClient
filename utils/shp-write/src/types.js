@@ -1,4 +1,4 @@
-export const jstypes = {
+const types = {
     NULL: 0,
     POINT: 1,
     POLYLINE: 3,
@@ -16,6 +16,4 @@ export const jstypes = {
 };
 
 
-export default {
-    jstypes
-}
+export default types
