@@ -277,7 +277,7 @@ const Create = (props) => {
 
   const tableOptions = useMemo(() => {
     return (tableData || []).map((t, i) => ({
-      value: Number(padNumber(t?.geoid || i)),
+      value: padNumber(t?.geoid || i),
       label: `${padNumber(t?.geoid)} -> ${t?.name}`,
     }));
   }, [tableData]);

@@ -48,7 +48,7 @@ const ACSMapFilter = ({
 
   const viewYear = useMemo(() => year - (year % 10), [year]);
 
-  const {
+  let {
     counties = [],
     variables = [],
     customDependency = {},
@@ -100,16 +100,25 @@ const ACSMapFilter = ({
       ]);
     }
     getViewData();
-  }, [pgEnv, geometry, activeViewId, activeView]);
+  }, [pgEnv, activeViewId, activeView]);
 
   useEffect(() => {
     async function getViewData() {
+      console.log("\n\n\n\nreached here\n\n\n\n", counties, year);
       await falcor
         .get(["geo", counties.map(String), [year], "tracts"])
+        // .get(["geo", counties, "tracts"])
         .then(() => {
-          const d = (counties || []).reduce((a, c) => {
+          console.log("falcorCache", falcorCache);
+          const d = (counties || []).reduce((a, c, i) => {
+            console.log(
+              "new get",
+              i,
+              get(falcorCache, ["geo", c, "tracts", "value"], [])
+            );
             a.push(
               ...get(falcorCache, ["geo", c, year, "tracts", "value"], [])
+              // ...get(falcorCache, ["geo", c, "tracts", "value"], [])
             );
             return a;
           }, []);
@@ -123,14 +132,8 @@ const ACSMapFilter = ({
   useEffect(() => {
     const newSymbology = cloneDeep(tempSymbology || {});
     (activeView?.view_dependencies || []).forEach((v) => {
-      const rawView = get(
-        falcorCache,
-        ["dama", pgEnv, "views", "byId", v, "attributes"],
-        {}
-      );
-
       let { sources, layers } = get(
-        rawView,
+        get(falcorCache, ["dama", pgEnv, "views", "byId", v, "attributes"], {}),
         ["metadata", "value", "tiles"],
         {}
       );
@@ -172,7 +175,7 @@ const ACSMapFilter = ({
       }
     }
     getACSData();
-  }, [counties, censusConfig, activeVar, year, geometry]);
+  }, [counties, subGeoids, censusConfig, year, geometry]);
 
   function getVersionId(str) {
     const match = str.match(/v(\d+)/);
@@ -183,8 +186,7 @@ const ACSMapFilter = ({
   }
 
   useEffect(() => {
-    let activeLayer;
-    let geoids;
+    let activeLayer, geoids;
     if (geometry === "COUNTY") {
       activeLayer = (tempSymbology["layers"] || []).find(
         (v) => countyViewId === getVersionId(v?.id)
@@ -276,6 +278,7 @@ const ACSMapFilter = ({
     censusConfig,
     falcorCache,
     activeView,
+    subGeoids,
     activeVar,
     geometry,
     year,
