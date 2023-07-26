@@ -115,7 +115,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
       {!isNewSource ? (
         <>
           <br />
-          <span> Source is already created </span>
+          <span> Source with type {tigerTable} already created </span>&nbsp;
           <button
             className={`align-right p-2 border-2 border-gray-200`}
             onClick={() => {
