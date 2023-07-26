@@ -44,7 +44,7 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, activeViewId, pgEnv]);
 
   return (
-    <div className="bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll">
+    <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
         {layer.source.display_name}
       </div>
@@ -176,12 +176,13 @@ class GISDatasetLayer extends LayerContainer {
               ""
             );
 
-// console.log("FOR EACH:", paintProperty, sym)
+console.log("FOR EACH:", paintProperty, sym)
 
           if (sym.settings) {
             this.legend.domain = sym.settings.domain;
             this.legend.range = sym.settings.range;
             this.legend.title = sym.settings.title;
+            this.legend.type = sym.type;
             this.legend.show = true;
             this.updateState({ showLegend: true });
           }
@@ -198,7 +199,7 @@ class GISDatasetLayer extends LayerContainer {
             //   sym.value
             // );
             const layer = layer_id || this.layers[0].id;
-// console.log("PAINT:", layer, paintProperty, sym.value)
+console.log("PAINT:", layer, paintProperty, sym.value)
             map.setPaintProperty(layer, paintProperty, sym.value);
           }
         });
