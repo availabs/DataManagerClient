@@ -54,6 +54,9 @@ const ViewSelector = ({views}) => {
     </div>
   )
 }
+
+const IGNORED_VARIABLES = ["wkb_geometry"];
+
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
   const { pgEnv } = React.useContext(DamaContext);
@@ -68,20 +71,21 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     return [];
   }, [source])
 
-  const allVariables = React.useMemo(() => {
-    return metadata.map(md => md.name)
-  }, [metadata]);
+  // const allVariables = React.useMemo(() => {
+  //   return metadata.map(md => md.name)
+  //     .filter(v => !IGNORED_VARIABLES.includes(v));
+  // }, [metadata]);
 
   const dataVariables = React.useMemo(() => {
     return metadata
       .filter(md => md.display === "data-variable")
-      .map(md => md.name)
+      .map(md => md.name);
   }, [metadata]);
 
   const metaVariables = React.useMemo(() => {
     return metadata
       .filter(md => md.display === "meta-variable")
-      .map(md => md.name)
+      .map(md => md.name);
   }, [metadata]);
 
   const variables = React.useMemo(() => {
@@ -97,17 +101,17 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
   const [dataLength, setDataLength] = React.useState(0);
   React.useEffect(() => {
-    const dl = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"]);
+    const dl = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"], 0);
     setDataLength(dl);
   }, [falcorCache, pgEnv, activeViewId]);
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    falcor.get([
+    falcor.chunk([
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      { from: 0, to: dataLength }, allVariables
+      [...Array(dataLength).keys()], variables
     ])
-  }, [falcor, pgEnv, activeViewId, dataLength, allVariables]);
+  }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
   React.useEffect(() => {
