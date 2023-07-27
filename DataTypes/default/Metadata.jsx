@@ -1,19 +1,16 @@
 import React from 'react';
 import get from 'lodash/get'
 
-import { useFalcor } from "~/modules/avl-components/src"
-import { useAuth } from "@availabs/ams"
-
 import { DamaContext } from "~/pages/DataManager/store"
 
 const MetadataTable = ({ source, ...props }) => {
 
-  const { authLevel } = useAuth();
+  
+  
+  const { pgEnv, falcor, user } = React.useContext(DamaContext)
+  const { authLevel } = user;
   const gridCols = authLevel < 5 ? "grid-cols-3" : "grid-cols-4";
 
-  const { pgEnv } = React.useContext(DamaContext)
-
-  const { falcor } = useFalcor();
 
   const sourceId = source.source_id;
   const [metadata, setMetadata] = React.useState([]);
