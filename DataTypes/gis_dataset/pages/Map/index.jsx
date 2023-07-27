@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { withAuth, Button, useFalcor, getColorRange } from "~/modules/avl-components/src"
+import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -56,9 +56,9 @@ const ViewSelector = ({views}) => {
 }
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
-  const { pgEnv } = React.useContext(DamaContext);
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
-  const {falcor, falcorCache } = useFalcor();
+  
 
   const metadata = React.useMemo(() => {
     const md = get(source, "metadata", []);
@@ -193,10 +193,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   )
 }
 
-const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
 
   const { /*sourceId,*/ viewId } = useParams()
-  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
@@ -335,7 +335,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   )
 }
 
-export default withAuth(MapPage)
+export default MapPage
 
 
 
