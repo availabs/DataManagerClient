@@ -21,7 +21,7 @@ const Pages = {
   meta: {
     name: "Metadata",
     path: "/meta",
-    hidden: true,
+    hidden: false,
     component: Metadata,
   },
   uploads: {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { withAuth, Button } from "~/modules/avl-components/src"
+import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -9,6 +9,12 @@ import { AvlMap } from "~/modules/avl-maplibre/src"
 import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
+import ckmeans from "../../../../utils/ckmeans";
+
+import { scaleThreshold, scaleOrdinal } from "d3-scale"
+const ColorRange = getColorRange(7, "BrBG")
+const OrdinalColorRange = getColorRange(12, "Set3")
+
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 //import { DAMA_HOST } from "~/config"
 
@@ -48,12 +54,125 @@ const ViewSelector = ({views}) => {
     </div>
   )
 }
+
+const IGNORED_VARIABLES = ["wkb_geometry"];
+
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
-const DefaultMapFilter = ({source, filters, setFilters}) => {
-  const variables = get(source,'metadata',[])
-    ?.filter(d => ['number'].includes(d.type))
-    ?.sort((a,b) => a.name - b.name)
-    ?.map(d => d.name)
+const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
+
+  
+
+  const metadata = React.useMemo(() => {
+    const md = get(source, "metadata", []);
+    if (Array.isArray(md)) {
+      return md;
+    }
+    return [];
+  }, [source])
+
+  // const allVariables = React.useMemo(() => {
+  //   return metadata.map(md => md.name)
+  //     .filter(v => !IGNORED_VARIABLES.includes(v));
+  // }, [metadata]);
+
+  const dataVariables = React.useMemo(() => {
+    return metadata
+      .filter(md => md.display === "data-variable")
+      .map(md => md.name);
+  }, [metadata]);
+
+  const metaVariables = React.useMemo(() => {
+    return metadata
+      .filter(md => md.display === "meta-variable")
+      .map(md => md.name);
+  }, [metadata]);
+
+  const variables = React.useMemo(() => {
+    return [...dataVariables, ...metaVariables];
+  }, [dataVariables, metaVariables]);
+
+  const activeVar = get(filters, ["activeVar", "value"], "");
+  const varType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
+
+  React.useEffect(() => {
+    falcor.get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
+  }, [falcor, pgEnv, activeViewId]);
+
+  const [dataLength, setDataLength] = React.useState(0);
+  React.useEffect(() => {
+    const dl = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"], 0);
+    setDataLength(dl);
+  }, [falcorCache, pgEnv, activeViewId]);
+
+  React.useEffect(() => {
+    if (!(dataLength && variables.length)) return;
+    falcor.chunk([
+      "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
+      [...Array(dataLength).keys()], variables
+    ])
+  }, [falcor, pgEnv, activeViewId, dataLength, variables]);
+
+  const [data, setData] = React.useState([]);
+  React.useEffect(() => {
+    if (!activeVar) setData([]);
+    const databyId = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
+    const data = Object.keys(databyId)
+      .map(id => {
+        const value = get(databyId, [id, activeVar], null);
+        return {
+          id,
+          var: activeVar,
+          value: value === 'null' ? null : value
+        }
+      }).filter(d => d.value !== null);
+    setData(data);
+  }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
+
+  const scale = React.useMemo(() => {
+    if (!data.length) return null;
+
+    const domain = data.map(d => +d.value);
+    if (varType === "data-variable") {
+      return scaleThreshold()
+        .domain(ckmeans(domain, ColorRange.length + 1))
+        .range(ColorRange)
+    }
+    else {
+      return scaleOrdinal()
+        .domain(domain)
+        .range(OrdinalColorRange)
+    }
+  }, [data, varType]);
+
+  React.useEffect(() => {
+    if (!data.length) return;
+
+    const colors = data.reduce((a, c) => {
+      a[c.id] = scale(c.value);
+      return a
+    }, {});
+
+    const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+
+    const newSymbology = layer.layers.reduce((a, c) => {
+      a[c.id] = {
+        "fill-color": {
+          [activeVar]: {
+            type: varType === "data-variable" ? 'threshold' : "ordinal",
+            settings: {
+              range: scale.range(),
+              domain: scale.domain(),
+              title: activeVar
+            },
+            value: output
+          }
+        }
+      };
+      return a;
+    }, {});
+    setTempSymbology(newSymbology)
+  }, [layer, data, scale, setTempSymbology, activeVar, varType]);
 
   return (
     <div className='flex flex-1'>
@@ -61,7 +180,7 @@ const DefaultMapFilter = ({source, filters, setFilters}) => {
       <div className='flex-1'>
         <select
             className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-            value={filters?.activeVar?.value}
+            value={activeVar}
             onChange={(e) => setFilters({'activeVar' :{ value: e.target.value}})}
           >
             <option  className="ml-2  truncate" value={null}>
@@ -78,9 +197,10 @@ const DefaultMapFilter = ({source, filters, setFilters}) => {
   )
 }
 
-const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
+
   const { /*sourceId,*/ viewId } = useParams()
-  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
@@ -100,6 +220,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
     })
     return out
   }, [activeView])
+
   const metaData = useMemo(() => {
     let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
     get(out,'tiles.sources',[])
@@ -110,14 +231,16 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
       })
     return out
   }, [activeView])
-  const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [viewId])
+  const activeViewId = React.useMemo(() => get(activeView,`view_id`,null), [activeView])
 
-  const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}))
+  const [ tempSymbology, setTempSymbology] = React.useState(get(mapData,'symbology',{}));
+
+  const { sources: symSources, layers: symLayers } = tempSymbology;
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
-      const sources = get(tempSymbology, 'sources', false) || get(mapData,'sources',[]), // if data in tempSymbology.sources prefer that to mapData
-      layers =  get(tempSymbology, 'layers', false) || get(mapData,'layers',[])
+      const sources = symSources || get(mapData,'sources',[]);
+      const layers =  symLayers || get(mapData,'layers',[]);
       if(sources.length === 0 || layers.length === 0 ) {
         return null
       }
@@ -136,7 +259,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
-  },[source, views, mapData, activeViewId,filters, tempSymbology])
+  },[source, views, mapData, activeViewId,filters, symSources, symLayers])
 
   return (
     <div>
@@ -216,7 +339,7 @@ const MapPage = ({source,views, user, HoverComp, MapFilter=DefaultMapFilter, fil
   )
 }
 
-export default withAuth(MapPage)
+export default MapPage
 
 
 
@@ -265,6 +388,8 @@ const Map = ({layers,tempSymbology}) => {
       return out
     },{})
   },[layers, layerData, tempSymbology])
+
+console.log("LAYER DATA:", layerData)
 
   return (
 

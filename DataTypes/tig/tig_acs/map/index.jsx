@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useContext, useMemo, useEffect, useState } from "react";
 import {
   get,
   cloneDeep,
@@ -31,14 +31,12 @@ const ACSMapFilter = ({
   activeView,
   activeViewId,
 }) => {
-  const [subGeoids, setSubGeoIds] = useState([]);
+  const { pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext);
+  const [subGeoids, setSubGeoIds] = useState([]);
+
   const max = new Date().getUTCFullYear();
   const yearRange = range(2010, max + 1);
-
-  console.log("activeView", activeView);
-  console.log("activeViewId", activeViewId);
 
   const [activeVar, geometry, year] = useMemo(() => {
     return [
@@ -48,10 +46,9 @@ const ACSMapFilter = ({
     ];
   }, [filters]);
 
-  console.log("activeVar, geometry, year", activeVar, geometry, year);
   const viewYear = useMemo(() => year - (year % 10), [year]);
 
-  const {
+  let {
     counties = [],
     variables = [],
     customDependency = {},
@@ -60,9 +57,6 @@ const ACSMapFilter = ({
     [activeView, activeViewId]
   );
 
-  console.log("counties", counties);
-  console.log("variables", variables);
-  console.log("customDependency", customDependency);
   const [countyViewId] = useMemo(() => {
     const uniqueTrackIds = Object.values(customDependency).reduce(
       (ids, cur) => {
@@ -106,16 +100,25 @@ const ACSMapFilter = ({
       ]);
     }
     getViewData();
-  }, [pgEnv, geometry, activeViewId, activeView]);
+  }, [pgEnv, activeViewId, activeView]);
 
   useEffect(() => {
     async function getViewData() {
+      console.log("\n\n\n\nreached here\n\n\n\n", counties, year);
       await falcor
         .get(["geo", counties.map(String), [year], "tracts"])
+        // .get(["geo", counties, "tracts"])
         .then(() => {
-          const d = (counties || []).reduce((a, c) => {
+          console.log("falcorCache", falcorCache);
+          const d = (counties || []).reduce((a, c, i) => {
+            console.log(
+              "new get",
+              i,
+              get(falcorCache, ["geo", c, "tracts", "value"], [])
+            );
             a.push(
               ...get(falcorCache, ["geo", c, year, "tracts", "value"], [])
+              // ...get(falcorCache, ["geo", c, "tracts", "value"], [])
             );
             return a;
           }, []);
@@ -129,14 +132,8 @@ const ACSMapFilter = ({
   useEffect(() => {
     const newSymbology = cloneDeep(tempSymbology || {});
     (activeView?.view_dependencies || []).forEach((v) => {
-      const rawView = get(
-        falcorCache,
-        ["dama", pgEnv, "views", "byId", v, "attributes"],
-        {}
-      );
-
       let { sources, layers } = get(
-        rawView,
+        get(falcorCache, ["dama", pgEnv, "views", "byId", v, "attributes"], {}),
         ["metadata", "value", "tiles"],
         {}
       );
@@ -178,7 +175,7 @@ const ACSMapFilter = ({
       }
     }
     getACSData();
-  }, [counties, censusConfig, activeVar, year, geometry]);
+  }, [counties, subGeoids, censusConfig, year, geometry]);
 
   function getVersionId(str) {
     const match = str.match(/v(\d+)/);
@@ -189,8 +186,7 @@ const ACSMapFilter = ({
   }
 
   useEffect(() => {
-    let activeLayer;
-    let geoids;
+    let activeLayer, geoids;
     if (geometry === "COUNTY") {
       activeLayer = (tempSymbology["layers"] || []).find(
         (v) => countyViewId === getVersionId(v?.id)
@@ -217,9 +213,9 @@ const ACSMapFilter = ({
     }, {});
 
     const ckmeansLen = Math.min((Object.values(valueMap) || []).length, 5);
-    const values = Object.values(valueMap || {})
-    let domain = [0,10,25,50,75,100]
-    if(ckmeansLen <= values.length){
+    const values = Object.values(valueMap || {});
+    let domain = [0, 10, 25, 50, 75, 100];
+    if (ckmeansLen <= values.length) {
       domain = ckmeans(values, ckmeansLen) || [];
     }
     const range = getColorRange(5, "YlOrRd", false);
@@ -282,6 +278,7 @@ const ACSMapFilter = ({
     censusConfig,
     falcorCache,
     activeView,
+    subGeoids,
     activeVar,
     geometry,
     year,
