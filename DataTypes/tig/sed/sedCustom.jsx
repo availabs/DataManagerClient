@@ -120,7 +120,7 @@ const SedMapFilter = ({
               a[c.id] = {
                 "fill-color": {
                   [activeVar]: {
-                    type: 'scale-threshold',
+                    type: 'threshold',
                     settings: {
                       range: varList[varType].range,
                       domain: varList[varType].domain,
