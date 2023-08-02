@@ -104,7 +104,6 @@ const ACSMapFilter = ({
 
   useEffect(() => {
     async function getViewData() {
-      console.log("\n\n\n\nreached here\n\n\n\n", counties, year);
       await falcor
         .get(["geo", counties.map(String), [year], "tracts"])
         // .get(["geo", counties, "tracts"])
