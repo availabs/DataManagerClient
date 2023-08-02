@@ -131,6 +131,9 @@ const DisplaySelector = ({ name, display, editMetadataDisplay }) => {
       <option value="data-variable">
         data variable
       </option>
+      <option value="geoid-variable">
+        geo variable
+      </option>
     </select>
   )
 }

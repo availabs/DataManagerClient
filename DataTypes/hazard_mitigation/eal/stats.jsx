@@ -1,11 +1,11 @@
 import { Table } from "../../../../../modules/avl-components/src";
 import get from "lodash/get";
 import React, { useEffect, useState } from "react";
-
+import {useNavigate, useParams} from "react-router-dom";
 import { DamaContext } from "../../../store";
 import { BarGraph } from "../../../../../modules/avl-graph/src";
 import { fnum, fnumIndex, range } from "../../../utils/macros"
-import { getColorRange } from "@availabs/avl-components"
+import { getColorRange } from "~/modules/avl-components/src"
 
 const DEFAULT_COLORS = getColorRange(12, "Set3");
 const RenderVersions = (domain, value, onchange) => {
