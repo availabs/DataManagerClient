@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
-import { RenderVersions } from "../../../utils/macros"
+import { RenderVersions, range } from "../../../utils/macros"
 
 import { DamaContext } from "../../../store";
 
@@ -45,8 +45,6 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, startYe
     navigate(`${baseUrl}/source/${resJson.payload.source_id}/versions`);
 }
 
-const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
-
 const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
     const { pgEnv } = React.useContext(DamaContext)
@@ -54,7 +52,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
     // selected views/versions
     const [startYear, setStartYear] = React.useState(1996);
     const [endYear, setEndYear] = React.useState(2019);
-    const years = range(1996, 2020);
+    const years = range(1996, new Date().getFullYear()).reverse();
+
     const [viewPB, setViewPB] = React.useState();
     const [viewNRI, setViewNRI] = React.useState();
     const [viewState, setViewState] = React.useState();
