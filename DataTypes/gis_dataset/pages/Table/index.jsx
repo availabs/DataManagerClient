@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import {  withAuth, Table } from '~/modules/avl-components/src'
+import {  Table } from '~/modules/avl-components/src'
 import get from 'lodash/get'
 import { useParams, useNavigate } from 'react-router-dom'
 
@@ -48,7 +48,6 @@ const identityMap = (tableData, attributes) => {
 const TablePage = ({
   source,
   views,
-  user,
   transform = identityMap,
   filterData = {},
   TableFilter = DefaultTableFilter,
@@ -58,7 +57,7 @@ const TablePage = ({
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }));
   }, []);
-  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache, user  } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(
@@ -161,4 +160,4 @@ const TablePage = ({
   );
 };
 
-export default withAuth(TablePage);
+export default TablePage;
