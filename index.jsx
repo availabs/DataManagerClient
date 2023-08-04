@@ -7,18 +7,26 @@ import SourceView from "./Source";
 import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
-
 // import { useFalcor } from '~/modules/avl-components/src'
 // import { withAuth } from '@availabs/ams'
 
-import { useFalcor } from '~/modules/avl-falcor'
-import { withAuth } from "~/modules/ams/src";
-
+// import { useFalcor } from '~/modules/avl-falcor'
+// import { withAuth } from "~/modules/ams/src";
 
 import { DamaContext } from "./store"
 
-const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false, components={}, navSettigs={}) => {
-  
+const DamaRoutes = DAMA_ARGS => {
+
+  const {
+    baseUrl = "/datasources",
+    defaultPgEnv = "pan",
+    auth = false,
+    components = {},
+    navSettigs = {},
+    useFalcor,
+    useAuth
+  } = DAMA_ARGS;
+
   const {
     Head = DataManagerHeader,
     List = SourceList,
@@ -32,7 +40,7 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
     topNav = {size: "none" }
   } = navSettigs
 
-  const HeaderComp = () => { 
+  const HeaderComp = () => {
     const { falcor, falcorCache } = useFalcor()
     return (
       <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
@@ -42,43 +50,47 @@ const DamaRoutes = (baseUrl = "/datasources", defaultPgEnv = "pan", auth = false
   }
   const Header = <HeaderComp />
 
-  const SourceListComp = withAuth(({user}) => { 
-    const { falcor, falcorCache } = useFalcor()
+  const SourceListComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
     return (
-      <DamaContext.Provider 
+      <DamaContext.Provider
         value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}
       >
         <List />
       </DamaContext.Provider>
     );
-  })
+  }
 
-  const SourceViewComp = withAuth(({user}) => { 
-    const { falcor, falcorCache } = useFalcor()
+  const SourceViewComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
     return (
       <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
         <View />
       </DamaContext.Provider>
     );
-  })
+  }
 
-  const SourceCreateComp = withAuth(({user}) => { 
-    const { falcor, falcorCache } = useFalcor()
-      return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-        <Create />
-      </DamaContext.Provider>
-    );
-  })
+  const SourceCreateComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+    return (
+    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
+      <Create />
+    </DamaContext.Provider>
+  );
+  }
 
-  const SourceDeleteComp = withAuth(({user}) => { 
-    const { falcor, falcorCache } = useFalcor()
+  const SourceDeleteComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
       return (
       <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
         <Del />
       </DamaContext.Provider>
     );
-  })
+  }
 
   return [
     // Source List

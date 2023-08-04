@@ -1,5 +1,5 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { withAuth, Input, Button } from "~/modules/avl-components/src"
+// import { withAuth, Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
@@ -13,7 +13,7 @@ const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
   const [value, setValue] = useState('')
   const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
-  
+
   useEffect(() => {
     setValue(startValue)
   },[startValue])
@@ -54,7 +54,7 @@ const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
         <div className='flex py-2'>
           <div className='flex-1'/>
           <Button themeOptions={{size:'sm', color: 'primary'}} onClick={e => save(attr,value)}> Save </Button>
-          <Button themeOptions={{size:'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button> 
+          <Button themeOptions={{size:'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button>
         </div>
       </div>) : (
       <div className='w-full flex flex-1'>
@@ -68,9 +68,9 @@ const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
 
 
 
-const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
+const OverviewEdit = ({source, views, activeViewId}) => {
   const [editing, setEditing] = React.useState(null)
-  const {pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
   return (
     <div>
@@ -80,20 +80,20 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
             <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               {/*<dt className="text-sm font-medium text-gray-500 py-5">name</dt>*/}
               <dd className="mt-1 text-2xl text-gray-700 font-medium overflow-hidden sm:mt-0 sm:col-span-3">
-                {editing === 'name' ? 
+                {editing === 'name' ?
                   <div className='pt-3 pr-8'>
-                    <Edit 
-                      startValue={source['name']} 
+                    <Edit
+                      startValue={source['name']}
                       attr={'name'}
                       sourceId={source.source_id}
                       cancel={() => setEditing(null)}
                     />
-                  </div> :  
-                  <div className='py-2 px-2'>{source['name']}</div> 
+                  </div> :
+                  <div className='py-2 px-2'>{source['name']}</div>
                 }
               </dd>
             </div>
-            {user.authLevel > 5 ? 
+            {user.authLevel > 5 ?
             <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => editing === 'name' ? setEditing(null): setEditing('name')}>
               <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
             </div> : ''}
@@ -101,17 +101,17 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
           <div className="w-full pl-4 py-6 hover:py-6 sm:pl-6 flex justify-between group">
             <div className="flex-1">
               <div className='mt-1 text-sm text-gray-500 pr-14'>
-              {editing === 'description' ? 
-                <Edit 
+              {editing === 'description' ?
+                <Edit
                   startValue={get(source,'description', '')}
                   attr={'description'}
                   type='textarea'
                   sourceId={source?.source_id}
-                  cancel={() => setEditing(null)}/> : 
+                  cancel={() => setEditing(null)}/> :
                 get(source,'description', false) || 'No Description'}
               </div>
             </div>
-            {user.authLevel > 5 ? 
+            {user.authLevel > 5 ?
             <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => setEditing('description')}>
                 <i className="fad fa-pencil absolute -ml-12  p-2 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
             </div> : '' }
@@ -128,20 +128,20 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
                     <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                       <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {editing === attr ? 
+                        {editing === attr ?
                           <div className='pt-3 pr-8'>
-                            <Edit 
-                              startValue={val} 
+                            <Edit
+                              startValue={val}
                               attr={attr}
                               sourceId={source.source_id}
                               cancel={() => setEditing(null)}
                             />
-                          </div> :  
-                          <div className='py-5 px-2'>{val}</div> 
+                          </div> :
+                          <div className='py-5 px-2'>{val}</div>
                         }
                       </dd>
                     </div>
-                    {user.authLevel > 5 ? 
+                    {user.authLevel > 5 ?
                     <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => editing === attr ? setEditing(null): setEditing(attr)}>
                       <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
                     </div> : ''}
@@ -149,17 +149,17 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
                 )
               })
             }
-            <VersionEditor 
-              view={views.filter(d => d.view_id === activeViewId )?.[0] || {}} 
+            <VersionEditor
+              view={views.filter(d => d.view_id === activeViewId )?.[0] || {}}
               columns={['source_url', 'publisher','_created_timestamp']}
             />
             <div className='w-full flex p-4'>
               <div className='flex-1' />
 
-              
+
             </div>
           </dl>
-          
+
           {/*<div className='py-10 px-2'>
             <div className='text-gray-500 py-8 px-5'>Metadata</div>
             <div className=''>
@@ -177,7 +177,7 @@ const OverviewEdit = withAuth(({source, views, activeViewId, user}) => {
         </div>
     </div>
   )
-})
+}
 
 
-export default OverviewEdit    
+export default OverviewEdit

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { get } from "lodash";
 import {  } from "~/modules/avl-components/src";
-import { withAuth } from "~/modules/avl-components/src";
+// import { withAuth } from "~/modules/avl-components/src";
 
 import { DamaContext } from "~/pages/DataManager/store";
 
@@ -10,9 +10,9 @@ import ListUploads from "./list";
 import Upload from "./view";
 
 const UploadsPage = ({ source }) => {
-  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
+  const { pgEnv, falcor, falcorCache, user } = React.useContext(DamaContext);
   const { viewId, page } = useParams();
-  
+
   let { source_id: sourceId } = source || {};
 
   if (page === "uploads" && viewId) {
@@ -78,4 +78,4 @@ const UploadsPage = ({ source }) => {
   );
 };
 
-export default withAuth(UploadsPage);
+export default UploadsPage;
