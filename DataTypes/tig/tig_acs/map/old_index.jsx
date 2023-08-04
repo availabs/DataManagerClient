@@ -41,21 +41,38 @@ const ACSMapFilter = ({
   const [activeVar, geometry, year] = useMemo(() => {
     return [
       filters?.activeVar?.value,
-      filters?.geometry?.value || "county",
+      filters?.geometry?.value || "COUNTY",
       filters?.year?.value || 2019,
     ];
   }, [filters]);
 
   const viewYear = useMemo(() => year - (year % 10), [year]);
-  const activeLayerId = useMemo(
-    () => `${geometry}_${viewYear}`,
-    [geometry, viewYear]
-  );
 
-  let { counties = [], variables = [] } = useMemo(
+  let {
+    counties = [],
+    variables = [],
+    customDependency = {},
+  } = useMemo(
     () => get(activeView, "metadata", {}),
     [activeView, activeViewId]
   );
+
+  const [countyViewId] = useMemo(() => {
+    const uniqueTrackIds = Object.values(customDependency).reduce(
+      (ids, cur) => {
+        if (!ids.includes(cur.id)) {
+          (ids || []).push(cur.id);
+        }
+        return ids;
+      },
+      []
+    );
+    const countyViewId =
+      (activeView?.view_dependencies || []).find(
+        (v_id) => !uniqueTrackIds.includes(v_id)
+      ) || null;
+    return [countyViewId, uniqueTrackIds];
+  }, [activeView, activeViewId]);
 
   const censusConfig = useMemo(
     () =>
@@ -89,10 +106,18 @@ const ACSMapFilter = ({
     async function getViewData() {
       await falcor
         .get(["geo", counties.map(String), [year], "tracts"])
+        // .get(["geo", counties, "tracts"])
         .then(() => {
-          const d = (counties || []).reduce((a, c) => {
+          console.log("falcorCache", falcorCache);
+          const d = (counties || []).reduce((a, c, i) => {
+            console.log(
+              "new get",
+              i,
+              get(falcorCache, ["geo", c, "tracts", "value"], [])
+            );
             a.push(
               ...get(falcorCache, ["geo", c, year, "tracts", "value"], [])
+              // ...get(falcorCache, ["geo", c, "tracts", "value"], [])
             );
             return a;
           }, []);
@@ -143,7 +168,7 @@ const ACSMapFilter = ({
 
   useEffect(() => {
     async function getACSData() {
-      const geoids = geometry === "county" ? counties : subGeoids;
+      const geoids = geometry === "COUNTY" ? counties : subGeoids;
       if (geoids.length > 0) {
         falcor.chunk(["acs", geoids, year, censusConfig]);
       }
@@ -151,14 +176,28 @@ const ACSMapFilter = ({
     getACSData();
   }, [counties, subGeoids, censusConfig, year, geometry]);
 
-  useEffect(() => {
-    let geoids;
-    let activeLayer = (tempSymbology["layers"] || []).find(
-      (v) => v.id === activeLayerId
-    );
+  function getVersionId(str) {
+    const match = str.match(/v(\d+)/);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
+    return null;
+  }
 
-    if (geometry === "county") geoids = counties;
-    else if (geometry === "tract") geoids = subGeoids;
+  useEffect(() => {
+    let activeLayer, geoids;
+    if (geometry === "COUNTY") {
+      activeLayer = (tempSymbology["layers"] || []).find(
+        (v) => countyViewId === getVersionId(v?.id)
+      );
+      geoids = counties;
+    } else if (geometry === "TRACT") {
+      const selectedView = customDependency[`${viewYear}`];
+      activeLayer = (tempSymbology["layers"] || []).find(
+        (v) => selectedView.id === getVersionId(v?.id)
+      );
+      geoids = subGeoids;
+    }
 
     const valueMap = (geoids || []).reduce((a, c) => {
       let value = (censusConfig || []).reduce((aa, cc) => {
@@ -228,7 +267,8 @@ const ACSMapFilter = ({
         value: output,
       };
     }
-    if (!isEqual(tempSymbology, newSymbology)) { 
+
+    if (!isEqual(tempSymbology, newSymbology)) {
       setTempSymbology(newSymbology);
     }
   }, [
@@ -279,34 +319,39 @@ const ACSMapFilter = ({
             });
           }}
         >
-          {["county", "tract"].map((v, i) => (
+          {["COUNTY", "TRACT"].map((v, i) => (
             <option key={i} className="ml-2 truncate" value={v}>
-              {v?.toUpperCase()}
+              {v}
             </option>
           ))}
         </select>
       </div>
-      <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
-      <div className="">
-        <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={year}
-          onChange={(e) => {
-            setFilters({
-              ...filters,
-              year: {
-                value: `${e.target.value}`,
-              },
-            });
-          }}
-        >
-          {(yearRange || []).map((k, i) => (
-            <option key={i} className="ml-2 truncate" value={k}>
-              {`${k}`}
-            </option>
-          ))}
-        </select>
-      </div>
+
+      {(Object.keys(customDependency) || []).length ? (
+        <>
+          <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
+          <div className="">
+            <select
+              className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+              value={year}
+              onChange={(e) => {
+                setFilters({
+                  ...filters,
+                  year: {
+                    value: `${e.target.value}`,
+                  },
+                });
+              }}
+            >
+              {(yearRange || []).map((k, i) => (
+                <option key={i} className="ml-2 truncate" value={k}>
+                  {`${k}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 };
