@@ -1,5 +1,5 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
-// import { withAuth, Input, Button } from "~/modules/avl-components/src"
+import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"

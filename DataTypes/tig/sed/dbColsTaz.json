@@ -10,6 +10,7 @@
     "earnwork_6",
     "earnwork_7",
     "earnwork_8",
+    "earnwork_9",
     
     "elf_0",
     "elf_1",
@@ -20,6 +21,7 @@
     "elf_6",
     "elf_7",
     "elf_8",
+    "elf_9",
     
     "empoff_0",
     "empoff_1",
@@ -30,6 +32,7 @@
     "empoff_6",
     "empoff_7",
     "empoff_8",
+    "empoff_9",
     
     "empret_0",
     "empret_1",
@@ -40,6 +43,7 @@
     "empret_6",
     "empret_7",
     "empret_8",
+    "empret_9",
     
     "emptot_0",
     "emptot_1",
@@ -50,6 +54,7 @@
     "emptot_6",
     "emptot_7",
     "emptot_8",
+    "emptot_9",
     
     "gqpop_0",
     "gqpop_1",
@@ -60,6 +65,7 @@
     "gqpop_6",
     "gqpop_7",
     "gqpop_8",
+    "gqpop_9",
     
     "gqpopins_0",
     "gqpopins_1",
@@ -70,6 +76,7 @@
     "gqpopins_6",
     "gqpopins_7",
     "gqpopins_8",
+    "gqpopins_9",
     
     "gqpopoth_0",
     "gqpopoth_1",
@@ -80,6 +87,7 @@
     "gqpopoth_6",
     "gqpopoth_7",
     "gqpopoth_8",
+    "gqpopoth_9",
     
     "gqpopstr_0",
     "gqpopstr_1",
@@ -90,6 +98,7 @@
     "gqpopstr_6",
     "gqpopstr_7",
     "gqpopstr_8",
+    "gqpopstr_9",
     
     "hhincx_0",
     "hhincx_1",
@@ -100,6 +109,7 @@
     "hhincx_6",
     "hhincx_7",
     "hhincx_8",
+    "hhincx_9",
     
     "hhnum_0",
     "hhnum_1",
@@ -110,6 +120,7 @@
     "hhnum_6",
     "hhnum_7",
     "hhnum_8",
+    "hhnum_9",
     
     "hhpop_0",
     "hhpop_1",
@@ -120,6 +131,7 @@
     "hhpop_6",
     "hhpop_7",
     "hhpop_8",
+    "hhpop_9",
     
     "hhsize_0",
     "hhsize_1",
@@ -130,6 +142,7 @@
     "hhsize_6",
     "hhsize_7",
     "hhsize_8",
+    "hhsize_9",
     
     "k12etot_0",
     "k12etot_1",
@@ -140,6 +153,7 @@
     "k12etot_6",
     "k12etot_7",
     "k12etot_8",
+    "k12etot_9",
     
     "totpop_0",
     "totpop_1",
@@ -150,6 +164,7 @@
     "totpop_6",
     "totpop_7",
     "totpop_8",
+    "totpop_9",
     
     "unvenrol_0",
     "unvenrol_1",
@@ -159,5 +174,6 @@
     "unvenrol_5",
     "unvenrol_6",
     "unvenrol_7",
-    "unvenrol_8"
+    "unvenrol_8",
+    "unvenrol_9"
 ]
