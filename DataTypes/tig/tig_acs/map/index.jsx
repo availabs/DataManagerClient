@@ -219,7 +219,7 @@ const ACSMapFilter = ({
       });
 
       newSymbology[activeLayer.id]["fill-color"][activeVar] = {
-        type: "scale-threshold",
+        type: "threshold",
         settings: {
           range: range,
           domain: domain,
