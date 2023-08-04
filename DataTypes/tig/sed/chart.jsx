@@ -5,7 +5,7 @@ import get from "lodash/get";
 
 import { DamaContext } from "~/pages/DataManager/store";
 
-import { useFalcor, withAuth } from "~/modules/avl-components/src";
+// import { useFalcor } from "~/modules/avl-components/src";
 import { LineGraph } from "~/modules/avl-graph/src";
 
 const ViewSelector = ({ views }) => {
@@ -48,18 +48,16 @@ const identityMap = (tableData, attributes) => {
 const TablePage = ({
   source,
   views,
-  user,
   transform = identityMap,
   filterData = {},
   TableFilter = DefaultTableFilter,
 }) => {
   const { viewId } = useParams();
-  const { falcor, falcorCache } = useFalcor();
   const [filters, _setFilters] = useState(filterData);
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }));
   }, []);
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache, user } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(
@@ -188,4 +186,4 @@ const TablePage = ({
   );
 };
 
-export default withAuth(TablePage);
+export default TablePage;

@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { withAuth, Input, Button } from "~/modules/avl-components/src"
+import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "../../../store";
@@ -238,20 +238,20 @@ export const VersionEditor = ({view,columns=null}) => {
                   <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                      {editing === attr ? 
+                      {editing === attr ?
                         <div className='pt-3 pr-8'>
-                          <Edit 
-                            startValue={val} 
+                          <Edit
+                            startValue={val}
                             attr={attr}
                             viewId={view.view_id}
                             cancel={() => setEditing(null)}
                           />
-                        </div> :  
-                        <div className='py-5 px-2'>{val}</div> 
+                        </div> :
+                        <div className='py-5 px-2'>{val}</div>
                       }
                     </dd>
                   </div>
-                  {user.authLevel > 5 ? 
+                  {user.authLevel > 5 ?
                   <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => editing === attr ? setEditing(null): setEditing(attr)}>
                     <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
                   </div> : ''}
@@ -272,16 +272,16 @@ function ViewControls ({view}) {
 
 
   const createDownload = () => {
-    const runPublish = async () => { 
+    const runPublish = async () => {
       try {
-        
+
         const publishData = {
           source_id: sourceId,
           view_id: viewId
         };
 
         console.log('creating download')
-        const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/createDownload`, 
+        const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/createDownload`,
         {
           method: "POST",
           body: JSON.stringify(publishData),
@@ -294,7 +294,7 @@ function ViewControls ({view}) {
          console.log('createDownload', publishFinalEvent)
 
       } catch (err) {
-        
+
         console.error("==>", err);
       }
     }
@@ -306,18 +306,18 @@ function ViewControls ({view}) {
           <div className='w-full'>
             <div> Admin Actions </div>
             <div className="w-full p-1 flex">
-              <Link 
+              <Link
                 className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                onClick={createDownload} 
-              > 
-                Create Download 
+                onClick={createDownload}
+              >
+                Create Download
               </Link>
             </div>
-            
+
             <div className="w-full p-1 flex">
-              <Link 
+              <Link
                   className={"w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
-                  to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}> 
+                  to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}>
                     Delete View <i className='fad fa-trash' />
               </Link>
             </div>
@@ -331,7 +331,7 @@ export function  VersionDownload ({view}) {
   if(!view?.metadata?.download) {
     return 'Download Not Available'
   }
-  
+
   return (
     <div className="inline-flex rounded-md shadow-sm">
       <button
@@ -407,21 +407,21 @@ export default function Version() {
               <dd className = 'sm:mt-0 sm:col-span-2'>
                 <VersionEditor view={view} baseUrl={baseUrl} />
 
-                {dependencies && dependencies.length > 0 ? 
-                <RenderDeps 
-                  viewId={viewId} 
-                  dependencies={dependencies} 
-                  srcMeta={srcMeta} 
-                  viewMeta={viewMeta} 
+                {dependencies && dependencies.length > 0 ?
+                <RenderDeps
+                  viewId={viewId}
+                  dependencies={dependencies}
+                  srcMeta={srcMeta}
+                  viewMeta={viewMeta}
                   baseUrl={baseUrl}
                 /> : ''}
-              
-                {dependents && dependents.length > 0 ? 
-                <RenderDependents 
+
+                {dependents && dependents.length > 0 ?
+                <RenderDependents
                   viewId={viewId}
                   dependents={dependents}
-                  srcMeta={srcMeta} 
-                  viewMeta={viewMeta} 
+                  srcMeta={srcMeta}
+                  viewMeta={viewMeta}
                   baseUrl={baseUrl}
                 /> : ''}
               </dd>
@@ -429,7 +429,7 @@ export default function Version() {
           </div>
 
         </div>
-      </div>   
+      </div>
     </div>
   );
 }

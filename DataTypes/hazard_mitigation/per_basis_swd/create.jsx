@@ -1,11 +1,11 @@
 import React from 'react'
 import { checkApiResponse, getDamaApiRoutePrefix, getSrcViews } from "../../../utils/DamaControllerApi";
-import { RenderVersions } from "../../../utils/macros"
+import { RenderVersions, range } from "../../../utils/macros"
 import {useNavigate} from "react-router-dom";
 
 import { DamaContext } from "../../../store";
 
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
+const CallServer = async ({rtPfx, baseUrl, source, startYear, endYear, newVersion, navigate,
                               viewNCEI={}, viewNRI={}}) => {
     const viewMetadata = [viewNCEI.view_id, viewNRI.view_id];
 
@@ -18,6 +18,8 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
     url.searchParams.append("existing_source_id", source.source_id);
     url.searchParams.append("view_dependencies", JSON.stringify(viewMetadata));
     url.searchParams.append("version", newVersion);
+    url.searchParams.append("startYear", startYear);
+    url.searchParams.append("endYear", endYear);
     
     url.searchParams.append("ncei_schema", viewNCEI.table_schema);
     url.searchParams.append("ncei_table", viewNCEI.table_name);
@@ -39,6 +41,10 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const navigate = useNavigate();
     const { pgEnv } = React.useContext(DamaContext)
     // selected views/versions
+    const [startYear, setStartYear] = React.useState(1996);
+    const [endYear, setEndYear] = React.useState(2019);
+    const years = range(1996, new Date().getFullYear()).reverse();
+
     const [viewNCEI, setViewNCEI] = React.useState();
     const [viewNRI, setViewNRI] = React.useState();
     // all versions
@@ -58,6 +64,8 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     return (
         <div className='w-full'>
+            {RenderVersions({value: startYear, setValue: setStartYear, versions: [startYear], type: 'Start Year'})}
+            {RenderVersions({value: endYear, setValue: setEndYear, versions: years, type: 'End Year'})}
             {RenderVersions({value: viewNCEI, setValue: setViewNCEI, versions: versionsNCEI, type: 'NCEI Storm Events'})}
             {RenderVersions({value: viewNRI, setValue: setViewNRI, versions: versionsNRI, type: 'NRI'})}
             <button
@@ -65,6 +73,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
                 onClick={() =>
                     CallServer(
                         {rtPfx, baseUrl, source,
+                            startYear, endYear,
                             viewNCEI: versionsNCEI.views.find(v => v.view_id === parseInt(viewNCEI)),
                             viewNRI: versionsNRI.views.find(v => v.view_id === parseInt(viewNRI)),
                             newVersion, navigate
