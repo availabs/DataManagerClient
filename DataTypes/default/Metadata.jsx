@@ -132,7 +132,10 @@ const DisplaySelector = ({ name, display, editMetadataDisplay }) => {
         data variable
       </option>
       <option value="geoid-variable">
-        geo variable
+        fips variable
+      </option>
+      <option value="geom-variable">
+        geom variable
       </option>
     </select>
   )
