@@ -66,7 +66,7 @@ const HoverComp = ({ data, layer }) => {
 const GISDatasetRenderComponent = props => {
   const {
     layerProps,
-    isLoaded,
+    resourcesLoaded,
     maplibreMap
   } = props;
 
@@ -100,7 +100,7 @@ const GISDatasetRenderComponent = props => {
 
   React.useEffect(() => {
     if (!maplibreMap) return;
-    if (!isLoaded) return;
+    if (!resourcesLoaded) return;
 
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
@@ -145,7 +145,7 @@ const GISDatasetRenderComponent = props => {
           }
         });
       });
-  }, [maplibreMap, isLoaded, symbology, activeVariable]);
+  }, [maplibreMap, resourcesLoaded, symbology, activeVariable]);
 
   return !legend ? null : (
     <div className="absolute top-0 left-0">
