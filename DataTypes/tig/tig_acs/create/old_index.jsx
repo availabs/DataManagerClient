@@ -1,5 +1,5 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
-import { get, uniq, groupBy, uniqBy, isEqual, flattenDeep } from "lodash";
+import { get, uniq, uniqBy, isEqual, flattenDeep } from "lodash";
 import { useFalcor } from "~/modules/avl-components/src";
 
 import { DamaContext } from "~/pages/DataManager/store";
@@ -15,6 +15,8 @@ import {
   getAttributes,
   SourceAttributes,
 } from "../../../../components/attributes";
+
+import { AcsCustomAttribute } from "./../customAttributes";
 
 const censusVariables = [
   { censusKeys: ["B02001_001E"], name: "Total Population" },
@@ -33,32 +35,13 @@ const censusVariables = [
   { censusKeys: ["B02001_002E"], name: "White alone" },
 ];
 
-const gropupOptions = (name, options, setSelecteTableOptions) => {
-  return {
-    label: (() => {
-      return (
-        <div
-          onClick={() =>
-            setSelecteTableOptions((val) =>
-              val?.concat(options?.filter((opt) => !val?.includes(opt)))
-            )
-          }
-        >
-          {name}
-        </div>
-      );
-    })(),
-    options: options,
-  };
-};
-
 const Create = (props) => {
   const { falcor, falcorCache } = useFalcor();
   const { pgEnv } = useContext(DamaContext);
 
   const [selectedView, setSelecteView] = useState(null);
   const [customAcsSelection, setcustomAcsSelection] = useState(null);
-  const [selectedTableViews, setSelecteTableOptions] = useState([]);
+  const [selectedTableViews, setSelecteTableOptions] = useState(null);
   const [selectedVariables, setSelecteVariableOptions] = useState(null);
   const [newEtlCtxId, setNewEtlCtxId] = useState(null);
 
@@ -101,6 +84,11 @@ const Create = (props) => {
             get(falcorCache, v.value, { attributes: {} })["attributes"]
           )
         )
+        // .filter(
+        //   (source) =>
+        //     source?.type === "tiger_counties" ||
+        //     source?.type === "tiger_censustrack"
+        // )
         .filter((source) => source?.type?.indexOf("tl_") !== -1)
         .reduce((acc, source) => {
           const { source_id, type } = source;
@@ -181,7 +169,7 @@ const Create = (props) => {
   }, [falcorCache, sourceGroup, pgEnv]);
 
   const views = useMemo(() => {
-    return viewGroup && flattenDeep(viewGroup["tl_full"] || []);
+    return viewGroup && flattenDeep(viewGroup["tl_county"] || []);
   }, [viewGroup]);
 
   const viewOptions = useMemo(() => {
@@ -192,8 +180,25 @@ const Create = (props) => {
     }));
   }, [views]);
 
+  const customViews = useMemo(() => {
+    return viewGroup && flattenDeep(viewGroup["tl_tract"] || []);
+  }, [viewGroup]);
+
+  const customViewOptions = useMemo(() => {
+    return (customViews || []).map((v) => ({
+      id: v.view_id,
+      value: v?.version || v?.table_name || "N/A",
+      source_id: v?.source_id,
+    }));
+  }, [customViews]);
+
   if (!selectedView && viewOptions && viewOptions[0]) {
     setSelecteView(viewOptions[0]);
+  }
+
+  // forced to add 2010
+  if (!customAcsSelection && customViewOptions && customViewOptions[0]) {
+    setcustomAcsSelection({ 2010: customViewOptions[0] });
   }
 
   useEffect(() => {
@@ -226,7 +231,26 @@ const Create = (props) => {
           selectedView?.id,
           "databyIndex",
           [...Array(maxData).keys()],
-          ["name", "geoid", "ogc_fid", "tiger_type"],
+          [
+            "ogc_fid",
+            "statefp",
+            "countyfp",
+            "countyns",
+            "geoid",
+            "name",
+            "namelsad",
+            "lsad",
+            "classfp",
+            "mtfcc",
+            "csafp",
+            "cbsafp",
+            "metdivfp",
+            "funcstat",
+            "aland",
+            "awater",
+            "intptlat",
+            "intptlon",
+          ],
         ],
         { chunkSize: 500 }
       );
@@ -240,25 +264,23 @@ const Create = (props) => {
         ["dama", pgEnv, "viewsbyId", selectedView?.id, "databyIndex"],
         []
       )
-    )
-      .map((d) => get(falcorCache, d.value, {}))
-      .filter((f) => f.tiger_type === "county");
+    ).map((d) => get(falcorCache, d.value, {}));
   }, [pgEnv, selectedView, falcorCache, dataLength]);
 
-  const groupByCounty = groupBy(
-    (tableData || []).map((t) => ({ value: t.geoid, label: `${t.geoid} -> ${t.name}` })),
-    (code) => code?.value?.substring(0, 2)
-  );
+  function padNumber(num) {
+    let str = num?.toString();
+    if (str?.length < 5) {
+      str = str?.padStart(5, "0");
+    }
+    return str;
+  }
 
   const tableOptions = useMemo(() => {
-    return (Object.keys(groupByCounty) || []).map((m) =>
-      gropupOptions(
-        `Group State - ${m}`,
-        groupByCounty[m],
-        setSelecteTableOptions
-      )
-    );
-  }, [groupByCounty]);
+    return (tableData || []).map((t, i) => ({
+      value: padNumber(t?.geoid || i),
+      label: `${padNumber(t?.geoid)} -> ${t?.name}`,
+    }));
+  }, [tableData]);
 
   const censusOptions = useMemo(() => {
     return (censusVariables || []).map((c) => ({
@@ -296,6 +318,22 @@ const Create = (props) => {
           </div>
         </div>
 
+        <div className="flex flex-wrap -mx-3 mb-6">
+          <div className="w-full md:w-1/2 px-3 mb-6 md:mb-0">
+            <label
+              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+              for="grid-census-track"
+            >
+              Cencus Tracks
+            </label>
+
+            <AcsCustomAttribute
+              customAcsSelection={customAcsSelection}
+              options={customViewOptions}
+              onChange={setcustomAcsSelection}
+            />
+          </div>
+        </div>
         {selectedView ? (
           <div className="flex flex-wrap -mx-3 mb-6">
             <div className="w-full px-3">
@@ -307,11 +345,19 @@ const Create = (props) => {
               </label>
 
               <MultiSelect
-                value={selectedTableViews}
+                value={(selectedTableViews || [])
+                  .map((values) =>
+                    (tableOptions || []).find((prod) => prod.value === values)
+                  )
+                  .filter((prod) => prod && prod.value && prod.label)
+                  .map((prod) => ({
+                    label: prod?.label,
+                    value: prod?.value,
+                  }))}
                 closeMenuOnSelect={false}
                 options={tableOptions || []}
                 onChange={(value) => {
-                  setSelecteTableOptions(value);
+                  setSelecteTableOptions(value?.map((val) => val?.value));
                 }}
                 selectMessage={"Counties"}
                 isSearchable
@@ -362,7 +408,7 @@ const Create = (props) => {
           <PublishAcs
             viewDependency={viewDependency || selectedView?.id}
             viewMetadata={{
-              counties: selectedTableViews.map(t => t.value),
+              counties: selectedTableViews,
               variables: selectedVariables,
               customDependency: customAcsSelection,
             }}
