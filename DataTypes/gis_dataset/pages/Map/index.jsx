@@ -124,13 +124,14 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   const scale = React.useMemo(() => {
     if (!data.length) return null;
 
-    const domain = data.map(d => +d.value);
     if (varType === "data-variable") {
+      const domain = data.map(d => +d.value).filter(Boolean);
       return scaleThreshold()
-        .domain(ckmeans(domain, ColorRange.length + 1))
+        .domain(ckmeans(domain, ColorRange.length - 1))
         .range(ColorRange)
     }
     else {
+      const domain = data.map(d => d.value);
       return scaleOrdinal()
         .domain(domain)
         .range(OrdinalColorRange)
@@ -155,7 +156,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
             settings: {
               range: scale.range(),
               domain: scale.domain(),
-              title: activeVar
+              name: activeVar
             },
             value: output
           }

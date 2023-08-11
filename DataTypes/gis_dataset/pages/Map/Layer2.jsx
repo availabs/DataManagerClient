@@ -1,8 +1,8 @@
 import React from "react";
-import { Legend } from "~/modules/avl-components/src";
+// import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
 
-import { AvlLayer } from "~/modules/avl-map-2/src";
+import { AvlLayer, Legend, useTheme } from "~/modules/avl-map-2/src";
 import ckmeans from "../../../../utils/ckmeans";
 import { getColorRange } from "../../../../utils/color-ranges";
 import * as d3scale from "d3-scale";
@@ -62,6 +62,22 @@ const HoverComp = ({ data, layer }) => {
     </div>
   );
 };
+
+export const LegendContainer = ({ name, title, children }) => {
+  const theme = useTheme();
+  return (
+    <div className={ `p-1 rounded ${ theme.bg }` }>
+      <div className={ `
+          p-1 relative border rounded pointer-events-auto
+          ${ theme.bgAccent2 } ${ theme.border }
+        ` }
+      >
+        <div>{ name || title }</div>
+        <div>{ children }</div>
+      </div>
+    </div>
+  )
+}
 
 const GISDatasetRenderComponent = props => {
   const {
@@ -130,8 +146,8 @@ const GISDatasetRenderComponent = props => {
             setLegend({
               domain: sym.settings.domain,
               range: sym.settings.range,
-              title: sym.settings.title,
-              format: ",.2s",
+              name: sym.settings.name || sym.settings.title,
+              format: sym.settings.format || ",.2s",
               type: sym.type
             })
           }
@@ -148,11 +164,10 @@ const GISDatasetRenderComponent = props => {
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable]);
 
   return !legend ? null : (
-    <div className="absolute top-0 left-0">
-      <div className="bg-white w-80 rounded p-2">
-        <div className="pb-1 text-sm font-medium">{ legend.title }</div>
+    <div className="absolute top-0 left-0 w-96">
+      <LegendContainer { ...legend }>
         <Legend { ...legend }/>
-      </div>
+      </LegendContainer>
     </div>
   )
 }
