@@ -271,7 +271,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         />
         <ViewSelector views={views} />
       </div>
-      <div className='w-ful h-[900px]'>
+      <div className='w-full h-[900px]'>
         <Map
           layers={[layer]}
           tempSymbology={tempSymbology}
@@ -388,6 +388,7 @@ const Map = ({layers,tempSymbology}) => {
           accessToken={ config.MAPBOX_TOKEN }
           mapOptions={ {
             zoom: 7.3,//8.32/40.594/-74.093
+            navigationControl: false,
             center: [-73.8, 40.79],
             styles: [
               { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
@@ -399,7 +400,7 @@ const Map = ({layers,tempSymbology}) => {
           layerProps={ layerProps }
           leftSidebar={ false }
           rightSidebar={ false }
-          mapActions={ ["reset-view"] }/>
+          mapActions={ ["navigation-controls"] }/>
       </div>
 
   )
