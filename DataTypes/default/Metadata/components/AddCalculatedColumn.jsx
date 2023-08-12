@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {DamaContext} from "../../../store/index.js";
+import {DamaContext} from "../../../../store/index.js";
 import {Button} from "~/modules/avl-components/src";
 import {addCalculatedColumn} from "../utils/addCalculatedColumn.js";
 

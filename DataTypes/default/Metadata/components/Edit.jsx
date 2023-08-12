@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {editMetadata} from "../utils/editMetadata.js";
 import {Button} from "~/modules/avl-components/src";
-import {DamaContext} from "../../../store/index.js";
+import {DamaContext} from "../../../../store/index.js";
 
 export const RenderTextArea = ({value, setValue, save, cancel}) => {
     return (

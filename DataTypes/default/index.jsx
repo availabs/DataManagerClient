@@ -1,5 +1,5 @@
 import Overview from "./Overview";
-import Index from "../metadata/index.jsx";
+import Metadata from "./Metadata";
 import Versions from "./Version/list";
 import AddVersion from "./Version/add";
 import Uploads from "./Uploads";
@@ -22,7 +22,7 @@ const Pages = {
     name: "Metadata",
     path: "/meta",
     hidden: false,
-    component: Index,
+    component: Metadata,
   },
   uploads: {
     name: "Uploads",

@@ -1,5 +1,5 @@
 import React from "react";
-import {DamaContext} from "../../../store/index.js";
+import {DamaContext} from "../../../../store/index.js";
 import {editMetadata} from "../utils/editMetadata.js";
 
 export const DisplaySelector = ({sourceId, metadata, setMetadata, col, value}) => {

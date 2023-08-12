@@ -2,7 +2,7 @@ import React from "react";
 import get from "lodash/get.js";
 import {DisplaySelector} from "./DisplaySelector.jsx";
 import {Edit} from "./Edit.jsx";
-import {DamaContext} from "../../../store/index.js";
+import {DamaContext} from "../../../../store/index.js";
 import {ManageMetaLookup} from "./MetadataLookup.jsx";
 import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";

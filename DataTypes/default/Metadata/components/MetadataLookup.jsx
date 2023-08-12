@@ -3,7 +3,7 @@ import {Button} from "~/modules/avl-components/src";
 import {RenderTextArea, RenderTextBox} from "./Edit.jsx";
 import {value} from "lodash/seq.js";
 import {editMetadata} from "../utils/editMetadata.js";
-import {DamaContext} from "../../../store/index.js";
+import {DamaContext} from "../../../../store/index.js";
 
 export const ManageMetaLookup = ({
                                      metadata, setMetadata,
