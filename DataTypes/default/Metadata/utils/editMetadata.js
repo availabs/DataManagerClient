@@ -1,4 +1,4 @@
-export const editMetadata = ({sourceId, pgEnv, falcor, metadata, setMetadata, col, value}) => {
+export const editMetadata = async ({sourceId, pgEnv, falcor, metadata, setMetadata, col, value}) => {
     // value = {meta-attr: meta-value}
     const md = metadata.map(d => {
         if (d.name === col) {
@@ -9,9 +9,10 @@ export const editMetadata = ({sourceId, pgEnv, falcor, metadata, setMetadata, co
             return d;
         }
     })
-    console.log('md?', value, md, metadata)
-    setMetadata(md);
-    falcor.set({
+
+    await setMetadata(md);
+
+    await falcor.set({
         paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "metadata"]], jsonGraph: {
             dama: {
                 [pgEnv]: {
@@ -25,5 +26,5 @@ export const editMetadata = ({sourceId, pgEnv, falcor, metadata, setMetadata, co
                 }
             }
         }
-    }).then(res => console.log("RES:", res))
+    })
 }

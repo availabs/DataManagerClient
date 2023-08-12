@@ -1,4 +1,4 @@
-import MapPage from "./pages/Map";
+// import MapPage from "./pages/Map";
 import CreatePage from "./pages/Create";
 import Table from "./pages/Table";
 // import Uploads from "./pages/Uploads";
@@ -8,11 +8,11 @@ import Table from "./pages/Table";
 
 
 const GisDatasetConfig = {
-  map: {
-    name: "Map",
-    path: "/map",
-    component: MapPage,
-  },
+  // map: {
+  //   name: "Map",
+  //   path: "/map",
+  //   component: MapPage,
+  // },
   table: {
     name: "Table",
     path: "/table",

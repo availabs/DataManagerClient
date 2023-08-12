@@ -5,9 +5,9 @@ import {editMetadata} from "../utils/editMetadata.js";
 export const DisplaySelector = ({sourceId, metadata, setMetadata, col, value}) => {
     const {pgEnv, falcor} = React.useContext(DamaContext);
 
-    const onChange = React.useCallback(e => {
-        editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {display: e.target.value}});
-    }, [col]);
+    const onChange = React.useCallback(async e => {
+        await editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {display: e.target.value}});
+    }, [col, metadata]);
 
     return (<select
         className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"

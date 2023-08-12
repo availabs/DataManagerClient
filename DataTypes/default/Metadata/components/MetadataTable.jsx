@@ -129,7 +129,7 @@ export const MetadataTable = ({source, ...props}) => {
                                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
                                     {col.display !== 'calculated-column' &&
                                         <DisplaySelector
-                                            sourceId={source.sourceId}
+                                            sourceId={source.source_id}
                                             metadata={metadata}
                                             setMetadata={setMetadata}
                                             col={col.name}
