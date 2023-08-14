@@ -1,6 +1,6 @@
 import React from "react";
 
-import MapPage from "../../gis_dataset/pages/Map";
+// import MapPage from "../../gis_dataset/pages/Map";
 import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
@@ -24,15 +24,15 @@ export const tig_sed_taz = {
   //   tag: 'test',
   //   component: TigSedTazOverview
   // },
-  map: {
-    name: "Map",
-    path: "/map",
-    component: (props) => <MapPage
-      {...props}
-      MapFilter={SedMapFilter}
-      HoverComp={SedHoverComp}
-    />,
-  },
+  // map: {
+  //   name: "Map",
+  //   path: "/map",
+  //   component: (props) => <MapPage
+  //     {...props}
+  //     MapFilter={SedMapFilter}
+  //     HoverComp={SedHoverComp}
+  //   />,
+  // },
   table: {
     name: "Table",
     path: "/table",

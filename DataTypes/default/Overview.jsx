@@ -3,7 +3,7 @@ import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
-import Metadata from './Metadata'
+import Index from './Metadata/index.jsx'
 import { useParams } from "react-router-dom";
 import Versions from './Version/list'
 import { VersionEditor, VersionDownload } from './Version/version'
@@ -161,9 +161,9 @@ const OverviewEdit = ({source, views, activeViewId}) => {
           </dl>
 
           {/*<div className='py-10 px-2'>
-            <div className='text-gray-500 py-8 px-5'>Metadata</div>
+            <div className='text-gray-500 py-8 px-5'>Index</div>
             <div className=''>
-              <Metadata source={source} />
+              <Index source={source} />
             </div>
           </div>*/}
         </div>
