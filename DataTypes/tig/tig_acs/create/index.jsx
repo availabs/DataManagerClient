@@ -263,7 +263,7 @@ const Create = (props) => {
   const censusOptions = useMemo(() => {
     return (censusVariables || []).map((c) => ({
       label: c?.name,
-      value: c?.censusKeys,
+      value: c,
     }));
   }, [censusVariables]);
 
