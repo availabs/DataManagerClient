@@ -1,6 +1,7 @@
 import React from "react";
 // import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep"
 
 import { AvlLayer, Legend, useTheme } from "~/modules/avl-map-2/src";
 import ckmeans from "../../../../utils/ckmeans";
@@ -157,7 +158,9 @@ const GISDatasetRenderComponent = props => {
 
           if (sym.value) {
             const layer = layer_id || this.layers[0].id;
-            maplibreMap.setPaintProperty(layer, paintProperty, sym.value);
+            let setValue = cloneDeep(sym.value)
+            console.log('sym.value', setValue, layer, paintProperty)
+            maplibreMap.setPaintProperty(layer, paintProperty, setValue);
           }
         });
       });

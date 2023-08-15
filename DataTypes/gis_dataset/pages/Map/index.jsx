@@ -13,7 +13,7 @@ import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
-const ColorRange = getColorRange(7, "BrBG")
+const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
 
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
@@ -142,15 +142,21 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     if (!data.length) return;
 
     const colors = data.reduce((a, c) => {
-      a[c.id] = scale(c.value);
+      a[c.id] = c.value ? scale(c.value) : 'rgba(0,0,0,0)';
       return a
     }, {});
 
-    const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+    const output = [
+      "case",
+      ["has", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
+      ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]],
+      "rgba(0,0,0,0)",
+    ];
+    // ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
 
     const newSymbology = layer.layers.reduce((a, c) => {
       a[c.id] = {
-        "fill-color": {
+        [`${c.type}-color`]: {
           [activeVar]: {
             type: varType === "data-variable" ? 'threshold' : "ordinal",
             settings: {
