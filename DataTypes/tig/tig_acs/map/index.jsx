@@ -60,7 +60,7 @@ const ACSMapFilter = ({
 
   const censusConfig = useMemo(
     () =>
-      ((variables || []).find((d) => d.label === activeVar) || {}).value || [],
+      (((variables || []).find((d) => d.label === activeVar) || {}).value || {}).censusKeys || [],
     [activeVar, variables]
   );
 
