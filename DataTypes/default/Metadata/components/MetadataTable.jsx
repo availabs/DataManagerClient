@@ -67,7 +67,7 @@ export const MetadataTable = ({source, ...props}) => {
                                         />
                                     </div> : <div className='pt-3 pr-8'>{get(col, 'name') || 'No Name'}</div>}
 
-                                    {user.authLevel > 5 && col.display === 'calculated-column'?
+                                    {user.authLevel > 5 && col.type === 'calculated-column'?
                                         <div className='hidden group-hover:block text-blue-500 cursor-pointer'
                                              onClick={e => setEditing(`${col.name}-columnName`)}>
                                             <i className="fad fa-pencil absolute -ml-12 p-2 pt-3 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
@@ -127,7 +127,8 @@ export const MetadataTable = ({source, ...props}) => {
 
                             {authLevel > 5 &&
                                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
-                                    {col.display !== 'calculated-column' &&
+                                    {
+                                        // col.display !== 'calculated-column' &&
                                         <DisplaySelector
                                             sourceId={source.source_id}
                                             metadata={metadata}

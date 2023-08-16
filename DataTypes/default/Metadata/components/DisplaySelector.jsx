@@ -13,7 +13,7 @@ export const DisplaySelector = ({sourceId, metadata, setMetadata, col, value}) =
         className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
         value={value}
         onChange={onChange}
-        disabled={value === 'calculated-column'}
+        // disabled={value === 'calculated-column'}
     >
         <option value={""}>
             none
