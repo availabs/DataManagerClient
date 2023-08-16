@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
+import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
 import GISDatasetLayer from './Layer2'
@@ -106,12 +107,13 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
+
   React.useEffect(() => {
     if (!activeVar) setData([]);
-    const databyId = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
-    const data = Object.keys(databyId)
+    const dataById = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
+    const data = Object.keys(dataById)
       .map(id => {
-        const value = get(databyId, [id, activeVar], null);
+        const value = get(dataById, [id, activeVar], null);
         return {
           id,
           var: activeVar,
@@ -121,51 +123,65 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     setData(data);
   }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
 
-  const scale = React.useMemo(() => {
-    if (!data.length) return null;
-
-    if (varType === "data-variable") {
-      const domain = data.map(d => +d.value).filter(Boolean);
-      return scaleThreshold()
-        .domain(ckmeans(domain, ColorRange.length - 1))
-        .range(ColorRange)
-    }
-    else {
-      const domain = data.map(d => d.value);
-      return scaleOrdinal()
-        .domain(domain)
-        .range(OrdinalColorRange)
-    }
-  }, [data, varType]);
+  // const scale = React.useMemo(() => {
+  //   if (!data.length) return null;
+  //
+  //   if (varType === "data-variable") {
+  //     const domain = data.map(d => +d.value).filter(Boolean);
+  //     return scaleThreshold()
+  //       .domain(ckmeans(domain, ColorRange.length - 1))
+  //       .range(ColorRange)
+  //   }
+  //   else {
+  //     const domain = data.map(d => d.value);
+  //     return scaleOrdinal()
+  //       .domain(domain)
+  //       .range(OrdinalColorRange)
+  //   }
+  // }, [data, varType]);
 
   React.useEffect(() => {
     if (!data.length) return;
 
-    const colors = data.reduce((a, c) => {
-      a[c.id] = scale(c.value);
-      return a
-    }, {});
+    // const colors = data.reduce((a, c) => {
+    //   a[c.id] = scale(c.value);
+    //   return a
+    // }, {});
+    //
+    // const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
 
-    const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
-
-    const newSymbology = layer.layers.reduce((a, c) => {
+    const newSym = layer.layers.reduce((a, c) => {
       a[c.id] = {
         "fill-color": {
           [activeVar]: {
-            type: varType === "data-variable" ? 'threshold' : "ordinal",
             settings: {
-              range: scale.range(),
-              domain: scale.domain(),
-              name: activeVar
+              name: activeVar,
+              type: varType === "data-variable" ? 'threshold' : "ordinal",
+              data
             },
-            value: output
+            // value: output
           }
         }
       };
       return a;
     }, {});
-    setTempSymbology(newSymbology)
-  }, [layer, data, scale, setTempSymbology, activeVar, varType]);
+
+    setTempSymbology(oldSym => {
+      const update = {};
+      for (const id in newSym) {
+        update[id] = {};
+        for (const p in newSym[id]) {
+          update[id][p] = {};
+          for (const v in newSym[id][p]) {
+            const os = get(oldSym, [id, p, v]);
+            const ns = get(newSym, [id, p, v]);
+            update[id][p][v] = os || ns;
+          }
+        }
+      }
+      return update;
+    });
+  }, [layer, data, setTempSymbology, activeVar, varType]);
 
   return (
     <div className='flex flex-1'>
@@ -275,6 +291,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         <Map
           layers={[layer]}
           tempSymbology={tempSymbology}
+          setTempSymbology={setTempSymbology}
         />
       </div>
       {user.authLevel >= 5 ?
@@ -334,7 +351,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
 export default MapPage
 
-const Map = ({layers,tempSymbology}) => {
+const Map = ({ layers, tempSymbology, setTempSymbology }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -370,16 +387,46 @@ const Map = ({layers,tempSymbology}) => {
     });
   }, [mounted, layers]);
 
+  const updateLegend = React.useCallback(legend => {
+
+    const { type, ...rest } = legend;
+
+    const [layerId] = Object.keys(tempSymbology);
+    const [paintProp] = Object.keys(tempSymbology[layerId]);
+    const [variable] = Object.keys(tempSymbology[layerId][paintProp]);
+
+    const { settings } = tempSymbology[layerId][paintProp][variable];
+
+    setTempSymbology({
+      ...tempSymbology,
+      [layerId]: {
+        [paintProp]: {
+          [variable]: {
+            type,
+            settings: {
+              ...settings,
+              ...rest,
+              type
+            }
+          }
+        }
+      }
+    })
+
+  }, [tempSymbology, setTempSymbology]);
+
   const layerProps = React.useMemo(()=>{
-    let inputViewIds = layers.filter(d => d).map(d => d.activeViewId)
+    let inputViewIds = layers.filter(Boolean).map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
-      if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
-        out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])
-        out[cur.id].symbology = cloneDeep(tempSymbology)
+      const index = inputViewIds.indexOf(cur.activeViewId);
+      if (index !== -1) {
+        out[cur.id] = cloneDeep(layers[index]);
+        out[cur.id].symbology = cloneDeep(tempSymbology);
+        out[cur.id].updateLegend = updateLegend;
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology])
+  },[layers, layerData, tempSymbology, updateLegend])
 
   return (
 

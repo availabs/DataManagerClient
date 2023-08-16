@@ -59,7 +59,7 @@ const MetadataTable = ({ source, ...props }) => {
           }
         }
       }
-    }).then(res => console.log("RES:", res))
+    })//.then(res => console.log("RES:", res))
   }, [falcor, pgEnv, sourceId, metadata]);
 
   if (!metadata ||!metadata.map || metadata.length === 0) return <div> Metadata Not Available </div>
