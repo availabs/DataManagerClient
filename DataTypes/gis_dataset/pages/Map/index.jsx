@@ -14,7 +14,7 @@ import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
-const ColorRange = getColorRange(7, "BrBG")
+const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
 
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
@@ -152,7 +152,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
     const newSym = layer.layers.reduce((a, c) => {
       a[c.id] = {
-        "fill-color": {
+        [`${c.type}-color`]: {
           [activeVar]: {
             settings: {
               name: activeVar,

@@ -60,7 +60,7 @@ const SourcesList = () => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "length"];
       const resp = await falcor.get(lengthPath);
-      console.log(resp)
+      // console.log(resp)
       await falcor.get([
         "dama", pgEnv, "sources", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },

@@ -1,6 +1,7 @@
 import React from "react";
 // import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep"
 
 import {
   AvlLayer,
