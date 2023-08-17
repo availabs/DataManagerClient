@@ -221,7 +221,6 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
-         // console.log('map layer', sym, symbology)
           if (sym.settings || sym.value) {
             createLegend(sym.settings);
             setLayerData({ layer_id, paintProperty, value: sym.value  });
@@ -238,26 +237,24 @@ const GISDatasetRenderComponent = props => {
     if (!legend) return;
     if (!layerData) return;
 
-    const { layer_id, paintProperty, value } = layerData;
-    console.log('setLayerData update', layer_id, paintProperty, value)
-    if(value) {
-      maplibreMap.setPaintProperty(layer_id, paintProperty, value);
-    } else { 
+    const { layer_id, paintProperty } = layerData;
+
+    let { value } = layerData;
+
+    if (!value) {
       const { type, domain, range, data } = legend;
 
       const scale = getScale(type, domain, range);
 
       const colors = data.reduce((a, c) => {
         a[c.id] = scale(c.value);
-        return a
+        return a;
       }, {});
 
-      const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
-
-      
-
-      maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+      value = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
     }
+
+    maplibreMap.setPaintProperty(layer_id, paintProperty, value);
 
   }, [legend, layerData]);
 
@@ -301,8 +298,9 @@ const GISDatasetRenderComponent = props => {
 //   )
 // }
 
-const DomainItem = ({ value, remove }) => {
+const RemoveDomainItem = ({ value, remove }) => {
   const doRemove = React.useCallback(e => {
+    e.stopPropagation();
     remove(value);
   }, [value, remove]);
   return (
@@ -311,6 +309,72 @@ const DomainItem = ({ value, remove }) => {
         fa-solid fa-remove px-2 flex items-center
         hover:bg-gray-400 rounded cursor-pointer
       ` }/>
+  )
+}
+const DomainItem = ({ domain, index, disabled, remove, edit }) => {
+  const [editing, setEditing] = React.useState(false);
+  const [value, setValue] = React.useState("");
+
+  const startEditing = React.useCallback(e => {
+    e.stopPropagation();
+    setEditing(true);
+    setValue(domain);
+  }, [domain]);
+
+  const stopEditing = React.useCallback(e => {
+    e.stopPropagation();
+    setEditing(false);
+    setValue("");
+  }, [domain]);
+
+  const doEdit = React.useCallback(e => {
+    e.stopPropagation();
+    edit(value, index);
+    setEditing(false);
+    setValue("");
+  }, [index, value, edit]);
+
+  const [ref, setRef] = React.useState();
+
+  React.useEffect(() => {
+    if (ref && editing) {
+      ref.focus();
+      ref.select();
+    }
+  }, [ref, editing]);
+
+  const [outter, setOutter] = React.useState();
+  useClickOutside(outter, stopEditing);
+
+  return (
+    <div ref={ setOutter }
+      className="flex hover:bg-gray-300 px-2 py-1 rounded cursor-pointer"
+      onClick={ startEditing }
+    >
+      <div className="w-8 mr-1 py-1">({ index + 1 })</div>
+      <div className="flex-1 mr-1">
+        { editing ?
+          <div className="flex">
+            <div className="flex-1 mr-1">
+              <Input ref={ setRef }
+                value={ value }
+                onChange={ setValue }/>
+            </div>
+            <Button onClick={ doEdit } className="buttonPrimary">
+              Edit
+            </Button>
+          </div> :
+          <div className="px-2 py-1">{ domain }</div>
+        }
+      </div>
+      { disabled ? null :
+        editing ?
+        <Button onClick={ stopEditing } className="buttonDanger">
+          Stop
+        </Button> :
+        <RemoveDomainItem remove={ remove } value={ domain }/>
+      }
+    </div>
   )
 }
 
@@ -326,6 +390,12 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
     updateLegend([...domain, +value].sort((a, b) => a - b));
     setValue("");
   }, [domain, value, updateLegend]);
+
+  const editDomain = React.useCallback((v, i) => {
+    const newDomain = [...domain]
+    newDomain.splice(i, 1, v);
+    updateLegend(newDomain.sort((a, b) => a - b));
+  }, [domain, updateLegend])
 
   const useCKMeans = React.useCallback(() => {
     updateLegend(undefined);
@@ -351,21 +421,20 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
       </div>
       <div>Domain:</div>
       { domain.map((d, i) => (
-          <div key={ d } className="flex hover:bg-gray-300 px-2 py-1 rounded">
-            <div className="w-8 mr-1">({ i + 1 })</div>
-            <div className="flex-1">{ d }</div>
-            { disabled ? null :
-              <DomainItem remove={ removeDomain } value={ d }/>
-            }
-          </div>
+          <DomainItem key={ d }
+            domain={ d } index={ i }
+            remove={ removeDomain }
+            disabled={ disabled }
+            edit={ editDomain }/>
         ))
       }
       <div className="flex">
-        <Input type="number" placeholder="enter a threshold value..."
-          onChange={ setValue }
-          value={ value }
-          className="px-2 py-1 mr-1 flex-1"/>
-        <Button onClick={ addDomain }>
+        <div className="mr-1 flex-1">
+          <Input type="number" placeholder="enter a threshold value..."
+            onChange={ setValue }
+            value={ value }/>
+        </div>
+        <Button onClick={ addDomain } disabled={ !value }>
           Add
         </Button>
       </div>
