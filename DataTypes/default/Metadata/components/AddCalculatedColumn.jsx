@@ -26,7 +26,7 @@ export const AddCalculatedColumn = ({
                             falcor,
                             metadata,
                             setMetadata,
-                            col: {"name": value, display: 'calculated-column'}
+                            col: {"name": value, type: 'calculated-column'}
                         })}>
                 Add Column
             </Button>

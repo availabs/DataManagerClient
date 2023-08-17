@@ -1,11 +1,24 @@
 import React from "react";
 // import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep"
 
-import { AvlLayer, Legend, useTheme } from "~/modules/avl-map-2/src";
+import {
+  AvlLayer,
+  Legend,
+  ActionButton,
+  MultiLevelSelect,
+  ColorRangesByType,
+  ColorCategory,
+  Input,
+  Button,
+  useTheme,
+  getScale
+} from "~/modules/avl-map-2/src";
 import ckmeans from "../../../../utils/ckmeans";
 import { getColorRange } from "../../../../utils/color-ranges";
 import * as d3scale from "d3-scale";
+import { extent as d3extent } from "d3-array"
 
 import { DamaContext } from "~/pages/DataManager/store";
 
@@ -79,6 +92,28 @@ export const LegendContainer = ({ name, title, children }) => {
   )
 }
 
+const calcDomain = (type, data, length) => {
+  const values = data.map(d => +d.value);
+  switch (type) {
+    case "quantize":
+      return d3extent(values);
+    case "threshold":
+      return ckmeans(values.filter(Boolean), length ? length - 1 : 6);
+    default:
+      return values;
+  }
+}
+const calcRange = (type, length) => {
+  switch (type) {
+    case "quantize":
+      return getColorRange(7, "BrBG");
+    case "threshold":
+      return getColorRange(length ? length + 1 : 7, "BrBG");
+    default:
+      return data;
+  }
+}
+
 const GISDatasetRenderComponent = props => {
   const {
     layerProps,
@@ -87,10 +122,40 @@ const GISDatasetRenderComponent = props => {
   } = props;
 
   const {
-    filters, activeViewId, symbology
+    filters,
+    activeViewId,
+    symbology,
+    updateLegend
   } = layerProps;
 
   const [legend, setLegend] = React.useState(null);
+  const [layerData, setLayerData] = React.useState(null);
+
+  const createLegend = React.useCallback(settings => {
+    const legend = { ...settings };
+
+    const {
+      domain = [],
+      range = [],
+      format,
+      name,
+      type = "threshold",
+      data = []
+    } = legend;
+
+    if (!domain.length) {
+      legend.domain = calcDomain(type, data, range.length);
+    }
+    if (!range.length) {
+      legend.range = calcRange(type, domain.length);
+    }
+    if (!format) {
+      legend.format = ".2s"
+    }
+
+    setLegend(legend);
+
+  }, []);
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -112,7 +177,7 @@ const GISDatasetRenderComponent = props => {
     }
   }, [maplibreMap, symbology]);
 
-  const activeVariable = get(filters, "activeVar.value", "");
+  const activeVariable = get(filters, ["activeVar", "value"], "");
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -136,38 +201,242 @@ const GISDatasetRenderComponent = props => {
           const sym =
             get(symbology, `[${paintProperty}][${activeVariable}]`, "") ||
             get(symbology, `[${paintProperty}][default]`, "") ||
-            get(
-              symbology,
-              `[${layer_id}][${paintProperty}][${activeVariable}]`,
-              ""
-            );
+            get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
           if (sym.settings) {
-            setLegend({
-              domain: sym.settings.domain,
-              range: sym.settings.range,
-              name: sym.settings.name || sym.settings.title,
-              format: sym.settings.format || ",.2s",
-              type: sym.type
-            })
+            createLegend(sym.settings);
+            setLayerData({ layer_id, paintProperty });
           }
           else {
             setLegend(null);
-          }
-
-          if (sym.value) {
-            const layer = layer_id || this.layers[0].id;
-            maplibreMap.setPaintProperty(layer, paintProperty, sym.value);
+            setLayerData(null);
           }
         });
       });
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable]);
 
+  React.useEffect(() => {
+    if (!legend) return;
+    if (!layerData) return;
+
+    const { type, domain, range, data } = legend;
+
+    const scale = getScale(type, domain, range);
+
+    const colors = data.reduce((a, c) => {
+      a[c.id] = scale(c.value);
+      return a
+    }, {});
+
+    const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+
+    const { layer_id, paintProperty } = layerData;
+
+    maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+
+  }, [legend, layerData]);
+
   return !legend ? null : (
-    <div className="absolute top-0 left-0 w-96">
-      <LegendContainer { ...legend }>
-        <Legend { ...legend }/>
-      </LegendContainer>
+    <div className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
+      <div className="z-10">
+        <LegendContainer { ...legend }>
+          <Legend { ...legend }/>
+        </LegendContainer>
+      </div>
+
+      <div className="z-0">
+        <LegendControls legend={ legend }
+          updateLegend={ updateLegend }/>
+      </div>
+    </div>
+  )
+}
+
+const LegendControlsToggle = ({ toggle }) => {
+  return (
+    <ActionButton onClick={ toggle }>
+      <span className="fa fa-plus"/>
+    </ActionButton>
+  )
+}
+
+const DomainItem = ({ value, remove }) => {
+  const doRemove = React.useCallback(e => {
+    remove(value);
+  }, [value, remove]);
+  return (
+    <span onClick={ doRemove }
+      className={ `
+        fa-solid fa-remove px-2 flex items-center
+        hover:bg-gray-400 rounded cursor-pointer
+      ` }/>
+  )
+}
+
+const ThresholdEditor = ({ domain, range, updateLegend }) => {
+
+  const removeDomain = React.useCallback(v => {
+    updateLegend(domain.filter(d => d !== v));
+  }, [domain, updateLegend]);
+
+  const [value, setValue] = React.useState("");
+
+  const addDomain = React.useCallback(e => {
+    updateLegend([...domain, +value].sort((a, b) => a - b));
+    setValue("");
+  }, [domain, value, updateLegend]);
+
+  const useCKMeans = React.useCallback(() => {
+    updateLegend(undefined);
+    setValue("");
+  }, [updateLegend]);
+
+  return (
+    <div className="grid grid-cols-1 gap-1">
+      <div className="border-b border-current">
+        For theshold scales, the number of values in the domain must be one less than the number of values in the range.
+      </div>
+      <div className="flex">
+        <div className="flex-1">Number of values in domain:</div>
+        <div className="pr-4">{ domain.length }</div>
+      </div>
+      <div className="flex border-b border-current">
+        <div className="flex-1">Number of values in range:</div>
+        <div className="pr-4">{ range.length }</div>
+      </div>
+      <div>Domain:</div>
+      { domain.map((d, i) => (
+          <div key={ d } className="flex hover:bg-gray-300 px-2 py-1 rounded">
+            <div className="w-8 mr-1">({ i + 1 })</div>
+            <div className="flex-1">{ d }</div>
+            <DomainItem remove={ removeDomain } value={ d }/>
+          </div>
+        ))
+      }
+      <div className="flex">
+        <Input type="number" placeholder="enter a threshold value..."
+          onChange={ setValue }
+          value={ value }
+          className="px-2 py-1 mr-1 flex-1"/>
+        <Button onClick={ addDomain }>
+          Add
+        </Button>
+      </div>
+      <div>
+        <Button className="buttonBlock" onClick={ useCKMeans }>
+          Reset with 6 bins
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+const LegendControls = ({ legend, updateLegend }) => {
+
+  const [isOpen, setIsOpen] = React.useState(false);
+  const toggle = React.useCallback(e => {
+    setIsOpen(o => !o);
+  }, []);
+
+  const updateLegendType = React.useCallback(type => {
+    updateLegend({ ...legend, type, domain: undefined });
+  }, [legend, updateLegend]);
+
+  const updateLegendRange = React.useCallback(range => {
+    updateLegend({ ...legend, range, domain: undefined });
+  }, [legend, updateLegend]);
+
+  const updateLegendDomain = React.useCallback((domain, range = undefined) => {
+    updateLegend({ ...legend, domain, range });
+  }, [legend, updateLegend]);
+
+  const [open, setOpen] = React.useState(-1);
+
+  return !isOpen ? (
+    <LegendControlsToggle toggle={ toggle }/>
+  ) : (
+    <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96 relative">
+      <div className="border rounded border-current relative">
+        <div onClick={ toggle }
+          className={ `
+            p-1 bg-gray-300 border-b border-current
+            rounded-t flex cursor-pointer font-bold
+          ` }
+        >
+          <div className="flex-1">
+            Legend Controls
+          </div>
+          <div className="flex-0">
+            <span className="px-2 py-1">
+              <span className="fa fa-minus"/>
+            </span>
+          </div>
+        </div>
+        <div className="p-1 grid grid-cols-1 gap-1">
+          <TypeSelector { ...legend }
+            updateLegend={ updateLegendType }/>
+
+          { Object.keys(ColorRangesByType).map((type, i) => (
+              <ColorCategory key={ type } type={ type }
+                startSize={ legend.range.length }
+                colors={ ColorRangesByType[type] }
+                updateLegend={ updateLegendRange }
+                isOpen={ open === i }
+                setOpen={ setOpen }
+                index={ i }
+                current={ legend.range }/>
+            ))
+          }
+        </div>
+      </div>
+
+      { legend.type !== "threshold" ? null :
+        <div className="w-96 absolute left-full top-0"
+          style={ { left: "CALC(100% + 1rem)" } }
+        >
+          <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96">
+            <div className="border rounded border-current relative">
+              <div className={ `
+                  p-1 bg-gray-300 border-b border-current rounded-t flex font-bold
+                ` }
+              >
+                Threshold Editor
+              </div>
+              <div className="p-1">
+                <ThresholdEditor { ...legend }
+                  updateLegend={ updateLegendDomain }/>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  )
+}
+
+const LegendTypes = [
+  { value: "quantize", name: "Quantize" },
+  { value: "quantile", name: "Quantile" },
+  { value: "threshold", name: "Threshold" },
+  { value: "ordinal", name: "Ordinal" }
+]
+
+const TypeSelector = ({ type, updateLegend }) => {
+  const onChange = React.useCallback(t => {
+    updateLegend(t);
+  }, [updateLegend]);
+  return (
+    <div className="flex items-center p-1">
+      <div className="flex-0 mr-1">Type:</div>
+      <div className="flex-1">
+        <MultiLevelSelect
+          removable={ false }
+          options={ LegendTypes }
+          displayAccessor={ t => t.name }
+          valueAccessor={ t => t.value }
+          onChange={ onChange }
+          value={ type }/>
+      </div>
     </div>
   )
 }
