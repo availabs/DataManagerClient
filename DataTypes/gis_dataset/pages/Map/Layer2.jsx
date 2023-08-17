@@ -131,20 +131,27 @@ const GISDatasetRenderComponent = props => {
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
 
-console.log("LEGEND:", legend)
-
   const createLegend = React.useCallback(settings => {
-    const legend = { ...settings };
 
     const {
       domain = [],
       range = [],
-      format,
+      format = ".2s",
       name,
       type = "threshold",
       data = [],
       color = "BrBG"
-    } = legend;
+    } = settings;
+
+    const legend = {
+      domain,
+      range,
+      format,
+      name,
+      type,
+      data,
+      color
+    };
 
     if (!domain.length) {
       legend.domain = calcDomain(type, data, range.length);
@@ -152,12 +159,8 @@ console.log("LEGEND:", legend)
     if (!range.length) {
       legend.range = calcRange(type, domain.length, color);
     }
-    if (!format) {
-      legend.format = ".2s"
-    }
 
     setLegend(legend);
-
   }, []);
 
   React.useEffect(() => {
@@ -346,7 +349,6 @@ const LegendControls = ({ legend, updateLegend }) => {
   }, [legend, updateLegend]);
 
   const updateLegendRange = React.useCallback((range, color) => {
-console.log("updateLegendRange", range, color)
     updateLegend({ ...legend, range, color, domain: undefined });
   }, [legend, updateLegend]);
 
