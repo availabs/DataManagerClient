@@ -1,20 +1,18 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
-import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
-import GISDatasetLayer from './Layer2'
+import GISDatasetLayer from './Layer'
 import Symbology from './symbology/index'
-// import { AvlMap } from "~/modules/avl-maplibre/src"
-import { AvlMap } from "~/modules/avl-map-2/src"
+import { AvlMap } from "~/modules/avl-maplibre/src"
 import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
-const ColorRange = getColorRange(7, "Reds")
+const ColorRange = getColorRange(7, "BrBG")
 const OrdinalColorRange = getColorRange(12, "Set3")
 
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
@@ -57,9 +55,13 @@ const ViewSelector = ({views}) => {
   )
 }
 
+const IGNORED_VARIABLES = ["wkb_geometry"];
+
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
+
+
 
   const metadata = React.useMemo(() => {
     const md = get(source, "metadata", []);
@@ -67,7 +69,12 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
       return md;
     }
     return [];
-  }, [source]);
+  }, [source])
+
+  // const allVariables = React.useMemo(() => {
+  //   return metadata.map(md => md.name)
+  //     .filter(v => !IGNORED_VARIABLES.includes(v));
+  // }, [metadata]);
 
   const dataVariables = React.useMemo(() => {
     return metadata
@@ -107,13 +114,12 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
-
   React.useEffect(() => {
     if (!activeVar) setData([]);
-    const dataById = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
-    const data = Object.keys(dataById)
+    const databyId = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
+    const data = Object.keys(databyId)
       .map(id => {
-        const value = get(dataById, [id, activeVar], null);
+        const value = get(databyId, [id, activeVar], null);
         return {
           id,
           var: activeVar,
@@ -123,65 +129,50 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     setData(data);
   }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
 
-  // const scale = React.useMemo(() => {
-  //   if (!data.length) return null;
-  //
-  //   if (varType === "data-variable") {
-  //     const domain = data.map(d => +d.value).filter(Boolean);
-  //     return scaleThreshold()
-  //       .domain(ckmeans(domain, ColorRange.length - 1))
-  //       .range(ColorRange)
-  //   }
-  //   else {
-  //     const domain = data.map(d => d.value);
-  //     return scaleOrdinal()
-  //       .domain(domain)
-  //       .range(OrdinalColorRange)
-  //   }
-  // }, [data, varType]);
+  const scale = React.useMemo(() => {
+    if (!data.length) return null;
+
+    const domain = data.map(d => +d.value);
+    if (varType === "data-variable") {
+      return scaleThreshold()
+        .domain(ckmeans(domain, ColorRange.length + 1))
+        .range(ColorRange)
+    }
+    else {
+      return scaleOrdinal()
+        .domain(domain)
+        .range(OrdinalColorRange)
+    }
+  }, [data, varType]);
 
   React.useEffect(() => {
     if (!data.length) return;
 
-    // const colors = data.reduce((a, c) => {
-    //   a[c.id] = scale(c.value);
-    //   return a
-    // }, {});
-    //
-    // const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+    const colors = data.reduce((a, c) => {
+      a[c.id] = scale(c.value);
+      return a
+    }, {});
 
-    const newSym = layer.layers.reduce((a, c) => {
+    const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+
+    const newSymbology = layer.layers.reduce((a, c) => {
       a[c.id] = {
-        [`${c.type}-color`]: {
+        "fill-color": {
           [activeVar]: {
+            type: varType === "data-variable" ? 'threshold' : "ordinal",
             settings: {
-              name: activeVar,
-              type: varType === "data-variable" ? 'threshold' : "ordinal",
-              data
+              range: scale.range(),
+              domain: scale.domain(),
+              title: activeVar
             },
-            // value: output
+            value: output
           }
         }
       };
       return a;
     }, {});
-
-    setTempSymbology(oldSym => {
-      const update = {};
-      for (const id in newSym) {
-        update[id] = {};
-        for (const p in newSym[id]) {
-          update[id][p] = {};
-          for (const v in newSym[id][p]) {
-            const os = get(oldSym, [id, p, v]);
-            const ns = get(newSym, [id, p, v]);
-            update[id][p][v] = os || ns;
-          }
-        }
-      }
-      return update;
-    });
-  }, [layer, data, setTempSymbology, activeVar, varType]);
+    setTempSymbology(newSymbology)
+  }, [layer, data, scale, setTempSymbology, activeVar, varType]);
 
   return (
     <div className='flex flex-1'>
@@ -287,11 +278,10 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         />
         <ViewSelector views={views} />
       </div>
-      <div className='w-full h-[900px]'>
+      <div className='w-ful h-[900px]'>
         <Map
           layers={[layer]}
           tempSymbology={tempSymbology}
-          setTempSymbology={setTempSymbology}
         />
       </div>
       {user.authLevel >= 5 ?
@@ -351,7 +341,9 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
 export default MapPage
 
-const Map = ({ layers, tempSymbology, setTempSymbology }) => {
+
+
+const Map = ({layers,tempSymbology}) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -387,67 +379,42 @@ const Map = ({ layers, tempSymbology, setTempSymbology }) => {
     });
   }, [mounted, layers]);
 
-  const updateLegend = React.useCallback(legend => {
-
-    const { type, ...rest } = legend;
-
-    const [layerId] = Object.keys(tempSymbology);
-    const [paintProp] = Object.keys(tempSymbology[layerId]);
-    const [variable] = Object.keys(tempSymbology[layerId][paintProp]);
-
-    const { settings } = tempSymbology[layerId][paintProp][variable];
-
-    setTempSymbology({
-      ...tempSymbology,
-      [layerId]: {
-        [paintProp]: {
-          [variable]: {
-            type,
-            settings: {
-              ...settings,
-              ...rest,
-              type
-            }
-          }
-        }
-      }
-    })
-
-  }, [tempSymbology, setTempSymbology]);
-
   const layerProps = React.useMemo(()=>{
-    let inputViewIds = layers.filter(Boolean).map(d => d.activeViewId)
+    let inputViewIds = layers.filter(d => d).map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
-      const index = inputViewIds.indexOf(cur.activeViewId);
-      if (index !== -1) {
-        out[cur.id] = cloneDeep(layers[index]);
-        out[cur.id].symbology = cloneDeep(tempSymbology);
-        out[cur.id].updateLegend = updateLegend;
+      if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
+        out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])
+        out[cur.id].symbology = cloneDeep(tempSymbology)
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology, updateLegend])
+  },[layers, layerData, tempSymbology])
 
   return (
 
       <div className='w-full h-full'>
         <AvlMap
           accessToken={ config.MAPBOX_TOKEN }
-          mapOptions={ {
+          falcor={falcor}
+          mapOptions={{
             zoom: 7.3,//8.32/40.594/-74.093
-            navigationControl: false,
-            center: [-73.8, 40.79],
+            center: [
+                -73.8,
+               40.79
+            ],
             styles: [
-              { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
-              { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
-              { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
+//              config.google_streets_style,
+//              config.google_sattelite_style,
+                { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
+                { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
+                { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },
+
             ]
-          } }
-          layers={ layerData }
-          layerProps={ layerProps }
-          leftSidebar={ false }
-          rightSidebar={ false }
-          mapActions={ ["navigation-controls"] }/>
+          }}
+          layers={layerData}
+          layerProps={layerProps}
+          Sidebar={ false }
+        />
       </div>
 
   )

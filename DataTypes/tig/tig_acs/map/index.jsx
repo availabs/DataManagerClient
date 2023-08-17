@@ -8,6 +8,7 @@ import {
   uniqBy,
   set,
   unset,
+  uniq,
 } from "lodash";
 
 import ckmeans from "../../../../utils/ckmeans";
@@ -59,7 +60,7 @@ const ACSMapFilter = ({
 
   const censusConfig = useMemo(
     () =>
-      ((variables || []).find((d) => d.label === activeVar) || {}).value || [],
+      (((variables || []).find((d) => d.label === activeVar) || {}).value || {}).censusKeys || [],
     [activeVar, variables]
   );
 
@@ -87,21 +88,41 @@ const ACSMapFilter = ({
 
   useEffect(() => {
     async function getViewData() {
-      await falcor
-        .get(["geo", counties.map(String), [year], "tracts"])
+      falcor
+        .get([
+          "dama",
+          [pgEnv],
+          "tiger",
+          activeView?.view_dependencies,
+          counties.map(String),
+          [viewYear],
+          ["tracts"],
+        ])
         .then(() => {
           const d = (counties || []).reduce((a, c) => {
             a.push(
-              ...get(falcorCache, ["geo", c, year, "tracts", "value"], [])
+              ...get(
+                falcorCache,
+                [
+                  "dama",
+                  pgEnv,
+                  "tiger",
+                  activeView?.view_dependencies[0],
+                  c,
+                  viewYear,
+                  "tracts",
+                  "value",
+                ],
+                []
+              )
             );
             return a;
           }, []);
-          setSubGeoIds(d);
+          setSubGeoIds(uniq(d));
         });
     }
-
     getViewData();
-  }, [falcorCache, counties, year]);
+  }, [falcorCache, pgEnv, activeViewId, activeView, counties, viewYear]);
 
   useEffect(() => {
     const newSymbology = cloneDeep(tempSymbology || {});
@@ -228,7 +249,7 @@ const ACSMapFilter = ({
         value: output,
       };
     }
-    if (!isEqual(tempSymbology, newSymbology)) { 
+    if (!isEqual(tempSymbology, newSymbology)) {
       setTempSymbology(newSymbology);
     }
   }, [

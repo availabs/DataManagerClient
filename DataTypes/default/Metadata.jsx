@@ -5,8 +5,8 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 const MetadataTable = ({ source, ...props }) => {
 
-  
-  
+
+
   const { pgEnv, falcor, user } = React.useContext(DamaContext)
   const { authLevel } = user;
   const gridCols = authLevel < 5 ? "grid-cols-3" : "grid-cols-4";
@@ -59,7 +59,7 @@ const MetadataTable = ({ source, ...props }) => {
           }
         }
       }
-    }).then(res => console.log("RES:", res))
+    })//.then(res => console.log("RES:", res))
   }, [falcor, pgEnv, sourceId, metadata]);
 
   if (!metadata ||!metadata.map || metadata.length === 0) return <div> Metadata Not Available </div>
@@ -139,9 +139,6 @@ const DisplaySelector = ({ name, display, editMetadataDisplay }) => {
 }
 
 const Metadata = ({source, views, ...props}) => {
-
-console.log("SOURCE:", source)
-
   return (
     <div  className="w-full flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
       <div className='col-span-3'>
