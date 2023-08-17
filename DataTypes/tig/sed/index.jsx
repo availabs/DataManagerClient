@@ -18,12 +18,12 @@ import TigSedTazOverview from "./TigSedTazOverview"
 import TigSedCountyOverview from "./TigSedCountyOverview"
 
 export const tig_sed_taz = {
-  // overview: {
-  //   name: "Overview",
-  //   path: "",
-  //   tag: 'test',
-  //   component: TigSedTazOverview
-  // },
+  overview: {
+    name: "Overview",
+    path: "",
+    tag: 'test',
+    component: TigSedTazOverview
+  },
   map: {
     name: "Map",
     path: "/map",
