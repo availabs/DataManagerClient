@@ -204,7 +204,7 @@ const TablePage = ({
           val += tmpVal > 0 ? tmpVal : 0;
         });
 
-        tableRow[`${cc}`] = val === 0 ? null : val;
+        tableRow[`${cc}`] = val === 0 ? null : val.toLocaleString();
       });
       a = [...a, tableRow];
       return a;
