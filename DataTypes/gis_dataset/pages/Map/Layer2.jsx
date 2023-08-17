@@ -141,7 +141,7 @@ const GISDatasetRenderComponent = props => {
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
 
-  const createLegend = React.useCallback(settings => {
+  const createLegend = React.useCallback((settings = {}) => {
 
     const {
       domain = [],
@@ -176,6 +176,7 @@ const GISDatasetRenderComponent = props => {
   React.useEffect(() => {
     if (!maplibreMap) return;
     const sources = get(symbology, "sources", []);
+    //console.log('sources', sources)
     if (Array.isArray(sources)) {
       sources.forEach(s => {
         if (!maplibreMap.getSource(s.id)) {
@@ -184,10 +185,11 @@ const GISDatasetRenderComponent = props => {
       })
     }
     const layers = get(symbology, "layers", []);
+
     if (Array.isArray(layers)) {
-      layers.forEach(s => {
-        if (!maplibreMap.getSource(s.id)) {
-          maplibreMap.addSource(s.id, s.source);
+      layers.forEach(l => {
+        if (!maplibreMap.getLayer(l.id)) {
+          maplibreMap.addLayer(l);
         }
       })
     }
@@ -219,9 +221,10 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
-          if (sym.settings) {
+         // console.log('map layer', sym, symbology)
+          if (sym.settings || sym.value) {
             createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty });
+            setLayerData({ layer_id, paintProperty, value: sym.value  });
           }
           else {
             setLegend(null);
@@ -235,20 +238,26 @@ const GISDatasetRenderComponent = props => {
     if (!legend) return;
     if (!layerData) return;
 
-    const { type, domain, range, data } = legend;
+    const { layer_id, paintProperty, value } = layerData;
+    console.log('setLayerData update', layer_id, paintProperty, value)
+    if(value) {
+      maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+    } else { 
+      const { type, domain, range, data } = legend;
 
-    const scale = getScale(type, domain, range);
+      const scale = getScale(type, domain, range);
 
-    const colors = data.reduce((a, c) => {
-      a[c.id] = scale(c.value);
-      return a
-    }, {});
+      const colors = data.reduce((a, c) => {
+        a[c.id] = scale(c.value);
+        return a
+      }, {});
 
-    const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+      const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
 
-    const { layer_id, paintProperty } = layerData;
+      
 
-    maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+      maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+    }
 
   }, [legend, layerData]);
 
@@ -486,9 +495,13 @@ class GISDatasetLayer extends AvlLayer {
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {
+    let scaleDomain = [0,25,50,75,100]
+    if(domain.length > numBins) {
+      scaleDomain = ckmeans(domain, numBins)
+    }
     return d3scale
       .scaleThreshold()
-      .domain(ckmeans(domain, numBins))
+      .domain(scaleDomain)
       .range(getColorRange(numBins, color));
   }
 
