@@ -103,12 +103,12 @@ const calcDomain = (type, data, length) => {
       return values;
   }
 }
-const calcRange = (type, length) => {
+const calcRange = (type, length, color) => {
   switch (type) {
     case "quantize":
-      return getColorRange(7, "BrBG");
+      return getColorRange(7, color);
     case "threshold":
-      return getColorRange(length ? length + 1 : 7, "BrBG");
+      return getColorRange(length ? length + 1 : 7, color);
     default:
       return data;
   }
@@ -131,6 +131,8 @@ const GISDatasetRenderComponent = props => {
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
 
+console.log("LEGEND:", legend)
+
   const createLegend = React.useCallback(settings => {
     const legend = { ...settings };
 
@@ -140,14 +142,15 @@ const GISDatasetRenderComponent = props => {
       format,
       name,
       type = "threshold",
-      data = []
+      data = [],
+      color = "BrBG"
     } = legend;
 
     if (!domain.length) {
       legend.domain = calcDomain(type, data, range.length);
     }
     if (!range.length) {
-      legend.range = calcRange(type, domain.length);
+      legend.range = calcRange(type, domain.length, color);
     }
     if (!format) {
       legend.format = ".2s"
@@ -342,8 +345,9 @@ const LegendControls = ({ legend, updateLegend }) => {
     updateLegend({ ...legend, type, domain: undefined });
   }, [legend, updateLegend]);
 
-  const updateLegendRange = React.useCallback(range => {
-    updateLegend({ ...legend, range, domain: undefined });
+  const updateLegendRange = React.useCallback((range, color) => {
+console.log("updateLegendRange", range, color)
+    updateLegend({ ...legend, range, color, domain: undefined });
   }, [legend, updateLegend]);
 
   const updateLegendDomain = React.useCallback((domain, range = undefined) => {
