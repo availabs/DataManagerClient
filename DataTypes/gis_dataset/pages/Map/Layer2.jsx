@@ -13,7 +13,8 @@ import {
   Input,
   Button,
   useTheme,
-  getScale
+  getScale,
+  useClickOutside
 } from "~/modules/avl-map-2/src";
 import ckmeans from "../../../../utils/ckmeans";
 import { getColorRange } from "../../../../utils/color-ranges";
@@ -76,7 +77,7 @@ const HoverComp = ({ data, layer }) => {
   );
 };
 
-export const LegendContainer = ({ name, title, children }) => {
+export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   const theme = useTheme();
   return (
     <div className={ `p-1 rounded ${ theme.bg }` }>
@@ -85,7 +86,16 @@ export const LegendContainer = ({ name, title, children }) => {
           ${ theme.bgAccent2 } ${ theme.border }
         ` }
       >
-        <div>{ name || title }</div>
+        <div className="flex mb-1">
+          <div className="flex-1 font-bold">{ name || title }</div>
+          <div onClick={ toggle }
+            className="px-2 hover:bg-gray-400 rounded cursor-pointer"
+          >
+            <span className={ `
+                fa-solid ${ isOpen ? "fa-chevron-up" : "fa-chevron-down" }
+              ` }/>
+          </div>
+        </div>
         <div>{ children }</div>
       </div>
     </div>
@@ -242,29 +252,45 @@ const GISDatasetRenderComponent = props => {
 
   }, [legend, layerData]);
 
+  const [isOpen, setIsOpen] = React.useState(false);
+  const close = React.useCallback(e => {
+    setIsOpen(false);
+  }, []);
+  const toggle = React.useCallback(e => {
+    setIsOpen(open => !open);
+  }, []);
+
+  const [ref, setRef] = React.useState();
+  useClickOutside(ref, close);
+
   return !legend ? null : (
-    <div className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
+    <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
-        <LegendContainer { ...legend }>
+        <LegendContainer { ...legend }
+          toggle={ toggle }
+          isOpen={ isOpen }
+        >
           <Legend { ...legend }/>
         </LegendContainer>
       </div>
 
       <div className="z-0">
         <LegendControls legend={ legend }
-          updateLegend={ updateLegend }/>
+          updateLegend={ updateLegend }
+          isOpen={ isOpen }
+          close={ close }/>
       </div>
     </div>
   )
 }
 
-const LegendControlsToggle = ({ toggle }) => {
-  return (
-    <ActionButton onClick={ toggle }>
-      <span className="fa fa-plus"/>
-    </ActionButton>
-  )
-}
+// const LegendControlsToggle = ({ toggle }) => {
+//   return (
+//     <ActionButton onClick={ toggle }>
+//       <span className="fa fa-plus"/>
+//     </ActionButton>
+//   )
+// }
 
 const DomainItem = ({ value, remove }) => {
   const doRemove = React.useCallback(e => {
@@ -297,6 +323,10 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
     setValue("");
   }, [updateLegend]);
 
+  const disabled = React.useMemo(() => {
+    return domain.length <= 2;
+  }, [domain.length]);
+
   return (
     <div className="grid grid-cols-1 gap-1">
       <div className="border-b border-current">
@@ -315,7 +345,9 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
           <div key={ d } className="flex hover:bg-gray-300 px-2 py-1 rounded">
             <div className="w-8 mr-1">({ i + 1 })</div>
             <div className="flex-1">{ d }</div>
-            <DomainItem remove={ removeDomain } value={ d }/>
+            { disabled ? null :
+              <DomainItem remove={ removeDomain } value={ d }/>
+            }
           </div>
         ))
       }
@@ -337,12 +369,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
   )
 }
 
-const LegendControls = ({ legend, updateLegend }) => {
-
-  const [isOpen, setIsOpen] = React.useState(false);
-  const toggle = React.useCallback(e => {
-    setIsOpen(o => !o);
-  }, []);
+const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
 
   const updateLegendType = React.useCallback(type => {
     updateLegend({ ...legend, type, domain: undefined });
@@ -358,23 +385,21 @@ const LegendControls = ({ legend, updateLegend }) => {
 
   const [open, setOpen] = React.useState(-1);
 
-  return !isOpen ? (
-    <LegendControlsToggle toggle={ toggle }/>
-  ) : (
+  return !isOpen ? null : (
     <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96 relative">
       <div className="border rounded border-current relative">
-        <div onClick={ toggle }
-          className={ `
-            p-1 bg-gray-300 border-b border-current
-            rounded-t flex cursor-pointer font-bold
+        <div className={ `
+            p-1 bg-gray-300 border-b border-current rounded-t flex font-bold
           ` }
         >
           <div className="flex-1">
             Legend Controls
           </div>
           <div className="flex-0">
-            <span className="px-2 py-1">
-              <span className="fa fa-minus"/>
+            <span onClick={ close }
+              className="px-2 py-1 hover:bg-gray-400 rounded cursor-pointer"
+            >
+              <span className="fa fa-remove"/>
             </span>
           </div>
         </div>
