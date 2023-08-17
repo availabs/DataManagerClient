@@ -209,9 +209,10 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
+          console.log('map layer', sym, symbology)
           if (sym.settings) {
             createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty });
+            setLayerData({ layer_id, paintProperty, value: sym.value  });
           }
           else {
             setLegend(null);
@@ -225,20 +226,25 @@ const GISDatasetRenderComponent = props => {
     if (!legend) return;
     if (!layerData) return;
 
-    const { type, domain, range, data } = legend;
+    const { layer_id, paintProperty, value } = layerData;
+    if(value) {
+      maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+    } else { 
+      const { type, domain, range, data } = legend;
 
-    const scale = getScale(type, domain, range);
+      const scale = getScale(type, domain, range);
 
-    const colors = data.reduce((a, c) => {
-      a[c.id] = scale(c.value);
-      return a
-    }, {});
+      const colors = data.reduce((a, c) => {
+        a[c.id] = scale(c.value);
+        return a
+      }, {});
 
-    const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+      const paint = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
 
-    const { layer_id, paintProperty } = layerData;
+      
 
-    maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+      maplibreMap.setPaintProperty(layer_id, paintProperty, paint);
+    }
 
   }, [legend, layerData]);
 
