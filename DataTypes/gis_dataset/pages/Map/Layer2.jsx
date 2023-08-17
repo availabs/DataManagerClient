@@ -131,7 +131,7 @@ const GISDatasetRenderComponent = props => {
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
 
-  const createLegend = React.useCallback(settings => {
+  const createLegend = React.useCallback((settings = {}) => {
 
     const {
       domain = [],
@@ -166,6 +166,7 @@ const GISDatasetRenderComponent = props => {
   React.useEffect(() => {
     if (!maplibreMap) return;
     const sources = get(symbology, "sources", []);
+    //console.log('sources', sources)
     if (Array.isArray(sources)) {
       sources.forEach(s => {
         if (!maplibreMap.getSource(s.id)) {
@@ -174,10 +175,11 @@ const GISDatasetRenderComponent = props => {
       })
     }
     const layers = get(symbology, "layers", []);
+
     if (Array.isArray(layers)) {
-      layers.forEach(s => {
-        if (!maplibreMap.getSource(s.id)) {
-          maplibreMap.addSource(s.id, s.source);
+      layers.forEach(l => {
+        if (!maplibreMap.getLayer(l.id)) {
+          maplibreMap.addLayer(l);
         }
       })
     }
@@ -209,8 +211,8 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
-          console.log('map layer', sym, symbology)
-          if (sym.settings) {
+         // console.log('map layer', sym, symbology)
+          if (sym.settings || sym.value) {
             createLegend(sym.settings);
             setLayerData({ layer_id, paintProperty, value: sym.value  });
           }
@@ -227,6 +229,7 @@ const GISDatasetRenderComponent = props => {
     if (!layerData) return;
 
     const { layer_id, paintProperty, value } = layerData;
+    console.log('setLayerData update', layer_id, paintProperty, value)
     if(value) {
       maplibreMap.setPaintProperty(layer_id, paintProperty, value);
     } else { 
@@ -467,9 +470,13 @@ class GISDatasetLayer extends AvlLayer {
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {
+    let scaleDomain = [0,25,50,75,100]
+    if(domain.length > numBins) {
+      scaleDomain = ckmeans(domain, numBins)
+    }
     return d3scale
       .scaleThreshold()
-      .domain(ckmeans(domain, numBins))
+      .domain(scaleDomain)
       .range(getColorRange(numBins, color));
   }
 
