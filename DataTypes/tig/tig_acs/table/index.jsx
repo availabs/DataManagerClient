@@ -198,13 +198,16 @@ const TablePage = ({
         geoid: c,
       };
       (tableColumns || []).forEach((cc) => {
-        let val = 0;
+        let val = 0, flag = false;
         (variables[cc] || []).forEach((v) => {
-          const tmpVal = get(falcorCache, ["acs", c, year, v], 0);
-          val += tmpVal > 0 ? tmpVal : 0;
+          const tmpVal = get(falcorCache, ["acs", c, year, v], null);
+          if (tmpVal !== null) {
+            flag = true;
+            val += tmpVal > 0 ? tmpVal : 0;
+          }
         });
 
-        tableRow[`${cc}`] = val === 0 ? null : val.toLocaleString();
+        tableRow[`${cc}`] = flag ? val.toLocaleString() : null;
       });
       a = [...a, tableRow];
       return a;
