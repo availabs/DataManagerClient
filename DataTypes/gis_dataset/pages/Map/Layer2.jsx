@@ -242,8 +242,6 @@ const GISDatasetRenderComponent = props => {
 
   }, [legend, layerData]);
 
-console.log("LEGEND:", legend);
-
   return !legend ? null : (
     <div className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
