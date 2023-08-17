@@ -221,9 +221,17 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
 
-          if (sym.settings || sym.value) {
+          if (sym.settings && sym.value) {
             createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty, value: sym.value  });
+            setLayerData({ layer_id, paintProperty, value: sym.value });
+          }
+          else if (sym.settings) {
+            createLegend(sym.settings);
+            setLayerData({ layer_id, paintProperty });
+          }
+          else if (sym.value) {
+            setLegend(null);
+            setLayerData({ layer_id, paintProperty, value: sym.value });
           }
           else {
             setLegend(null);
