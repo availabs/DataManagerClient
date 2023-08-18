@@ -1,15 +1,25 @@
-
-import React, { useState } from 'react';
-import {  Table } from '~/modules/avl-components/src'
-import get from 'lodash/get'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+} from "react";
+import { get, uniq } from "lodash";
+import { Table } from "~/modules/avl-components/src";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { DamaContext } from "~/pages/DataManager/store";
-// import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 
-const ViewSelector = ({views}) => {
-  const { viewId, sourceId, page } = useParams()
-  const navigate = useNavigate()
+var years = Array.from(
+  Array(new Date().getFullYear() - 2 - 2009),
+  (_, i) => i + 2010
+);
+var geometries = ["county", "tracts"];
+
+const ViewSelector = ({ views }) => {
+  const { viewId, sourceId, page } = useParams();
+  const navigate = useNavigate();
 
   return (
     <div className="flex">
@@ -18,12 +28,14 @@ const ViewSelector = ({views}) => {
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) =>
+            navigate(`/source/${sourceId}/${page}/${e.target.value}`)
+          }
         >
           {views
             ?.sort((a, b) => b.view_id - a.view_id)
             .map((v, i) => (
-              <option key={i} className="ml-2  truncate" value={v.view_id}>
+              <option key={i} className="ml-2 truncate" value={v.view_id}>
                 {v.version ? v.version : v.view_id}
               </option>
             ))}
@@ -46,7 +58,6 @@ const identityMap = (tableData, attributes) => {
 };
 
 const TablePage = ({
-  source,
   views,
   transform = identityMap,
   filterData = {},
@@ -54,100 +65,175 @@ const TablePage = ({
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
-  const setFilters = React.useCallback(filters => {
-    _setFilters(prev => ({ ...prev, ...filters }));
+  const [acsTractGeoids, setAcsTractGeoids] = useState([]);
+  const [tableColumns, setTableColumns] = useState([]);
+  const setFilters = useCallback((filters) => {
+    _setFilters((prev) => ({ ...prev, ...filters }));
   }, []);
-  const { pgEnv, falcor, falcorCache, user  } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
 
-  const activeView = React.useMemo(() => {
+  const [geometry, year] = useMemo(() => {
+    return [
+      filters?.geometry?.value || "county",
+      filters?.year?.value || 2019,
+    ];
+  }, [filters]);
+
+  const viewYear = useMemo(() => year - (year % 10), [year]);
+  const activeView = useMemo(() => {
     return get(
       views?.filter((d) => d.view_id === viewId),
       "[0]",
       views[0]
     );
   }, [views, viewId]);
-  const activeViewId = React.useMemo(
-    () => get(activeView, `view_id`, null),
+
+  const activeViewId = useMemo(
+    () => get(activeView, "view_id", null),
     [activeView]
   );
 
-  React.useEffect(() => {
-    console.time("getviewLength");
-    falcor
-      .get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
-      .then((d) => {
-        console.timeEnd("getviewLength");
-      });
-  }, [pgEnv, activeViewId]);
+  const variables = useMemo(() => {
+    return get(activeView, "metadata.variables", []).reduce((acc, cur) => {
+      const key = cur?.label;
+      acc[key] = cur?.value?.censusKeys || [];
+      return acc;
+    }, {});
+  }, [activeView]);
 
-  const dataLength = React.useMemo(() => {
-    return get(
-      falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"],
-      "No Length"
-    );
-  }, [pgEnv, activeViewId, falcorCache]);
+  useEffect(() => {
+    if (variables && Object.keys(variables) && Object.keys(variables).length) {
+      setTableColumns(Object.keys(variables));
+    }
+  }
+  , []);
+  
+  const geoids = useMemo(
+    () => get(activeView, "metadata.counties", []),
+    [activeView]
+  );
 
-  const attributes = React.useMemo(() => {
-    return get(source, "metadata", [])
-      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
-      .map((d) => d.name);
-  }, [source]);
-
-  // const metadata = get(source,'metadata',[])
-  React.useEffect(() => {
-    if (dataLength > 0) {
-      console.log("dataLength", dataLength);
-      let maxData = Math.min(dataLength, 10000);
-      console.time("getViewData", maxData);
+  useEffect(() => {
+    async function getViewData() {
       falcor
-        .chunk(
-          [
-            "dama",
-            pgEnv,
-            "viewsbyId",
-            activeViewId,
-            "databyIndex",
-            [...Array(maxData).keys()],
-            attributes,
-          ],
-          { chunkSize: 500 }
-        )
-        .then((d) => {
-          console.timeEnd("getViewData", maxData);
+        .get([
+          "dama",
+          [pgEnv],
+          "tiger",
+          activeView?.view_dependencies,
+          geoids.map(String),
+          [viewYear],
+          ["tracts"],
+        ])
+        .then(() => {
+          const d = (geoids || []).reduce((a, c) => {
+            a.push(
+              ...get(
+                falcorCache,
+                [
+                  "dama",
+                  pgEnv,
+                  "tiger",
+                  activeView?.view_dependencies[0],
+                  c,
+                  viewYear,
+                  "tracts",
+                  "value",
+                ],
+                []
+              )
+            );
+            return a;
+          }, []);
+          setAcsTractGeoids(uniq([...d]));
         });
     }
-  }, [pgEnv, activeViewId, dataLength, attributes]);
+    getViewData();
+  }, [falcorCache, pgEnv, activeViewId, activeView, geoids, viewYear]);
 
-  const tableData = React.useMemo(() => {
-    let maxData = Math.min(dataLength, 5000);
+  const censusConfig = useMemo(
+    () =>
+      (Object.keys(variables) || []).reduce((acc, cur) => {
+        acc = [...acc, ...variables[cur]];
+        return acc;
+      }, []),
+    [variables]
+  );
 
-    let data = Object.values(
-      get(
-        falcorCache,
-        ["dama", pgEnv, "viewsbyId", activeViewId, "databyIndex"],
-        []
-      )
-    ).map((d) => get(falcorCache, d.value, {}));
+  useEffect(() => {
+    async function getACSData() {
+      const geos = geometry === "county" ? geoids : acsTractGeoids;
+      if (geos.length > 0) falcor.chunk(["acs", geos, year, censusConfig]);
+    }
+    getACSData();
+  }, [censusConfig, year, geometry]);
 
-    //console.log('attr data from cache', data)
+  const tableData = useMemo(() => {
+    const geos = geometry === "county" ? geoids : acsTractGeoids;
 
-    return data;
-  }, [pgEnv, activeViewId, falcorCache, dataLength]);
+    // ---------------- Keep this Code ---------------------------------
+    // return (geos || []).reduce((a, c) => {
+    //   let value = (censusConfig || []).reduce((aa, cc) => {
+    //     const censusName =
+    //       findKey(variables, (valueArray) => includes(valueArray, cc)) || null;
+    //     let yearValue = (years || []).reduce((aaa, ccc) => {
+    //       const v = get(falcorCache, ["acs", c, ccc, cc], null);
+    //       const tableRow = {
+    //         geoid: c,
+    //         [`${censusName}`]: v === -666666666 ? null : v,
+    //       };
+    //       aaa = [...aaa, tableRow];
+    //       return aaa;
+    //     }, []);
+    //     aa = [...aa, ...yearValue];
+    //     return aa;
+    //   }, []);
+    //   a = [...a, ...value];
+    //   return a;
+    // }, []);
+    // ---------------- Keep this Code ---------------------------------
 
-  let years = get(activeView, ["metadata", "years"], []);
+    return (geos || []).reduce((a, c) => {
+      let tableRow = {
+        geoid: c,
+      };
+      (tableColumns || []).forEach((cc) => {
+        let val = 0, flag = false;
+        (variables[cc] || []).forEach((v) => {
+          const tmpVal = get(falcorCache, ["acs", c, year, v], null);
+          if (tmpVal !== null) {
+            flag = true;
+            val += tmpVal > 0 ? tmpVal : 0;
+          }
+        });
 
-  const { data, columns } = React.useMemo(
-    () => transform(tableData, attributes, filters, years, source),
-    [tableData, attributes, transform, filters, years, source]
+        tableRow[`${cc}`] = flag ? val.toLocaleString() : null;
+      });
+      a = [...a, tableRow];
+      return a;
+    }, []);
+  }, [activeViewId, falcorCache, geometry, tableColumns, year, variables]);
+
+  const { data, columns } = useMemo(
+    () => transform(tableData, ["geoid", ...tableColumns]),
+    [tableData]
   );
 
   return (
     <div>
       <div className="flex">
         <div className="flex-1 pl-3 pr-4 py-2">Table View</div>
-        <TableFilter filters={filters} setFilters={setFilters} source={source}
-          data={data} columns={columns}/>
+        <TableFilter
+          filters={filters}
+          setFilters={setFilters}
+          variables={variables}
+          years={years}
+          geometries={geometries}
+          data={data}
+          columns={columns}
+          tableColumns={tableColumns}
+          setTableColumns={setTableColumns}
+        />
         <ViewSelector views={views} />
       </div>
       <div className="max-w-6xl">
