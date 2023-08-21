@@ -15,8 +15,6 @@ export const MetadataTable = ({source, ...props}) => {
     const {authLevel} = user;
     const gridCols = authLevel < 5 ? "grid-cols-3" : "grid-cols-4";
 
-    console.log('user', user)
-
     React.useEffect(() => {
         const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
         if (Array.isArray(md)) {
