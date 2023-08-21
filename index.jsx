@@ -17,7 +17,6 @@ import { DamaContext } from "./store"
 
 const DamaRoutes = DAMA_ARGS => {
 
-  console.log('registering data manager', DAMA_ARGS)
   const {
     baseUrl = "/datasources",
     defaultPgEnv = "pan",
