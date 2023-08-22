@@ -6,15 +6,26 @@ import {DamaContext} from "../../../../store/index.js";
 import {ManageMetaLookup} from "./MetadataLookup.jsx";
 import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
+import {FnSelector} from "./FnSelector.jsx";
 
-export const MetadataTable = ({source, ...props}) => {
+export const MetadataTable = ({source, colOrigin, ...props}) => {
     const {user} = React.useContext(DamaContext);
     const [metadata, setMetadata] = React.useState([]);
     const [editing, setEditing] = React.useState(null);
 
     const {authLevel} = user;
-    const gridCols = authLevel < 5 ? "grid-cols-3" : "grid-cols-4";
+    const gridCols =
+        authLevel < 5 ? "grid-cols-3" :
+            !colOrigin ? "grid-cols-5" : "grid-cols-5";
 
+    const tableCols = [
+        {name: 'Column', auth: false, Comp: () => <></>},
+        {name: 'Description', auth: false},
+        {name: 'Type', auth: false},
+        {name: 'Display', auth: true, minAuthLevel: 5},
+        {name: 'Default Fn', auth: true, minAuthLevel: 5},
+        // {name: 'Delete', auth: true, minAuthLevel: 5, condition: colOrigin === 'calculated-column'},
+    ]
     React.useEffect(() => {
         const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
         if (Array.isArray(md)) {
@@ -31,25 +42,22 @@ export const MetadataTable = ({source, ...props}) => {
     if (!metadata || !metadata.map || metadata.length === 0) return <div> Metadata Not Available </div>
 
     return (<div className="overflow-hidden">
-        {authLevel > 5 && <AddCalculatedColumn sourceId={source.source_id} metadata={metadata} setMetadata={setMetadata}/>}
+        {authLevel > 5 && colOrigin === 'calculated-column' && <AddCalculatedColumn sourceId={source.source_id} metadata={metadata} setMetadata={setMetadata}/>}
         <div className={`py-4 sm:py-2 sm:grid sm:${gridCols} sm:gap-4 sm:px-6 border-b-2`}>
-            <dt className="text-sm font-medium text-gray-600">
-                Column
-            </dt>
-            <dd className="text-sm font-medium text-gray-600 ">
-                Description
-            </dd>
-            <dd className="text-sm font-medium text-gray-600">
-                Type
-            </dd>
-            {authLevel < 5 ? null : <dd className="text-sm font-medium text-gray-600">
-                Display
-            </dd>}
+            {
+                tableCols
+                    .filter(tableCol =>
+                        (!tableCol.auth ||( tableCol.auth && authLevel >= tableCol.minAuthLevel)) &&
+                        (!tableCol.hasOwnProperty('condition') || tableCol.condition)
+                    )
+                    .map(tableCol => <dd className="text-sm font-medium text-gray-600 ">{tableCol.name}</dd>)
+            }
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
             <dl className="sm:divide-y sm:divide-gray-200">
 
                 {metadata
+                    .filter(col => col.origin === colOrigin)
                     .map((col, i) => (
                         <div key={i} className={`py-4 sm:py-5 sm:grid sm:${gridCols} sm:gap-4 sm:px-6`}>
                             <dt className="text-sm text-gray-900">
@@ -67,7 +75,7 @@ export const MetadataTable = ({source, ...props}) => {
                                         />
                                     </div> : <div className='pt-3 pr-8'>{get(col, 'name') || 'No Name'}</div>}
 
-                                    {user.authLevel > 5 && col.type === 'calculated-column'?
+                                    {authLevel > 5 && col.origin === 'calculated-column' ?
                                         <div className='hidden group-hover:block text-blue-500 cursor-pointer'
                                              onClick={e => setEditing(`${col.name}-columnName`)}>
                                             <i className="fad fa-pencil absolute -ml-12 p-2 pt-3 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
@@ -88,7 +96,7 @@ export const MetadataTable = ({source, ...props}) => {
                                         />
                                     </div> : <div className='pt-3 pr-8 font-bold'>{get(col, 'display_name') || 'No Display Name'}</div>}
 
-                                    {user.authLevel > 5 ?
+                                    {authLevel > 5 ?
                                         <div className='hidden group-hover:block text-blue-500 cursor-pointer'
                                              onClick={e => setEditing(`${col.name}-displayName`)}>
                                             <i className="fad fa-pencil absolute -ml-12 p-2 pt-3 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
@@ -101,21 +109,21 @@ export const MetadataTable = ({source, ...props}) => {
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 flex flex-row justify-between group">
                                 {editing === `${col.name}-description` ? <div className='pr-8'>
                                     <Edit
-                                        sourceId={source.source_id}
                                         metadata={metadata}
                                         setMetadata={setMetadata}
                                         col={col.name}
                                         startValue={get(col, 'desc') || 'No Description'}
                                         attr={'desc'}
+                                        sourceId={source.source_id}
                                         setEditing={setEditing}
                                         cancel={() => setEditing(null)}
                                     />
                                 </div> : <div className='pr-8'>{get(col, 'desc') || 'No Description'}</div>}
 
-                                {user.authLevel > 5 ?
+                                {authLevel > 5 ?
                                     <div className='hidden group-hover:block text-blue-500 cursor-pointer'
                                          onClick={e => setEditing(`${col.name}-description`)}>
-                                        <i className="fad fa-pencil absolute -ml-12 p-2 pt-0 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
+                                        <i className="fad fa-pencil absolute -ml-12 p-2 hover:bg-blue-500 rounded focus:bg-blue-700 hover:text-white "/>
                                     </div> : ''}
                             </dd>
 
@@ -128,38 +136,53 @@ export const MetadataTable = ({source, ...props}) => {
                             {authLevel > 5 &&
                                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
                                     {
-                                        // col.display !== 'calculated-column' &&
+                                        // col.origin !== 'calculated-column' &&
                                         <DisplaySelector
-                                            sourceId={source.source_id}
                                             metadata={metadata}
                                             setMetadata={setMetadata}
                                             col={col.name}
                                             value={col.display}
-                                        />}
-                                    {
-                                       col.display === 'calculated-column' &&
-                                        <RemoveCalculatedColumn
-                                            col={col.name}
                                             sourceId={source.source_id}
-                                            metadata={metadata}
-                                            setMetadata={setMetadata}
-                                        />
-                                    }
+                                        />}
                                     {
                                         ['meta-variable', 'geoid-variable'].includes(col.display) &&
                                             <ManageMetaLookup
-                                                sourceId={source.source_id}
                                                 metadata={metadata}
                                                 setMetadata={setMetadata}
                                                 col={col.name}
                                                 startValue={get(col, 'meta_lookup') || 'No Meta Lookup Available'}
                                                 attr={'meta_lookup'}
+                                                sourceId={source.source_id}
                                                 setEditing={setEditing}
                                                 cancel={() => setEditing(null)}
                                             />
                                     }
                                 </dd>
                             }
+
+                            {authLevel > 5 &&
+                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 flex flex-row">
+                                    {
+                                        // col.origin !== 'calculated-column' &&
+                                        <FnSelector
+                                            metadata={metadata}
+                                            setMetadata={setMetadata}
+                                            col={col.name}
+                                            value={col.defaultFn}
+                                            sourceId={source.source_id}
+                                        />}
+                                    {
+                                        col.origin === 'calculated-column' &&
+                                        <RemoveCalculatedColumn
+                                            metadata={metadata}
+                                            setMetadata={setMetadata}
+                                            col={col.name}
+                                            sourceId={source.source_id}
+                                        />
+                                    }
+                                </dd>
+                            }
+
 
                         </div>))}
 
