@@ -7,6 +7,7 @@ import {ManageMetaLookup} from "./MetadataLookup.jsx";
 import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
 import {FnSelector} from "./FnSelector.jsx";
+import {TypeSelector} from "./TypeSelector.jsx";
 
 export const MetadataTable = ({source, colOrigin, ...props}) => {
     const {user} = React.useContext(DamaContext);
@@ -128,8 +129,18 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                             </dd>
 
 
-                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 ">
-                                <div className='text-gray-400 italic'>{col.type}</div>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
+                                { authLevel > 5 ?
+                                    // col.origin !== 'calculated-column' &&
+                                    <TypeSelector
+                                        metadata={metadata}
+                                        setMetadata={setMetadata}
+                                        col={col.name}
+                                        value={col.type}
+                                        sourceId={source.source_id}
+                                    /> :
+                                    <div className='text-gray-400 italic'>{col.type}</div>
+                                }
                             </dd>
 
 
