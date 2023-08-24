@@ -130,8 +130,8 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
 
 
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
-                                { authLevel > 5 ?
-                                    // col.origin !== 'calculated-column' &&
+                                {
+                                    authLevel > 5 && col.origin === 'calculated-column' ?
                                     <TypeSelector
                                         metadata={metadata}
                                         setMetadata={setMetadata}
