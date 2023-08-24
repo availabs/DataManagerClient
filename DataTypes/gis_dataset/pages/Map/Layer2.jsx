@@ -1,6 +1,7 @@
 import React from "react";
 // import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
+import isEqual from "lodash/isEqual";
 import cloneDeep from "lodash/cloneDeep"
 
 import {
@@ -113,12 +114,12 @@ const calcDomain = (type, data, length) => {
       return values;
   }
 }
-const calcRange = (type, length, color) => {
+const calcRange = (type, length, color, reverse) => {
   switch (type) {
     case "quantize":
-      return getColorRange(7, color);
+      return getColorRange(7, color, reverse);
     case "threshold":
-      return getColorRange(length ? length + 1 : 7, color);
+      return getColorRange(length ? length + 1 : 7, color, reverse);
     default:
       return data;
   }
@@ -135,11 +136,14 @@ const GISDatasetRenderComponent = props => {
     filters,
     activeViewId,
     symbology,
-    updateLegend
+    updateLegend,
+    sourceId
   } = layerProps;
 
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
+
+  const { pgEnv, falcor, falcorCache, ...rest } = React.useContext(DamaContext);
 
   const createLegend = React.useCallback((settings = {}) => {
 
@@ -150,7 +154,8 @@ const GISDatasetRenderComponent = props => {
       name,
       type = "threshold",
       data = [],
-      color = "BrBG"
+      color = "BrBG",
+      reverse = false
     } = settings;
 
     const legend = {
@@ -160,18 +165,40 @@ const GISDatasetRenderComponent = props => {
       name,
       type,
       data,
-      color
+      color,
+      reverse
     };
 
     if (!domain.length) {
       legend.domain = calcDomain(type, data, range.length);
     }
     if (!range.length) {
-      legend.range = calcRange(type, domain.length, color);
+      legend.range = calcRange(type, domain.length, color, reverse);
     }
 
     setLegend(legend);
   }, []);
+
+  const prevLegend = React.useRef(legend);
+
+  React.useEffect(() => {
+    if (!legend) return;
+
+    const { data, domain, name, ...rest } = legend;
+
+    if (legend && !prevLegend.current) {
+      prevLegend.current = rest;
+      return;
+    }
+
+    if (!isEqual(rest, prevLegend.current)) {
+      prevLegend.current = rest;
+      falcor.call(
+        ["dama", "sources", "metadata", "update"],
+        [pgEnv, sourceId, { legend: rest }]
+      );
+    }
+  }, [falcor, pgEnv, sourceId, legend])
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -239,7 +266,7 @@ const GISDatasetRenderComponent = props => {
           }
         });
       });
-  }, [maplibreMap, resourcesLoaded, symbology, activeVariable]);
+  }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
 
   React.useEffect(() => {
     if (!legend) return;
@@ -455,14 +482,38 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
   )
 }
 
+const BooleanSlider = ({ value, onChange }) => {
+  const toggle = React.useCallback(e => {
+    onChange(!value);
+  }, [onChange, value]);
+  const theme = useTheme();
+  return (
+    <div onClick={ toggle }
+      className="px-4 py-1 h-8 rounded flex items-center w-full cursor-pointer"
+    >
+      <div className="rounded flex-1 h-2 bg-gray-300 relative flex items-center">
+        <div className={ `
+            w-4 h-4 rounded absolute
+            ${ Boolean(value) ? "bg-teal-500" : "bg-gray-400" }
+          ` }
+          style={ {
+            left: Boolean(value) ? "100%" : "0%",
+            transform: "translateX(-50%)",
+            transition: "left 150ms"
+          } }/>
+      </div>
+    </div>
+  )
+}
+
 const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
 
   const updateLegendType = React.useCallback(type => {
     updateLegend({ ...legend, type, domain: undefined });
   }, [legend, updateLegend]);
 
-  const updateLegendRange = React.useCallback((range, color) => {
-    updateLegend({ ...legend, range, color, domain: undefined });
+  const updateLegendRange = React.useCallback((range, color, reverse) => {
+    updateLegend({ ...legend, range, color, reverse, domain: undefined });
   }, [legend, updateLegend]);
 
   const updateLegendDomain = React.useCallback((domain, range = undefined) => {
@@ -470,6 +521,8 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
   }, [legend, updateLegend]);
 
   const [open, setOpen] = React.useState(-1);
+
+  const [reverseColors, setReverseColors] = React.useState(legend.reverse);
 
   return !isOpen ? null : (
     <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96 relative">
@@ -493,6 +546,15 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
           <TypeSelector { ...legend }
             updateLegend={ updateLegendType }/>
 
+          <div className="flex items-center px-1">
+            <div>Reverse Colors:</div>
+            <div className="flex-1">
+              <BooleanSlider
+                value={ reverseColors }
+                onChange={ setReverseColors }/>
+            </div>
+          </div>
+
           { Object.keys(ColorRangesByType).map((type, i) => (
               <ColorCategory key={ type } type={ type }
                 startSize={ legend.range.length }
@@ -501,7 +563,8 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
                 isOpen={ open === i }
                 setOpen={ setOpen }
                 index={ i }
-                current={ legend.range }/>
+                current={ legend.range }
+                reverseColors={ reverseColors }/>
             ))
           }
         </div>
