@@ -3,10 +3,9 @@ import {MetadataTable} from "./components/MetadataTable.jsx";
 
 const Index = ({source, views, ...props}) => {
     return (
-        <div className="w-full flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <div className='col-span-3'>
-                <MetadataTable source={source}/>
-            </div>
+        <div className="w-full flex-1 sm:px-6 divide-y-4 grid gap-y-6 ">
+            <MetadataTable source={source} colOrigin={'calculated-column'}/>
+            <MetadataTable source={source} colOrigin={undefined}/>
         </div>
     )
 }
