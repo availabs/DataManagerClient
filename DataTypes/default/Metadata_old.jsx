@@ -5,24 +5,35 @@ import { DamaContext } from "~/pages/DataManager/store"
 
 const MetadataTable = ({ source, ...props }) => {
 
-
-
-  const { pgEnv, falcor, user } = React.useContext(DamaContext)
+  const { pgEnv, falcor, user } = React.useContext(DamaContext);
   const { authLevel } = user;
   const gridCols = authLevel < 5 ? "grid-cols-3" : "grid-cols-4";
-
 
   const sourceId = source.source_id;
   const [metadata, setMetadata] = React.useState([]);
 
   React.useEffect(() => {
     const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
+
     if (Array.isArray(md)) {
-      const MD = md.map(d => ({
+      setMetadata(md.map(d => ({
           display: "",
           ...d
-        }));
-      setMetadata(MD);
+        }))
+      );
+    }
+    else if ("columns" in md) {
+      const columns = get(md, "columns", []);
+      if (Array.isArray(columns)) {
+        setMetadata(columns.map(d => ({
+            display: "",
+            ...d
+          }))
+        );
+      }
+      else {
+        setMetadata([]);
+      }
     }
     else {
       setMetadata([]);
@@ -42,24 +53,27 @@ const MetadataTable = ({ source, ...props }) => {
       }
     })
     setMetadata(md);
-    falcor.set({
-      paths: [
-        ['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "metadata"]
-      ],
-      jsonGraph: {
-        dama: {
-          [pgEnv]: {
-            sources: {
-              byId: {
-                [sourceId]: {
-                  attributes: { metadata: JSON.stringify(md) }
-                }
-              }
-            }
-          }
-        }
-      }
-    })//.then(res => console.log("RES:", res))
+    falcor.call(["dama", "sources", "metadata", "update"], [pgEnv, sourceId, { columns: md }])
+      // .then(res => console.log("RES:", res))
+
+    // falcor.set({
+    //   paths: [
+    //     ['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "metadata"]
+    //   ],
+    //   jsonGraph: {
+    //     dama: {
+    //       [pgEnv]: {
+    //         sources: {
+    //           byId: {
+    //             [sourceId]: {
+    //               attributes: { metadata: JSON.stringify(md) }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }).then(res => console.log("RES:", res))
   }, [falcor, pgEnv, sourceId, metadata]);
 
   if (!metadata ||!metadata.map || metadata.length === 0) return <div> Metadata Not Available </div>

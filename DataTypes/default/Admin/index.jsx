@@ -5,11 +5,65 @@ import { useParams, Link } from "react-router-dom";
 
 import Uploads from '../Uploads'
 
-
 const AdminPage = ({source, views, activeViewId, }) => {
-  const [editing, setEditing] = React.useState(null)
-  const { sourceId } = useParams()
-  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
+  const currentKeys = ['Guest User', 'Public User', 'Agency User'];
+  const currentRoles = ['view', 'download'];
+
+  const currentAccess = Object.assign({}, ...currentKeys.map((key) => {
+    return {
+      [key]: Object.assign({}, ...currentRoles.map((role) => { return { [role]: false} }))
+    };
+  }));
+
+  const [editing, setEditing] = React.useState(currentAccess);
+  const { sourceId } = useParams();
+  const {pgEnv, baseUrl, user, falcor} = React.useContext(DamaContext);
+  const {visibility = 'visible'} = source?.statistics || {};
+  const {access = currentAccess} = source?.statistics || {};
+
+  const updateVisibilityData = async() => {
+    const sourceStatistics = source?.statistics || {};
+    sourceStatistics['visibility'] = visibility == 'hidden' ? 'visible' : 'hidden';
+
+    await falcor.set({
+      paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "statistics"]], jsonGraph: {
+          dama: {
+              [pgEnv]: {
+                  sources: {
+                      byId: {
+                          [sourceId]: {
+                              attributes: {statistics: JSON.stringify(sourceStatistics)}
+                          }
+                      }
+                  }
+              }
+          }
+      }
+    })
+  };
+
+  const updateAccess = async(group, control, event) => {
+    const ca = JSON.parse(JSON.stringify(access));
+    ca[group][control] = event.target.checked;
+    const sourceStatistics = source?.statistics || {};
+    sourceStatistics['access'] = ca;
+    
+    await falcor.set({
+      paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "statistics"]], jsonGraph: {
+          dama: {
+              [pgEnv]: {
+                  sources: {
+                      byId: {
+                          [sourceId]: {
+                              attributes: {statistics: JSON.stringify(sourceStatistics)}
+                          }
+                      }
+                  }
+              }
+          }
+      }
+    });
+  }
 
   return (
     <div>
@@ -23,9 +77,154 @@ const AdminPage = ({source, views, activeViewId, }) => {
               </dd>
             </div>
           </div>
-          <div className="w-full pl-4 py-6 hover:py-6 sm:pl-6 flex justify-between group">
-            Access Controls
-          </div>
+          <div className='flex-1 border-b-2 border-[#679d89]'>
+            <div className="py-4">
+              <div className="flex items-center border-t-2 border-[#679d89]">
+                <div className='py-3 px-6 bg-[#679d89] text-gray-100 text-lg'> General </div>
+              </div>
+            </div>
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="text-center" style={{ paddingRight: "40px" }}>
+                      
+                    </th>
+                    <th className="text-center">
+                      Show
+                    </th>
+                    <th className="text-center">
+                      Download
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentKeys.map((key, i) => {
+                    return (
+                      <>
+                        <tr key={i} className='border-b-2 '>
+                          <td className='p-2'>{key}</td>
+                          <td className="text-center">
+                            <input
+                              type='checkbox'
+                              checked={access[key]['view']}
+                              onChange={(e) => updateAccess(key, 'view', e)}  
+                            />
+                          </td>
+                          <td className="text-center">
+                            <input
+                              type='checkbox'
+                              checked={access[key]['download']}
+                              onChange={(e) => updateAccess(key, 'download', e)}
+                            />
+                          </td>
+                        </tr>
+                        
+                      </>
+                    )
+                  })}
+                  {/* {tableDescriptorColumnTypes.map(({ key, col }, rowIdx) => {
+                    let fieldColNameOptions;
+                    if (Array.isArray(availableDbColNames)) {
+                      fieldColNameOptions = assignedColNamesSet.has(col)
+                        ? [col, ...availableDbColNames]
+                        : availableDbColNames;
+                    }
+
+                    const ColNameCell = omittedFields[key] ? (
+                      <span />
+                    ) : (
+                      <InputElem
+                        {...{
+                          availableDbColNames: fieldColNameOptions,
+                          publishStatus,
+                          field: key,
+                          col,
+                          onChange: (e) => {
+                            const value = e.target ? e.target.value : e;
+                            dispatch({
+                              type: "update_dbColName",
+                              payload: { rowIdx, colName: value },
+                            });
+                          },
+                        }}
+                      />
+                    );
+
+                    return (
+                      <tr key={key} className="border-b">
+                        <td className="py-4 text-left">{key}</td>
+                        <td className="text-center  p-2">{ColNameCell}</td>
+                        <td className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={omittedFields[key]}
+                            disabled={
+                              fieldColNameOptions && fieldColNameOptions.length === 0
+                            }
+                            onChange={() => {
+                              const newOmittedFields = {
+                                ...omittedFields,
+                                [key]: !omittedFields[key],
+                              };
+
+                              setOmittedFields(newOmittedFields);
+
+                              const isAllChecked = Object.values(
+                                newOmittedFields
+                              ).some((v) => v === false);
+                              setAllChecked(isAllChecked);
+                              if (col) {
+                                dispatch({
+                                  type: "update_dbColName",
+                                  payload: { rowIdx, colName: "" },
+                                });
+                              } else if (!fieldColNameOptions) {
+                                dispatch({
+                                  type: "update_dbColName",
+                                  payload: {
+                                    rowIdx,
+                                    colName: defaultMappings[key],
+                                  },
+                                });
+                              }
+                            }}
+                          />
+                        </td>
+                        <td className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={preserveColumns[col]}
+                            disabled={
+                              fieldColNameOptions && fieldColNameOptions.length === 0
+                            }
+                            onChange={() => {
+                              const newPreserveColumns = {
+                                ...preserveColumns,
+                                [col]: !preserveColumns[col],
+                              };
+
+                              setPreserveColumns(newPreserveColumns);
+
+                              const isAllPreserveColumnsChecked = Object.values(
+                                newPreserveColumns
+                              ).some((v) => v === false);
+                              setallPreserveColumnsChecked(
+                                isAllPreserveColumnsChecked
+                              );
+
+                              dispatch({
+                                type: "update",
+                                payload: { mbtilesOptions: { preserveColumns: newPreserveColumns } },
+                              });
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })} */}
+                </tbody>
+              </table>
+            </div>
         </div>
         <div className="w-72 ">
           <div> Admin Actions </div>
@@ -37,9 +236,13 @@ const AdminPage = ({source, views, activeViewId, }) => {
             </Link>
           </div>
           <div className='flex w-full p-1'>
-            <div className='flex-1 text-center shadow p-4 border'>
-              Visibility 
-            </div>
+              <Link onClick={updateVisibilityData}
+                  className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
+                  style={{backgroundColor: visibility == 'visible'?'lightgreen': '#FF7276'}}
+                  > 
+                    Visibile {visibility == 'visible'? "ON" : "OFF"}
+              </Link>
+              
           </div>
           <div className="w-full p-1 flex">
             <Link 

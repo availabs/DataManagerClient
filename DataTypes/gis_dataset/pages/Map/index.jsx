@@ -62,7 +62,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
   const metadata = React.useMemo(() => {
-    const md = get(source, "metadata", []);
+    const md = get(source, ["metadata", "columns"], get(source, "metadata", []));
     if (Array.isArray(md)) {
       return md;
     }
@@ -123,32 +123,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     setData(data);
   }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
 
-  // const scale = React.useMemo(() => {
-  //   if (!data.length) return null;
-  //
-  //   if (varType === "data-variable") {
-  //     const domain = data.map(d => +d.value).filter(Boolean);
-  //     return scaleThreshold()
-  //       .domain(ckmeans(domain, ColorRange.length - 1))
-  //       .range(ColorRange)
-  //   }
-  //   else {
-  //     const domain = data.map(d => d.value);
-  //     return scaleOrdinal()
-  //       .domain(domain)
-  //       .range(OrdinalColorRange)
-  //   }
-  // }, [data, varType]);
-
   React.useEffect(() => {
     if (!data.length) return;
 
-    // const colors = data.reduce((a, c) => {
-    //   a[c.id] = scale(c.value);
-    //   return a
-    // }, {});
-    //
-    // const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
+    const legend = get(source, ["metadata", "legend"], {});
 
     const newSym = layer.layers.reduce((a, c) => {
       a[c.id] = {
@@ -157,6 +135,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
             settings: {
               name: activeVar,
               type: varType === "data-variable" ? 'threshold' : "ordinal",
+              ...legend,
               data
             },
             // value: output
@@ -181,7 +160,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
       }
       return update;
     });
-  }, [layer, data, setTempSymbology, activeVar, varType]);
+  }, [layer, data, setTempSymbology, activeVar, varType, source]);
 
   return (
     <div className='flex flex-1'>
@@ -246,6 +225,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
+// console.log("SOURCE:", source)
+
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
       const sources = symSources || get(mapData,'sources',[]);
@@ -260,7 +241,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView: activeView,
             filters,
             hoverComp: HoverComp,
-            attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
+            attributes: get(source, ['metadata', 'columns'], get(source, 'metadata', []))
+              .filter(d => ['integer', 'string', 'number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
             sources,
@@ -273,7 +255,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   return (
     <div>
       <div className='flex'>
-        <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
+        <div className='pl-3 pr-4 py-2 flex-1'>Map View { viewId }</div>{/*{get(activeView,'id','')}*/}
         <MapFilter
           source={source}
           metaData={metaData}
@@ -288,11 +270,11 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         <ViewSelector views={views} />
       </div>
       <div className='w-full h-[900px]'>
-        <Map
-          layers={[layer]}
-          tempSymbology={tempSymbology}
-          setTempSymbology={setTempSymbology}
-        />
+        <Map key={ viewId }
+          layers={ [layer] }
+          source={ source }
+          tempSymbology={ tempSymbology }
+          setTempSymbology={ setTempSymbology }/>
       </div>
       {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -351,7 +333,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
 export default MapPage
 
-const Map = ({ layers, tempSymbology, setTempSymbology }) => {
+const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -423,10 +405,11 @@ const Map = ({ layers, tempSymbology, setTempSymbology }) => {
         out[cur.id] = cloneDeep(layers[index]);
         out[cur.id].symbology = cloneDeep(tempSymbology);
         out[cur.id].updateLegend = updateLegend;
+        out[cur.id].sourceId = source.source_id;
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology, updateLegend])
+  },[layers, layerData, tempSymbology, updateLegend, source.source_id])
 
   return (
 
