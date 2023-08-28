@@ -34,7 +34,7 @@ const ACSMapFilter = ({
 }) => {
   const { pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
-  const [subGeoids, setSubGeoIds] = useState([]);
+  //const [subGeoids, setSubGeoIds] = useState([]);
 
   const max = new Date().getUTCFullYear();
   const yearRange = range(2010, max + 1);
@@ -86,7 +86,7 @@ const ACSMapFilter = ({
     getViewData();
   }, [pgEnv, activeViewId, activeView]);
 
-  useEffect(() => {
+  const subGeoids = React.useMemo(async () => {
     async function getViewData() {
       falcor
         .get([
@@ -118,10 +118,10 @@ const ACSMapFilter = ({
             );
             return a;
           }, []);
-          setSubGeoIds(uniq(d));
+          return uniq(d);
         });
     }
-    getViewData();
+    return await getViewData();
   }, [falcorCache, pgEnv, activeViewId, activeView, counties, viewYear]);
 
   useEffect(() => {
@@ -158,8 +158,10 @@ const ACSMapFilter = ({
       "id"
     );
     newSymbology["layers"] = uniqBy(flattenDeep(newSymbology["layers"]), "id");
-
-    setTempSymbology(newSymbology);
+    if (!isEqual(tempSymbology, newSymbology)) {
+      console.log('setTempSymbology 1', newSymbology)
+      setTempSymbology(newSymbology);
+    }
   }, [falcorCache, pgEnv, activeViewId, activeView]);
 
   useEffect(() => {
@@ -250,6 +252,7 @@ const ACSMapFilter = ({
       };
     }
     if (!isEqual(tempSymbology, newSymbology)) {
+      console.log('setTempSymbology 2', newSymbology)
       setTempSymbology(newSymbology);
     }
   }, [

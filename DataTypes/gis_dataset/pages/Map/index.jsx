@@ -234,6 +234,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       if(sources.length === 0 || layers.length === 0 ) {
         return null
       }
+      //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
       return {
             name: source.name,
             pgEnv,
@@ -241,7 +242,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView: activeView,
             filters,
             hoverComp: HoverComp,
-            attributes: get(source, ['metadata', 'columns'], get(source, 'metadata', []))
+            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
               .filter(d => ['integer', 'string', 'number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
