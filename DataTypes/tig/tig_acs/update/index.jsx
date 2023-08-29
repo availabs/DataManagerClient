@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { get } from "lodash";
 import { Button, useFalcor } from "~/modules/avl-components/src";
 
@@ -18,6 +18,7 @@ import {
 
 const Update = (props) => {
   const { falcor, falcorCache } = useFalcor();
+  const navigate = useNavigate();
   const { sourceId } = useParams();
   const { pgEnv } = useContext(DamaContext);
   const [selectedVariables, setSelecteVariableOptions] = useState(null);
@@ -156,7 +157,7 @@ const Update = (props) => {
     value: Number(year),
   }));
 
-  const runScript = (params) => {
+  const runScript = (params, navigate) => {
     const runPublish = async () => {
       try {
         const publishData = {
@@ -166,7 +167,7 @@ const Update = (props) => {
           viewDependency: params.viewDependency,
           ...params.metadata,
         };
-        
+
         const res = await fetch(
           `${DAMA_HOST}/dama-admin/${pgEnv}/hazard_mitigation/cacheAcs`,
           {
@@ -178,7 +179,11 @@ const Update = (props) => {
           }
         );
 
-        await res.json();
+        const finalEvent = await res.json();
+        const { etl_context_id, source_id } = finalEvent;
+        if (etl_context_id && source_id) {
+          navigate(`/source/${source_id}/uploads/${etl_context_id}`);
+        }
       } catch (err) {}
     };
     runPublish();
@@ -284,7 +289,7 @@ const Update = (props) => {
                 years: selectedYears,
               }),
               viewDependency,
-            });
+            }, navigate);
           }}
         >
           {" "}

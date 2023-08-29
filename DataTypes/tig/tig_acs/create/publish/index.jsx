@@ -38,7 +38,7 @@ const submitUpload = (props, navigate, pgEnv) => {
             ...(props?.viewMetadata || {}),
           };
 
-          await fetch(
+          const res = await fetch(
             `${DAMA_HOST}/dama-admin/${pgEnv}/hazard_mitigation/cacheAcs`,
             {
               method: "POST",
@@ -48,8 +48,13 @@ const submitUpload = (props, navigate, pgEnv) => {
               },
             }
           );
-        } catch (err) {}
+          const publishFinalEvent = await res.json();
+          const { etl_context_id, source_id } = publishFinalEvent;
 
+          if (etl_context_id && source_id) {
+            navigate(`/source/${source_id}/uploads/${etl_context_id}`);
+          }
+        } catch (err) {}
         navigate(`/source/${source_id}`);
       }
     } catch (err) {
