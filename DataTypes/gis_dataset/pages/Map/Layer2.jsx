@@ -224,9 +224,13 @@ const GISDatasetRenderComponent = props => {
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
 
+
+
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
+
+    // console.log('layer update symbology ',symbology)
 
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {

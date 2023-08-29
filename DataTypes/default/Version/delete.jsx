@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
 import { DamaContext } from "../../../store";
-import { getDamaApiRoutePrefix, deleteView } from "../../../utils/DamaControllerApi";
 
 async function getData({ falcor, pgEnv, viewId }) {
   const data = await falcor.get(
@@ -45,11 +44,19 @@ const DeleteButton = ({ text, viewId, sourceId, pgEnv, baseUrl, falcor }) => {
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
       onClick={async () => {
-        await deleteView(getDamaApiRoutePrefix(pgEnv), viewId);
+
+        await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/deleteDamaView`, {
+          method: "POST",
+          body: JSON.stringify({ "view_id": viewId }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
         await falcor.invalidate(["dama", pgEnv, "sources", "byId", sourceId, "views", "length"])
         navigate(`${baseUrl}/source/${sourceId}/versions`);
-      }
-      }>
+      }}
+    >
 
       {text}
     </button>
