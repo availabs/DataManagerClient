@@ -10,6 +10,8 @@ import SourcesLayout from "../components/SourcesLayout";
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/components/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
+import baseUserViewAccess  from "../utils/authLevel";
+import { NoMatch } from "../utils/404";
 
 
 const Source = ({}) => {
@@ -17,7 +19,8 @@ const Source = ({}) => {
   const [ pages, setPages] = useState(Pages)
   const [ activeViewId, setActiveViewId ] = useState(viewId)
   const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
-
+  // console.log('source page: ');
+  const userAuthLevel = user.authLevel;
 
   const Page = useMemo(() => {
     return page
@@ -97,6 +100,8 @@ const Source = ({}) => {
     return attributes;
   }, [falcorCache, sourceId, pgEnv]);
 
+  const sourceAuthLevel = baseUserViewAccess(source?.statistics?.access || {});
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const makeUrl = React.useCallback(d => {
@@ -106,57 +111,60 @@ const Source = ({}) => {
     })
     return `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
   }, [baseUrl, sourceId, activeViewId, searchParams])
-
+ 
+  if(sourceAuthLevel > userAuthLevel) {
+    return  <NoMatch />
+  } 
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <SourcesLayout baseUrl={baseUrl}>
-        {/*<div className='flex w-full p-2 border-b items-center'>
-          <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
-            {source.display_name || source.name}
-          </div>
-          <div className='flex-1'></div>
-          <div className='py-2'>
-            { user && user.authLevel >= 10 ?
-              <Link
-                className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
-                to={`${baseUrl}/delete/source/${source.source_id}/`}>
-                  <i className='fad fa-trash' />
-              </Link> : ''
-            }
-          </div>
-        </div>*/}
-        <TopNav
-          menuItems={Object.values(pages)
-            .filter(d => {
-              const authLevel = d?.authLevel || -1
-              const userAuth = user.authLevel || -1
-              return !d.hidden && (authLevel <= userAuth)
-            })
-            .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
-            .map(d => {
-              return {
-                name:d.name,
-                path: makeUrl(d)
+      <div className="max-w-6xl mx-auto">
+        <SourcesLayout baseUrl={baseUrl}>
+          {/*<div className='flex w-full p-2 border-b items-center'>
+            <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
+              {source.display_name || source.name}
+            </div>
+            <div className='flex-1'></div>
+            <div className='py-2'>
+              { user && user.authLevel >= 10 ?
+                <Link
+                  className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
+                  to={`${baseUrl}/delete/source/${source.source_id}/`}>
+                    <i className='fad fa-trash' />
+                </Link> : ''
               }
+            </div>
+          </div>*/}
+          <TopNav
+            menuItems={Object.values(pages)
+              .filter(d => {
+                const authLevel = d?.authLevel || -1
+                const userAuth = user.authLevel || -1
+                return !d.hidden && (authLevel <= userAuth)
+              })
+              .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
+              .map(d => {
+                return {
+                  name:d.name,
+                  path: makeUrl(d)
+                }
 
-            })}
-          themeOptions={{ size: "inline" }}
-        />
-        <div className='w-full p-4 bg-white shadow mb-4'>
-          <Page
-            searchParams={ searchParams }
-            setSearchParams={ setSearchParams }
-            source={source}
-            views={views}
-            user={user}
-            baseUrl={baseUrl}
-            activeViewId={activeViewId}
+              })}
+            themeOptions={{ size: "inline" }}
           />
-        </div>
-      </SourcesLayout>
-    </div>
-  );
+          <div className='w-full p-4 bg-white shadow mb-4'>
+            <Page
+              searchParams={ searchParams }
+              setSearchParams={ setSearchParams }
+              source={source}
+              views={views}
+              user={user}
+              baseUrl={baseUrl}
+              activeViewId={activeViewId}
+            />
+          </div>
+        </SourcesLayout>
+      </div>
+    )
 };
 
 

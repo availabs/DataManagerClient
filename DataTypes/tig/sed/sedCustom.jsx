@@ -9,7 +9,7 @@ import * as d3scale from "d3-scale"
 import { range as d3range } from "d3-array"
 import ckmeans from '../../../utils/ckmeans'
 import cloneDeep from 'lodash/cloneDeep'
-
+import "../style/sedCustomStyle.css"
 import download from "downloadjs"
 import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
 
@@ -178,13 +178,34 @@ const SedMapFilter = ({
 
   return (
     <div className="flex flex-1 border-blue-100">
-      <MapDataDownloader
-        variable={ get(varList, [varType, "name"]) }
-        activeViewId={ activeViewId }
-        activeVar={ activeVar }
-        year={ get(metaData, ["years", year]) }/>
-      <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
-      <div className="flex-1">
+      <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
+        <div className="">
+          {/* <select
+            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+            value={year}
+            onChange={(e) =>
+              setFilters({
+                activeVar: { value: `${varType}_${e.target.value}` },
+              })
+            }
+          > */}
+          <input type="range" min="1" max={metaData?.years.length} id="my-range" list="my-datalist" onChange={(e) =>
+              setFilters({
+                activeVar: { value: `${varType}_${e.target.value}` },
+              })
+            }/>
+  <datalist id="my-datalist">
+          {(metaData?.years || ["2010"]).map((k, i) => (
+            <option key={i} value={i}>
+              {k}
+            </option>
+          ))}
+          </datalist>
+        {/* </select> */}
+      </div>
+
+      <div className="py-3.5 ms-3 px-2 text-sm text-gray-400">Variable: </div>
+      <div className="flex-1 me-2">
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={varType}
@@ -205,24 +226,11 @@ const SedMapFilter = ({
         </select>
       </div>
 
-      <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
-      <div className="">
-        <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={year}
-          onChange={(e) =>
-            setFilters({
-              activeVar: { value: `${varType}_${e.target.value}` },
-            })
-          }
-        >
-          {(metaData?.years || ["2010"]).map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={i}>
-              {k}
-            </option>
-          ))}
-        </select>
-      </div>
+      <MapDataDownloader
+        variable={ get(varList, [varType, "name"]) }
+        activeViewId={ activeViewId }
+        activeVar={ activeVar }
+        year={ get(metaData, ["years", year]) }/>
     </div>
   );
 };
