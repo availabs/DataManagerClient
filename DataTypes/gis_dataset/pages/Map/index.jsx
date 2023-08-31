@@ -12,7 +12,7 @@ import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
-import {Protocol, PMTiles} from 'pmtiles'
+import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
