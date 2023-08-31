@@ -12,6 +12,7 @@ import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
+import {Protocol, PMTiles} from 'pmtiles'
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
@@ -28,6 +29,19 @@ const getTilehost = (DAMA_HOST) =>
 const TILEHOST = getTilehost(DAMA_HOST)
 
 //Console.log('DAMA_HOST', DAMA_HOST, TILEHOST)
+
+const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
+  }
+}
 
 
 const ViewSelector = ({views}) => {
@@ -211,6 +225,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const metaData = useMemo(() => {
     let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
+    console.log('out', out)
     get(out,'tiles.sources',[])
       .forEach(s => {
         if(s?.source?.url) {
@@ -252,6 +267,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
+  console.log('metadata',metaData)
 
   return (
     <div>
@@ -426,6 +442,7 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
           mapOptions={ {
             zoom: 7.3,//8.32/40.594/-74.093
             navigationControl: false,
+            protocols: [PMTilesProtocol],
             center: [-73.8, 40.79],
             styles: [
               { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
@@ -433,6 +450,7 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
               { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
             ]
           } }
+          
           layers={ layerData }
           layerProps={ layerProps }
           leftSidebar={ false }
@@ -507,13 +525,15 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   },[value])
 
   const save = async (attr, value) => {
-    //console.log('click save 222', attr, value)
+    console.log('click save 222', attr, value, parentData)
+    let update = JSON.parse(value)
+    console.log('update', value)
+        let val = parentData || {tiles:{}}
+    console.log('parentData', val )
+        val.tiles[attr] = update
+        console.log('out value', update)
     if(viewId) {
       try{
-        let update = JSON.parse(value)
-        let val = parentData || {tiles:{}}
-        val.tiles[attr] = update
-        console.log('out value', val)
         let response = await falcor.set({
             paths: [
               ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]

@@ -40,7 +40,7 @@ export const ViewAttributes = {
 }
 
 export const getAttributes = (data) => {
-  return Object.entries(data)
+  return Object.entries(data || {})
     .reduce((out,attr) => {
       const [k,v] = attr
       typeof v.value !== 'undefined' ? 

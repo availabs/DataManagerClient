@@ -1,6 +1,7 @@
 import React from "react";
 
 import MapPage from "../../gis_dataset/pages/Map";
+import Overview from "../../default/Overview";
 import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
@@ -54,6 +55,12 @@ export const tig_sed_taz = {
         TableFilter={SedChartFilter}
       />
     ),
+  },
+  meta: {
+    name: "Metadata",
+    path: "/meta",
+    hidden: false,
+    component: Overview,
   },
   sourceCreate: {
     name: "Create",
@@ -121,6 +128,12 @@ export const tig_sed_county = {
         TableFilter={SedChartFilterCounty}
       />
     ),
+  },
+   meta: {
+    name: "Metadata",
+    path: "/meta",
+    hidden: false,
+    component: Overview,
   },
   sourceCreate: {
     name: "Create",
