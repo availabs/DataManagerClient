@@ -175,7 +175,7 @@ const SedMapFilter = ({
     }
   }, [activeVar, setFilters, searchVar]);
 
-  console.log('mapFilter', metaData.years, activeVar)
+  //console.log('mapFilter', metaData.years, activeVar)
 
   return (
     <div className="flex flex-1 border-blue-100">
