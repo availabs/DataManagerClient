@@ -274,6 +274,7 @@ const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
         const value = get(data, activeVar, null);
         const county = get(data, "county", "unknown");
         const geom = get(data, "wkb_geometry", "");
+        console.log('geom', geom, data)
         return {
           type: "Feature",
           properties: {

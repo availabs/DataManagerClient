@@ -1,4 +1,11 @@
-const LightBase = {
+
+import {
+  composeTheme,
+  makeProxy,
+  $compositions
+} from "~/modules/avl-map-2/src"
+
+const BlueBase = {
   bgInput: "bg-white",
   bgInputHover: "hover:bg-white",
 
@@ -10,14 +17,14 @@ const LightBase = {
 
   text: "text-gray-800 disabled:text-gray-400 placeholder:text-gray-400",
   textDisabled: "text-gray-400 disabled:text-gray-400 placeholder:text-gray-400",
-  bg: "bg-white",
-  border: "shadow",
+  bg: "bg-blue-100",
+  border: "border-gray-800",
   outline: "outline-gray-800",
 
   textButton: "text-gray-400 disabled:text-gray-400 placeholder:text-gray-400",
   bgButton: "bg-gray-400",
   bgButtonHover: "hover:bg-gray-400",
-  borderButton: "shadow",
+  borderButton: "border-gray-400",
   outlineButton: "outline-gray-400",
 
   textInfo: "text-teal-400 disabled:text-teal-400 placeholder:text-teal-400",
@@ -58,27 +65,31 @@ const LightBase = {
   paddingBase: "py-1 px-2",
   paddingLarge: "py-2 px-4",
 
-  bgAccent1: "bg-white",
-  bgAccent2: "bg-white",
-  bgAccent3: "bg-white",
-  bgAccent4: "bg-gray-500",
+  bgAccent1: "bg-blue-200",
+  bgAccent2: "bg-blue-300",
+  bgAccent3: "bg-blue-400",
+  bgAccent4: "bg-blue-500",
 
-  bgAccent1Hover: "hover:bg-gray-200",
-  bgAccent2Hover: "hover:bg-gray-300",
-  bgAccent3Hover: "hover:bg-gray-400",
-  bgAccent4Hover: "hover:bg-gray-500",
+  bgAccent1Hover: "hover:bg-blue-200",
+  bgAccent2Hover: "hover:bg-blue-300",
+  bgAccent3Hover: "hover:bg-blue-400",
+  bgAccent4Hover: "hover:bg-blue-500",
 
-  textHighlight: "text-teal-500",
-  textHighlightHover: "hover:text-teal-500",
+  bgHighlight: "bg-blue-500",
+  bgHighlightHover: "hover:bg-blue-500",
 
-  borderHighlight: "border-teal-500",
-  borderHighlightHover: "hover:border-teal-500",
+  textHighlight: "text-blue-500",
+  textHighlightHover: "hover:text-blue-500",
 
-  bgHighlight: "bg-teal-500",
-  bgHighlightHover: "hover:bg-teal-500",
+  borderHighlight: "border-blue-500",
+  borderHighlightHover: "hover:border-blue-500",
 
   transition: "transition ease-in-out duration-150",
 
+  $compositions
 };
 
-export default LightBase
+const composed = composeTheme(BlueBase);
+const BlueTheme = makeProxy(composed);
+
+export default BlueTheme;

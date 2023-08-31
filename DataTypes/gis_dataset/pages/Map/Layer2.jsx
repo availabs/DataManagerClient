@@ -9,7 +9,9 @@ import {
   Legend,
   ActionButton,
   MultiLevelSelect,
-  ColorRangesByType,
+  // ColorRangesByType,
+  ColorRanges,
+  ColorBar,
   ColorCategory,
   Input,
   Button,
@@ -20,7 +22,10 @@ import {
 import ckmeans from "../../../../utils/ckmeans";
 import { getColorRange } from "../../../../utils/color-ranges";
 import * as d3scale from "d3-scale";
-import { extent as d3extent } from "d3-array"
+import {
+  extent as d3extent,
+  range as d3range
+} from "d3-array"
 
 import { DamaContext } from "~/pages/DataManager/store";
 
@@ -90,7 +95,10 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
         <div className="flex mb-1">
           <div className="flex-1 font-bold">{ name || title }</div>
           <div onClick={ toggle }
-            className="px-2 hover:bg-gray-400 rounded cursor-pointer"
+            className={ `
+              px-2 rounded cursor-pointer
+              ${ theme.bgAccent3Hover }
+            ` }
           >
             <span className={ `
                 fa-solid ${ isOpen ? "fa-chevron-up" : "fa-chevron-down" }
@@ -347,11 +355,12 @@ const RemoveDomainItem = ({ value, remove }) => {
     e.stopPropagation();
     remove(value);
   }, [value, remove]);
+  const theme = useTheme();
   return (
     <span onClick={ doRemove }
       className={ `
         fa-solid fa-remove px-2 flex items-center
-        hover:bg-gray-400 rounded cursor-pointer
+        ${ theme.bgAccent3Hover } rounded cursor-pointer
       ` }/>
   )
 }
@@ -390,9 +399,14 @@ const DomainItem = ({ domain, index, disabled, remove, edit }) => {
   const [outter, setOutter] = React.useState();
   useClickOutside(outter, stopEditing);
 
+  const theme = useTheme();
+
   return (
     <div ref={ setOutter }
-      className="flex hover:bg-gray-300 px-2 py-1 rounded cursor-pointer"
+      className={ `
+        flex px-2 py-1 rounded cursor-pointer
+        ${ theme.bgAccent2Hover }
+      ` }
       onClick={ startEditing }
     >
       <div className="w-8 mr-1 py-1">({ index + 1 })</div>
@@ -450,42 +464,56 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
     return domain.length <= 2;
   }, [domain.length]);
 
+  const theme = useTheme();
+
   return (
-    <div className="grid grid-cols-1 gap-1">
-      <div className="border-b border-current">
-        For theshold scales, the number of values in the domain must be one less than the number of values in the range.
-      </div>
-      <div className="flex">
-        <div className="flex-1">Number of values in domain:</div>
-        <div className="pr-4">{ domain.length }</div>
-      </div>
-      <div className="flex border-b border-current">
-        <div className="flex-1">Number of values in range:</div>
-        <div className="pr-4">{ range.length }</div>
-      </div>
-      <div>Domain:</div>
-      { domain.map((d, i) => (
-          <DomainItem key={ d }
-            domain={ d } index={ i }
-            remove={ removeDomain }
-            disabled={ disabled }
-            edit={ editDomain }/>
-        ))
-      }
-      <div className="flex">
-        <div className="mr-1 flex-1">
-          <Input type="number" placeholder="enter a threshold value..."
-            onChange={ setValue }
-            value={ value }/>
+    <div className="absolute left-full top-0"
+      style={ { left: "CALC(100% + 1rem)" } }
+    >
+      <div className={ `
+          ${ theme.bg } p-1 pointer-events-auto rounded w-96
+        ` }>
+        <div className="border rounded border-current relative">
+          <div className={ `
+              p-1 border-b border-current rounded-t flex font-bold
+              ${ theme.bgAccent2 }
+            ` }
+          >
+            Threshold Editor
+          </div>
+          <div className="p-1">
+            <div className="grid grid-cols-1 gap-1">
+              <div>Current Thresholds:</div>
+              { domain.map((d, i) => (
+                  <DomainItem key={ d }
+                    domain={ d } index={ i }
+                    remove={ removeDomain }
+                    disabled={ disabled }
+                    edit={ editDomain }/>
+                ))
+              }
+              <div className="flex">
+                <div className="mr-1 flex-1">
+                  <Input type="number" placeholder="enter a threshold value..."
+                    onChange={ setValue }
+                    value={ value }/>
+                </div>
+                <Button onClick={ addDomain } disabled={ !value }
+                  className="buttonPrimary"
+                >
+                  Add
+                </Button>
+              </div>
+              <div>
+                <Button className="buttonBlock" onClick={ useCKMeans }
+                  className="buttonPrimaryBlock"
+                >
+                  Reset with 6 bins
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-        <Button onClick={ addDomain } disabled={ !value }>
-          Add
-        </Button>
-      </div>
-      <div>
-        <Button className="buttonBlock" onClick={ useCKMeans }>
-          Reset with 6 bins
-        </Button>
       </div>
     </div>
   )
@@ -500,10 +528,14 @@ const BooleanSlider = ({ value, onChange }) => {
     <div onClick={ toggle }
       className="px-4 py-1 h-8 rounded flex items-center w-full cursor-pointer"
     >
-      <div className="rounded flex-1 h-2 bg-gray-300 relative flex items-center">
+      <div className={ `
+          rounded flex-1 h-2 relative flex items-center
+          ${ theme.bgAccent2 }
+        ` }
+      >
         <div className={ `
             w-4 h-4 rounded absolute
-            ${ Boolean(value) ? "bg-teal-500" : "bg-gray-400" }
+            ${ Boolean(value) ? theme.bgHighlight : "bg-gray-400" }
           ` }
           style={ {
             left: Boolean(value) ? "100%" : "0%",
@@ -511,6 +543,28 @@ const BooleanSlider = ({ value, onChange }) => {
             transition: "left 150ms"
           } }/>
       </div>
+    </div>
+  )
+}
+
+const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
+  const isActive = React.useMemo(() => {
+    return isEqual(colors, range);
+  }, [colors, range]);
+  const onClick = React.useCallback(() => {
+    updateLegend(colors, name, reverse)
+  }, [updateLegend, name, colors, reverse])
+  return (
+    <div key={ name }
+      onClick={ isActive ? null : onClick }
+      className={ `
+        outline outline-2 rounded-lg my-2
+        ${ isActive ? "outline-current" : "outline-transparent cursor-pointer" }
+      ` }
+    >
+      <ColorBar
+        colors={ colors }
+        height={ 3 }/>
     </div>
   )
 }
@@ -531,13 +585,28 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
 
   const [open, setOpen] = React.useState(-1);
 
+  const [rangeSize, setRangeSize] = React.useState(get(legend, ["range", "length"], 7));
+
   const [reverseColors, setReverseColors] = React.useState(legend.reverse);
 
+  const Colors = React.useMemo(() => {
+    return get(ColorRanges, rangeSize, [])
+      .map(({ colors, ...rest }) => ({
+        ...rest,
+        colors: reverseColors ? [...colors].reverse() : [...colors]
+      }))
+  }, [rangeSize, reverseColors]);
+
+  const theme = useTheme();
+
   return !isOpen ? null : (
-    <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96 relative">
+    <div className={ `
+        ${ theme.bg } p-1 pointer-events-auto rounded w-96 relative
+      ` }>
       <div className="border rounded border-current relative">
         <div className={ `
-            p-1 bg-gray-300 border-b border-current rounded-t flex font-bold
+            p-1 border-b border-current rounded-t flex font-bold
+            ${ theme.bgAccent2 }
           ` }
         >
           <div className="flex-1">
@@ -545,18 +614,36 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
           </div>
           <div className="flex-0">
             <span onClick={ close }
-              className="px-2 py-1 hover:bg-gray-400 rounded cursor-pointer"
+              className={ `
+                px-2 py-1 rounded cursor-pointer
+                ${ theme.bgAccent3Hover }
+              ` }
             >
               <span className="fa fa-remove"/>
             </span>
           </div>
         </div>
         <div className="p-1 grid grid-cols-1 gap-1">
-          <TypeSelector { ...legend }
-            updateLegend={ updateLegendType }/>
 
           <div className="flex items-center px-1">
-            <div>Reverse Colors:</div>
+            <div className="w-40 text-right">Scale Type:</div>
+            <div className="flex-1 ml-1">
+              <TypeSelector { ...legend }
+                updateLegend={ updateLegendType }/>
+            </div>
+          </div>
+
+          <div className="flex items-center px-1">
+            <div className="w-40 text-right">Number of Colors:</div>
+            <div className="flex-1 ml-1">
+              <RangeSizeSelector
+                size={ rangeSize }
+                onChange={ setRangeSize }/>
+            </div>
+          </div>
+
+          <div className="flex items-center px-1">
+            <div className="w-40 text-right">Reverse Colors:</div>
             <div className="flex-1">
               <BooleanSlider
                 value={ reverseColors }
@@ -564,42 +651,48 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
             </div>
           </div>
 
-          { Object.keys(ColorRangesByType).map((type, i) => (
-              <ColorCategory key={ type } type={ type }
-                startSize={ legend.range.length }
-                colors={ ColorRangesByType[type] }
-                updateLegend={ updateLegendRange }
-                isOpen={ open === i }
-                setOpen={ setOpen }
-                index={ i }
-                current={ legend.range }
-                reverseColors={ reverseColors }/>
-            ))
-          }
+          <div className="border-b-2 border-current">
+            Available Legend Colors:
+          </div>
+
+          <div className={ `
+              overflow-auto px-2 rounded ${ theme.bgAccent2 }
+              scrollbar-sm scrollbar-blue
+            ` }
+            style={ { height: "30rem" } }
+          >
+            { Colors.map(color => (
+                <LegendColorBar key={ color.name }
+                  { ...color } { ...legend }
+                  updateLegend={ updateLegendRange }
+                  reverse={ reverseColors }/>
+              ))
+            }
+          </div>
+
         </div>
       </div>
 
       { legend.type !== "threshold" ? null :
-        <div className="w-96 absolute left-full top-0"
-          style={ { left: "CALC(100% + 1rem)" } }
-        >
-          <div className="bg-gray-100 p-1 pointer-events-auto rounded w-96">
-            <div className="border rounded border-current relative">
-              <div className={ `
-                  p-1 bg-gray-300 border-b border-current rounded-t flex font-bold
-                ` }
-              >
-                Threshold Editor
-              </div>
-              <div className="p-1">
-                <ThresholdEditor { ...legend }
-                  updateLegend={ updateLegendDomain }/>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ThresholdEditor { ...legend }
+          updateLegend={ updateLegendDomain }/>
       }
     </div>
+  )
+}
+
+const RangeSizes = d3range(3, 13);
+const Identity = i => i;
+
+const RangeSizeSelector = ({ size, onChange }) => {
+  return (
+    <MultiLevelSelect
+      removable={ false }
+      options={ RangeSizes }
+      displayAccessor={ Identity }
+      valueAccessor={ Identity }
+      onChange={ onChange }
+      value={ size }/>
   )
 }
 
@@ -615,18 +708,13 @@ const TypeSelector = ({ type, updateLegend }) => {
     updateLegend(t);
   }, [updateLegend]);
   return (
-    <div className="flex items-center p-1">
-      <div className="flex-0 mr-1">Type:</div>
-      <div className="flex-1">
-        <MultiLevelSelect
-          removable={ false }
-          options={ LegendTypes }
-          displayAccessor={ t => t.name }
-          valueAccessor={ t => t.value }
-          onChange={ onChange }
-          value={ type }/>
-      </div>
-    </div>
+    <MultiLevelSelect
+      removable={ false }
+      options={ LegendTypes }
+      displayAccessor={ t => t.name }
+      valueAccessor={ t => t.value }
+      onChange={ onChange }
+      value={ type }/>
   )
 }
 

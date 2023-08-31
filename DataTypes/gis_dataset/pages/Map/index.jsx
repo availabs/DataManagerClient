@@ -16,6 +16,8 @@ import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
 import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
 
+import {google_streets_style} from '~/config.json'
+
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
@@ -278,7 +280,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         </div>
       </div>*/}
       <div className='flex'>
-        
+
         <MapFilter
             source={source}
             metaData={metaData}
@@ -293,7 +295,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         <ViewSelector views={views} />
       </div>
       <div className='w-full h-[900px]'>
-        <Map 
+        <Map
           key={ viewId }
           layers={ [layer] }
           source={ source }
@@ -440,6 +442,7 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
 
       <div className='w-full h-full'>
         <ThemeProvider theme={mapTheme} >
+
           <AvlMap
             accessToken={ config.MAPBOX_TOKEN }
             mapOptions={ {
@@ -448,12 +451,12 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
               protocols: [PMTilesProtocol],
               center: [-73.8, 40.79],
               styles: [
+                google_streets_style,
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
               ]
             } }
-            
             layers={ layerData }
             layerProps={ layerProps }
             leftSidebar={ false }
