@@ -7,7 +7,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import GISDatasetLayer from './Layer2'
 import Symbology from './symbology/index'
 // import { AvlMap } from "~/modules/avl-maplibre/src"
-import { AvlMap } from "~/modules/avl-map-2/src"
+
+import {
+  AvlMap,
+  ThemeProvider
+} from "~/modules/avl-map-2/src"
+import BlueTheme from "./BlueTheme"
+
 import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
@@ -414,23 +420,25 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
   return (
 
       <div className='w-full h-full'>
-        <AvlMap
-          accessToken={ config.MAPBOX_TOKEN }
-          mapOptions={ {
-            zoom: 7.3,//8.32/40.594/-74.093
-            navigationControl: false,
-            center: [-73.8, 40.79],
-            styles: [
-              { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
-              { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
-              { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
-            ]
-          } }
-          layers={ layerData }
-          layerProps={ layerProps }
-          leftSidebar={ false }
-          rightSidebar={ false }
-          mapActions={ ["navigation-controls"] }/>
+        <ThemeProvider theme={ BlueTheme }>
+          <AvlMap
+            accessToken={ config.MAPBOX_TOKEN }
+            mapOptions={ {
+              zoom: 7.3,//8.32/40.594/-74.093
+              navigationControl: false,
+              center: [-73.8, 40.79],
+              styles: [
+                { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
+                { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
+                { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
+              ]
+            } }
+            layers={ layerData }
+            layerProps={ layerProps }
+            leftSidebar={ false }
+            rightSidebar={ false }
+            mapActions={ ["navigation-controls"] }/>
+        </ThemeProvider>
       </div>
 
   )
