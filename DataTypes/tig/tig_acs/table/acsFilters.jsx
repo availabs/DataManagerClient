@@ -1,6 +1,31 @@
 import React, { useEffect, useMemo } from "react";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import makeAnimated from "react-select/animated";
+
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue } = props;
+  return (
+    <components.ValueContainer {...props}>
+      {getValue().length} items selected
+    </components.ValueContainer>
+  );
+};
+const Option = (props) => {
+  return (
+    <div>
+      <components.Option {...props}>
+        <div className="d-flex align-items-center">
+          <input
+            type="checkbox"
+            checked={props.isSelected}
+            onChange={() => null}
+          />{" "}
+          <label className="m-0 ml-2">{props.label}</label>
+        </div>
+      </components.Option>
+    </div>
+  );
+};
 
 const MultiSelect = ({
   options,
@@ -12,15 +37,20 @@ const MultiSelect = ({
   const animatedComponents = makeAnimated();
   return (
     <Select
+      {...props}
       options={options}
       onChange={onChange}
       value={value}
-      hideSelectedOptions={true}
+      controlShouldRenderValue={false}
       closeMenuOnSelect={false}
+      hideSelectedOptions={false}
       isMulti
-      placeholder={`-- Select ${selectMessage} --`}
-      components={{ animatedComponents }}
-      {...props}
+      placeholder={"Variables"}
+      components={{
+        // ValueContainer,
+        Option,
+        animatedComponents,
+      }}
     />
   );
 };
@@ -47,10 +77,7 @@ const AcsTableFilter = ({
   setTableColumns,
 }) => {
   const [geometry, year] = useMemo(() => {
-    return [
-      filters?.geometry?.value || "county",
-      filters?.year?.value || 2019,
-    ];
+    return [filters?.geometry?.value || "county", filters?.year?.value || 2019];
   }, [filters]);
 
   const variableOptions = Object.keys(variables).map((v) => ({
@@ -75,25 +102,23 @@ const AcsTableFilter = ({
 
   return (
     <div className="flex flex-1 border-blue-100">
-      <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
-      <div className="flex-1">
+      
+      <div className="w-[180px]">
         <MultiSelect
           value={(tableColumns || []).map((prod) => ({
             label: prod,
             value: prod,
           }))}
-          closeMenuOnSelect={false}
           options={variableOptions || []}
           onChange={(value) => {
-            setTableColumns(value.map(v => v.value));
+            setTableColumns(value.map((v) => v.value));
           }}
-          isSearchable
         />
       </div>
       <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
       <div className="flex-1">
         <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-[90px] bg-white mr-2 flex items-center justify-between text-sm"
           value={year}
           onChange={(e) => {
             setFilters({
@@ -114,7 +139,7 @@ const AcsTableFilter = ({
       <div className="py-3.5 px-2 text-sm text-gray-400">Type: </div>
       <div className="flex-1">
         <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-[120px] bg-white mr-2 flex items-center justify-between text-sm"
           value={geometry}
           onChange={(e) => {
             setFilters({

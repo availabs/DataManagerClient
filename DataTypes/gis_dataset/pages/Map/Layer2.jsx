@@ -232,9 +232,13 @@ const GISDatasetRenderComponent = props => {
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
 
+
+
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
+
+    // console.log('layer update symbology ',symbology)
 
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
@@ -297,8 +301,10 @@ const GISDatasetRenderComponent = props => {
       value = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
     }
 
-    maplibreMap.setPaintProperty(layer_id, paintProperty, value);
-
+     console.log('setPaintProperty', maplibreMap.getLayer(layer_id), layer_id, paintProperty, value)
+    //if(maplibreMap.getLayer(layer_id)) {
+      maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+    //}
   }, [legend, layerData]);
 
   const [isOpen, setIsOpen] = React.useState(false);

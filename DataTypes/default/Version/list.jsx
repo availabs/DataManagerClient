@@ -45,11 +45,11 @@ const Versions = ({ source, views, meta }) => {
   if (vPage === "delete") {
     return <DeleteVersion  />;
   }
-  if (viewId) {
-    return (
-      <Version />
-    );
-  }
+  // if (viewId) {
+  //   return (
+  //     <Version />
+  //   );
+  // }
 
   // const columns = React.useMemo(() => {
   //   return [

@@ -51,7 +51,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                         (!tableCol.auth ||( tableCol.auth && authLevel >= tableCol.minAuthLevel)) &&
                         (!tableCol.hasOwnProperty('condition') || tableCol.condition)
                     )
-                    .map(tableCol => <dd className="text-sm font-medium text-gray-600 ">{tableCol.name}</dd>)
+                    .map((tableCol,i) => <dd key={i} className="text-sm font-medium text-gray-600 ">{tableCol.name}</dd>)
             }
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -130,8 +130,8 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
 
 
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0">
-                                { authLevel > 5 ?
-                                    // col.origin !== 'calculated-column' &&
+                                {
+                                    authLevel > 5 && col.origin === 'calculated-column' ?
                                     <TypeSelector
                                         metadata={metadata}
                                         setMetadata={setMetadata}

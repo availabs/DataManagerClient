@@ -1,6 +1,7 @@
 import React from "react";
 
 import MapPage from "../../gis_dataset/pages/Map";
+import Overview from "../../default/Overview";
 import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import Chart from "./chart";
@@ -14,15 +15,15 @@ import { customRules } from "./sedCustomRules";
 import dbColsTaz from "./dbColsTaz.json";
 import dbColsCounty from "./dbColsCounty.json";
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
-import TigSedTazOverview from "./TigSedTazOverview"
-import TigSedCountyOverview from "./TigSedCountyOverview"
+import TigSedOverview from "./TigSedOverview"
+
 
 export const tig_sed_taz = {
   overview: {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedTazOverview
+    component: TigSedOverview
   },
   map: {
     name: "Map",
@@ -54,6 +55,12 @@ export const tig_sed_taz = {
         TableFilter={SedChartFilter}
       />
     ),
+  },
+  meta: {
+    name: "Metadata",
+    path: "/meta",
+    hidden: false,
+    component: Overview,
   },
   sourceCreate: {
     name: "Create",
@@ -89,7 +96,7 @@ export const tig_sed_county = {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedCountyOverview
+    component: TigSedOverview
   },
   map: {
     name: "Map",
@@ -121,6 +128,12 @@ export const tig_sed_county = {
         TableFilter={SedChartFilterCounty}
       />
     ),
+  },
+   meta: {
+    name: "Metadata",
+    path: "/meta",
+    hidden: false,
+    component: Overview,
   },
   sourceCreate: {
     name: "Create",

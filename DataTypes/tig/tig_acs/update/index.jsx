@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { get } from "lodash";
 import { Button, useFalcor } from "~/modules/avl-components/src";
 
@@ -9,45 +9,20 @@ import MultiSelect from "./../multiSelect";
 import { Select } from "./../singleSelect";
 import { ACSCustomVariables } from "./../customVariables";
 
-import { DAMA_HOST } from "~/config";
+import { API_HOST, DAMA_HOST } from "~/config";
 
 import {
   ViewAttributes,
   getAttributes,
 } from "../../../../components/attributes";
 
-// const censusVariables = [
-//   { censusKeys: ["B02001_001E"], name: "Total Population", divisorKeys: [] },
-//   {
-//     censusKeys: ["B02001_004E"],
-//     name: "American Indian and Alaska Native alone",
-//     divisorKeys: [],
-//   },
-//   { censusKeys: ["B02001_005E"], name: "Asian alone", divisorKeys: [] },
-//   {
-//     censusKeys: ["B02001_003E"],
-//     name: "Black or African American alone",
-//     divisorKeys: [],
-//   },
-//   {
-//     censusKeys: ["B02001_006E"],
-//     name: "Native Hawaiian and Other Pacific Islander alone",
-//     divisorKeys: [],
-//   },
-//   {
-//     censusKeys: ["B02001_007E"],
-//     name: "Some other race alone",
-//     divisorKeys: [],
-//   },
-//   { censusKeys: ["B02001_008E"], name: "Two or more races", divisorKeys: [] },
-//   { censusKeys: ["B02001_002E"], name: "White alone", divisorKeys: [] },
-// ];
-
 const Update = (props) => {
   const { falcor, falcorCache } = useFalcor();
+  const navigate = useNavigate();
   const { sourceId } = useParams();
   const { pgEnv } = useContext(DamaContext);
   const [selectedVariables, setSelecteVariableOptions] = useState(null);
+  const [selectedYears, setSelectedYears] = useState(null);
   const [selectedView, setSelecteView] = useState(null);
 
   useEffect(() => {
@@ -106,16 +81,16 @@ const Update = (props) => {
     setSelecteView(viewOptions[0]);
   }
 
-  const [metadata, variables] = useMemo(() => {
+  const [viewDependency, metadata, variables, years] = useMemo(() => {
     const selectedViewData =
       views.find((v) => v.view_id === selectedView?.id) || {};
     return [
+      get(selectedViewData, "view_dependencies", {})?.[0] || [],
       get(selectedViewData, "metadata", {}),
       get(selectedViewData, "metadata.variables", []),
+      get(selectedViewData, "metadata.years", []),
     ];
   }, [views, selectedView]);
-
-  console.log("meta", metadata);
 
   useEffect(() => {
     if (variables && !selectedVariables) {
@@ -123,51 +98,95 @@ const Update = (props) => {
     }
   }, [variables]);
 
+  useEffect(() => {
+    if (years && !selectedYears) {
+      setSelectedYears(years);
+    }
+  }, [years]);
+
   const addNewVariable = (newVariable) =>
     setSelecteVariableOptions([...selectedVariables, newVariable]);
-
-  const damaServerPath = `${DAMA_HOST}/dama-admin/${pgEnv}`;
-
-  const censusOptions = useMemo(() => {
-    return (selectedVariables || []).map((c) => ({
-      label: c?.label || c?.name,
-      value: c,
-    }));
-  }, [selectedVariables]);
 
   const UpdateView = (attr, value) => {
     if (selectedView && selectedView.id) {
       const { id: view_id } = selectedView;
       try {
         falcor
-        .set({
-          paths: [
-            ["dama", pgEnv, "views", "byId", view_id, "attributes", "metadata"],
-          ],
-          jsonGraph: {
-            dama: {
-              [pgEnv]: {
-                views: {
-                  byId: {
-                    [view_id]: {
-                      attributes: {
-                        ["metadata"]: JSON.stringify(value),
+          .set({
+            paths: [
+              [
+                "dama",
+                pgEnv,
+                "views",
+                "byId",
+                view_id,
+                "attributes",
+                "metadata",
+              ],
+            ],
+            jsonGraph: {
+              dama: {
+                [pgEnv]: {
+                  views: {
+                    byId: {
+                      [view_id]: {
+                        attributes: {
+                          ["metadata"]: JSON.stringify(value),
+                        },
                       },
                     },
                   },
                 },
               },
             },
-          },
-        })
-        .then((d) => {
-          console.log("d", d);
-        });  
+          })
+          .then((d) => {
+            console.log("d", d);
+          });
       } catch (error) {
         console.log("error", error);
       }
-      
     }
+  };
+
+  const yearsOptions = Array.from(
+    Array(new Date().getFullYear() - 2009),
+    (_, i) => i + 2010
+  ).map((year) => ({
+    label: year,
+    value: Number(year),
+  }));
+
+  const runScript = (params, navigate) => {
+    const runPublish = async () => {
+      try {
+        const publishData = {
+          serverUrl: `${API_HOST}/graph`,
+          view_id: params.id,
+          source_id: params.source_id,
+          viewDependency: params.viewDependency,
+          ...params.metadata,
+        };
+
+        const res = await fetch(
+          `${DAMA_HOST}/dama-admin/${pgEnv}/hazard_mitigation/cacheAcs`,
+          {
+            method: "POST",
+            body: JSON.stringify(publishData),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const finalEvent = await res.json();
+        const { etl_context_id, source_id } = finalEvent;
+        if (etl_context_id && source_id) {
+          navigate(`/source/${source_id}/uploads/${etl_context_id}`);
+        }
+      } catch (err) {}
+    };
+    runPublish();
   };
 
   return (
@@ -177,7 +196,7 @@ const Update = (props) => {
           <div className="w-full px-3">
             <label
               className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-              for="grid-counties"
+              htmlFor="grid-counties"
             >
               Select View
             </label>
@@ -189,11 +208,46 @@ const Update = (props) => {
             <p className="text-gray-600 text-xs italic">Select View</p>
           </div>
         </div>
+
         <div className="flex flex-wrap -mx-3 mb-6">
           <div className="w-full px-3">
             <label
               className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-              for="grid-counties"
+              for="grid-years"
+            >
+              Years
+            </label>
+
+            <MultiSelect
+              value={(selectedYears || [])
+                ?.map((values) =>
+                  (yearsOptions || []).find(
+                    (prod) => prod.value === Number(values)
+                  )
+                )
+                .filter((prod) => prod && prod.value && prod.label)
+                .map((prod) => ({
+                  label: prod?.label,
+                  value: prod?.value,
+                }))}
+              closeMenuOnSelect={false}
+              options={yearsOptions}
+              onChange={(value) => setSelectedYears(value.map((v) => v.value))}
+              selectMessage={"Years"}
+              isSearchable
+            />
+
+            <p className="text-gray-600 text-xs italic">
+              Select Years for the view
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap -mx-3 mb-6">
+          <div className="w-full px-3">
+            <label
+              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+              htmlFor="grid-counties"
             >
               Variables
             </label>
@@ -213,18 +267,30 @@ const Update = (props) => {
           </div>
         </div>
       </div>
+
       <ACSCustomVariables addNewVariable={addNewVariable} />
 
       <div className="mt-6 mb-6">
         <Button
           className="rounded-lg"
           themeOptions={{ size: "sm", color: "primary" }}
-          onClick={() =>
+          onClick={() => {
             UpdateView(
               "metadata",
-              Object.assign({}, metadata, { variables: selectedVariables })
-            )
-          }
+              Object.assign({}, metadata, {
+                variables: selectedVariables,
+                years: selectedYears,
+              })
+            );
+            runScript({
+              ...selectedView,
+              metadata: Object.assign({}, metadata, {
+                variables: selectedVariables,
+                years: selectedYears,
+              }),
+              viewDependency,
+            }, navigate);
+          }}
         >
           {" "}
           Save{" "}

@@ -18,6 +18,7 @@ import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
+import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
@@ -34,6 +35,19 @@ const getTilehost = (DAMA_HOST) =>
 const TILEHOST = getTilehost(DAMA_HOST)
 
 //Console.log('DAMA_HOST', DAMA_HOST, TILEHOST)
+
+const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
+  }
+}
 
 
 const ViewSelector = ({views}) => {
@@ -217,6 +231,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const metaData = useMemo(() => {
     let out = get(activeView,`metadata`,{tiles:{sources:[], layers:[]}})
+    console.log('out', out)
     get(out,'tiles.sources',[])
       .forEach(s => {
         if(s?.source?.url) {
@@ -240,6 +255,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       if(sources.length === 0 || layers.length === 0 ) {
         return null
       }
+      //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
       return {
             name: source.name,
             pgEnv,
@@ -247,7 +263,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView: activeView,
             filters,
             hoverComp: HoverComp,
-            attributes: get(source, ['metadata', 'columns'], get(source, 'metadata', []))
+            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
               .filter(d => ['integer', 'string', 'number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
@@ -257,26 +273,33 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
+  console.log('metadata',metaData)
 
   return (
     <div>
+      {/*<div className='flex'>
+        <div className='pl-2 pr-2 py-2 flex-1'>
+          Map View { viewId }
+        </div>
+      </div>*/}
       <div className='flex'>
-        <div className='pl-3 pr-4 py-2 flex-1'>Map View { viewId }</div>{/*{get(activeView,'id','')}*/}
+
         <MapFilter
-          source={source}
-          metaData={metaData}
-          filters={filters}
-          setFilters={setFilters}
-          tempSymbology={tempSymbology}
-          setTempSymbology={setTempSymbology}
-          activeView={activeView}
-          activeViewId={activeViewId}
-          layer={layer}
+            source={source}
+            metaData={metaData}
+            filters={filters}
+            setFilters={setFilters}
+            tempSymbology={tempSymbology}
+            setTempSymbology={setTempSymbology}
+            activeView={activeView}
+            activeViewId={activeViewId}
+            layer={layer}
         />
         <ViewSelector views={views} />
       </div>
       <div className='w-full h-[900px]'>
-        <Map key={ viewId }
+        <Map
+          key={ viewId }
           layers={ [layer] }
           source={ source }
           tempSymbology={ tempSymbology }
@@ -508,13 +531,15 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   },[value])
 
   const save = async (attr, value) => {
-    //console.log('click save 222', attr, value)
+    console.log('click save 222', attr, value, parentData)
+    let update = JSON.parse(value)
+    console.log('update', value)
+        let val = parentData || {tiles:{}}
+    console.log('parentData', val )
+        val.tiles[attr] = update
+        console.log('out value', update)
     if(viewId) {
       try{
-        let update = JSON.parse(value)
-        let val = parentData || {tiles:{}}
-        val.tiles[attr] = update
-        console.log('out value', val)
         let response = await falcor.set({
             paths: [
               ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]

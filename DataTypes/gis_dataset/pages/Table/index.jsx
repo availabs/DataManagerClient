@@ -73,6 +73,7 @@ const TablePage = ({
 
   React.useEffect(() => {
     console.time("getviewLength");
+    console.log('getviewLength', pgEnv,activeViewId)
     falcor
       .get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
       .then((d) => {
@@ -89,8 +90,14 @@ const TablePage = ({
   }, [pgEnv, activeViewId, falcorCache]);
 
   const attributes = React.useMemo(() => {
-    return get(source, "metadata", [])
-      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
+    
+    let md = get(source, ["metadata", "columns"], get(source, "metadata", []));
+    if (!Array.isArray(md)) {
+      md = [];
+    }
+
+    return md
+      .filter((d) => ["integer", "string", "number"].includes(d.type))
       .map((d) => d.name);
   }, [source]);
 
@@ -145,7 +152,7 @@ const TablePage = ({
   return (
     <div>
       <div className="flex">
-        <div className="flex-1 pl-3 pr-4 py-2">Table View</div>
+        {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
           data={data} columns={columns}/>
         <ViewSelector views={views} />

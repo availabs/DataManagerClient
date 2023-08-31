@@ -21,7 +21,7 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
         const url = `${damaServerPath}/metadata/datasource-latest-view-table-columns?damaSourceId=${damaSourceId}`;
         const res = await fetch(url);
         let dbColNames = await res.json();
-console.log("??????????", damaServerPath, damaSourceId, res, dbColNames)
+//console.log("??????????", damaServerPath, damaSourceId, res, dbColNames)
         dbColNames = dbColNames?.filter(
           (col) => col !== "wkb_geometry" && col !== "ogc_fid"
         );

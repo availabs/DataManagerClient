@@ -54,6 +54,7 @@ const ConstrainedColumnNameInput = ({
       placeholder="Select the db column name"
       disabled={!hasAvailableDbColNames || publishStatus !== "AWAITING"}
     >
+      <option>Choose db column </option>
       {availableDbColNames.map((col, i) => (
         <option key={i} value={col}>
           {col}
