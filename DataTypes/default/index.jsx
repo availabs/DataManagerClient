@@ -18,12 +18,6 @@ const Pages = {
     hidden: "true",
     component: Versions
   },
-  meta: {
-    name: "Metadata",
-    path: "/meta",
-    hidden: false,
-    component: Metadata,
-  },
   uploads: {
     name: "Uploads",
     path: "/uploads",
@@ -37,6 +31,12 @@ const Pages = {
     authLevel: 5,
     hidden: true,
     component: AddVersion
+  },
+  meta: {
+    name: "Metadata",
+    path: "/meta",
+    hidden: false,
+    component: Metadata,
   },
   admin: {
     name: "Admin",

@@ -255,12 +255,14 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   return (
     <div>
+      {/*<div className='flex'>
+        <div className='pl-2 pr-2 py-2 flex-1'>
+          Map View { viewId }
+        </div>
+      </div>*/}
       <div className='flex'>
-        <div className='pl-2 pr-2 py-2 flex-1'>Map View { viewId }</div>{/*{get(activeView,'id','')}*/}
-      </div>
-      <div className='flex'>
-        <ViewSelector views={views} />
-          <MapFilter
+        
+        <MapFilter
             source={source}
             metaData={metaData}
             filters={filters}
@@ -270,10 +272,12 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView={activeView}
             activeViewId={activeViewId}
             layer={layer}
-          />
+        />
+        <ViewSelector views={views} />
       </div>
       <div className='w-full h-[900px]'>
-        <Map key={ viewId }
+        <Map 
+          key={ viewId }
           layers={ [layer] }
           source={ source }
           tempSymbology={ tempSymbology }

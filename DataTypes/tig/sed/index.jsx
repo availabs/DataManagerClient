@@ -14,15 +14,15 @@ import { customRules } from "./sedCustomRules";
 import dbColsTaz from "./dbColsTaz.json";
 import dbColsCounty from "./dbColsCounty.json";
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
-import TigSedTazOverview from "./TigSedTazOverview"
-import TigSedCountyOverview from "./TigSedCountyOverview"
+import TigSedOverview from "./TigSedOverview"
+
 
 export const tig_sed_taz = {
   overview: {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedTazOverview
+    component: TigSedOverview
   },
   map: {
     name: "Map",
@@ -89,7 +89,7 @@ export const tig_sed_county = {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedCountyOverview
+    component: TigSedOverview
   },
   map: {
     name: "Map",

@@ -9,12 +9,11 @@ import * as d3scale from "d3-scale"
 import { range as d3range } from "d3-array"
 import ckmeans from '../../../utils/ckmeans'
 import cloneDeep from 'lodash/cloneDeep'
-import "../style/sedCustomStyle.css"
 import download from "downloadjs"
 import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
 
-[1112,1588,2112,2958,56390]
-const defaultRange = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
+// [1112,1588,2112,2958,56390]
+const defaultRange = ['#ffffb2', '#fed976',  '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 const defaultDomain = [0,872,2047,3649,6934,14119,28578]
 export const sedVars = {
   totpop: { name: "Total Population", domain: [0,872,2047,3649,6934,14119,28578], range: defaultRange},
@@ -114,7 +113,7 @@ const SedMapFilter = ({
             },{})
             let output = ["get",["to-string",["get","ogc_fid"]], ["literal", colors]]
 
-// console.log("tempSymbology", tempSymbology, layer)
+
 
             const newSymbology = layer.layers.reduce((a, c) => {
               a[c.id] = {
@@ -179,33 +178,36 @@ const SedMapFilter = ({
   return (
     <div className="flex flex-1 border-blue-100">
       <div className="py-3.5 px-2 text-sm text-gray-400">Year:</div>
-        <div className="">
-          {/* <select
-            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-            value={year}
-            onChange={(e) =>
-              setFilters({
-                activeVar: { value: `${varType}_${e.target.value}` },
-              })
-            }
-          > */}
-          <input type="range" min="1" max={metaData?.years.length} id="my-range" list="my-datalist" onChange={(e) =>
+        <div className="flex-1">
+          <div className='px-6'>
+          <input type="range" 
+              min="1" 
+              max={metaData?.years.length} 
+              id="my-range" 
+              list="my-datalist"
+              className='w-full'
+              value={year}
+              onChange={(e) =>
               setFilters({
                 activeVar: { value: `${varType}_${e.target.value}` },
               })
             }/>
-  <datalist id="my-datalist">
-          {(metaData?.years || ["2010"]).map((k, i) => (
-            <option key={i} value={i}>
+          </div>
+          <datalist id="my-datalist" className='w-full flex'>
+            {(metaData?.years || ["2010"]).map((k, i) => (
+              <option 
+                key={i} 
+                value={i} 
+                className={`flex-1 text-gray-500 text-center text-xs`}>
               {k}
             </option>
-          ))}
+            ))}
           </datalist>
-        {/* </select> */}
-      </div>
+        
+        </div>
 
       <div className="py-3.5 ms-3 px-2 text-sm text-gray-400">Variable: </div>
-      <div className="flex-1 me-2">
+      <div className="me-2">
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={varType}
@@ -347,31 +349,34 @@ const SedTableFilter = ({ source, filters, setFilters, data, columns }) => {
 
   return (
     <div className="flex flex-1 border-blue-100">
+      <div className='flex flex-1'>
+        <div className='flex-1' /> 
+        <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
+        <div className="px-2">
+          <select
+            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+            value={activeVar}
+            onChange={(e) =>
+              setFilters({ ...filters, activeVar: { value: e.target.value } })
+            }
+          >
+            <option className="ml-2  truncate" value={""}>
+              none
+            </option>
+            {Object.keys(varList).map((k, i) => (
+              <option key={i} className="ml-2  truncate" value={k}>
+                {varList[k].name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       <div>
         <Button themeOptions={{size:'sm', color: 'primary'}}
           onClick={ downloadData }
         >
           Download
         </Button>
-      </div>
-      <div className="py-3.5 px-2 text-sm text-gray-400">Variable: </div>
-      <div className="flex-1">
-        <select
-          className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-          value={activeVar}
-          onChange={(e) =>
-            setFilters({ ...filters, activeVar: { value: e.target.value } })
-          }
-        >
-          <option className="ml-2  truncate" value={""}>
-            none
-          </option>
-          {Object.keys(varList).map((k, i) => (
-            <option key={i} className="ml-2  truncate" value={k}>
-              {varList[k].name}
-            </option>
-          ))}
-        </select>
       </div>
     </div>
   );
