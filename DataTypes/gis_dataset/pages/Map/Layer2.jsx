@@ -505,7 +505,8 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                 </Button>
               </div>
               <div>
-                <Button className="buttonBlock" onClick={ useCKMeans }
+                <Button 
+                  onClick={ useCKMeans }
                   className="buttonPrimaryBlock"
                 >
                   Reset with 6 bins
