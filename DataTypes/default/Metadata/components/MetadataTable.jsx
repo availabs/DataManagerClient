@@ -8,11 +8,14 @@ import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
 import {FnSelector} from "./FnSelector.jsx";
 import {TypeSelector} from "./TypeSelector.jsx";
+import {dmsDataTypes} from "~/modules/dms/src"
+
 
 export const MetadataTable = ({source, colOrigin, ...props}) => {
     const {user} = React.useContext(DamaContext);
     const [metadata, setMetadata] = React.useState([]);
     const [editing, setEditing] = React.useState(null);
+    const Lexical = dmsDataTypes.lexical.ViewComp;
 
     const {authLevel} = user;
     const gridCols =
@@ -110,6 +113,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                             <dd className="mt-1 text-sm text-gray-900 sm:mt-0 flex flex-row justify-between group">
                                 {editing === `${col.name}-description` ? <div className='pr-8'>
                                     <Edit
+                                        type={'lexical'}
                                         metadata={metadata}
                                         setMetadata={setMetadata}
                                         col={col.name}
@@ -119,7 +123,15 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                                         setEditing={setEditing}
                                         cancel={() => setEditing(null)}
                                     />
-                                </div> : <div className='pr-8'>{get(col, 'desc') || 'No Description'}</div>}
+                                </div> :
+                                    <div className='pr-8'>
+                                        {
+                                            get(col, ['desc', 'root']) ?
+                                                <Lexical value={get(col, 'desc')} /> :
+                                                ( get(col, 'desc') || 'No Description')
+                                        }
+                                    </div>
+                                }
 
                                 {authLevel > 5 ?
                                     <div className='hidden group-hover:block text-blue-500 cursor-pointer'
