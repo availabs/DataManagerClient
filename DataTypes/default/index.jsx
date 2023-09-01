@@ -19,18 +19,6 @@ const Pages = {
     hidden: "true",
     component: Versions
   },
-  meta_advanced: {
-    name: "Metadata",
-    path: "/meta_advanced",
-    hidden: true,
-    component: MetadataAdvanced,
-  },
-  meta_basic: {
-    name: "Metadata",
-    path: "/meta_basic",
-    hidden: false,
-    component: MetadataBasic,
-  },
   uploads: {
     name: "Uploads",
     path: "/uploads",
@@ -45,6 +33,18 @@ const Pages = {
     hidden: true,
     component: AddVersion
   },
+    meta_advanced: {
+        name: "Metadata",
+        path: "/meta_advanced",
+        hidden: true,
+        component: MetadataAdvanced,
+    },
+    meta_basic: {
+        name: "Metadata",
+        path: "/meta_basic",
+        hidden: false,
+        component: MetadataBasic,
+    },
   admin: {
     name: "Admin",
     path: "/admin",

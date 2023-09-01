@@ -9,6 +9,7 @@ import { VersionEditor, VersionDownload } from './Version/version'
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
   const [value, setValue] = useState('')
+  console.log('what is the value :', )
   const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
 

@@ -33,6 +33,11 @@ const censusVariables = [
   { censusKeys: ["B02001_002E"], name: "White alone" },
 ];
 
+var years = Array.from(
+  Array(new Date().getFullYear() - 2009),
+  (_, i) => i + 2010
+);
+
 const gropupOptions = (name, options, setSelecteTableOptions) => {
   return {
     label: (() => {
@@ -60,6 +65,7 @@ const Create = (props) => {
   const [customAcsSelection, setcustomAcsSelection] = useState(null);
   const [selectedTableViews, setSelecteTableOptions] = useState([]);
   const [selectedVariables, setSelecteVariableOptions] = useState(null);
+  const [selectedYears, setselectedYears] = useState(years.slice(0, -2));
   const [newEtlCtxId, setNewEtlCtxId] = useState(null);
 
   const damaServerPath = `${DAMA_HOST}/dama-admin/${pgEnv}`;
@@ -246,7 +252,10 @@ const Create = (props) => {
   }, [pgEnv, selectedView, falcorCache, dataLength]);
 
   const groupByCounty = groupBy(
-    (tableData || []).map((t) => ({ value: t.geoid, label: `${t.geoid} -> ${t.name}` })),
+    (tableData || []).map((t) => ({
+      value: t.geoid,
+      label: `${t.geoid} -> ${t.name}`,
+    })),
     (code) => code?.value?.substring(0, 2)
   );
 
@@ -276,6 +285,11 @@ const Create = (props) => {
       .map((s) => s?.id);
   }, [selectedView, customAcsSelection]);
 
+  const yearsOptions = years.map((year) => ({
+    value: Number(year),
+    label: year,
+  }));
+
   return (
     <>
       <div className="w-full max-w-lg">
@@ -295,6 +309,44 @@ const Create = (props) => {
             />
           </div>
         </div>
+
+        {selectedView ? (
+          <div className="flex flex-wrap -mx-3 mb-6">
+            <div className="w-full px-3">
+              <label
+                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                for="grid-years"
+              >
+                Years
+              </label>
+
+              <MultiSelect
+                value={(selectedYears || [])
+                  ?.map((values) =>
+                    (yearsOptions || []).find(
+                      (prod) => prod.value === Number(values)
+                    )
+                  )
+                  .filter((prod) => prod && prod.value && prod.label)
+                  .map((prod) => ({
+                    label: prod?.label,
+                    value: prod?.value,
+                  }))}
+                closeMenuOnSelect={false}
+                options={yearsOptions}
+                onChange={(value) => {
+                  setselectedYears(value.map((v) => v.value));
+                }}
+                selectMessage={"Years"}
+                isSearchable
+              />
+
+              <p className="text-gray-600 text-xs italic">
+                Select Years for the view
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {selectedView ? (
           <div className="flex flex-wrap -mx-3 mb-6">
@@ -323,6 +375,7 @@ const Create = (props) => {
             </div>
           </div>
         ) : null}
+
         {selectedView ? (
           <div className="flex flex-wrap -mx-3 mb-6">
             <div className="w-full px-3">
@@ -358,13 +411,14 @@ const Create = (props) => {
             </div>
           </div>
         ) : null}
-        <div class="md:flex md:items-center">
+        <div className="md:flex md:items-center">
           <PublishAcs
             viewDependency={viewDependency || selectedView?.id}
             viewMetadata={{
-              counties: selectedTableViews.map(t => t.value),
+              counties: selectedTableViews.map((t) => t.value),
               variables: selectedVariables,
               customDependency: customAcsSelection,
+              years: selectedYears,
             }}
             etlContextId={newEtlCtxId}
             damaServerPath={damaServerPath}
