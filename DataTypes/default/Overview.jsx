@@ -8,6 +8,7 @@ import { useParams } from "react-router-dom";
 import Versions from './Version/list'
 import { VersionEditor, VersionDownload } from './Version/version'
 
+import SourceCategories from "./SourceCategories"
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
   const [value, setValue] = useState('')
@@ -124,8 +125,24 @@ const OverviewEdit = ({source, views, activeViewId}) => {
               .filter(d => !['source_id','metadata','description', 'statistics', 'category', 'display_name','name'].includes(d))
               .map((attr,i) => {
                 let val = typeof source[attr] === 'object' ? JSON.stringify(source[attr]) : source[attr]
+                if (attr === "categories") {
+                  return (
+                    <div key={attr} className='flex justify-between group'>
+                      <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
+                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                          <div className="relative">
+                            <div className="absolute inset-0 pt-4 pb-5">
+                              <SourceCategories source={ source }/>
+                            </div>
+                          </div>
+                        </dd>
+                      </div>
+                    </div>
+                  )
+                }
                 return (
-                  <div key={i} className='flex justify-between group'>
+                  <div key={attr} className='flex justify-between group'>
                     <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                       <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -156,7 +173,6 @@ const OverviewEdit = ({source, views, activeViewId}) => {
             />
             <div className='w-full flex p-4'>
               <div className='flex-1' />
-
 
             </div>
           </dl>

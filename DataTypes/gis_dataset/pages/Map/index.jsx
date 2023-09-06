@@ -34,22 +34,6 @@ const getTilehost = (DAMA_HOST) =>
 
 const TILEHOST = getTilehost(DAMA_HOST)
 
-//Console.log('DAMA_HOST', DAMA_HOST, TILEHOST)
-
-const PMTilesProtocol = {
-  type: "pmtiles",
-  protocolInit: maplibre => {
-    const protocol = new Protocol();
-    maplibre.addProtocol("pmtiles", protocol.tile);
-    return protocol;
-  },
-  sourceInit: (protocol, source, maplibreMap) => {
-    const p = new PMTiles(source.url);
-    protocol.add(p);
-  }
-}
-
-
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
@@ -273,7 +257,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
-  console.log('metadata',metaData)
 
   return (
     <div>
@@ -361,6 +344,19 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 }
 
 export default MapPage
+
+const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
+  }
+}
 
 const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
   const [mounted, setMounted] = React.useState(false);
@@ -450,6 +446,7 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
               center: [-73.8, 40.79],
+              protocols: [PMTilesProtocol],
               styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
