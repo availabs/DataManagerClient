@@ -160,6 +160,7 @@ const GISDatasetRenderComponent = props => {
       range = [],
       format = ".2s",
       name,
+      title,
       type = "threshold",
       data = [],
       color = "BrBG",
@@ -171,6 +172,7 @@ const GISDatasetRenderComponent = props => {
       range,
       format,
       name,
+      title,
       type,
       data,
       color,
@@ -232,13 +234,12 @@ const GISDatasetRenderComponent = props => {
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
 
-
+    
 
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
 
-    // console.log('layer update symbology ',symbology)
 
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
@@ -301,10 +302,10 @@ const GISDatasetRenderComponent = props => {
       value = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
     }
 
-     console.log('setPaintProperty', maplibreMap.getLayer(layer_id), layer_id, paintProperty, value)
-    //if(maplibreMap.getLayer(layer_id)) {
+    // console.log('setPaintProperty', maplibreMap.getLayer(layer_id), layer_id, paintProperty, value)
+    if(maplibreMap.getLayer(layer_id)?.id) {
       maplibreMap.setPaintProperty(layer_id, paintProperty, value);
-    //}
+    }
   }, [legend, layerData]);
 
   const [isOpen, setIsOpen] = React.useState(false);
@@ -317,6 +318,8 @@ const GISDatasetRenderComponent = props => {
 
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
+
+  //console.log('legend', legend)
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
@@ -436,7 +439,7 @@ const DomainItem = ({ domain, index, disabled, remove, edit }) => {
 const ThresholdEditor = ({ domain, range, updateLegend }) => {
 
   const removeDomain = React.useCallback(v => {
-    updateLegend(domain.filter(d => d !== v));
+    updateLegend(domain.filer(d => d !== v));
   }, [domain, updateLegend]);
 
   const [value, setValue] = React.useState("");
@@ -502,7 +505,8 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                 </Button>
               </div>
               <div>
-                <Button className="buttonBlock" onClick={ useCKMeans }
+                <Button 
+                  onClick={ useCKMeans }
                   className="buttonPrimaryBlock"
                 >
                   Reset with 6 bins

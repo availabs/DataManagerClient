@@ -231,7 +231,14 @@ const AdminPage = ({source, views, activeViewId, }) => {
           <div className="w-full p-1 flex">
             <Link 
                 className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                to={`${baseUrl}/source/${source.source_id}/add_version`}> 
+                to={`${baseUrl}/source/${source.source_id}/meta_advanced`}>
+                  Advanced Metadata <i className='fa fa-circle-info' />
+            </Link>
+          </div>
+            <div className="w-full p-1 flex">
+            <Link
+                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
+                to={`${baseUrl}/source/${source.source_id}/add_version`}>
                   Add Version <i className='fad fa-upload' />
             </Link>
           </div>

@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {editMetadata} from "../utils/editMetadata.js";
 import {Button} from "~/modules/avl-components/src";
 import {DamaContext} from "../../../../store/index.js";
+import {dmsDataTypes} from "~/modules/dms/src"
 
 export const RenderTextArea = ({value, setValue, save, cancel}) => {
     return (
@@ -38,6 +39,18 @@ export const RenderTextBox = ({value, setValue, save, cancel}) => {
         </div>
     )
 }
+
+export const RenderLexical = ({Comp, value, setValue, save, cancel}) => {
+    return (
+        <div className='w-full flex flex-1 flex-col'>
+            <Comp value={value} onChange={setValue} />
+            <div className={'flex self-end'}>
+                <Button themeOptions={{size: 'sm', color: 'primary'}} onClick={e => save(value)}> Save </Button>
+                <Button themeOptions={{size: 'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button>
+            </div>
+        </div>
+    )
+}
 export const Edit = ({
                          metadata, setMetadata,
                          col,
@@ -52,6 +65,7 @@ export const Edit = ({
                      }) => {
     const [value, setValue] = useState('')
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
+    const Lexical = dmsDataTypes.lexical.EditComp;
 
     useEffect(() => {
         setValue(startValue)
@@ -64,5 +78,7 @@ export const Edit = ({
 
     return type === 'textarea' ?
         <RenderTextArea value={value} setValue={setValue} save={save} cancel={cancel}/> :
-        <RenderTextBox value={value} setValue={setValue} save={save} cancel={cancel}/>
+        type === 'lexical' ?
+            <RenderLexical Comp={Lexical} value={value} setValue={setValue} save={save} cancel={cancel} /> :
+            <RenderTextBox value={value} setValue={setValue} save={save} cancel={cancel}/>
 }

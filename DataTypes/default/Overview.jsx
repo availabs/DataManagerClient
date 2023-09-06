@@ -3,8 +3,6 @@ import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { SourceAttributes } from '~/pages/DataManager/components/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
-import Index from './Metadata/index.jsx'
-import { useParams } from "react-router-dom";
 import Versions from './Version/list'
 import { VersionEditor, VersionDownload } from './Version/version'
 
