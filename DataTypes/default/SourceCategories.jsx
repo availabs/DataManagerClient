@@ -3,8 +3,16 @@ import React from "react"
 import get from "lodash/get"
 
 import { DamaContext } from "~/pages/DataManager/store"
+import { Button } from "~/modules/avl-components/src"
 
 import { useClickOutside } from "~/pages/DataManager/utils/useClickOutside"
+
+const TestCategories = [
+  ["test-1-1", "test-1-2", "test-1-3", "test-1-4"],
+  ["test-test-2-1", "test-test-2-2", "test-test-2-3"],
+  ["test-test-test-3-1", "test-test-test-3-2"],
+  ["test-4-1"]
+]
 
 const useSourceCategories = ({ source }) => {
 
@@ -48,7 +56,100 @@ const useSourceCategories = ({ source }) => {
   return [categories, setCategories];
 }
 
+const CategoryItem = ({ children }) => {
+  const [hovering, setHovering] = React.useState(false);
+  const mouseEnter = React.useCallback(() => {
+    setHovering(true);
+  }, []);
+  const mouseLeave = React.useCallback(() => {
+    setHovering(false);
+  }, []);
+  return (
+    <div className={ `
+        overflow-hidden text-ellipsis whitespace-nowrap
+      ` }
+    >
+      { children }
+    </div>
+  )
+}
+
+const Spanner = () => {
+  return (
+    <span className="fas fa-caret-right mx-1"/>
+  )
+}
+const Plus = props => {
+  return (
+    <span { ...props }
+      className={ `
+        fas fa-plus p-1 rounded cursor-pointer
+        text-blue-500 hover:bg-blue-500 hover:text-white
+      ` }/>
+  )
+}
+
+const CategoryList = props => {
+
+  const {
+    categories,
+    parent,
+    addNewCategory,
+    editingCategories: eCats,
+    // stopEditing
+  } = props;
+
+  const num = categories.length;
+
+  const [editing, setEditing] = React.useState(false);
+  const startEditing = React.useCallback(e => {
+    e.stopPropagation();
+    setEditing(true);
+  }, []);
+  const stopEditing = React.useCallback(e => {
+    e.stopPropagation();
+    setEditing(false);
+  }, []);
+
+  const doAdd = React.useCallback(cat => {
+    addNewCategory(cat, parent);
+    setEditing(false);
+  }, [addNewCategory, parent, stopEditing]);
+
+  return (
+    <div className={ `flex flex-col border-current ${ eCats ? "border-b" : "" }`}>
+      <div className={ `flex ${ eCats ? "border-b" : "" }` }>
+        <div className="font-bold">
+          { categories[0] }
+        </div>
+        { !eCats || editing ? null :
+          <div className="flex-1 flex items-center justify-end">
+            <Plus onClick={ startEditing }/>
+          </div>
+        }
+      </div>
+      <div className="flex ml-4">
+        { categories.slice(1).map((cat, i) => (
+            <CategoryItem key={ cat }>
+              <span>{ cat }</span>{ i < num - 2 ? <Spanner /> : null}
+            </CategoryItem>
+          ))
+        }
+      </div>
+      { !editing ? null :
+        <CategoryAdder isSub
+          stopEditing={ stopEditing }
+          addNewCategory={ doAdd }/>
+      }
+    </div>
+  )
+}
+
 const SourceCategories = props => {
+  const {
+    editingCategories,
+    stopEditingCategories: stopAll
+  } = props;
 
   const [categories, setCategories] = useSourceCategories(props);
 
@@ -72,122 +173,33 @@ const SourceCategories = props => {
         }, [])
       );
     }
-  }, [categories]);
-
-  const [showList, setShowList] = React.useState(false);
-
-  const onMouseEnter = React.useCallback(e => {
-    setShowList(true);
-  }, []);
-  const onMouseLeave = React.useCallback(e => {
-    setShowList(false);
-  }, []);
+  }, [categories, setCategories]);
 
   return (
-    <div className="relative w-full whitespace-nowrap"
-      onMouseEnter={ onMouseEnter }
-      onMouseLeave={ onMouseLeave }
-    >
-      { !categories.length ?
-        <CategoryAdder addNewCategory={ addNewCategory }>
-          Add Category
-        </CategoryAdder> :
-        <>
-          { !showList ?
-            <div className="px-2 py-1 bg-gray-100">{ categories[0][0] }</div> :
-            <CategoryList
-              list={ categories[0] }
-              addNewCategory={ addNewCategory }
-              parent={ 0 }/>
-          }
-          { !showList ? null :
-            <>
-              { categories.slice(1).map((cats, i) => (
-                  <CategoryList key={ i }
-                    list={ cats }
-                    addNewCategory={ addNewCategory }
-                    parent={ i }/>
-                ))
-              }
-              <CategoryAdder addNewCategory={ addNewCategory }>
-                Add Category
-              </CategoryAdder>
-            </>
-          }
-        </>
+    <div>
+      { categories.map((cats, i) => (
+          <CategoryList key={ i }
+            categories={ cats }
+            parent={ i }
+            editingCategories={ editingCategories }
+            addNewCategory={ addNewCategory }/>
+        ))
       }
-    </div>
-  )
-}
-export default SourceCategories;
-
-const CategoryList = props => {
-
-  const {
-    list = [],
-    addNewCategory,
-    parent,
-    children
-  } = props;
-
-  const [showList, setShowList] = React.useState(false);
-
-  const onMouseEnter = React.useCallback(e => {
-    setShowList(true);
-  }, []);
-  const onMouseLeave = React.useCallback(e => {
-    setShowList(false);
-  }, []);
-
-  const doAdd = React.useCallback(cat => {
-    addNewCategory(cat, parent);
-  }, [addNewCategory]);
-
-  return (
-    <div className="relative"
-      onMouseEnter={ onMouseEnter }
-      onMouseLeave={ onMouseLeave }
-    >
-      <ListItem>{ list[0] }</ListItem>
-      { !showList ? null :
-        <div className="absolute top-0 left-full">
-          <ListItems list={ list.slice(1) }
-            addNewCategory={ doAdd }
-            isChild/>
+      { !editingCategories ? null :
+        <div className="grid grid-cols-1 gap-1 mt-1">
+          <CategoryAdder
+            addNewCategory={ addNewCategory }/>
+          <Button onClick={ stopAll }
+            themeOptions={ { size:'sm', color: 'cancel' } }
+          >
+            Stop editing categories
+          </Button>
         </div>
       }
     </div>
   )
 }
-
-const ListItems = ({ list, addNewCategory }) => {
-  const hasChild = Boolean(list.length > 1);
-  return (
-    <div className="flex flex-col w-fit">
-      { list.map((l, i) => (
-          <ListItem key={ i } isChild>{ l }</ListItem>
-        ))
-      }
-      <CategoryAdder addNewCategory={ addNewCategory }>
-        Add Subcategory
-      </CategoryAdder>
-    </div>
-  )
-}
-
-const ListItem = ({ children, isChild = false }) => {
-  return (
-    <div className="px-2 py-1 bg-gray-100 relative flex items-center">
-      <div>{ children }</div>
-      <div className="flex-1 text-right ml-8 text-blue-500">
-        { isChild ?
-          <span className="fas fa-arrow-down"/> :
-          <span className="fas fa-arrow-right"/>
-        }
-      </div>
-    </div>
-  )
-}
+export default SourceCategories;
 
 const Input = ({ onChange, ...props }) => {
   const doOnChange = React.useCallback(e => {
@@ -206,60 +218,46 @@ const Input = ({ onChange, ...props }) => {
   )
 }
 
-const CategoryAdder = ({ addNewCategory, children }) => {
-  const [editing, setEditing] = React.useState(false);
+const CategoryAdder = ({ addNewCategory, stopEditing, isSub = false }) => {
   const [cat, setCat] = React.useState("");
-  const startEditing = React.useCallback(e => {
-    e.stopPropagation();
-    setEditing(true);
-    setCat("");
-  }, []);
-  const stopEditing = React.useCallback(e => {
-    e.stopPropagation();
-    setEditing(false);
-    setCat("");
-  }, []);
   const doAdd = React.useCallback(e => {
     e.stopPropagation();
     addNewCategory(cat);
-    setEditing(false);
     setCat("");
   }, [addNewCategory, cat]);
+  const doStop = React.useCallback(e => {
+    if (typeof stopEditing === "function") {
+      stopEditing(e);
+    }
+    setCat("");
+  }, [stopEditing]);
   const onKeyDown = React.useCallback(e => {
     if ((e.key === "Enter") || (e.keyCode === 13)) {
       doAdd(e);
     }
     else if ((e.key === "Escape") || (e.keyCode === 27)) {
-      stopEditing(e);
+      doStop(e);
     }
-  }, [doAdd, stopEditing]);
+  }, [doAdd, doStop]);
+
   const [ref, setRef] = React.useState(null);
-  useClickOutside(ref, stopEditing);
+  useClickOutside(ref, doStop);
+
   return (
-    <div className="px-2 py-1 bg-gray-100 whitespace-nowrap"
-      onClick={ startEditing }
-      ref={ setRef }
-    >
-      { !editing ?
-        <div
-          className="bg-gray-200 hover:bg-gray-300 px-2 rounded cursor-pointer"
-        >
-          <span className="fas fa-plus mr-1 text-blue-500"/>{ children }
-        </div> :
-        <div className="flex flex-col">
-          <div className="mb-1">
-            <Input type="text"
-              value={ cat }
-              onChange={ setCat }
-              onKeyDown={ onKeyDown }/>
-          </div>
-          <div className="px-2 rounded bg-gray-200 text-center">
-            { !cat ? "Start typing" :
-              "Enter to save"
-            }
-          </div>
+    <div ref={ setRef } className="px-2 py-1 bg-gray-100 whitespace-nowrap">
+      <div className="flex flex-col">
+        <div className="mb-1">
+          <Input type="text"
+            value={ cat }
+            onChange={ setCat }
+            onKeyDown={ onKeyDown }/>
         </div>
-      }
+        <div className="px-2 rounded bg-gray-200 text-center">
+          { !cat ? `Start typing to add new ${ isSub ? "subcategory" : "category" }` :
+            "Press Enter to save or Esc to cancel"
+          }
+        </div>
+      </div>
     </div>
   )
 }

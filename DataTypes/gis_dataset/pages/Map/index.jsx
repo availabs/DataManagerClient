@@ -254,10 +254,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
-<<<<<<< HEAD
-=======
-  //console.log('metadata',metaData)
->>>>>>> c1e543c3e4de918d76ebdbd584ace82fa9eef011
 
   return (
     <div>
