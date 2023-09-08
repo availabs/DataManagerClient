@@ -6,6 +6,7 @@ import { DamaContext } from "~/pages/DataManager/store"
 import Versions from './Version/list'
 import { VersionEditor, VersionDownload } from './Version/version'
 
+import SourceCategories from "./SourceCategories"
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
   const [value, setValue] = useState('')
@@ -68,7 +69,15 @@ const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
 
 
 const OverviewEdit = ({source, views, activeViewId}) => {
-  const [editing, setEditing] = React.useState(null)
+  const [editing, setEditing] = React.useState(null);
+
+  const stopEditing = React.useCallback(e => {
+    e.stopPropagation();
+    setEditing(null);
+  }, []);
+
+console.log("OverviewEdit::editing:", editing)
+
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
   return (
@@ -85,7 +94,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                       startValue={source['name']}
                       attr={'name'}
                       sourceId={source.source_id}
-                      cancel={() => setEditing(null)}
+                      cancel={stopEditing}
                     />
                   </div> :
                   <div className='py-2 px-2'>{source['name']}</div>
@@ -106,7 +115,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                   attr={'description'}
                   type='textarea'
                   sourceId={source?.source_id}
-                  cancel={() => setEditing(null)}/> :
+                  cancel={stopEditing}/> :
                 get(source,'description', false) || 'No Description'}
               </div>
             </div>
@@ -122,8 +131,31 @@ const OverviewEdit = ({source, views, activeViewId}) => {
               .filter(d => !['source_id','metadata','description', 'statistics', 'category', 'display_name','name'].includes(d))
               .map((attr,i) => {
                 let val = typeof source[attr] === 'object' ? JSON.stringify(source[attr]) : source[attr]
+                if (attr === "categories") {
+                  return (
+                    <div key={attr} className='flex justify-between group'>
+                      <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
+                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                          <div className="py-5 px-2 relative">
+                            <SourceCategories source={ source }
+                              editingCategories={ editing === attr }
+                              stopEditingCategories={ stopEditing }/>
+                          </div>
+                        </dd>
+                      </div>
+                      { user.authLevel > 5 && (editing !== attr) ?
+                        <div className='hidden group-hover:block text-blue-500 cursor-pointer'
+                          onClick={ e => setEditing(attr) }
+                        >
+                          <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
+                        </div> : null
+                      }
+                    </div>
+                  )
+                }
                 return (
-                  <div key={i} className='flex justify-between group'>
+                  <div key={attr} className='flex justify-between group'>
                     <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                       <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -133,7 +165,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                               startValue={val}
                               attr={attr}
                               sourceId={source.source_id}
-                              cancel={() => setEditing(null)}
+                              cancel={stopEditing}
                             />
                           </div> :
                           <div className='py-5 px-2'>{val}</div>
@@ -154,7 +186,6 @@ const OverviewEdit = ({source, views, activeViewId}) => {
             />
             <div className='w-full flex p-4'>
               <div className='flex-1' />
-
 
             </div>
           </dl>
