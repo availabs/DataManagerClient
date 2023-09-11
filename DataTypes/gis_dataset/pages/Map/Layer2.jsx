@@ -12,7 +12,7 @@ import {
   // ColorRangesByType,
   ColorRanges,
   ColorBar,
-  ColorCategory,
+  // ColorCategory,
   Input,
   Button,
   useTheme,
@@ -89,7 +89,7 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
     <div className={ `p-1 rounded ${ theme.bg }` }>
       <div className={ `
           p-1 relative border rounded pointer-events-auto
-          ${ theme.bgAccent2 } ${ theme.border }
+          ${ theme.legendBg } ${ theme.legendBorder }
         ` }
       >
         <div className="flex mb-1">
@@ -234,7 +234,7 @@ const GISDatasetRenderComponent = props => {
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
 
-    
+
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -505,7 +505,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                 </Button>
               </div>
               <div>
-                <Button 
+                <Button
                   onClick={ useCKMeans }
                   className="buttonPrimaryBlock"
                 >
@@ -530,13 +530,12 @@ const BooleanSlider = ({ value, onChange }) => {
       className="px-4 py-1 h-8 rounded flex items-center w-full cursor-pointer"
     >
       <div className={ `
-          rounded flex-1 h-2 relative flex items-center
-          ${ theme.bgAccent2 }
+          rounded flex-1 h-2 relative flex items-center bg-blue-100
         ` }
       >
         <div className={ `
             w-4 h-4 rounded absolute
-            ${ Boolean(value) ? theme.bgHighlight : "bg-gray-400" }
+            ${ Boolean(value) ? "bg-blue-500" : "bg-gray-500" }
           ` }
           style={ {
             left: Boolean(value) ? "100%" : "0%",
@@ -552,6 +551,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
   const isActive = React.useMemo(() => {
     return isEqual(colors, range);
   }, [colors, range]);
+
   const onClick = React.useCallback(() => {
     updateLegend(colors, name, reverse)
   }, [updateLegend, name, colors, reverse])
@@ -560,7 +560,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
       onClick={ isActive ? null : onClick }
       className={ `
         outline outline-2 rounded-lg my-2
-        ${ isActive ? "outline-current" : "outline-transparent cursor-pointer" }
+        ${ isActive ? "outline-black" : "outline-transparent cursor-pointer" }
       ` }
     >
       <ColorBar
