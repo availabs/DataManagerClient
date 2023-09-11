@@ -492,7 +492,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                     edit={ editDomain }/>
                 ))
               }
-              <div className="flex">
+              <div className={ `flex border-t pt-1 ${ theme.border }` }>
                 <div className="mr-1 flex-1">
                   <Input type="number" placeholder="enter a threshold value..."
                     onChange={ setValue }
