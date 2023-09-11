@@ -16,6 +16,7 @@ import {
   Input,
   Button,
   useTheme,
+  ThemeUpdater,
   getScale,
   useClickOutside
 } from "~/modules/avl-map-2/src";
@@ -88,8 +89,8 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   return (
     <div className={ `p-1 rounded ${ theme.bg }` }>
       <div className={ `
-          p-1 relative border rounded pointer-events-auto
-          ${ theme.legendBg } ${ theme.legendBorder }
+          p-1 relative rounded border pointer-events-auto
+          ${ theme.bgAccent2 } ${ theme.border }
         ` }
       >
         <div className="flex mb-1">
@@ -131,6 +132,11 @@ const calcRange = (type, length, color, reverse) => {
     default:
       return data;
   }
+}
+
+const ThemeUpdate = {
+  bgAccent2: "bg-white",
+  border: "shadow"
 }
 
 const GISDatasetRenderComponent = props => {
@@ -234,8 +240,6 @@ const GISDatasetRenderComponent = props => {
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
 
-
-
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
@@ -324,12 +328,15 @@ const GISDatasetRenderComponent = props => {
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
-        <LegendContainer { ...legend }
-          toggle={ toggle }
-          isOpen={ isOpen }
-        >
-          <Legend { ...legend }/>
-        </LegendContainer>
+{ /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
+        <ThemeUpdater themeUpdate={ ThemeUpdate }>
+          <LegendContainer { ...legend }
+            toggle={ toggle }
+            isOpen={ isOpen }
+          >
+            <Legend { ...legend }/>
+          </LegendContainer>
+        </ThemeUpdater>
       </div>
 
       <div className="z-0">
@@ -341,14 +348,6 @@ const GISDatasetRenderComponent = props => {
     </div>
   )
 }
-
-// const LegendControlsToggle = ({ toggle }) => {
-//   return (
-//     <ActionButton onClick={ toggle }>
-//       <span className="fa fa-plus"/>
-//     </ActionButton>
-//   )
-// }
 
 const RemoveDomainItem = ({ value, remove }) => {
   const doRemove = React.useCallback(e => {

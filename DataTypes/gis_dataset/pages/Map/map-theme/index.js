@@ -86,9 +86,6 @@ const MapThemeBase = {
 
   transition: "transition ease-in-out duration-150",
 
-  legendBg: "bg-white",
-  legendBorder: "shadow",
-
   $compositions
 };
 
