@@ -1,4 +1,11 @@
-const LightBase = {
+
+import {
+  composeTheme,
+  makeProxy,
+  $compositions
+} from "~/modules/avl-map-2/src"
+
+const MapThemeBase = {
   bgInput: "bg-white",
   bgInputHover: "hover:bg-white",
 
@@ -11,7 +18,7 @@ const LightBase = {
   text: "text-gray-800 disabled:text-gray-400 placeholder:text-gray-400",
   textDisabled: "text-gray-400 disabled:text-gray-400 placeholder:text-gray-400",
   bg: "bg-white",
-  border: "shadow",
+  border: "border-gray-800",
   outline: "outline-gray-800",
 
   textButton: "text-gray-400 disabled:text-gray-400 placeholder:text-gray-400",
@@ -68,17 +75,21 @@ const LightBase = {
   bgAccent3Hover: "hover:bg-gray-400",
   bgAccent4Hover: "hover:bg-gray-500",
 
-  textHighlight: "text-teal-500",
-  textHighlightHover: "hover:text-teal-500",
+  textHighlight: "text-blue-500",
+  textHighlightHover: "hover:text-blue-500",
 
-  borderHighlight: "border-teal-500",
-  borderHighlightHover: "hover:border-teal-500",
+  borderHighlight: "border-blue-500",
+  borderHighlightHover: "hover:border-blue-500",
 
-  bgHighlight: "bg-teal-500",
-  bgHighlightHover: "hover:bg-teal-500",
+  bgHighlight: "bg-blue-500",
+  bgHighlightHover: "hover:bg-blue-500",
 
   transition: "transition ease-in-out duration-150",
 
+  $compositions
 };
 
-export default LightBase
+const composed = composeTheme(MapThemeBase);
+const MapTheme = makeProxy(composed);
+
+export default MapTheme;
