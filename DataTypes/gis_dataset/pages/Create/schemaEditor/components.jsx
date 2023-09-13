@@ -65,8 +65,13 @@ const ConstrainedColumnNameInput = ({
 };
 
 export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
-  const { layerName, tableDescriptor, publishStatus, databaseColumnNames } =
-    state;
+  const { 
+    layerName, 
+    tableDescriptor, 
+    publishStatus, 
+    databaseColumnNames,
+    mbtilesOptions
+    } = state;
 
   //console.log('databaseColumnNames', databaseColumnNames)
 
@@ -152,7 +157,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     setallPreserveColumnsChecked(!e.target.checked);
     dispatch({
       type: "update",
-      payload: { mbtilesOptions: { preserveColumns: updatedVal } },
+      payload: { mbtilesOptions: { preserveColumns: updatedVal, ...mbtilesOptions } },
     });
   };
 

@@ -90,8 +90,8 @@ const TablePage = ({
   }, [pgEnv, activeViewId, falcorCache]);
 
   const attributes = React.useMemo(() => {
-    return get(source, "metadata", [])
-      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
+    return (source?.metadata?.columns || source?.metadata || [])
+      .filter((d) => ["integer", "string", "number"].includes(d.type))
       .map((d) => d.name);
   }, [source]);
 

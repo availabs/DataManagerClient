@@ -211,25 +211,48 @@ const GISDatasetRenderComponent = props => {
   }, [falcor, pgEnv, sourceId, legend])
 
   React.useEffect(() => {
-    if (!maplibreMap) return;
-    const sources = get(symbology, "sources", []);
-    //console.log('sources', sources)
-    if (Array.isArray(sources)) {
-      sources.forEach(s => {
-        if (!maplibreMap.getSource(s.id)) {
-          maplibreMap.addSource(s.id, s.source);
-        }
-      })
-    }
-    const layers = get(symbology, "layers", []);
+    async function loadMapData () { 
+      if (!maplibreMap) return;
+      const sources = get(symbology, "sources", []);
+      const layers = get(symbology, "layers", []);
+      const images = get(symbology, "images", []);
 
-    if (Array.isArray(layers)) {
-      layers.forEach(l => {
-        if (!maplibreMap.getLayer(l.id)) {
-          maplibreMap.addLayer(l);
-        }
-      })
+      //console.log('set sources', sources, layers,images)
+      if (Array.isArray(images)) {
+        await Promise.all(
+            images
+              .filter(img => !maplibreMap.hasImage(img.id))
+              .map(img => new Promise((resolve, reject) => {
+                
+                maplibreMap.loadImage(img.url, function (error, res) {
+                    if (error) throw error;
+                    maplibreMap.addImage(img.id, res)
+                    resolve();
+                })
+            }))
+        )
+      }
+
+
+      if (Array.isArray(sources)) {
+        sources.forEach(s => {
+          if (!maplibreMap.getSource(s.id)) {
+            maplibreMap.addSource(s.id, s.source);
+          }
+        })
+      }
+      
+      if (Array.isArray(layers)) {
+        layers.forEach(l => {
+          if (!maplibreMap.getLayer(l.id)) {
+            maplibreMap.addLayer(l);
+          }
+        })
+      }
+      // console.log('loadMapData done')
     }
+
+    loadMapData()
   }, [maplibreMap, symbology]);
 
   const activeVariable = get(filters, ["activeVar", "value"], "");

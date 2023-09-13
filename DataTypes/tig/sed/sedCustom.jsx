@@ -4,7 +4,7 @@ import get from "lodash/get";
 import { useSearchParams } from "react-router-dom";
 
 import { DamaContext } from "~/pages/DataManager/store"
-import { useFalcor, Button } from "~/modules/avl-components/src"
+import { Button } from "~/modules/avl-components/src"
 import * as d3scale from "d3-scale"
 import { range as d3range } from "d3-array"
 import ckmeans from '../../../utils/ckmeans'
@@ -58,8 +58,7 @@ const SedMapFilter = ({
     activeViewId,
     layer
   }) => {
-  const {falcor, falcorCache} = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext)
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext)
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let varType = useMemo(
     () =>
