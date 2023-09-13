@@ -59,11 +59,26 @@ const styles = {
          "LineString"
       ],
    },
+   // "circle":{
+   //    "type": "circle",
+   //    'paint': {
+   //      'circle-color': ["get", ["to-string", ["get", "ptype_id"]], ["literal", ptypes_colors]], // reference the image
+   //      'circle-radius': 4
+   //    },
+   //    "filter": [
+   //       "==",
+   //       [
+   //          "geometry-type"
+   //       ],
+   //       "Point"
+   //    ],
+   // },
    "circle":{
       "type": "symbol",
       'layout': {
         'icon-image': ["get", ["to-string", ["get", "ptype_id"]], ["literal", ptypes]], // reference the image
-        'icon-size': 0.10
+        'icon-size': 0.10,
+        'icon-allow-overlap': true
       },
       "filter": [
          "==",

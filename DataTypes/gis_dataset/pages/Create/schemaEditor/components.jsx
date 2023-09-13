@@ -136,7 +136,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     return null;
   }
 
-  const InputElem = databaseColumnNames
+  const InputElem = (databaseColumnNames && databaseColumnNames.length > 0) 
     ? ConstrainedColumnNameInput
     : FreeFormColumnNameInput;
 
@@ -157,10 +157,11 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     setallPreserveColumnsChecked(!e.target.checked);
     dispatch({
       type: "update",
-      payload: { mbtilesOptions: { preserveColumns: updatedVal, ...mbtilesOptions } },
+      payload: { mbtilesOptions: {  ...mbtilesOptions , preserveColumns: updatedVal,} },
     });
   };
 
+  console.log('mbtilesOptions', mbtilesOptions)
   const availableDbColNames =
     databaseColumnNames &&
     databaseColumnNames
@@ -291,7 +292,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
 
                         dispatch({
                           type: "update",
-                          payload: { mbtilesOptions: { preserveColumns: newPreserveColumns } },
+                          payload: { mbtilesOptions: { ...mbtilesOptions, preserveColumns: newPreserveColumns, } },
                         });
                       }}
                     />
