@@ -1,4 +1,7 @@
 // Consider:  Should this be a class so that tasks can extend and override methods?
+// Consider: DONT USE THIS
+// --------  this codebase is not designed to have centralized api calls
+// --------  please put your api calls where you use them for readability
 
 import { DAMA_HOST } from "~/config";
 
@@ -76,38 +79,4 @@ export const makeAuthoritative = async (rtPfx, viewId) => {
   return viewMetaRes;
 };
 
-export const deleteSource = async (rtPfx, sourceId) => {
-  const url = new URL(`${rtPfx}/deleteDamaSource`);
 
-  const res = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify({ "source_id": sourceId }),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-
-  await checkApiResponse(res);
-
-  const sourceDelRes = await res.json();
-
-  return sourceDelRes;
-};
-
-export const deleteView = async (rtPfx, viewId) => {
-  const url = new URL(`${rtPfx}/deleteDamaView`);
-
-  const res = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify({ "view_id": viewId }),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-
-  await checkApiResponse(res);
-
-  const viewMetaRes = await res.json();
-
-  return viewMetaRes;
-};

@@ -22,7 +22,7 @@ const DamaRoutes = DAMA_ARGS => {
     defaultPgEnv = "pan",     // old position 1 arg
     auth = false,             // old position 2 arg
     components = {},
-    navSettigs = {},
+    navSettings = {},
     useFalcor,
     useAuth
   } = DAMA_ARGS;
@@ -37,8 +37,8 @@ const DamaRoutes = DAMA_ARGS => {
 
   const {
     sideNav = { size: "none"},
-    topNav = {size: "none" }
-  } = navSettigs
+    topNav = { size: "none" }
+  } = navSettings
 
   const HeaderComp = () => {
     const { falcor, falcorCache } = useFalcor()

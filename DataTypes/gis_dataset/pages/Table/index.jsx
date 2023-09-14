@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import {  withAuth, Table } from '~/modules/avl-components/src'
+import {  Table } from '~/modules/avl-components/src'
 import get from 'lodash/get'
 import { useParams, useNavigate } from 'react-router-dom'
 
@@ -48,7 +48,6 @@ const identityMap = (tableData, attributes) => {
 const TablePage = ({
   source,
   views,
-  user,
   transform = identityMap,
   filterData = {},
   TableFilter = DefaultTableFilter,
@@ -58,7 +57,7 @@ const TablePage = ({
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }));
   }, []);
-  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache, user  } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
     return get(
@@ -74,6 +73,7 @@ const TablePage = ({
 
   React.useEffect(() => {
     console.time("getviewLength");
+    console.log('getviewLength', pgEnv,activeViewId)
     falcor
       .get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
       .then((d) => {
@@ -90,8 +90,14 @@ const TablePage = ({
   }, [pgEnv, activeViewId, falcorCache]);
 
   const attributes = React.useMemo(() => {
-    return get(source, "metadata", [])
-      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
+    
+    let md = get(source, ["metadata", "columns"], get(source, "metadata", []));
+    if (!Array.isArray(md)) {
+      md = [];
+    }
+
+    return md
+      .filter((d) => ["integer", "string", "number"].includes(d.type))
       .map((d) => d.name);
   }, [source]);
 
@@ -146,7 +152,7 @@ const TablePage = ({
   return (
     <div>
       <div className="flex">
-        <div className="flex-1 pl-3 pr-4 py-2">Table View</div>
+        {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
           data={data} columns={columns}/>
         <ViewSelector views={views} />
@@ -161,4 +167,4 @@ const TablePage = ({
   );
 };
 
-export default withAuth(TablePage);
+export default TablePage;

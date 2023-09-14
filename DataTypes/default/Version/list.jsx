@@ -1,5 +1,5 @@
 import React, {Fragment} from "react";
-import { withAuth, Table } from "~/modules/avl-components/src";
+import { Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getDamaApiRoutePrefix, makeAuthoritative } from "../../../utils/DamaControllerApi";
@@ -45,11 +45,11 @@ const Versions = ({ source, views, meta }) => {
   if (vPage === "delete") {
     return <DeleteVersion  />;
   }
-  if (viewId) {
-    return (
-      <Version />
-    );
-  }
+  // if (viewId) {
+  //   return (
+  //     <Version />
+  //   );
+  // }
 
   // const columns = React.useMemo(() => {
   //   return [
@@ -78,9 +78,9 @@ const Versions = ({ source, views, meta }) => {
   //       Header: " ",
   //       accessor: c => {
   //         console.log('downlaod view',c)
-  //         return 
+  //         return
   //           <VersionDownload
-  //             view={c} 
+  //             view={c}
   //           />
   //       },
   //       disableFilters: true
@@ -119,7 +119,7 @@ const Versions = ({ source, views, meta }) => {
         accessor: c => {
           return (
             <VersionDownload
-              view={c} 
+              view={c}
             />
           )
         },

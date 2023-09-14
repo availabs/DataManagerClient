@@ -1,18 +1,25 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
+import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
 import { useParams, useNavigate } from 'react-router-dom'
-import GISDatasetLayer from './Layer'
+import GISDatasetLayer from './Layer2'
 import Symbology from './symbology/index'
-import { AvlMap } from "~/modules/avl-maplibre/src"
+// import { AvlMap } from "~/modules/avl-maplibre/src"
+import { AvlMap, ThemeProvider} from "~/modules/avl-map-2/src"
+import mapTheme from './map-theme'
+
 import { DamaContext } from "~/pages/DataManager/store"
 import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
+import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
+
+// import {google_streets_style} from '~/config.json'
 
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
-const ColorRange = getColorRange(7, "BrBG")
+const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
 
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
@@ -24,9 +31,6 @@ const getTilehost = (DAMA_HOST) =>
     : DAMA_HOST + "/tiles";
 
 const TILEHOST = getTilehost(DAMA_HOST)
-
-//Console.log('DAMA_HOST', DAMA_HOST, TILEHOST)
-
 
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
@@ -55,26 +59,17 @@ const ViewSelector = ({views}) => {
   )
 }
 
-const IGNORED_VARIABLES = ["wkb_geometry"];
-
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
 const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
-  
-
   const metadata = React.useMemo(() => {
-    const md = get(source, "metadata", []);
+    const md = get(source, ["metadata", "columns"], get(source, "metadata", []));
     if (Array.isArray(md)) {
       return md;
     }
     return [];
-  }, [source])
-
-  // const allVariables = React.useMemo(() => {
-  //   return metadata.map(md => md.name)
-  //     .filter(v => !IGNORED_VARIABLES.includes(v));
-  // }, [metadata]);
+  }, [source]);
 
   const dataVariables = React.useMemo(() => {
     return metadata
@@ -114,12 +109,13 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
+
   React.useEffect(() => {
     if (!activeVar) setData([]);
-    const databyId = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
-    const data = Object.keys(databyId)
+    const dataById = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
+    const data = Object.keys(dataById)
       .map(id => {
-        const value = get(databyId, [id, activeVar], null);
+        const value = get(dataById, [id, activeVar], null);
         return {
           id,
           var: activeVar,
@@ -129,50 +125,44 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     setData(data);
   }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
 
-  const scale = React.useMemo(() => {
-    if (!data.length) return null;
-
-    const domain = data.map(d => +d.value);
-    if (varType === "data-variable") {
-      return scaleThreshold()
-        .domain(ckmeans(domain, ColorRange.length + 1))
-        .range(ColorRange)
-    }
-    else {
-      return scaleOrdinal()
-        .domain(domain)
-        .range(OrdinalColorRange)
-    }
-  }, [data, varType]);
-
   React.useEffect(() => {
     if (!data.length) return;
 
-    const colors = data.reduce((a, c) => {
-      a[c.id] = scale(c.value);
-      return a
-    }, {});
+    const legend = get(source, ["metadata", "legend"], {});
 
-    const output = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
-
-    const newSymbology = layer.layers.reduce((a, c) => {
+    const newSym = layer.layers.reduce((a, c) => {
       a[c.id] = {
-        "fill-color": {
+        [`${c.type}-color`]: {
           [activeVar]: {
-            type: varType === "data-variable" ? 'threshold' : "ordinal",
             settings: {
-              range: scale.range(),
-              domain: scale.domain(),
-              title: activeVar
+              name: activeVar,
+              type: varType === "data-variable" ? 'threshold' : "ordinal",
+              ...legend,
+              data
             },
-            value: output
+            // value: output
           }
         }
       };
       return a;
     }, {});
-    setTempSymbology(newSymbology)
-  }, [layer, data, scale, setTempSymbology, activeVar, varType]);
+
+    setTempSymbology(oldSym => {
+      const update = {};
+      for (const id in newSym) {
+        update[id] = {};
+        for (const p in newSym[id]) {
+          update[id][p] = {};
+          for (const v in newSym[id][p]) {
+            const os = get(oldSym, [id, p, v]);
+            const ns = get(newSym, [id, p, v]);
+            update[id][p][v] = os || ns;
+          }
+        }
+      }
+      return update;
+    });
+  }, [layer, data, setTempSymbology, activeVar, varType, source]);
 
   return (
     <div className='flex flex-1'>
@@ -216,6 +206,11 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     out.sources.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        if(s.source.url.includes('.pmtiles')){
+          s.source.url = s.source.url
+            .replace('https://', 'pmtiles://')
+            .replace('http://', 'pmtiles://')
+        } 
       }
     })
     return out
@@ -237,6 +232,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
+// console.log("SOURCE:", source)
+
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
       const sources = symSources || get(mapData,'sources',[]);
@@ -244,6 +241,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       if(sources.length === 0 || layers.length === 0 ) {
         return null
       }
+      //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
       return {
             name: source.name,
             pgEnv,
@@ -251,7 +249,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView: activeView,
             filters,
             hoverComp: HoverComp,
-            attributes: get(source,'metadata',[])?.filter(d => ['integer','string','number'].includes(d.type))
+            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
+              .filter(d => ['integer', 'string', 'number'].includes(d.type))
               .map(d => d.name),
             activeViewId: activeViewId,
             sources,
@@ -263,26 +262,33 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   return (
     <div>
+      {/*<div className='flex'>
+        <div className='pl-2 pr-2 py-2 flex-1'>
+          Map View { viewId }
+        </div>
+      </div>*/}
       <div className='flex'>
-        <div className='pl-3 pr-4 py-2 flex-1'>Map View  {viewId}</div>{/*{get(activeView,'id','')}*/}
+
         <MapFilter
-          source={source}
-          metaData={metaData}
-          filters={filters}
-          setFilters={setFilters}
-          tempSymbology={tempSymbology}
-          setTempSymbology={setTempSymbology}
-          activeView={activeView}
-          activeViewId={activeViewId}
-          layer={layer}
+            source={source}
+            metaData={metaData}
+            filters={filters}
+            setFilters={setFilters}
+            tempSymbology={tempSymbology}
+            setTempSymbology={setTempSymbology}
+            activeView={activeView}
+            activeViewId={activeViewId}
+            layer={layer}
         />
         <ViewSelector views={views} />
       </div>
-      <div className='w-ful h-[900px]'>
+      <div className='w-full h-[900px]'>
         <Map
-          layers={[layer]}
-          tempSymbology={tempSymbology}
-        />
+          key={ viewId }
+          layers={ [layer] }
+          source={ source }
+          tempSymbology={ tempSymbology }
+          setTempSymbology={ setTempSymbology }/>
       </div>
       {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -341,81 +347,122 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
 export default MapPage
 
+const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
+  }
+}
 
-
-const Map = ({layers,tempSymbology}) => {
-  const mounted = React.useRef(false);
+const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
   const {falcor} = React.useContext(DamaContext)
   const [layerData, setLayerData] = React.useState([])
-  const  currentLayerIds = React.useMemo(() => {
-    return layers.filter(d => d).map(d => d.activeViewId)
-  },[layers])
+  // const  currentLayerIds = React.useMemo(() => {
+  //   return layers.filter(d => d).map(d => d.activeViewId)
+  // },[layers])
 
   React.useEffect( () => {
-    const updateLayers = async () => {
-      if(mounted.current) {
-        setLayerData(l => {
-            // use functional setState
-            // to get info about previous layerData (l)
-            let activeLayerIds = l?.map(d => d.activeViewId)?.filter(d => d)
-            //console.log('updatelayers', currentLayerIds, l, layers)
+    if (!mounted) return;
 
-            let output = layers?.filter(d => d)
-                .filter(d => !activeLayerIds.includes(d.activeViewId))
-                .map(l => GISDatasetLayer(l))
+    setLayerData(l => {
+      // use functional setState
+      // to get info about previous layerData (l)
+      let activeLayerIds = l?.map(d => d.activeViewId)?.filter(Boolean);
+      //console.log('updatelayers', currentLayerIds, l, layers)
 
-            //console.log('updatelayers2', output)
+      let output = layers?.filter(Boolean)
+          .filter(d => !activeLayerIds.includes(d.activeViewId))
+          .map(l => GISDatasetLayer(l));
 
-            return [
-              // remove layers not in list anymore
-              ...l?.filter(d => l.map(x => x.activeViewId).includes(d.activeViewId)),
-              // add newly initialized layers
-              ...output
-            ]
-        })
+      //console.log('updatelayers2', output)
+
+      return [
+        // remove layers not in list anymore
+        ...l?.filter(d => activeLayerIds.includes(d.activeViewId)),
+        // add newly initialized layers
+        ...output
+      ]
+    });
+  }, [mounted, layers]);
+
+  const updateLegend = React.useCallback(legend => {
+
+    const { type, ...rest } = legend;
+
+    const [layerId] = Object.keys(tempSymbology);
+    const [paintProp] = Object.keys(tempSymbology[layerId]);
+    const [variable] = Object.keys(tempSymbology[layerId][paintProp]);
+
+    const { settings } = tempSymbology[layerId][paintProp][variable];
+
+    setTempSymbology({
+      ...tempSymbology,
+      [layerId]: {
+        [paintProp]: {
+          [variable]: {
+            type,
+            settings: {
+              ...settings,
+              ...rest,
+              type
+            }
+          }
+        }
       }
-    }
-    updateLayers()
-  },[ currentLayerIds ])
+    })
+
+  }, [tempSymbology, setTempSymbology]);
 
   const layerProps = React.useMemo(()=>{
-    let inputViewIds = layers.filter(d => d).map(d => d.activeViewId)
+    let inputViewIds = layers.filter(Boolean).map(d => d.activeViewId)
     return layerData.reduce((out, cur) => {
-      if(inputViewIds.indexOf(cur.activeViewId) !== -1) {
-        out[cur.id] = cloneDeep(layers[inputViewIds.indexOf(cur.activeViewId)])
-        out[cur.id].symbology = cloneDeep(tempSymbology)
+      const index = inputViewIds.indexOf(cur.activeViewId);
+      if (index !== -1) {
+        out[cur.id] = cloneDeep(layers[index]);
+        out[cur.id].symbology = cloneDeep(tempSymbology);
+        out[cur.id].updateLegend = updateLegend;
+        out[cur.id].sourceId = source.source_id;
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology])
+  },[layers, layerData, tempSymbology, updateLegend, source.source_id])
 
-console.log("LAYER DATA:", layerData)
-
+  //console.log('mapTheme',mapTheme)
   return (
 
-      <div className='w-full h-full' ref={mounted}>
-        <AvlMap
-          accessToken={ config.MAPBOX_TOKEN }
-          falcor={falcor}
-          mapOptions={{
-            zoom: 7.3,//8.32/40.594/-74.093
-            center: [
-                -73.8,
-               40.79
-            ],
-            styles: [
-//              config.google_streets_style,
-//              config.google_sattelite_style,
+      <div className='w-full h-full'>
+        <ThemeProvider theme={mapTheme} >
+
+          <AvlMap
+            accessToken={ config.MAPBOX_TOKEN }
+            mapOptions={ {
+              zoom: 7.3,//8.32/40.594/-74.093
+              navigationControl: false,
+              protocols: [PMTilesProtocol],
+              center: [-73.8, 40.79],
+              styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
-                { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" },
-
-            ]
-          }}
-          layers={layerData}
-          layerProps={layerProps}
-          Sidebar={ false }
-        />
+                { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
+              ]
+            } }
+            layers={ layerData }
+            layerProps={ layerProps }
+            leftSidebar={ false }
+            rightSidebar={ false }
+            mapActions={ ["navigation-controls"] }/>
+        </ThemeProvider>
       </div>
 
   )
@@ -485,13 +532,15 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   },[value])
 
   const save = async (attr, value) => {
-    //console.log('click save 222', attr, value)
+    //console.log('click save 222', attr, value, parentData)
+    let update = JSON.parse(value)
+    //console.log('update', value)
+        let val = parentData || {tiles:{}}
+    //console.log('parentData', val )
+        val.tiles[attr] = update
+        // console.log('out value', update)
     if(viewId) {
       try{
-        let update = JSON.parse(value)
-        let val = parentData || {tiles:{}}
-        val.tiles[attr] = update
-        console.log('out value', val)
         let response = await falcor.set({
             paths: [
               ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]

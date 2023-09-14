@@ -63,6 +63,7 @@ import {tig_sed_taz, tig_sed_county} from './tig/sed'
 import tiger_counties from './tig/tiger_counties'
 import tiger_censustrack from './tig/tiger_censustrack'
 import tig_acs from './tig/tig_acs'
+import tig_project from './tig/project'
 
 
 const DataTypes = {
@@ -95,6 +96,7 @@ const DataTypes = {
   tiger_counties,
   tiger_censustrack,
   tig_acs,
+  tig_project,
 
   // hazmit types: other data
   usda_crop_insurance_cause_of_loss,

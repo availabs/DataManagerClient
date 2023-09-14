@@ -11,6 +11,7 @@
     "tot_pop_7",
     "tot_pop_8",
     "tot_pop_9",
+    "tot_pop_10",
 
     "tot_emp_0",
     "tot_emp_1",
@@ -22,6 +23,7 @@
     "tot_emp_7",
     "tot_emp_8",
     "tot_emp_9",
+    "tot_emp_10",
 
     "emp_pay_0",
     "emp_pay_1",
@@ -32,7 +34,8 @@
     "emp_pay_6",
     "emp_pay_7",
     "emp_pay_8",
-    "emp_pay_9", 
+    "emp_pay_9",
+    "emp_pay_10", 
 
     "emp_prop_0",
     "emp_prop_1",
@@ -44,6 +47,7 @@
     "emp_prop_7",
     "emp_prop_8",
     "emp_prop_9",
+    "emp_prop_10",
 
     "hh_pop_0",
     "hh_pop_1",
@@ -55,6 +59,7 @@
     "hh_pop_7",
     "hh_pop_8",
     "hh_pop_9",
+    "hh_pop_10",
 
     "gq_pop_0",
     "gq_pop_1",
@@ -66,6 +71,7 @@
     "gq_pop_7",
     "gq_pop_8",
     "gq_pop_9",
+    "gq_pop_10",
 
     "hh_num_0",
     "hh_num_1",
@@ -77,6 +83,7 @@
     "hh_num_7",
     "hh_num_8",
     "hh_num_9",
+    "hh_num_10",
 
     "hh_size_0",
     "hh_size_1",
@@ -88,6 +95,7 @@
     "hh_size_7",
     "hh_size_8",
     "hh_size_9",
+    "hh_size_10",
 
     "lf_0",
     "lf_1",
@@ -99,6 +107,7 @@
     "lf_7",
     "lf_8",
     "lf_9",
+    "lf_10",
 
     "emplf_0",
     "emplf_1",
@@ -109,6 +118,7 @@
     "emplf_6",
     "emplf_7",
     "emplf_8",
-    "emplf_9"
+    "emplf_9",
+    "emplf_10"
 
 ]

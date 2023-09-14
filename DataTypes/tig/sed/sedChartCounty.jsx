@@ -4,7 +4,7 @@ import sumBy from "lodash/sumBy";
 import { regionalData } from "../constants/index";
 import ckmeans from '../../../utils/ckmeans'
 import * as d3scale from "d3-scale"
-import { useFalcor, withAuth, Button } from "~/modules/avl-components/src"
+import { Button } from "~/modules/avl-components/src"
 import { toPng } from "html-to-image"
 import download from "downloadjs"
 
