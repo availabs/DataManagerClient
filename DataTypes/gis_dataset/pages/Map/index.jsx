@@ -123,7 +123,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
         }
       }).filter(d => d.value !== null);
     setData(data);
-  }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
+  }, [falcorCache, pgEnv, activeViewId, activeVar]);
 
   React.useEffect(() => {
     if (!data.length) return;
@@ -210,7 +210,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           s.source.url = s.source.url
             .replace('https://', 'pmtiles://')
             .replace('http://', 'pmtiles://')
-        } 
+        }
       }
     })
     return out
