@@ -18,9 +18,9 @@ import { DamaContext } from "./store"
 const DamaRoutes = DAMA_ARGS => {
 
   const {
-    baseUrl = "/datasources",
-    defaultPgEnv = "pan",
-    auth = false,
+    baseUrl = "/datasources", // old position 0 arg
+    defaultPgEnv = "pan",     // old position 1 arg
+    auth = false,             // old position 2 arg
     components = {},
     navSettigs = {},
     useFalcor,
