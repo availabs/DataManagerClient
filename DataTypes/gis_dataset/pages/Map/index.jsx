@@ -206,6 +206,11 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     out.sources.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        if(s.source.url.includes('.pmtiles')){
+          s.source.url = s.source.url
+            .replace('https://', 'pmtiles://')
+            .replace('http://', 'pmtiles://')
+        } 
       }
     })
     return out
@@ -446,7 +451,6 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
               navigationControl: false,
               protocols: [PMTilesProtocol],
               center: [-73.8, 40.79],
-              protocols: [PMTilesProtocol],
               styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },

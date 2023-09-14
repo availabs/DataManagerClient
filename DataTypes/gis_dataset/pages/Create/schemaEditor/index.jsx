@@ -14,30 +14,13 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
     layerName,
   } = state;
 
-  useEffect(() => {
-    // if a source id exists, get table structure
-    (async () => {
-      if (damaSourceId && !databaseColumnNames) {
-        const url = `${damaServerPath}/metadata/datasource-latest-view-table-columns?damaSourceId=${damaSourceId}`;
-        const res = await fetch(url);
-        let dbColNames = await res.json();
-//console.log("??????????", damaServerPath, damaSourceId, res, dbColNames)
-        dbColNames = dbColNames?.filter(
-          (col) => col !== "wkb_geometry" && col !== "ogc_fid"
-        );
-        console.log("update_dbColName", dbColNames);
-        dispatch({
-          type: "update",
-          payload: { databaseColumnNames: dbColNames },
-        });
-      }
-    })();
-  }, [databaseColumnNames, damaSourceId, damaServerPath, dispatch]);
+
 
   useEffect(() => {
     // get the table description of the uploaded dataset
     (async () => {
       // if updating source must wait for database columns
+      console.log('damaSourceId', damaSourceId, databaseColumnNames)
       if (
         (damaSourceId && !databaseColumnNames) ||
         !gisUploadId ||

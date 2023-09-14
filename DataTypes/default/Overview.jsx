@@ -10,7 +10,7 @@ import SourceCategories from "./SourceCategories"
 
 const Edit = ({startValue, attr, sourceId, type='text',cancel=()=>{}}) => {
   const [value, setValue] = useState('')
-  console.log('what is the value :', )
+  //console.log('what is the value :', )
   const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
 
@@ -76,7 +76,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     setEditing(null);
   }, []);
 
-console.log("OverviewEdit::editing:", editing)
+  // console.log("OverviewEdit::editing:", editing)
 
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
