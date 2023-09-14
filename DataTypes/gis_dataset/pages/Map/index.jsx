@@ -199,7 +199,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
   const activeView = React.useMemo(() => {
-    return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
+    let currentView = (views || []).filter(d => d.view_id === +viewId)
+    return get(currentView,'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
@@ -242,6 +243,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         return null
       }
       //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
+      let attributes = (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
+      attributes = Array.isArray(attributes) ? attributes : []
       return {
             name: source.name,
             pgEnv,
@@ -250,9 +253,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             filters,
             hoverComp: HoverComp?.Component || false,
             isPinnable: HoverComp?.isPinnable || false,
-            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
-              .filter(d => ['integer', 'string', 'number'].includes(d.type))
-              .map(d => d.name),
+            attributes,
             activeViewId: activeViewId,
             sources,
             layers,

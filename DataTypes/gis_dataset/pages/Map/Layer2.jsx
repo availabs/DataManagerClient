@@ -308,7 +308,7 @@ const GISDatasetRenderComponent = props => {
             }
 
             if(maplibreMap.getLayer(layer_id)?.id) {
-              console.log('calling create legend', sym.settings)
+              //console.log('calling create legend', sym.settings)
               if(['visibility'].includes(paintProperty)) {
                 maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
               } else {

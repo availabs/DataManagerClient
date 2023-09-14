@@ -22,7 +22,10 @@ const ACSHoverComp = ({ data, layer }) => {
     },
   } = layer;
 
+  //console.log('hover', layer)
+
   const lId = (data && data[1]);
+  
 
   const activeVar = useMemo(
     () => get(filters, "activeVar.value", ""),
@@ -41,6 +44,8 @@ const ACSHoverComp = ({ data, layer }) => {
 
   if (lId === activeLayerId) {
     TEMPGEOID = ((data && data[2]) || {}).geoid;
+  } else {
+    return ''
   }
   let geoid = TEMPGEOID;
 
