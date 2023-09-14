@@ -16,7 +16,7 @@ import { NoMatch } from "../utils/404";
 
 const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
-  const [ pages, setPages] = useState(Pages)
+  const [ pages, setPages] = useState( Pages || [])
   const [ activeViewId, setActiveViewId ] = useState(viewId)
   const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
   // console.log('source page: ');

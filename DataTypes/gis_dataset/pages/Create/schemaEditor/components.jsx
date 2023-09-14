@@ -163,7 +163,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
 
   console.log('mbtilesOptions', mbtilesOptions)
   const availableDbColNames =
-    databaseColumnNames &&
+    databaseColumnNames && databaseColumnNames.length > 0 &&
     databaseColumnNames
       .filter((c) => !assignedColNamesSet.has(c))
       .filter(Boolean);

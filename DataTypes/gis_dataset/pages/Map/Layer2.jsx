@@ -1,12 +1,12 @@
 import React from "react";
-// import { Legend } from "~/modules/avl-components/src";
+import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import isEqual from "lodash/isEqual";
 import cloneDeep from "lodash/cloneDeep"
 
 import {
   AvlLayer,
-  Legend,
+  //Legend,
   ActionButton,
   MultiLevelSelect,
   // ColorRangesByType,
@@ -31,7 +31,7 @@ import {
 import { DamaContext } from "~/pages/DataManager/store";
 
 const HoverComp = ({ data, layer }) => {
-  const { attributes, activeViewId } = layer;
+  const { attributes, activeViewId, filters } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
@@ -271,7 +271,8 @@ const GISDatasetRenderComponent = props => {
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
         (
-          Object.keys(symbology[layer_id] || {}).filter((paintProperty) => {
+          Object.keys(symbology[layer_id] || {})
+            .filter((paintProperty) => {
             const value =
               get(symbology, `[${paintProperty}][${activeVariable}]`, false) ||
               get(symbology, `[${paintProperty}][default]`, false) ||
@@ -279,31 +280,65 @@ const GISDatasetRenderComponent = props => {
                 symbology,
                 `[${layer_id}][${paintProperty}][${activeVariable}]`,
                 false
-              );
+              )  
+              || get(symbology, `[${layer_id}][${paintProperty}][default]`, false);
             return value;
           }) || []
         ).forEach((paintProperty) => {
           const sym =
             get(symbology, `[${paintProperty}][${activeVariable}]`, "") ||
             get(symbology, `[${paintProperty}][default]`, "") ||
-            get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
+            get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "")
+            || get(symbology, `[${layer_id}][${paintProperty}][default]`, "");
+           
 
-          if (sym.settings && sym.value) {
-            createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty, value: sym.value });
-          }
-          else if (sym.settings) {
-            createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty });
-          }
-          else if (sym.value) {
-            setLegend(null);
-            setLayerData({ layer_id, paintProperty, value: sym.value });
-          }
-          else {
-            setLegend(null);
-            setLayerData(null);
-          }
+            // ----------- New -----------
+            let { value, settings } = sym;
+
+            if (!value && settings) {
+              const { type, domain, range, data } = settings;
+              const scale = getScale(type, domain, range);
+        
+              const colors = data.reduce((a, c) => {
+                a[c.id] = scale(c.value);
+                return a;
+              }, {});
+        
+              value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
+            }
+
+            if(maplibreMap.getLayer(layer_id)?.id) {
+              //console.log('calling create legend', sym.settings)
+              if(['visibility'].includes(paintProperty)) {
+                maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
+              } else {
+                maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+              }
+            }
+            if(sym.settings) {
+              createLegend(sym.settings)
+              
+            }
+            // ----------- New -----------
+
+          // --------- Old ------------
+          // if (sym.settings && sym.value) {
+          //   createLegend(sym.settings);
+          //   setLayerData({ layer_id, paintProperty, value: sym.value });
+          // }
+          // else if (sym.settings) {
+          //   createLegend(sym.settings);
+          //   setLayerData({ layer_id, paintProperty });
+          // }
+          // else if (sym.value) {
+          //   setLegend(null);
+          //   setLayerData({ layer_id, paintProperty, value: sym.value });
+          // }
+          // else {
+          //   setLegend(null);
+          //   setLayerData(null);
+          // }
+          // --------- Old ------------
         });
       });
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
@@ -331,7 +366,7 @@ const GISDatasetRenderComponent = props => {
 
     // console.log('setPaintProperty', maplibreMap.getLayer(layer_id), layer_id, paintProperty, value)
     if(maplibreMap.getLayer(layer_id)?.id) {
-      maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+      // maplibreMap.setPaintProperty(layer_id, paintProperty, value);
     }
   }, [legend, layerData]);
 
@@ -346,7 +381,6 @@ const GISDatasetRenderComponent = props => {
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
 
-  //console.log('legend', legend)
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
@@ -747,11 +781,12 @@ class GISDatasetLayer extends AvlLayer {
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
 
-      let data = [feature.id, layerId];
+      let data = [feature.id, layerId, (features[0] || {}).properties];
 
       return data;
     },
     Component: this.hoverComp || HoverComp,
+    isPinnable: this.isPinnable || false
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {

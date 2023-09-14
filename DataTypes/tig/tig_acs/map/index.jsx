@@ -34,7 +34,7 @@ const ACSMapFilter = ({
 }) => {
   const { pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
-  //const [subGeoids, setSubGeoIds] = useState([]);
+  const [subGeoids, setSubGeoIds] = useState([]);
 
   const max = new Date().getUTCFullYear();
   const yearRange = range(2010, max + 1);
@@ -60,7 +60,8 @@ const ACSMapFilter = ({
 
   const censusConfig = useMemo(
     () =>
-      (((variables || []).find((d) => d.label === activeVar) || {}).value || {}).censusKeys || [],
+      (((variables || []).find((d) => d.label === activeVar) || {}).value || {})
+        .censusKeys || [],
     [activeVar, variables]
   );
 
@@ -86,7 +87,49 @@ const ACSMapFilter = ({
     getViewData();
   }, [pgEnv, activeViewId, activeView]);
 
-  const subGeoids = React.useMemo(async () => {
+  // ------ Updated -------
+  
+  // const subGeoids = React.useMemo(async () => {
+  //   async function getViewData() {
+  //     falcor
+  //       .get([
+  //         "dama",
+  //         [pgEnv],
+  //         "tiger",
+  //         activeView?.view_dependencies,
+  //         counties.map(String),
+  //         [viewYear],
+  //         ["tracts"],
+  //       ])
+  //       .then(() => {
+  //         const d = (counties || []).reduce((a, c) => {
+  //           a.push(
+  //             ...get(
+  //               falcorCache,
+  //               [
+  //                 "dama",
+  //                 pgEnv,
+  //                 "tiger",
+  //                 activeView?.view_dependencies[0],
+  //                 c,
+  //                 viewYear,
+  //                 "tracts",
+  //                 "value",
+  //               ],
+  //               []
+  //             )
+  //           );
+  //           return a;
+  //         }, []);
+  //         return uniq(d);
+  //       });
+  //   }
+  //   return await getViewData();
+  // }, [falcorCache, pgEnv, activeViewId, activeView, counties, viewYear]);
+
+  // ------ Updated -------
+
+  useEffect(() => {
     async function getViewData() {
       falcor
         .get([
@@ -118,10 +161,10 @@ const ACSMapFilter = ({
             );
             return a;
           }, []);
-          return uniq(d);
+          setSubGeoIds(uniq(d));
         });
     }
-    return await getViewData();
+    getViewData();
   }, [falcorCache, pgEnv, activeViewId, activeView, counties, viewYear]);
 
   useEffect(() => {
@@ -159,7 +202,6 @@ const ACSMapFilter = ({
     );
     newSymbology["layers"] = uniqBy(flattenDeep(newSymbology["layers"]), "id");
     if (!isEqual(tempSymbology, newSymbology)) {
-      console.log('setTempSymbology 1', newSymbology)
       setTempSymbology(newSymbology);
     }
   }, [falcorCache, pgEnv, activeViewId, activeView]);
@@ -229,19 +271,19 @@ const ACSMapFilter = ({
       "case",
       ["has", ["to-string", ["get", "geoid"]], ["literal", colors]],
       ["get", ["to-string", ["get", "geoid"]], ["literal", colors]],
-      "rgba(0,0,0,0)",
+      "rgba(0,0,0,0.0)",
     ];
 
     let newSymbology = Object.assign({}, cloneDeep(tempSymbology));
     if (activeVar && activeLayer) {
       (newSymbology?.layers || []).forEach((l) => {
         unset(newSymbology, `${l?.id}`);
-        set(newSymbology, `${l?.id}.fill-color.${activeVar}`, {
-          value: "rgba(0,0,0,0)",
-        });
+        // set(newSymbology, `${l?.id}.visibility.default.value`, "none");
+        set(newSymbology, `${l?.id}.fill-color.default.value`, 'rgba(0,0,0,0)');
+        // set(newSymbology, `${l?.id}.visibility.default.`, "none");
       });
 
-      newSymbology[activeLayer.id]["fill-color"][activeVar] = {
+      set(newSymbology, `${activeLayer.id}.fill-color.${activeVar}`, {
         type: "threshold",
         settings: {
           range: range,
@@ -249,14 +291,15 @@ const ACSMapFilter = ({
           title: activeVar,
         },
         value: output,
-      };
+      });
+      unset(newSymbology, `${activeLayer.id}.layout`);
     }
     if (!isEqual(tempSymbology, newSymbology)) {
-      console.log('setTempSymbology 2', newSymbology)
       setTempSymbology(newSymbology);
     }
   }, [
     tempSymbology,
+    activeLayerId,
     activeViewId,
     censusConfig,
     falcorCache,
