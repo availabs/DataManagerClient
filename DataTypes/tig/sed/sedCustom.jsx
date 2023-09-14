@@ -409,9 +409,10 @@ const SedTableTransform = (tableData, attributes, filters, years,source) => {
 };
 
 const SedHoverComp = ({ data, layer }) => {
+
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const { source: { type }, attributes, activeViewId, props: { filters, activeView: {metadata: { years } } }  } = layer
 
-  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 
