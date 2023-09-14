@@ -13,7 +13,10 @@ const TigAcsConfig = {
   map: {
     name: "Map",
     path: "/map",
-    component: (props) => <MapPage {...props} MapFilter={ACSMapFilter} HoverComp={ACSHoverComp} />,
+    component: (props) => <MapPage {...props} 
+      MapFilter={ACSMapFilter} 
+      HoverComp={{Component:ACSHoverComp, isPinnable: true}} 
+    />,
   },
   sourceCreate: {
     name: "Create",
