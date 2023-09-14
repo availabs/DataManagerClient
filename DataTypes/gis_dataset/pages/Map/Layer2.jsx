@@ -12,10 +12,11 @@ import {
   // ColorRangesByType,
   ColorRanges,
   ColorBar,
-  ColorCategory,
+  // ColorCategory,
   Input,
   Button,
   useTheme,
+  ThemeUpdater,
   getScale,
   useClickOutside
 } from "~/modules/avl-map-2/src";
@@ -88,7 +89,7 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   return (
     <div className={ `p-1 rounded ${ theme.bg }` }>
       <div className={ `
-          p-1 relative border rounded pointer-events-auto
+          p-1 relative rounded border pointer-events-auto
           ${ theme.bgAccent2 } ${ theme.border }
         ` }
       >
@@ -131,6 +132,11 @@ const calcRange = (type, length, color, reverse) => {
     default:
       return data;
   }
+}
+
+const ThemeUpdate = {
+  bgAccent2: "bg-white",
+  border: "shadow"
 }
 
 const GISDatasetRenderComponent = props => {
@@ -233,8 +239,6 @@ const GISDatasetRenderComponent = props => {
   }, [maplibreMap, symbology]);
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
-
-    
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -358,12 +362,15 @@ const GISDatasetRenderComponent = props => {
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
-        <LegendContainer { ...legend }
-          toggle={ toggle }
-          isOpen={ isOpen }
-        >
-          <Legend { ...legend }/>
-        </LegendContainer>
+{ /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
+        <ThemeUpdater themeUpdate={ ThemeUpdate }>
+          <LegendContainer { ...legend }
+            toggle={ toggle }
+            isOpen={ isOpen }
+          >
+            <Legend { ...legend }/>
+          </LegendContainer>
+        </ThemeUpdater>
       </div>
 
       <div className="z-0">
@@ -375,14 +382,6 @@ const GISDatasetRenderComponent = props => {
     </div>
   )
 }
-
-// const LegendControlsToggle = ({ toggle }) => {
-//   return (
-//     <ActionButton onClick={ toggle }>
-//       <span className="fa fa-plus"/>
-//     </ActionButton>
-//   )
-// }
 
 const RemoveDomainItem = ({ value, remove }) => {
   const doRemove = React.useCallback(e => {
@@ -526,7 +525,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                     edit={ editDomain }/>
                 ))
               }
-              <div className="flex">
+              <div className={ `flex border-t pt-1 ${ theme.border }` }>
                 <div className="mr-1 flex-1">
                   <Input type="number" placeholder="enter a threshold value..."
                     onChange={ setValue }
@@ -539,7 +538,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                 </Button>
               </div>
               <div>
-                <Button 
+                <Button
                   onClick={ useCKMeans }
                   className="buttonPrimaryBlock"
                 >
@@ -564,13 +563,12 @@ const BooleanSlider = ({ value, onChange }) => {
       className="px-4 py-1 h-8 rounded flex items-center w-full cursor-pointer"
     >
       <div className={ `
-          rounded flex-1 h-2 relative flex items-center
-          ${ theme.bgAccent2 }
+          rounded flex-1 h-2 relative flex items-center bg-blue-100
         ` }
       >
         <div className={ `
             w-4 h-4 rounded absolute
-            ${ Boolean(value) ? theme.bgHighlight : "bg-gray-400" }
+            ${ Boolean(value) ? "bg-blue-500" : "bg-gray-500" }
           ` }
           style={ {
             left: Boolean(value) ? "100%" : "0%",
@@ -586,6 +584,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
   const isActive = React.useMemo(() => {
     return isEqual(colors, range);
   }, [colors, range]);
+
   const onClick = React.useCallback(() => {
     updateLegend(colors, name, reverse)
   }, [updateLegend, name, colors, reverse])
@@ -594,7 +593,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
       onClick={ isActive ? null : onClick }
       className={ `
         outline outline-2 rounded-lg my-2
-        ${ isActive ? "outline-current" : "outline-transparent cursor-pointer" }
+        ${ isActive ? "outline-black" : "outline-transparent cursor-pointer" }
       ` }
     >
       <ColorBar

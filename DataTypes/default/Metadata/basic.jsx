@@ -23,7 +23,7 @@ const MetadataTable = ({ source, ...props }) => {
         }))
       );
     }
-    else if ("columns" in md) {
+    else if (md && "columns" in md) {
       const columns = get(md, "columns", []);
       if (Array.isArray(columns)) {
         setMetadata(columns.map(d => ({

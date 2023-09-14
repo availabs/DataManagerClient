@@ -151,7 +151,7 @@ class EALChoroplethOptions extends LayerContainer {
   };
 
   legend = {
-    Title: ({ layer }) => `Estimated Annual Loss by ${get(layer.filters.hazard, "value", "").toUpperCase()} in $`,
+    Title: ({ layer }) => `Expected Annual Loss by ${get(layer.filters.hazard, "value", "").toUpperCase()} in $`,
     domain: [],
     range: getColorRange(9, "RdYlGn", false),
     show: true
