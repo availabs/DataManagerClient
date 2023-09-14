@@ -239,9 +239,8 @@ const SedMapFilter = ({
 };
 
 const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
-  const { falcor, falcorCache } = useFalcor()
-
-  const { pgEnv } = React.useContext(DamaContext);
+  
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
   const [loading, setLoading] = React.useState(true);
 
@@ -410,10 +409,9 @@ const SedTableTransform = (tableData, attributes, filters, years,source) => {
 };
 
 const SedHoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor()
   const { source: { type }, attributes, activeViewId, props: { filters, activeView: {metadata: { years } } }  } = layer
 
-  const { pgEnv } = React.useContext(DamaContext)
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 

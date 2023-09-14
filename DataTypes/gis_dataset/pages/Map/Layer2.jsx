@@ -752,6 +752,7 @@ class GISDatasetLayer extends AvlLayer {
       return data;
     },
     Component: this.hoverComp || HoverComp,
+    isPinnable: this.isPinnable || false
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {

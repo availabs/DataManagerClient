@@ -248,7 +248,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             source: source,
             activeView: activeView,
             filters,
-            hoverComp: HoverComp,
+            hoverComp: HoverComp?.Component || false,
+            isPinnable: HoverComp?.isPinnable || false,
             attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
               .filter(d => ['integer', 'string', 'number'].includes(d.type))
               .map(d => d.name),
@@ -290,6 +291,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           tempSymbology={ tempSymbology }
           setTempSymbology={ setTempSymbology }/>
       </div>
+
       {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">

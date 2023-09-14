@@ -31,7 +31,7 @@ export const tig_sed_taz = {
     component: (props) => <MapPage
       {...props}
       MapFilter={SedMapFilter}
-      HoverComp={SedHoverComp}
+      HoverComp={{Component: SedHoverComp, isPinnable: true}}
     />,
   },
   table: {
@@ -104,7 +104,7 @@ export const tig_sed_county = {
     component: (props) => <MapPage
       {...props}
       MapFilter={SedMapFilter}
-      HoverComp={SedHoverComp}
+      HoverComp={{Component: SedHoverComp, isPinnable: true}}
     />,
   },
   table: {
