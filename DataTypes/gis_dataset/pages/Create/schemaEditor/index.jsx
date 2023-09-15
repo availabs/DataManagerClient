@@ -20,7 +20,7 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
     // get the table description of the uploaded dataset
     (async () => {
       // if updating source must wait for database columns
-      console.log('damaSourceId', damaSourceId, databaseColumnNames)
+      //console.log('damaSourceId', damaSourceId, databaseColumnNames)
       if (
         (damaSourceId && !databaseColumnNames) ||
         !gisUploadId ||

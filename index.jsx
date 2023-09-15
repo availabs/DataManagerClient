@@ -1,6 +1,6 @@
 import React from "react";
 
-import { DataManagerHeader } from "./components/SourcesLayout";
+import { DataManagerHeader, Header } from "./components/SourcesLayout";
 
 import SourceList from "./Source/list";
 import SourceView from "./Source";
@@ -41,14 +41,13 @@ const DamaRoutes = DAMA_ARGS => {
   } = navSettings
 
   const HeaderComp = () => {
-    const { falcor, falcorCache } = useFalcor()
     return (
       <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
         <Head  />
       </DamaContext.Provider>
     )
   }
-  const Header = <HeaderComp />
+  //const Header = () => <HeaderComp />
 
   const SourceListComp = () => {
     const { falcor, falcorCache } = useFalcor();

@@ -473,7 +473,7 @@ async function getHeaderAndRoot(
 
   const v = new DataView(resp.data);
   if (v.getUint16(0, true) !== 0x4d50) {
-    throw new Error("Wrong magic number for PMTiles archive");
+    throw new Error(`Wrong magic number for PMTiles archive got ${ v.getUint16(0, true)} not 19729`);
   }
 
   // V2 COMPATIBILITY

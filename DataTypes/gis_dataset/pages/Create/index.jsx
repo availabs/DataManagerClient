@@ -22,7 +22,7 @@ export default function UploadGisDataset({
   databaseColumnNames = null,
 }) {
 
-  console.log('tippecanoeOptions', tippecanoeOptions)
+  // console.log('tippecanoeOptions', tippecanoeOptions)
   const { name: damaSourceName, source_id: sourceId, type } = source;
   const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
 

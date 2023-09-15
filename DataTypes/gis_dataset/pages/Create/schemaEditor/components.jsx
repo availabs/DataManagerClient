@@ -161,7 +161,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     });
   };
 
-  console.log('mbtilesOptions', mbtilesOptions)
+  // console.log('mbtilesOptions', mbtilesOptions)
   const availableDbColNames =
     databaseColumnNames && databaseColumnNames.length > 0 &&
     databaseColumnNames
