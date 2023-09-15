@@ -125,12 +125,10 @@ const calcDomain = (type, data, length) => {
 }
 const calcRange = (type, length, color, reverse) => {
   switch (type) {
-    case "quantize":
-      return getColorRange(7, color, reverse);
     case "threshold":
       return getColorRange(length ? length + 1 : 7, color, reverse);
     default:
-      return data;
+      return getColorRange(7, color, reverse);
   }
 }
 
@@ -217,7 +215,7 @@ const GISDatasetRenderComponent = props => {
   }, [falcor, pgEnv, sourceId, legend])
 
   React.useEffect(() => {
-    async function loadMapData () { 
+    async function loadMapData () {
       if (!maplibreMap) return;
       const sources = get(symbology, "sources", []);
       const layers = get(symbology, "layers", []);
@@ -229,7 +227,7 @@ const GISDatasetRenderComponent = props => {
             images
               .filter(img => !maplibreMap.hasImage(img.id))
               .map(img => new Promise((resolve, reject) => {
-                
+
                 maplibreMap.loadImage(img.url, function (error, res) {
                     if (error) throw error;
                     maplibreMap.addImage(img.id, res)
@@ -247,7 +245,7 @@ const GISDatasetRenderComponent = props => {
           }
         })
       }
-      
+
       if (Array.isArray(layers)) {
         layers.forEach(l => {
           if (!maplibreMap.getLayer(l.id)) {
@@ -280,7 +278,7 @@ const GISDatasetRenderComponent = props => {
                 symbology,
                 `[${layer_id}][${paintProperty}][${activeVariable}]`,
                 false
-              )  
+              )
               || get(symbology, `[${layer_id}][${paintProperty}][default]`, false);
             return value;
           }) || []
@@ -290,7 +288,7 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${paintProperty}][default]`, "") ||
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "")
             || get(symbology, `[${layer_id}][${paintProperty}][default]`, "");
-           
+
 
             // ----------- New -----------
             let { value, settings } = sym;
@@ -298,12 +296,12 @@ const GISDatasetRenderComponent = props => {
             if (!value && settings) {
               const { type, domain, range, data } = settings;
               const scale = getScale(type, domain, range);
-        
+
               const colors = data.reduce((a, c) => {
                 a[c.id] = scale(c.value);
                 return a;
               }, {});
-        
+
               value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
             }
 
@@ -317,7 +315,7 @@ const GISDatasetRenderComponent = props => {
             }
             if(sym.settings) {
               createLegend(sym.settings)
-              
+
             }
             // ----------- New -----------
 
