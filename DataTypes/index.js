@@ -32,12 +32,16 @@ import individuals_and_households_program_valid_registrations_v1
   from "./hazard_mitigation/individuals_and_households_program_valid_registrations_v1";
 import public_assistance_funded_projects_details_v1
   from "./hazard_mitigation/public_assistance_funded_projects_details_v1";
+import public_assistance_funded_projects_details_v1_enhanced
+  from "./hazard_mitigation/public_assistance_funded_projects_details_v1_enhanced";
 import hazard_mitigation_grant_program_disaster_summaries_v2
   from "./hazard_mitigation/hazard_mitigation_grant_program_disaster_summaries_v2/index.jsx";
 import hazard_mitigation_assistance_mitigated_properties_v3
   from "./hazard_mitigation/hazard_mitigation_assistance_mitigated_properties_v3/index.jsx";
 import hazard_mitigation_assistance_projects_v3
   from "./hazard_mitigation/hazard_mitigation_assistance_projects_v3/index.jsx";
+import hazard_mitigation_assistance_projects_v3_enhanced
+  from "./hazard_mitigation/hazard_mitigation_assistance_projects_v3_enhanced/index.jsx";
 import ncei_storm_events from './hazard_mitigation/ncei_storm_events';
 import ncei_storm_events_enhanced from "./hazard_mitigation/ncei_storm_events_enhanced";
 import zone_to_county from "./hazard_mitigation/zone_to_county";
@@ -111,9 +115,11 @@ const DataTypes = {
   fima_nfip_claims_v1_enhanced,
   individuals_and_households_program_valid_registrations_v1,
   public_assistance_funded_projects_details_v1,
+  public_assistance_funded_projects_details_v1_enhanced,
   hazard_mitigation_grant_program_disaster_summaries_v2,
   hazard_mitigation_assistance_mitigated_properties_v3,
   hazard_mitigation_assistance_projects_v3,
+  hazard_mitigation_assistance_projects_v3_enhanced,
   // open_fema_data,
 
   disaster_loss_summary,
