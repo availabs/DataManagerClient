@@ -197,9 +197,9 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
 
-  console.log("\n\n\n\n\n");
-  console.log("what is the content of the filters data: ", filters);
-  console.log("\n\n\n\n\n");
+  // console.log("\n\n\n\n\n");
+  // console.log("what is the content of the filters data: ", filters);
+  // console.log("\n\n\n\n\n");
   const activeView = React.useMemo(() => {
     let currentView = (views || []).filter(d => d.view_id === +viewId)
     return get(currentView,'[0]', views[0])
@@ -235,7 +235,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
- console.log("Symbology:", tempSymbology)
+  //console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -452,6 +452,7 @@ console.log("updateLegend:", legend)
           <AvlMap
             accessToken={ config.MAPBOX_TOKEN }
             mapOptions={ {
+              protocols: [PMTilesProtocol],
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
               protocols: [PMTilesProtocol],
