@@ -7,6 +7,7 @@ import freight_atlas_shapefile from "./freight_atlas_shapefile";
 // ---- Basic Types
 // ---------------------------
 import gis_dataset from "./gis_dataset";
+import csv_dataset from "./csv_dataset";
 
 
 // ---------------------------
@@ -63,11 +64,13 @@ import {tig_sed_taz, tig_sed_county} from './tig/sed'
 import tiger_counties from './tig/tiger_counties'
 import tiger_censustrack from './tig/tiger_censustrack'
 import tig_acs from './tig/tig_acs'
+import tig_bpm_perfomance_measures from './tig/bpm_performance_measures'
 
 
 const DataTypes = {
   //freight_atlas_shapefile,
   gis_dataset,
+  csv_dataset,
 
   // npmrds,
 
@@ -95,6 +98,7 @@ const DataTypes = {
   tiger_counties,
   tiger_censustrack,
   tig_acs,
+  tig_bpm_perfomance_measures,
 
   // hazmit types: other data
   usda_crop_insurance_cause_of_loss,

@@ -214,6 +214,10 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
+
+  console.log("\n\n\n\n\n");
+  console.log("what is the content of the filters data: ", filters);
+  console.log("\n\n\n\n\n");
   const activeView = React.useMemo(() => {
     return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
   },[views,viewId])

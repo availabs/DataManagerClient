@@ -57,6 +57,7 @@ const TablePage = ({
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }));
   }, []);
+
   const { pgEnv, falcor, falcorCache, user  } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
@@ -154,7 +155,7 @@ const TablePage = ({
       <div className="flex">
         {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
-          data={data} columns={columns}/>
+          data={tableData} columns={columns}/>
         <ViewSelector views={views} />
       </div>
       <div className="max-w-6xl">
