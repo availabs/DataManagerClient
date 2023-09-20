@@ -102,10 +102,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    falcor.chunk([
+    falcor.get([
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      [...Array(dataLength).keys()], variables
-    ])
+      {from: 0, to: dataLength-1}, variables
+    ]).then(d => console.log('got data'))
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
@@ -163,6 +163,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
       return update;
     });
   }, [layer, data, setTempSymbology, activeVar, varType, source]);
+
 
   return (
     <div className='flex flex-1'>
@@ -233,7 +234,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
-// console.log("SOURCE:", source)
+ console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
