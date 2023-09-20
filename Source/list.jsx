@@ -76,12 +76,6 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
-
-<<<<<<< HEAD
-=======
-  // console.log('sources', sources)
-
->>>>>>> 1bd38aa1c5544df705f235f9976d193253f7d935
   return (
 
     <SourcesLayout baseUrl={baseUrl}>

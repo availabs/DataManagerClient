@@ -147,7 +147,6 @@ const config = {
     component: (props) => (
       <Map
         {...props}
-       
       />
     ),
   },
