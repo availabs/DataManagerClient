@@ -254,10 +254,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
-<<<<<<< HEAD
-=======
-  //console.log('metadata',metaData)
->>>>>>> c1e543c3e4de918d76ebdbd584ace82fa9eef011
+
 
   return (
     <div>
@@ -448,7 +445,6 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
             mapOptions={ {
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
-              protocols: [PMTilesProtocol],
               center: [-73.8, 40.79],
               protocols: [PMTilesProtocol],
               styles: [

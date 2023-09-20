@@ -8,8 +8,7 @@ import { SourceAttributes, ViewAttributes, getAttributes } from "../components/a
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
-  console.log('what is the value of the source: ');
-
+  
   useEffect(() => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
@@ -77,8 +76,6 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
-
-  console.log('sources', sources)
 
   return (
 
