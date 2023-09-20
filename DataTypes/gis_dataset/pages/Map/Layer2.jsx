@@ -35,26 +35,17 @@ const HoverComp = ({ data, layer }) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
-  React.useEffect(() => {
-    // console.log('hover falcor',[
-    //   'dama',
-    //   pgEnv,
-    //   'viewsbyId',
-    //   activeViewId,
-    //   'databyId',
-    //   id,
-    //   attributes
-    // ])
-    falcor.get([
-      "dama",
-      pgEnv,
-      "viewsbyId",
-      activeViewId,
-      "databyId",
-      id,
-      attributes,
-    ]);
-  }, [falcor, pgEnv, activeViewId, id, attributes]);
+  // React.useEffect(() => {
+  //   falcor.get([
+  //     "dama",
+  //     pgEnv,
+  //     "viewsbyId",
+  //     activeViewId,
+  //     "databyId",
+  //     id,
+  //     attributes,
+  //   ]);
+  // }, [falcor, pgEnv, activeViewId, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
     return get(
@@ -119,6 +110,8 @@ const calcDomain = (type, data, length) => {
       return d3extent(values);
     case "threshold":
       return ckmeans(values.filter(Boolean), length ? length - 1 : 6);
+    case "ordinal":
+      return [...new Set(values)];
     default:
       return values;
   }
@@ -127,6 +120,8 @@ const calcRange = (type, length, color, reverse) => {
   switch (type) {
     case "threshold":
       return getColorRange(length ? length + 1 : 7, color, reverse);
+    case "ordinal":
+      return getColorRange(Math.min(12, length), color, reverse);
     default:
       return getColorRange(7, color, reverse);
   }
@@ -149,8 +144,14 @@ const GISDatasetRenderComponent = props => {
     activeViewId,
     symbology,
     updateLegend,
-    sourceId
+    sourceId,
+    layers
   } = layerProps;
+
+  const activeVar = get(filters, ["activeVar", "value"], "");
+
+// console.log("GISDatasetRenderComponent::symbology", symbology);
+// console.log("GISDatasetRenderComponent::layerProps", layerProps);
 
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
@@ -193,12 +194,12 @@ const GISDatasetRenderComponent = props => {
     setLegend(legend);
   }, []);
 
-  const prevLegend = React.useRef(legend);
+  const prevLegend = React.useRef(null);
 
   React.useEffect(() => {
     if (!legend) return;
 
-    const { data, domain, name, ...rest } = legend;
+    const { data, domain, ...rest } = legend;
 
     if (legend && !prevLegend.current) {
       prevLegend.current = rest;
@@ -207,12 +208,23 @@ const GISDatasetRenderComponent = props => {
 
     if (!isEqual(rest, prevLegend.current)) {
       prevLegend.current = rest;
+
+      const toSave = JSON.parse(JSON.stringify(symbology));
+
+      layers.forEach(({ id, type }) => {
+        toSave[id][`${ type }-color`][activeVar].settings = {
+          ...rest
+        }
+      });
+
+console.log("SAVING SYM:", toSave)
+
       falcor.call(
         ["dama", "sources", "metadata", "update"],
-        [pgEnv, sourceId, { legend: rest }]
-      );
+        [pgEnv, sourceId, { symbology: toSave }]
+      ).then(res => console.log("SAVE RESPONSE:", res))
     }
-  }, [falcor, pgEnv, sourceId, legend])
+  }, [falcor, pgEnv, sourceId, legend, symbology, activeVar, layers]);
 
   React.useEffect(() => {
     async function loadMapData () {
@@ -264,7 +276,11 @@ const GISDatasetRenderComponent = props => {
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
-
+    if (!activeVariable || (activeVariable === "none")) {
+      setLegend(null);
+      setLayerData(null);
+      return;
+    }
 
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
@@ -320,6 +336,7 @@ const GISDatasetRenderComponent = props => {
             // ----------- New -----------
 
           // --------- Old ------------
+
           if (sym.settings && sym.value) {
             createLegend(sym.settings);
             setLayerData({ layer_id, paintProperty, value: sym.value });
@@ -346,7 +363,6 @@ const GISDatasetRenderComponent = props => {
     if (!layerData) return;
 
     const { layer_id, paintProperty } = layerData;
-
     let { value } = layerData;
 
     if (!value) {
@@ -362,8 +378,7 @@ const GISDatasetRenderComponent = props => {
       value = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
     }
 
-    // console.log('setPaintProperty', maplibreMap.getLayer(layer_id), layer_id, paintProperty, value)
-    if(maplibreMap.getLayer(layer_id)?.id) {
+    if (maplibreMap.getLayer(layer_id)) {
       maplibreMap.setPaintProperty(layer_id, paintProperty, value);
     }
   }, [legend, layerData]);
@@ -493,7 +508,7 @@ const DomainItem = ({ domain, index, disabled, remove, edit }) => {
 const ThresholdEditor = ({ domain, range, updateLegend }) => {
 
   const removeDomain = React.useCallback(v => {
-    updateLegend(domain.filer(d => d !== v));
+    updateLegend(domain.filter(d => d !== v));
   }, [domain, updateLegend]);
 
   const [value, setValue] = React.useState("");
@@ -601,14 +616,15 @@ const BooleanSlider = ({ value, onChange }) => {
   )
 }
 
-const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
+const LegendColorBar = ({ colors, name, reverse, range, updateLegend, test }) => {
   const isActive = React.useMemo(() => {
     return isEqual(colors, range);
   }, [colors, range]);
 
   const onClick = React.useCallback(() => {
     updateLegend(colors, name, reverse)
-  }, [updateLegend, name, colors, reverse])
+  }, [updateLegend, name, colors, reverse]);
+
   return (
     <div key={ name }
       onClick={ isActive ? null : onClick }
@@ -718,7 +734,7 @@ const LegendControls = ({ legend, updateLegend, isOpen, close }) => {
           >
             { Colors.map(color => (
                 <LegendColorBar key={ color.name }
-                  { ...color } { ...legend }
+                  { ...color } range={ legend.range }
                   updateLegend={ updateLegendRange }
                   reverse={ reverseColors }/>
               ))
