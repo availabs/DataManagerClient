@@ -89,7 +89,7 @@ const ChartPage = ({
   useEffect(() => {
     async function getACSData() {
       if (geoids.length > 0)
-        falcor.chunk(["acs", geoids, activeYear, activeCensusKeys]);
+        falcor.chunk(["acs", geoids, activeYear, [...activeCensusKeys, ...activeDivisorKeys]]);
     }
     getACSData();
   }, [geoids, activeCensusKeys, activeYear]);
@@ -132,13 +132,12 @@ const ChartPage = ({
       }
       return a;
     }, {});
-  }, [falcorCache, geoids, activeCensusKeys, activeYear]);
+  }, [falcorCache, geoids, activeCensusKeys, activeDivisorKeys, activeYear]);
 
   let { data } = useMemo(
     () => transform({ valueMap, filters, isDivisor: Boolean(activeDivisorKeys.length) }),
     [valueMap, transform, filters]
   );
-
   return (
     <div>
       <div className="flex">

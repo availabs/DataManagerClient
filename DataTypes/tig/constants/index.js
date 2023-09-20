@@ -78,7 +78,7 @@ const regionalData = {
 
 const fips2Name = {
   "34003": "Bergen",
-  "34013": "Essex",
+  "34013": "Essex, NJ",
   "34017": "Hudson",
   "34019": "Hunterdon",
   "34021": "Mercer",

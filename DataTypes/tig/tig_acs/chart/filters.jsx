@@ -91,7 +91,7 @@ export const AcsChartFilters = ({ filters, setFilters, variables, years }) => {
           {area === "all" ? (
             <>
               {Object.keys(summarizeVars).map((k, i) => (
-                <option key={i} className="ml-2  truncate" value={k}>
+                <option key={i} className="ml-2 truncate" value={k}>
                   {summarizeVars[k]?.name}
                 </option>
               ))}
@@ -196,13 +196,13 @@ export const ACSChartTransform = ({ valueMap, filters, isDivisor }) => {
       id: key,
       name: key,
       value: isDivisor
-        ? Math.round(
+        ? `${Math.round(
             mean(
               areaToGeos[`${key}`]
                 .map((val) => +valueMap[`${val}`])
                 .filter(Boolean) || []
             )
-          ) || 0
+          ) || 0}%`
         : sum(
             areaToGeos[`${key}`]
               .map((val) => valueMap[`${val}`])
