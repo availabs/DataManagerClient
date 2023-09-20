@@ -35,6 +35,9 @@ const HoverComp = ({ data, layer }) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
+  let getAttributes = typeof attributes?.[0] === 'string' ?
+    attributes : attributes.map(d => d.name)
+
   // React.useEffect(() => {
   //   falcor.get([
   //     "dama",
@@ -50,7 +53,7 @@ const HoverComp = ({ data, layer }) => {
   const attrInfo = React.useMemo(() => {
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id],
+      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id, getAttributes],
       {}
     );
   }, [id, falcorCache, activeViewId, pgEnv]);
