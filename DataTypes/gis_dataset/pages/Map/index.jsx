@@ -102,16 +102,16 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    falcor.chunk([
+    falcor.get([
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      [...Array(dataLength).keys()], variables
+      { from: 0, to: dataLength - 1 }, variables
     ])
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
-    if (!activeVar) setData([]);
+    if (!activeVar || (activeVar === "none")) setData([]);
     const dataById = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
     const data = Object.keys(dataById)
       .map(id => {
@@ -128,41 +128,39 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   React.useEffect(() => {
     if (!data.length) return;
 
-    const legend = get(source, ["metadata", "legend"], {});
+    const symbology = JSON.parse(JSON.stringify(get(source, ["metadata", "symbology"], {})));
 
-    const newSym = layer.layers.reduce((a, c) => {
-      a[c.id] = {
-        [`${c.type}-color`]: {
-          [activeVar]: {
-            settings: {
-              name: activeVar,
-              type: varType === "data-variable" ? 'threshold' : "ordinal",
-              ...legend,
-              data
-            },
-            // value: output
-          }
-        }
-      };
-      return a;
-    }, {});
+console.log("LOADING SYM:", symbology);
 
-    setTempSymbology(oldSym => {
-      const update = {};
-      for (const id in newSym) {
-        update[id] = {};
-        for (const p in newSym[id]) {
-          update[id][p] = {};
-          for (const v in newSym[id][p]) {
-            const os = get(oldSym, [id, p, v]);
-            const ns = get(newSym, [id, p, v]);
-            update[id][p][v] = os || ns;
-          }
-        }
+    const defaultSettings = {
+      name: activeVar,
+      type: varType === "data-variable" ? 'threshold' : "ordinal",
+      data
+    }
+
+    const paths = layer.layers.map(({ id, type }) => {
+      return [id, `${ type }-color`, activeVar, "settings"];
+    })
+
+    paths.forEach(path => {
+      const test = get(symbology, path, null);
+      if (!test) {
+        const [id, pp, av] = path;
+        symbology[id] = symbology[id] || {};
+        symbology[id][pp] = symbology[id][pp] || {};
+        symbology[id][pp][av] = symbology[id][pp][av] || {};
+        symbology[id][pp][av].settings = defaultSettings;
       }
-      return update;
+      else {
+        const [id, pp, av] = path;
+        symbology[id][pp][av].settings.data = data;
+      }
     });
+
+    setTempSymbology(symbology);
+
   }, [layer, data, setTempSymbology, activeVar, varType, source]);
+
 
   return (
     <div className='flex flex-1'>
@@ -198,6 +196,10 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
+
+  // console.log("\n\n\n\n\n");
+  // console.log("what is the content of the filters data: ", filters);
+  // console.log("\n\n\n\n\n");
   const activeView = React.useMemo(() => {
     let currentView = (views || []).filter(d => d.view_id === +viewId)
     return get(currentView,'[0]', views[0])
@@ -233,7 +235,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
-// console.log("SOURCE:", source)
+  //console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -288,9 +290,11 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         <Map
           key={ viewId }
           layers={ [layer] }
+          layer={layer}
           source={ source }
           tempSymbology={ tempSymbology }
-          setTempSymbology={ setTempSymbology }/>
+          setTempSymbology={ setTempSymbology }
+          filters={filters}/>
       </div>
 
       {user.authLevel >= 5 ?
@@ -363,7 +367,7 @@ const PMTilesProtocol = {
   }
 }
 
-const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
+const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -399,33 +403,30 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
     });
   }, [mounted, layers]);
 
+  const activeVar = get(filters, ["activeVar", "value"], "");
+
   const updateLegend = React.useCallback(legend => {
+    if (!activeVar || (activeVar === "none")) return;
+    // const { type, ...rest } = legend;
 
-    const { type, ...rest } = legend;
-
-    const [layerId] = Object.keys(tempSymbology);
-    const [paintProp] = Object.keys(tempSymbology[layerId]);
-    const [variable] = Object.keys(tempSymbology[layerId][paintProp]);
-
-    const { settings } = tempSymbology[layerId][paintProp][variable];
-
-    setTempSymbology({
-      ...tempSymbology,
-      [layerId]: {
-        [paintProp]: {
-          [variable]: {
-            type,
-            settings: {
-              ...settings,
-              ...rest,
-              type
-            }
-          }
-        }
-      }
+    const paths = layer.layers.map(({ id, type }) => {
+      return [id, `${ type }-color`, activeVar];
     })
 
-  }, [tempSymbology, setTempSymbology]);
+    const newSym = JSON.parse(JSON.stringify(tempSymbology));
+
+console.log("updateLegend:", legend)
+
+    paths.forEach(([id, pp, av]) => {
+      newSym[id][pp][av].settings = {
+        ...tempSymbology[id][pp][av].settings,
+        ...legend
+      }
+    });
+
+    setTempSymbology(newSym);
+
+  }, [tempSymbology, setTempSymbology, layer, activeVar]);
 
   const layerProps = React.useMemo(()=>{
     let inputViewIds = layers.filter(Boolean).map(d => d.activeViewId)
@@ -434,12 +435,13 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
       if (index !== -1) {
         out[cur.id] = cloneDeep(layers[index]);
         out[cur.id].symbology = cloneDeep(tempSymbology);
-        out[cur.id].updateLegend = updateLegend;
+        out[cur.id].updateLegend = updateLegend;;
         out[cur.id].sourceId = source.source_id;
+        out[cur.id].filters = filters;
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology, updateLegend, source.source_id])
+  },[layers, layerData, tempSymbology, updateLegend, source.source_id, filters])
 
   //console.log('mapTheme',mapTheme)
   return (
@@ -450,6 +452,7 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
           <AvlMap
             accessToken={ config.MAPBOX_TOKEN }
             mapOptions={ {
+              protocols: [PMTilesProtocol],
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
               protocols: [PMTilesProtocol],

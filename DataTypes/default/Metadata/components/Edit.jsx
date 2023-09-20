@@ -72,8 +72,8 @@ export const Edit = ({
     }, [startValue])
 
     const save = (value) => {
-        editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {[attr]: value}});
-        setEditing(null);
+        editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {[attr]: value}})
+          .then(() => setEditing(null));
     }
 
     return type === 'textarea' ?

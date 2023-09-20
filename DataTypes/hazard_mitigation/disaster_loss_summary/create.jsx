@@ -82,7 +82,7 @@ const Create = ({ source, newVersion, baseUrl }) => {
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsPAFPD, type: 'public_assistance_funded_projects_details_v1'});
+            await getSrcViews({rtPfx, setVersions: setVersionsPAFPD, type: 'public_assistance_funded_projects_details_v1_enhanced'});
             await getSrcViews({rtPfx, setVersions: setVersionsIHP, type: 'individuals_and_households_program_valid_registrations_v1'});
             await getSrcViews({rtPfx, setVersions: setVersionsDDS, type: 'disaster_declarations_summaries_v2'});
             await getSrcViews({rtPfx, setVersions: setVersionsSBA, type: 'sba_disaster_loan_data_new'});

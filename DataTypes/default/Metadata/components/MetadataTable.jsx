@@ -31,7 +31,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
         // {name: 'Delete', auth: true, minAuthLevel: 5, condition: colOrigin === 'calculated-column'},
     ]
     React.useEffect(() => {
-        const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
+        const md = JSON.parse(JSON.stringify(get(source, ["metadata", "columns"], get(source, "metadata", []))));
         if (Array.isArray(md)) {
             const MD = md.map(d => ({
                 display: "", ...d

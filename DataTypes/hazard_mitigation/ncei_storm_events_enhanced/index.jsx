@@ -1,6 +1,5 @@
 import React, {useState, useEffect} from 'react';
 import Create from './create';
-import {useFalcor} from "~/modules/avl-components/src";
 import get from "lodash/get";
 
 import { DamaContext } from "../../../store";
@@ -267,8 +266,7 @@ const RenderTypeMapping = ({metadataActiveView, metadataCompareView, activeView,
 )
 
 const Stats = ({source, views}) => {
-    const { pgEnv } = React.useContext(DamaContext)
-    const {falcor, falcorCache} = useFalcor();
+    const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext)
     const [activeView, setActiveView] = useState(views[0].view_id);
     const [compareView, setCompareView] = useState(views[0].view_id);
     const [compareMode, setCompareMode] = useState(undefined);
