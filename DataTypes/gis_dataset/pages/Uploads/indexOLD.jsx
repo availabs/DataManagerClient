@@ -93,6 +93,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [dataVariables, metaVariables]);
 
   const activeVar = get(filters, ["activeVar", "value"], "");
+  console.log("what is the value of the active var: ", activeVar);s
   const varType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
 
   React.useEffect(() => {

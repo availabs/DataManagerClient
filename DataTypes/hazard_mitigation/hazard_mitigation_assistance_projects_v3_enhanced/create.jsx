@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 
 import { DamaContext } from "../../../store";
 import {RenderVersions} from "../../../utils/macros.jsx";
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewHmgp}) => {
-    const viewMetadata = [viewHmgp.view_id];
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewHmgp, viewDDS}) => {
+    const viewMetadata = [viewHmgp.view_id, viewDDS.view_id];
 
 
     const url = new URL(
@@ -22,6 +22,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewHmg
 
     url.searchParams.append("ofd_schema", viewHmgp.table_schema);
     url.searchParams.append("hmgp_table", viewHmgp.table_name);
+    url.searchParams.append("dds_table", viewDDS.table_name);
 
     const stgLyrDataRes = await fetch(url);
 
@@ -40,11 +41,15 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
     const [viewHmgp, setViewHmgp] = useState();
+    const [viewDDS, setViewDDS] = useState();
+
     const [versionsHmgp, setVersionsHmgp] = React.useState({sources:[], views: []});
-    console.log('base', baseUrl)
+    const [versionsDDS, setVersionsDDS] = React.useState({sources:[], views: []});
+
     React.useEffect(() => {
         async function fetchData() {
             await getSrcViews({rtPfx, setVersions: setVersionsHmgp,  type: 'hazard_mitigation_assistance_projects_v3'});
+            await getSrcViews({rtPfx, setVersions: setVersionsDDS,  type: 'disaster_declarations_summaries_v2'});
         }
         fetchData();
     }, [rtPfx])
@@ -52,11 +57,13 @@ const Create = ({ source, newVersion, baseUrl }) => {
     return (
         <div className='w-full'>
             {RenderVersions({value: viewHmgp, setValue: setViewHmgp, versions: versionsHmgp, type: 'HMGP'})}
+            {RenderVersions({value: viewDDS, setValue: setViewDDS, versions: versionsDDS, type: 'Disaster Declarations Summary'})}
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
                 rtPfx, baseUrl, source, newVersion, navigate,
                     viewHmgp: versionsHmgp.views.find(v => v.view_id === parseInt(viewHmgp)),
+                    viewDDS: versionsDDS.views.find(v => v.view_id === parseInt(viewDDS)),
             })}> Add New Source</button>
         </div>
     )

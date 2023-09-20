@@ -161,6 +161,7 @@ console.log("LOADING SYM:", symbology);
 
   }, [layer, data, setTempSymbology, activeVar, varType, source]);
 
+
   return (
     <div className='flex flex-1'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
@@ -195,6 +196,10 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
+
+  console.log("\n\n\n\n\n");
+  console.log("what is the content of the filters data: ", filters);
+  console.log("\n\n\n\n\n");
   const activeView = React.useMemo(() => {
     let currentView = (views || []).filter(d => d.view_id === +viewId)
     return get(currentView,'[0]', views[0])
@@ -230,7 +235,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
-// console.log("SOURCE:", source)
+ console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
