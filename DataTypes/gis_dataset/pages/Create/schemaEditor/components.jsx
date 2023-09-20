@@ -65,8 +65,13 @@ const ConstrainedColumnNameInput = ({
 };
 
 export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
-  const { layerName, tableDescriptor, publishStatus, databaseColumnNames } =
-    state;
+  const { 
+    layerName, 
+    tableDescriptor, 
+    publishStatus, 
+    databaseColumnNames,
+    mbtilesOptions
+    } = state;
 
   //console.log('databaseColumnNames', databaseColumnNames)
 
@@ -131,7 +136,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     return null;
   }
 
-  const InputElem = databaseColumnNames
+  const InputElem = (databaseColumnNames && databaseColumnNames.length > 0) 
     ? ConstrainedColumnNameInput
     : FreeFormColumnNameInput;
 
@@ -152,12 +157,13 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
     setallPreserveColumnsChecked(!e.target.checked);
     dispatch({
       type: "update",
-      payload: { mbtilesOptions: { preserveColumns: updatedVal } },
+      payload: { mbtilesOptions: {  ...mbtilesOptions , preserveColumns: updatedVal,} },
     });
   };
 
+  // console.log('mbtilesOptions', mbtilesOptions)
   const availableDbColNames =
-    databaseColumnNames &&
+    databaseColumnNames && databaseColumnNames.length > 0 &&
     databaseColumnNames
       .filter((c) => !assignedColNamesSet.has(c))
       .filter(Boolean);
@@ -286,7 +292,7 @@ export const GisDatasetLayerDatabaseDbSchemaForm = ({ state, dispatch }) => {
 
                         dispatch({
                           type: "update",
-                          payload: { mbtilesOptions: { preserveColumns: newPreserveColumns } },
+                          payload: { mbtilesOptions: { ...mbtilesOptions, preserveColumns: newPreserveColumns, } },
                         });
                       }}
                     />

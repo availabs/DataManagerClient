@@ -7,7 +7,7 @@ import { BarGraph } from "../../../../../modules/avl-graph/src";
 import { fnum, fnumIndex, range } from "../../../utils/macros"
 import { getColorRange } from "~/modules/avl-components/src"
 
-const DEFAULT_COLORS = getColorRange(12, "Set3");
+const DEFAULT_COLORS = [getColorRange(12, "Set3")];
 const RenderVersions = (domain, value, onchange) => {
     const navigate = useNavigate();
     const {sourceId, page} = useParams();
@@ -194,7 +194,7 @@ export const Stats = ({source, views}) => {
             );
         }
 
-        return getData();
+        getData();
     }, [activeView, compareView, falcor, source.source_id, pgEnv])
 
     const NCEIeETFData = Object.values(get(falcorCache,
@@ -336,7 +336,7 @@ export const Stats = ({source, views}) => {
                                       <Table
                                           data={NCEIeETFData}
                                           columns={
-                                              Object.keys(NCEIeETFData[0])
+                                              Object.keys(NCEIeETFData?.[0] || {})
                                                   .map(col => {
                                                       const mappedName = NCEIeAttributes({event_type_formatted: 'Pre Coastal->Hurricane'})[col] || col
                                                       return {
@@ -358,7 +358,7 @@ export const Stats = ({source, views}) => {
                                       <Table
                                           data={NCEIeNRICatData}
                                           columns={
-                                              Object.keys(NCEIeNRICatData[0])
+                                              Object.keys(NCEIeNRICatData?.[0] || {})
                                                   .map(col => {
                                                       const mappedName = NCEIeAttributes({nri_category: 'Post Coastal->Hurricane'})[col] || col
                                                       return {

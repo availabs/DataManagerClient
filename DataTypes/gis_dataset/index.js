@@ -5,8 +5,6 @@ import Table from "./pages/Table";
 
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
-
-
 const GisDatasetConfig = {
   map: {
     name: "Map",
@@ -23,6 +21,7 @@ const GisDatasetConfig = {
     name: "Create",
     component: CreatePage,
   },
+
   // add_version: {
   //   name: "Add Version",
   //   path: "/add_version",

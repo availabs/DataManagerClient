@@ -274,28 +274,6 @@ const SedChartTransformCounty = (tableData, attributes, filters, years, flag) =>
       }));
     }
   }
-  /* [
-    {
-      name: New York County,
-      data: [{
-        x: 15, // year
-        y: 35636 //value of totpop_15
-      },
-      ...
-      {
-        x:55,
-        y: 2346236, //value of totpop_55
-      }
-      ]
-    },
-    {
-      name: Kings COunty
-      data:[
-        {///
-      ]
-    }
-  ]
-*/
   return {
     data: finalGraphData,
     columns,

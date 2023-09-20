@@ -17,9 +17,12 @@ export default function UploadGisDataset({
   user = {},
   dataType = "gis_dataset",
   CustomAttributes = BlankComponent,
+  tippecanoeOptions = {},
   customRules = {},
   databaseColumnNames = null,
 }) {
+
+  // console.log('tippecanoeOptions', tippecanoeOptions)
   const { name: damaSourceName, source_id: sourceId, type } = source;
   const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
 
@@ -27,6 +30,9 @@ export default function UploadGisDataset({
  
   const [state, dispatch] = useReducer(reducer, {
     damaSourceId: sourceId,
+    databaseColumnNames: databaseColumnNames ? 
+      databaseColumnNames : 
+      (source?.metadata?.columns || source?.metadata || []).map(d => d.name),
     damaSourceName: damaSourceName,
     userId: 7,
     etlContextId: null,
@@ -50,9 +56,9 @@ export default function UploadGisDataset({
     layerAnalysis: null,
 
     // schemaEditor state
-    databaseColumnNames: databaseColumnNames,
+    
     tableDescriptor: null,
-    mbtilesOptions: { preserveColumns: {} },
+    mbtilesOptions: { preserveColumns: {}, ...tippecanoeOptions },
 
     // publish state
     publishStatus: "AWAITING",

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
 import { DamaContext } from "../../../store";
+import {DAMA_HOST} from '~/config'
 
 async function getData({ falcor, pgEnv, viewId }) {
   const data = await falcor.get(

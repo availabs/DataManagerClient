@@ -32,22 +32,6 @@ const getTilehost = (DAMA_HOST) =>
 
 const TILEHOST = getTilehost(DAMA_HOST)
 
-//Console.log('DAMA_HOST', DAMA_HOST, TILEHOST)
-
-const PMTilesProtocol = {
-  type: "pmtiles",
-  protocolInit: maplibre => {
-    const protocol = new Protocol();
-    maplibre.addProtocol("pmtiles", protocol.tile);
-    return protocol;
-  },
-  sourceInit: (protocol, source, maplibreMap) => {
-    const p = new PMTiles(source.url);
-    protocol.add(p);
-  }
-}
-
-
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
@@ -118,10 +102,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    falcor.chunk([
+    falcor.get([
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      [...Array(dataLength).keys()], variables
-    ])
+      {from: 0, to: dataLength-1}, variables
+    ]).then(d => console.log('got data'))
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
@@ -139,7 +123,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
         }
       }).filter(d => d.value !== null);
     setData(data);
-  }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
+  }, [falcorCache, pgEnv, activeViewId, activeVar]);
 
   React.useEffect(() => {
     if (!data.length) return;
@@ -180,6 +164,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     });
   }, [layer, data, setTempSymbology, activeVar, varType, source]);
 
+
   return (
     <div className='flex flex-1'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
@@ -219,13 +204,19 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   console.log("what is the content of the filters data: ", filters);
   console.log("\n\n\n\n\n");
   const activeView = React.useMemo(() => {
-    return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
+    let currentView = (views || []).filter(d => d.view_id === +viewId)
+    return get(currentView,'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        if(s.source.url.includes('.pmtiles')){
+          s.source.url = s.source.url
+            .replace('https://', 'pmtiles://')
+            .replace('http://', 'pmtiles://')
+        }
       }
     })
     return out
@@ -247,7 +238,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
-// console.log("SOURCE:", source)
+ console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -257,16 +248,17 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         return null
       }
       //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
+      let attributes = (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
+      attributes = Array.isArray(attributes) ? attributes : []
       return {
             name: source.name,
             pgEnv,
             source: source,
             activeView: activeView,
             filters,
-            hoverComp: HoverComp,
-            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
-              .filter(d => ['integer', 'string', 'number'].includes(d.type))
-              .map(d => d.name),
+            hoverComp: HoverComp?.Component || false,
+            isPinnable: HoverComp?.isPinnable || false,
+            attributes,
             activeViewId: activeViewId,
             sources,
             layers,
@@ -274,7 +266,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
-  //console.log('metadata',metaData)
 
   return (
     <div>
@@ -306,6 +297,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           tempSymbology={ tempSymbology }
           setTempSymbology={ setTempSymbology }/>
       </div>
+
       {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
@@ -362,6 +354,19 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 }
 
 export default MapPage
+
+const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
+  }
+}
 
 const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
   const [mounted, setMounted] = React.useState(false);
@@ -452,7 +457,6 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
             mapOptions={ {
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
-              protocols: [PMTilesProtocol],
               center: [-73.8, 40.79],
               styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},

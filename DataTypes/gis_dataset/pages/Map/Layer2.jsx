@@ -12,10 +12,11 @@ import {
   // ColorRangesByType,
   ColorRanges,
   ColorBar,
-  ColorCategory,
+  // ColorCategory,
   Input,
   Button,
   useTheme,
+  ThemeUpdater,
   getScale,
   useClickOutside
 } from "~/modules/avl-map-2/src";
@@ -30,7 +31,7 @@ import {
 import { DamaContext } from "~/pages/DataManager/store";
 
 const HoverComp = ({ data, layer }) => {
-  const { attributes, activeViewId } = layer;
+  const { attributes, activeViewId, filters } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
@@ -88,7 +89,7 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   return (
     <div className={ `p-1 rounded ${ theme.bg }` }>
       <div className={ `
-          p-1 relative border rounded pointer-events-auto
+          p-1 relative rounded border pointer-events-auto
           ${ theme.bgAccent2 } ${ theme.border }
         ` }
       >
@@ -124,13 +125,16 @@ const calcDomain = (type, data, length) => {
 }
 const calcRange = (type, length, color, reverse) => {
   switch (type) {
-    case "quantize":
-      return getColorRange(7, color, reverse);
     case "threshold":
       return getColorRange(length ? length + 1 : 7, color, reverse);
     default:
-      return data;
+      return getColorRange(7, color, reverse);
   }
+}
+
+const ThemeUpdate = {
+  bgAccent2: "bg-white",
+  border: "shadow"
 }
 
 const GISDatasetRenderComponent = props => {
@@ -211,30 +215,51 @@ const GISDatasetRenderComponent = props => {
   }, [falcor, pgEnv, sourceId, legend])
 
   React.useEffect(() => {
-    if (!maplibreMap) return;
-    const sources = get(symbology, "sources", []);
-    //console.log('sources', sources)
-    if (Array.isArray(sources)) {
-      sources.forEach(s => {
-        if (!maplibreMap.getSource(s.id)) {
-          maplibreMap.addSource(s.id, s.source);
-        }
-      })
-    }
-    const layers = get(symbology, "layers", []);
+    async function loadMapData () {
+      if (!maplibreMap) return;
+      const sources = get(symbology, "sources", []);
+      const layers = get(symbology, "layers", []);
+      const images = get(symbology, "images", []);
 
-    if (Array.isArray(layers)) {
-      layers.forEach(l => {
-        if (!maplibreMap.getLayer(l.id)) {
-          maplibreMap.addLayer(l);
-        }
-      })
+      //console.log('set sources', sources, layers,images)
+      if (Array.isArray(images)) {
+        await Promise.all(
+            images
+              .filter(img => !maplibreMap.hasImage(img.id))
+              .map(img => new Promise((resolve, reject) => {
+
+                maplibreMap.loadImage(img.url, function (error, res) {
+                    if (error) throw error;
+                    maplibreMap.addImage(img.id, res)
+                    resolve();
+                })
+            }))
+        )
+      }
+
+
+      if (Array.isArray(sources)) {
+        sources.forEach(s => {
+          if (!maplibreMap.getSource(s.id)) {
+            maplibreMap.addSource(s.id, s.source);
+          }
+        })
+      }
+
+      if (Array.isArray(layers)) {
+        layers.forEach(l => {
+          if (!maplibreMap.getLayer(l.id)) {
+            maplibreMap.addLayer(l);
+          }
+        })
+      }
+      // console.log('loadMapData done')
     }
+
+    loadMapData()
   }, [maplibreMap, symbology]);
 
   const activeVariable = get(filters, ["activeVar", "value"], "");
-
-    
 
   React.useEffect(() => {
     if (!maplibreMap) return;
@@ -244,7 +269,8 @@ const GISDatasetRenderComponent = props => {
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
         (
-          Object.keys(symbology[layer_id] || {}).filter((paintProperty) => {
+          Object.keys(symbology[layer_id] || {})
+            .filter((paintProperty) => {
             const value =
               get(symbology, `[${paintProperty}][${activeVariable}]`, false) ||
               get(symbology, `[${paintProperty}][default]`, false) ||
@@ -252,15 +278,48 @@ const GISDatasetRenderComponent = props => {
                 symbology,
                 `[${layer_id}][${paintProperty}][${activeVariable}]`,
                 false
-              );
+              )
+              || get(symbology, `[${layer_id}][${paintProperty}][default]`, false);
             return value;
           }) || []
         ).forEach((paintProperty) => {
           const sym =
             get(symbology, `[${paintProperty}][${activeVariable}]`, "") ||
             get(symbology, `[${paintProperty}][default]`, "") ||
-            get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "");
+            get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "")
+            || get(symbology, `[${layer_id}][${paintProperty}][default]`, "");
 
+
+            // ----------- New -----------
+            // let { value, settings } = sym;
+            //
+            // if (!value && settings) {
+            //   const { type, domain, range, data } = settings;
+            //   const scale = getScale(type, domain, range);
+            //
+            //   const colors = data.reduce((a, c) => {
+            //     a[c.id] = scale(c.value);
+            //     return a;
+            //   }, {});
+            //
+            //   value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
+            // }
+
+            // if(maplibreMap.getLayer(layer_id)?.id) {
+            //   //console.log('calling create legend', sym.settings)
+            //   if(['visibility'].includes(paintProperty)) {
+            //     maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
+            //   } else {
+            //     maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+            //   }
+            // }
+            // if(sym.settings) {
+            //   createLegend(sym.settings)
+            //
+            // }
+            // ----------- New -----------
+
+          // --------- Old ------------
           if (sym.settings && sym.value) {
             createLegend(sym.settings);
             setLayerData({ layer_id, paintProperty, value: sym.value });
@@ -277,6 +336,7 @@ const GISDatasetRenderComponent = props => {
             setLegend(null);
             setLayerData(null);
           }
+          // --------- Old ------------
         });
       });
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
@@ -319,17 +379,19 @@ const GISDatasetRenderComponent = props => {
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
 
-  //console.log('legend', legend)
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
-        <LegendContainer { ...legend }
-          toggle={ toggle }
-          isOpen={ isOpen }
-        >
-          <Legend { ...legend }/>
-        </LegendContainer>
+{ /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
+        <ThemeUpdater themeUpdate={ ThemeUpdate }>
+          <LegendContainer { ...legend }
+            toggle={ toggle }
+            isOpen={ isOpen }
+          >
+            <Legend { ...legend }/>
+          </LegendContainer>
+        </ThemeUpdater>
       </div>
 
       <div className="z-0">
@@ -341,14 +403,6 @@ const GISDatasetRenderComponent = props => {
     </div>
   )
 }
-
-// const LegendControlsToggle = ({ toggle }) => {
-//   return (
-//     <ActionButton onClick={ toggle }>
-//       <span className="fa fa-plus"/>
-//     </ActionButton>
-//   )
-// }
 
 const RemoveDomainItem = ({ value, remove }) => {
   const doRemove = React.useCallback(e => {
@@ -492,7 +546,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                     edit={ editDomain }/>
                 ))
               }
-              <div className="flex">
+              <div className={ `flex border-t pt-1 ${ theme.border }` }>
                 <div className="mr-1 flex-1">
                   <Input type="number" placeholder="enter a threshold value..."
                     onChange={ setValue }
@@ -505,7 +559,7 @@ const ThresholdEditor = ({ domain, range, updateLegend }) => {
                 </Button>
               </div>
               <div>
-                <Button 
+                <Button
                   onClick={ useCKMeans }
                   className="buttonPrimaryBlock"
                 >
@@ -530,13 +584,12 @@ const BooleanSlider = ({ value, onChange }) => {
       className="px-4 py-1 h-8 rounded flex items-center w-full cursor-pointer"
     >
       <div className={ `
-          rounded flex-1 h-2 relative flex items-center
-          ${ theme.bgAccent2 }
+          rounded flex-1 h-2 relative flex items-center bg-blue-100
         ` }
       >
         <div className={ `
             w-4 h-4 rounded absolute
-            ${ Boolean(value) ? theme.bgHighlight : "bg-gray-400" }
+            ${ Boolean(value) ? "bg-blue-500" : "bg-gray-500" }
           ` }
           style={ {
             left: Boolean(value) ? "100%" : "0%",
@@ -552,6 +605,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
   const isActive = React.useMemo(() => {
     return isEqual(colors, range);
   }, [colors, range]);
+
   const onClick = React.useCallback(() => {
     updateLegend(colors, name, reverse)
   }, [updateLegend, name, colors, reverse])
@@ -560,7 +614,7 @@ const LegendColorBar = ({ colors, name, reverse, range, updateLegend }) => {
       onClick={ isActive ? null : onClick }
       className={ `
         outline outline-2 rounded-lg my-2
-        ${ isActive ? "outline-current" : "outline-transparent cursor-pointer" }
+        ${ isActive ? "outline-black" : "outline-transparent cursor-pointer" }
       ` }
     >
       <ColorBar
@@ -725,11 +779,12 @@ class GISDatasetLayer extends AvlLayer {
     callback: (layerId, features, lngLat) => {
       let feature = features[0];
 
-      let data = [feature.id, layerId];
+      let data = [feature.id, layerId, (features[0] || {}).properties];
 
       return data;
     },
     Component: this.hoverComp || HoverComp,
+    isPinnable: this.isPinnable || false
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {

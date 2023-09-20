@@ -78,7 +78,6 @@ const TablePage = ({
       .then((d) => {
         console.timeEnd("getviewLength");
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId]);
 
   const dataLength = React.useMemo(() => {
@@ -90,8 +89,8 @@ const TablePage = ({
   }, [pgEnv, activeViewId, falcorCache]);
 
   const attributes = React.useMemo(() => {
-    return get(source, "metadata", [])
-      ?.filter((d) => ["integer", "string", "number"].includes(d.type))
+    return (source?.metadata?.columns || source?.metadata || [])
+      .filter((d) => ["integer", "string", "number"].includes(d.type))
       .map((d) => d.name);
   }, [source]);
 
@@ -108,11 +107,7 @@ const TablePage = ({
           [...Array(maxData).keys()],
           attributes,
         ])
-        .then((d) => {
-          console.timeEnd("getViewData", maxData);
-        });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId, dataLength, attributes]);
 
   const tableData = React.useMemo(() => {
@@ -125,14 +120,12 @@ const TablePage = ({
     ).map((d) => get(falcorCache, d.value, {}));
 
     return data;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pgEnv, activeViewId, falcorCache, dataLength]);
 
   let years = get(activeView, ["metadata", "years"], []);
 
   const { data } = React.useMemo(
     () => transform(tableData, attributes, filters, years, "group_by_county"),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tableData, attributes, transform, filters]
   );
 
