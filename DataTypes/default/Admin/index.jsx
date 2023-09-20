@@ -77,10 +77,10 @@ const AdminPage = ({source, views, activeViewId, }) => {
               </dd>
             </div>
           </div>
-          <div className='flex-1 border-b-2 border-[#679d89]'>
+          <div className='flex-1 border-b-2 '>
             <div className="py-4">
-              <div className="flex items-center border-t-2 border-[#679d89]">
-                <div className='py-3 px-6 bg-[#679d89] text-gray-100 text-lg'> General </div>
+              <div className="flex items-center border-t-2 ">
+                <div className='py-3 px-6 text-blue-500 font-medium text-lg'> Access Controls</div>
               </div>
             </div>
               <table className="w-full">
@@ -122,106 +122,7 @@ const AdminPage = ({source, views, activeViewId, }) => {
                       </>
                     )
                   })}
-                  {/* {tableDescriptorColumnTypes.map(({ key, col }, rowIdx) => {
-                    let fieldColNameOptions;
-                    if (Array.isArray(availableDbColNames)) {
-                      fieldColNameOptions = assignedColNamesSet.has(col)
-                        ? [col, ...availableDbColNames]
-                        : availableDbColNames;
-                    }
-
-                    const ColNameCell = omittedFields[key] ? (
-                      <span />
-                    ) : (
-                      <InputElem
-                        {...{
-                          availableDbColNames: fieldColNameOptions,
-                          publishStatus,
-                          field: key,
-                          col,
-                          onChange: (e) => {
-                            const value = e.target ? e.target.value : e;
-                            dispatch({
-                              type: "update_dbColName",
-                              payload: { rowIdx, colName: value },
-                            });
-                          },
-                        }}
-                      />
-                    );
-
-                    return (
-                      <tr key={key} className="border-b">
-                        <td className="py-4 text-left">{key}</td>
-                        <td className="text-center  p-2">{ColNameCell}</td>
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={omittedFields[key]}
-                            disabled={
-                              fieldColNameOptions && fieldColNameOptions.length === 0
-                            }
-                            onChange={() => {
-                              const newOmittedFields = {
-                                ...omittedFields,
-                                [key]: !omittedFields[key],
-                              };
-
-                              setOmittedFields(newOmittedFields);
-
-                              const isAllChecked = Object.values(
-                                newOmittedFields
-                              ).some((v) => v === false);
-                              setAllChecked(isAllChecked);
-                              if (col) {
-                                dispatch({
-                                  type: "update_dbColName",
-                                  payload: { rowIdx, colName: "" },
-                                });
-                              } else if (!fieldColNameOptions) {
-                                dispatch({
-                                  type: "update_dbColName",
-                                  payload: {
-                                    rowIdx,
-                                    colName: defaultMappings[key],
-                                  },
-                                });
-                              }
-                            }}
-                          />
-                        </td>
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={preserveColumns[col]}
-                            disabled={
-                              fieldColNameOptions && fieldColNameOptions.length === 0
-                            }
-                            onChange={() => {
-                              const newPreserveColumns = {
-                                ...preserveColumns,
-                                [col]: !preserveColumns[col],
-                              };
-
-                              setPreserveColumns(newPreserveColumns);
-
-                              const isAllPreserveColumnsChecked = Object.values(
-                                newPreserveColumns
-                              ).some((v) => v === false);
-                              setallPreserveColumnsChecked(
-                                isAllPreserveColumnsChecked
-                              );
-
-                              dispatch({
-                                type: "update",
-                                payload: { mbtilesOptions: { preserveColumns: newPreserveColumns } },
-                              });
-                            }}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })} */}
+                  
                 </tbody>
               </table>
             </div>

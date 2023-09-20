@@ -102,10 +102,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    falcor.chunk([
+    falcor.get([
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      [...Array(dataLength).keys()], variables
-    ])
+      {from: 0, to: dataLength-1}, variables
+    ]).then(d => console.log('got data'))
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
@@ -123,7 +123,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
         }
       }).filter(d => d.value !== null);
     setData(data);
-  }, [falcorCache, pgEnv, activeViewId, dataLength, activeVar]);
+  }, [falcorCache, pgEnv, activeViewId, activeVar]);
 
   React.useEffect(() => {
     if (!data.length) return;
@@ -164,6 +164,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
     });
   }, [layer, data, setTempSymbology, activeVar, varType, source]);
 
+
   return (
     <div className='flex flex-1'>
       <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
@@ -199,13 +200,19 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     _setFilters(prev => ({ ...prev, ...filters }))
   }, []);
   const activeView = React.useMemo(() => {
-    return get((views || []).filter(d => d.view_id === +viewId),'[0]', views[0])
+    let currentView = (views || []).filter(d => d.view_id === +viewId)
+    return get(currentView,'[0]', views[0])
   },[views,viewId])
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        if(s.source.url.includes('.pmtiles')){
+          s.source.url = s.source.url
+            .replace('https://', 'pmtiles://')
+            .replace('http://', 'pmtiles://')
+        }
       }
     })
     return out
@@ -227,7 +234,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const { sources: symSources, layers: symLayers } = tempSymbology;
 
-// console.log("SOURCE:", source)
+ console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
       //console.log('layer update', tempSymbology)
@@ -237,16 +244,17 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         return null
       }
       //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
+      let attributes = (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
+      attributes = Array.isArray(attributes) ? attributes : []
       return {
             name: source.name,
             pgEnv,
             source: source,
             activeView: activeView,
             filters,
-            hoverComp: HoverComp,
-            attributes: (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
-              .filter(d => ['integer', 'string', 'number'].includes(d.type))
-              .map(d => d.name),
+            hoverComp: HoverComp?.Component || false,
+            isPinnable: HoverComp?.isPinnable || false,
+            attributes,
             activeViewId: activeViewId,
             sources,
             layers,
@@ -254,7 +262,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       }
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
-
 
   return (
     <div>
@@ -286,6 +293,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           tempSymbology={ tempSymbology }
           setTempSymbology={ setTempSymbology }/>
       </div>
+
       {user.authLevel >= 5 ?
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
@@ -446,7 +454,6 @@ const Map = ({ layers, tempSymbology, setTempSymbology, source }) => {
               zoom: 7.3,//8.32/40.594/-74.093
               navigationControl: false,
               center: [-73.8, 40.79],
-              protocols: [PMTilesProtocol],
               styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },

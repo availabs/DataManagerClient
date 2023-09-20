@@ -33,8 +33,6 @@ export const ViewAttributes = {
   "user_id" : "user_id",
   "etl_context_id" : "etl_context_id",
   "view_dependencies" : "view_dependencies",
-  // "active_start_timestamp" : "active_start_timestamp",
-  // "active_end_timestamp" : "active_end_timestamp",
   "_created_timestamp" : "_created_timestamp",
   "_modified_timestamp" : "_modified_timestamp"
 }

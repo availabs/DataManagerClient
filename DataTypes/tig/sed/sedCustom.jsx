@@ -4,7 +4,7 @@ import get from "lodash/get";
 import { useSearchParams } from "react-router-dom";
 
 import { DamaContext } from "~/pages/DataManager/store"
-import { useFalcor, Button } from "~/modules/avl-components/src"
+import { Button } from "~/modules/avl-components/src"
 import * as d3scale from "d3-scale"
 import { range as d3range } from "d3-array"
 import ckmeans from '../../../utils/ckmeans'
@@ -58,8 +58,7 @@ const SedMapFilter = ({
     activeViewId,
     layer
   }) => {
-  const {falcor, falcorCache} = useFalcor();
-  const { pgEnv } = React.useContext(DamaContext)
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext)
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let varType = useMemo(
     () =>
@@ -240,9 +239,8 @@ const SedMapFilter = ({
 };
 
 const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
-  const { falcor, falcorCache } = useFalcor()
-
-  const { pgEnv } = React.useContext(DamaContext);
+  
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
   const [loading, setLoading] = React.useState(true);
 
@@ -411,10 +409,10 @@ const SedTableTransform = (tableData, attributes, filters, years,source) => {
 };
 
 const SedHoverComp = ({ data, layer }) => {
-  const { falcor, falcorCache } = useFalcor()
+
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const { source: { type }, attributes, activeViewId, props: { filters, activeView: {metadata: { years } } }  } = layer
 
-  const { pgEnv } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 

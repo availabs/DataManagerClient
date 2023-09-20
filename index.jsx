@@ -1,6 +1,6 @@
 import React from "react";
 
-import { DataManagerHeader } from "./components/SourcesLayout";
+import { DataManagerHeader, Header } from "./components/SourcesLayout";
 
 import SourceList from "./Source/list";
 import SourceView from "./Source";
@@ -18,9 +18,9 @@ import { DamaContext } from "./store"
 const DamaRoutes = DAMA_ARGS => {
 
   const {
-    baseUrl = "/datasources",
-    defaultPgEnv = "pan",
-    auth = false,
+    baseUrl = "/datasources", // old position 0 arg
+    defaultPgEnv = "pan",     // old position 1 arg
+    auth = false,             // old position 2 arg
     components = {},
     navSettings = {},
     useFalcor,
@@ -41,14 +41,13 @@ const DamaRoutes = DAMA_ARGS => {
   } = navSettings
 
   const HeaderComp = () => {
-    const { falcor, falcorCache } = useFalcor()
     return (
       <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
         <Head  />
       </DamaContext.Provider>
     )
   }
-  const Header = <HeaderComp />
+  //const Header = () => <HeaderComp />
 
   const SourceListComp = () => {
     const { falcor, falcorCache } = useFalcor();

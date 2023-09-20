@@ -8,7 +8,7 @@ import { SourceAttributes, ViewAttributes, getAttributes } from "../components/a
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
-  
+
   useEffect(() => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
@@ -77,6 +77,11 @@ const SourcesList = () => {
   }, [falcorCache, pgEnv]);
 
 
+<<<<<<< HEAD
+=======
+  // console.log('sources', sources)
+
+>>>>>>> 1bd38aa1c5544df705f235f9976d193253f7d935
   return (
 
     <SourcesLayout baseUrl={baseUrl}>
