@@ -53,6 +53,7 @@ const ACSMapFilter = ({
     [geometry, viewYear]
   );
 
+  const metaYears = useMemo(() => get(activeView, "metadata.years", []).sort(), [activeView]);
   let { counties = [], variables = [] } = useMemo(
     () => get(activeView, "metadata", {}),
     [activeView, activeViewId]
@@ -367,7 +368,7 @@ const ACSMapFilter = ({
             });
           }}
         >
-          {(yearRange || []).map((k, i) => (
+          {(metaYears || []).map((k, i) => (
             <option key={i} className="ml-2 truncate" value={k}>
               {`${k}`}
             </option>
