@@ -9,6 +9,8 @@ const TipHoverComp = ({ data, layer }) => {
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 
+  let getAttributes = typeof attributes?.[0] === 'string' ?
+    attributes : attributes.map(d => d.name)
   //console.log('filters', filters , layer)
 
   React.useEffect(() => {
@@ -19,7 +21,7 @@ const TipHoverComp = ({ data, layer }) => {
       activeViewId,
       'databyId',
       id,
-      attributes
+      getAttributes
     ])
   }, [falcor, pgEnv, activeViewId, id, attributes])
 
