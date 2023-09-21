@@ -453,9 +453,8 @@ console.log("updateLegend:", legend)
             accessToken={ config.MAPBOX_TOKEN }
             mapOptions={ {
               protocols: [PMTilesProtocol],
-              zoom: 7.3,//8.32/40.594/-74.093
+              zoom: 7.3, //8.32/40.594/-74.093
               navigationControl: false,
-              protocols: [PMTilesProtocol],
               center: [-73.8, 40.79],
               styles: [
                 { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
