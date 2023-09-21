@@ -6,17 +6,21 @@ import ACSMapFilter from "./map";
 import Chart from "./chart";
 
 import { ACSHoverComp } from "./map/hover";
-import Table from './table';
+import Table from "./table";
 import { AcsTableFilter, AcsTableTransform } from "./table/acsFilters";
+import { AcsChartFilters, ACSChartTransform } from "./chart/filters";
 
 const TigAcsConfig = {
   map: {
     name: "Map",
     path: "/map",
-    component: (props) => <MapPage {...props} 
-      MapFilter={ACSMapFilter} 
-      HoverComp={{Component:ACSHoverComp, isPinnable: true}} 
-    />,
+    component: (props) => (
+      <MapPage
+        {...props}
+        MapFilter={ACSMapFilter}
+        HoverComp={{ Component: ACSHoverComp, isPinnable: true }}
+      />
+    ),
   },
   sourceCreate: {
     name: "Create",
@@ -27,11 +31,17 @@ const TigAcsConfig = {
     path: "/update",
     component: (props) => <Update {...props} />,
   },
-  // chart: {
-  //   name: "Chart",
-  //   path: "/chart",
-  //   component: (props) => <Chart {...props} />,
-  // },
+  chart: {
+    name: "Chart",
+    path: "/chart",
+    component: (props) => (
+      <Chart
+        {...props}
+        ChartFilter={AcsChartFilters}
+        transform={ACSChartTransform}
+      />
+    ),
+  },
   table: {
     name: "Table",
     path: "/table",

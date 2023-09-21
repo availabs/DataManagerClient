@@ -9,7 +9,6 @@ import freight_atlas_shapefile from "./freight_atlas_shapefile";
 import gis_dataset from "./gis_dataset";
 import csv_dataset from "./csv_dataset";
 
-
 // ---------------------------
 // ---- NPMRDS Types
 // ---------------------------
@@ -69,6 +68,7 @@ import tiger_counties from './tig/tiger_counties'
 import tiger_censustrack from './tig/tiger_censustrack'
 import tig_acs from './tig/tig_acs'
 import tig_bpm_perfomance_measures from './tig/bpm_performance_measures'
+import upwp_projects from './tig/upwp_projects';
 import tig_project from './tig/project'
 
 
@@ -76,7 +76,7 @@ const DataTypes = {
   //freight_atlas_shapefile,
   gis_dataset,
   csv_dataset,
-
+  upwp_projects,
   // npmrds,
 
   // npmrds_travel_times_export_ritis,
