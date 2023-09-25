@@ -10,15 +10,16 @@ import { DamaContext } from "~/pages/DataManager/store";
 const ViewSelector = ({views}) => {
   const { viewId, sourceId, page } = useParams()
   const navigate = useNavigate()
+  const { baseUrl  } = React.useContext(DamaContext)
 
   return (
     <div className="flex">
-      <div className="py-3.5 px-2 text-sm text-gray-400">Version : </div>
+      <div className="py-3.5 px-2 text-sm text-gray-400">Version  ss: </div>
       <div className="flex-1">
         <select
           className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
           value={viewId}
-          onChange={(e) => navigate(`/source/${sourceId}/${page}/${e.target.value}`)}
+          onChange={(e) => navigate(`/${baseUrl}/source/${sourceId}/${page}/${e.target.value}`)}
         >
           {views
             ?.sort((a, b) => b.view_id - a.view_id)
@@ -57,6 +58,7 @@ const TablePage = ({
   const setFilters = React.useCallback(filters => {
     _setFilters(prev => ({ ...prev, ...filters }));
   }, []);
+
   const { pgEnv, falcor, falcorCache, user  } = React.useContext(DamaContext)
 
   const activeView = React.useMemo(() => {
@@ -154,7 +156,7 @@ const TablePage = ({
       <div className="flex">
         {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
-          data={data} columns={columns}/>
+          data={tableData} columns={columns}/>
         <ViewSelector views={views} />
       </div>
       <div className="max-w-6xl">
