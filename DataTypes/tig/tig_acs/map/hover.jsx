@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from "react";
-import { get, find } from "lodash";
+import { get, find, filter } from "lodash";
 import { DamaContext } from "~/pages/DataManager/store";
 
 const typeToLength = {
@@ -24,8 +24,7 @@ const ACSHoverComp = ({ data, layer }) => {
 
   //console.log('hover', layer)
 
-  const lId = (data && data[1]);
-  
+  const lId = data && data[1];
 
   const activeVar = useMemo(
     () => get(filters, "activeVar.value", ""),
@@ -41,11 +40,10 @@ const ACSHoverComp = ({ data, layer }) => {
     [geometry, year]
   );
 
-
   if (lId === activeLayerId) {
     TEMPGEOID = ((data && data[2]) || {}).geoid;
   } else {
-    return ''
+    return "";
   }
   let geoid = TEMPGEOID;
 
@@ -53,6 +51,16 @@ const ACSHoverComp = ({ data, layer }) => {
     find(variables, { label: activeVar }),
     "value.censusKeys",
     null
+  );
+
+  const divisorConfig = filter(
+    get(find(variables, { label: activeVar }), "value.divisorKeys", null),
+    Boolean
+  );
+
+  const isDivisor = useMemo(
+    () => Boolean(divisorConfig && divisorConfig.length),
+    [divisorConfig]
   );
 
   geoid = geoid.slice(0, typeToLength[`${geometry}`]);
@@ -75,6 +83,18 @@ const ACSHoverComp = ({ data, layer }) => {
     [falcorCache, censusConfig, geoid, year]
   );
 
+  const divisorValue = useMemo(
+    () =>
+      (divisorConfig || []).reduce((aa, cc) => {
+        const v = get(falcorCache, ["acs", geoid, year, cc], -666666666);
+        if (v !== -666666666) {
+          aa += v;
+        }
+        return aa;
+      }, 0),
+    [falcorCache, divisorConfig, geoid, year]
+  );
+
   return (
     <div className="bg-white p-4 max-h-64 scrollbar-xs overflow-y-scroll">
       <div className="flex border-b pt-1">
@@ -84,7 +104,11 @@ const ACSHoverComp = ({ data, layer }) => {
 
       <div className="flex border-t pt-1">
         <div className="flex-1 font-medium text-sm pl-1">{activeVar}</div>
-        <div className="flex-1 text-right font-thin pl-4 pr-1">{value}</div>
+        <div className="flex-1 text-right font-thin pl-4 pr-1">
+          {isDivisor && divisorValue !== 0
+            ? `${(value / divisorValue).toFixed(2) * 100}%`
+            : value}
+        </div>
       </div>
     </div>
   );

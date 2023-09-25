@@ -1,6 +1,7 @@
 import React from "react";
 // import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
+import set from "lodash/set";
 import isEqual from "lodash/isEqual";
 import cloneDeep from "lodash/cloneDeep"
 
@@ -215,9 +216,12 @@ const GISDatasetRenderComponent = props => {
       const toSave = JSON.parse(JSON.stringify(symbology));
 
       layers.forEach(({ id, type }) => {
-        toSave[id][`${ type }-color`][activeVar].settings = {
+        set(toSave, `${id}.${type}-color.${activeVar}.settings`, {
           ...rest
-        }
+        });
+        // toSave[id][`${ type }-color`][activeVar].settings = {
+        //   ...rest
+        // }
       });
 
 console.log("SAVING SYM:", toSave)
@@ -308,54 +312,56 @@ console.log("SAVING SYM:", toSave)
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "")
             || get(symbology, `[${layer_id}][${paintProperty}][default]`, "");
 
+            
+            // ----------- TIG -----------
+            let { value, settings } = sym;
+            
+            if (!value && settings) {
+              const { type, domain, range, data } = settings;
+              const scale = getScale(type, domain, range);
+            
+              const colors = data.reduce((a, c) => {
+                a[c.id] = scale(c.value);
+                return a;
+              }, {});
+            
+              value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
+            }
 
-            // ----------- New -----------
-            // let { value, settings } = sym;
-            //
-            // if (!value && settings) {
-            //   const { type, domain, range, data } = settings;
-            //   const scale = getScale(type, domain, range);
-            //
-            //   const colors = data.reduce((a, c) => {
-            //     a[c.id] = scale(c.value);
-            //     return a;
-            //   }, {});
-            //
-            //   value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
-            // }
-
-            // if(maplibreMap.getLayer(layer_id)?.id) {
-            //   //console.log('calling create legend', sym.settings)
-            //   if(['visibility'].includes(paintProperty)) {
-            //     maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
-            //   } else {
-            //     maplibreMap.setPaintProperty(layer_id, paintProperty, value);
-            //   }
-            // }
-            // if(sym.settings) {
-            //   createLegend(sym.settings)
-            //
-            // }
-            // ----------- New -----------
+            if(maplibreMap.getLayer(layer_id)?.id) {
+              if(['visibility'].includes(paintProperty)) {
+                maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
+              } else {
+                maplibreMap.setPaintProperty(layer_id, paintProperty, value);
+              }
+            }
+            if(sym.settings) {
+              createLegend(sym.settings)
+            }
+            // ----------- END TIG -----------
 
           // --------- Old ------------
 
-          if (sym.settings && sym.value) {
-            createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty, value: sym.value });
-          }
-          else if (sym.settings) {
-            createLegend(sym.settings);
-            setLayerData({ layer_id, paintProperty });
-          }
-          else if (sym.value) {
-            setLegend(null);
-            setLayerData({ layer_id, paintProperty, value: sym.value });
-          }
-          else {
-            setLegend(null);
-            setLayerData(null);
-          }
+          // if (sym.settings && sym.value) {
+          //   console.log("Here 1");
+          //   createLegend(sym.settings);
+          //   setLayerData({ layer_id, paintProperty, value: sym.value });
+          // }
+          // else if (sym.settings) {
+          //   console.log("Here 2");
+          //   createLegend(sym.settings);
+          //   setLayerData({ layer_id, paintProperty });
+          // }
+          // else if (sym.value) {
+          //   console.log("Here 3");
+          //   setLegend(null);
+          //   setLayerData({ layer_id, paintProperty, value: sym.value });
+          // }
+          // else {
+          //   console.log("Here 4");
+          //   setLegend(null);
+          //   setLayerData(null);
+          // }
           // --------- Old ------------
         });
       });
@@ -396,7 +402,7 @@ console.log("SAVING SYM:", toSave)
 
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
-
+  
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
