@@ -12,19 +12,23 @@ export const editMetadata = async ({sourceId, pgEnv, falcor, metadata, setMetada
 
     await setMetadata(md);
 
-    await falcor.set({
-        paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "metadata"]], jsonGraph: {
-            dama: {
-                [pgEnv]: {
-                    sources: {
-                        byId: {
-                            [sourceId]: {
-                                attributes: {metadata: JSON.stringify(md)}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    })
+    // await falcor.set({
+    //     paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "metadata"]], jsonGraph: {
+    //         dama: {
+    //             [pgEnv]: {
+    //                 sources: {
+    //                     byId: {
+    //                         [sourceId]: {
+    //                             attributes: { metadata: { columns:JSON.stringify(md) } }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // })
+    await falcor.call(
+      ["dama", "sources", "metadata", "update"],
+      [pgEnv, sourceId, { columns: md }]
+    )
 }

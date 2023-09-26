@@ -8,12 +8,12 @@ import { DamaContext } from "../../../store";
 const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, 
                               viewPAFPD = {}, viewIHP = {}, 
                               viewDDS = {}, viewSBA = {}, 
-                              viewNFIP = {}, viewUSDA = {}, viewHMGP = {}
+                              viewNFIP = {}, viewUSDA = {}
                           }) => {
     const viewMetadata = [
         viewPAFPD.view_id, viewIHP.view_id,
         viewDDS.view_id, viewSBA.view_id,
-        viewNFIP.view_id, viewUSDA.view_id, viewHMGP.view_id
+        viewNFIP.view_id, viewUSDA.view_id
     ];
 
     const url = new URL(
@@ -46,9 +46,6 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate,
     url.searchParams.append("usda_table", viewUSDA.table_name);
     url.searchParams.append("usda_schema", viewUSDA.table_schema);
 
-    url.searchParams.append("hmgp_table", viewHMGP.table_name);
-    url.searchParams.append("hmgp_schema", viewHMGP.table_schema);
-
     const stgLyrDataRes = await fetch(url);
 
     await checkApiResponse(stgLyrDataRes);
@@ -73,7 +70,6 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const [viewSBA, setViewSBA] = React.useState();
     const [viewNFIP, setViewNFIP] = React.useState();
     const [viewUSDA, setViewUSDA] = React.useState();
-    const [viewHMGP , setViewHMGP] = React.useState();
     // all versions
     const [versionsPAFPD, setVersionsPAFPD] = React.useState({sources:[], views: []});
     const [versionsIHP, setVersionsIHP] = React.useState({sources:[], views: []});
@@ -81,19 +77,17 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const [versionsSBA, setVersionsSBA] = React.useState({sources:[], views: []});
     const [versionsNFIP, setVersionsNFIP] = React.useState({sources:[], views: []});
     const [versionsUSDA, setVersionsUSDA] = React.useState({sources:[], views: []});
-    const [versionsHMGP, setVersionsHMGP] = React.useState({sources:[], views: []});
 
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
     React.useEffect(() => {
         async function fetchData() {
-            await getSrcViews({rtPfx, setVersions: setVersionsPAFPD, type: 'pa_funded_projects_enhanced'});
+            await getSrcViews({rtPfx, setVersions: setVersionsPAFPD, type: 'public_assistance_funded_projects_details_v1_enhanced'});
             await getSrcViews({rtPfx, setVersions: setVersionsIHP, type: 'individuals_and_households_program_valid_registrations_v1'});
             await getSrcViews({rtPfx, setVersions: setVersionsDDS, type: 'disaster_declarations_summaries_v2'});
             await getSrcViews({rtPfx, setVersions: setVersionsSBA, type: 'sba_disaster_loan_data_new'});
             await getSrcViews({rtPfx, setVersions: setVersionsNFIP, type: 'fima_nfip_claims_v1_enhanced'});
             await getSrcViews({rtPfx, setVersions: setVersionsUSDA, type: 'usda_crop_insurance_cause_of_loss_enhanced'});
-            await getSrcViews({rtPfx, setVersions: setVersionsHMGP, type: 'hazard_mitigation_assistance_projects_enhanced'});
         }
         fetchData();
     }, [rtPfx])
@@ -106,7 +100,6 @@ const Create = ({ source, newVersion, baseUrl }) => {
             {RenderVersions({value: viewSBA, setValue: setViewSBA, versions: versionsSBA, type: 'SBA Loan Data'})}
             {RenderVersions({value: viewNFIP, setValue: setViewNFIP, versions: versionsNFIP, type: 'NFIP Claims Enhanced'})}
             {RenderVersions({value: viewUSDA, setValue: setViewUSDA, versions: versionsUSDA, type: 'USDA Crop Loss Enhanced'})}
-            {RenderVersions({value: viewHMGP, setValue: setViewHMGP, versions: versionsHMGP, type: 'HMGP Projects Enhanced'})}
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() =>
@@ -118,7 +111,6 @@ const Create = ({ source, newVersion, baseUrl }) => {
                             viewSBA: versionsSBA.views.find(v => v.view_id === parseInt(viewSBA)),
                             viewNFIP: versionsNFIP.views.find(v => v.view_id === parseInt(viewNFIP)),
                             viewUSDA: versionsUSDA.views.find(v => v.view_id === parseInt(viewUSDA)),
-                            viewHMGP: versionsHMGP.views.find(v => v.view_id === parseInt(viewHMGP)),
                             navigate
                         })}>
                 Add New Source

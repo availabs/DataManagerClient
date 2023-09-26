@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 
 import { DamaContext } from "../../../store";
 import {RenderVersions} from "../../../utils/macros.jsx";
-const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewPa}) => {
-    const viewMetadata = [viewPa.view_id];
+const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewPa, viewDDS}) => {
+    const viewMetadata = [viewPa.view_id, viewDDS.view_id];
 
 
     const url = new URL(
@@ -22,6 +22,7 @@ const CallServer = async ({rtPfx, baseUrl, source, newVersion, navigate, viewPa}
 
     url.searchParams.append("ofd_schema", viewPa.table_schema);
     url.searchParams.append("pa_table", viewPa.table_name);
+    url.searchParams.append("dds_table", viewDDS.table_name);
 
     const stgLyrDataRes = await fetch(url);
 
@@ -40,11 +41,15 @@ const Create = ({ source, newVersion, baseUrl }) => {
     const rtPfx = getDamaApiRoutePrefix(pgEnv);
 
     const [viewPa, setViewPa] = useState();
+    const [viewDDS, setViewDDS] = useState();
+
     const [versionsPa, setVersionsPa] = React.useState({sources:[], views: []});
+    const [versionsDDS, setVersionsDDS] = React.useState({sources:[], views: []});
 
     React.useEffect(() => {
         async function fetchData() {
             await getSrcViews({rtPfx, setVersions: setVersionsPa,  type: 'public_assistance_funded_projects_details_v1'});
+            await getSrcViews({rtPfx, setVersions: setVersionsDDS,  type: 'disaster_declarations_summaries_v2'});
         }
         fetchData();
     }, [rtPfx])
@@ -52,12 +57,15 @@ const Create = ({ source, newVersion, baseUrl }) => {
     return (
         <div className='w-full'>
             {RenderVersions({value: viewPa, setValue: setViewPa, versions: versionsPa, type: 'PA'})}
+            {RenderVersions({value: viewDDS, setValue: setViewDDS, versions: versionsDDS, type: 'Disaster Declarations Summary'})}
+
             <button
                 className={`align-right p-2 border-2 border-gray-200`}
                 onClick={() => CallServer({
                 rtPfx, baseUrl, source, newVersion, navigate,
                     viewPa: versionsPa.views.find(v => v.view_id === parseInt(viewPa)),
-            })}> Add New Source</button>
+                    viewDDS: versionsDDS.views.find(v => v.view_id === parseInt(viewDDS)),
+                })}> Add New Source</button>
         </div>
     )
 }
