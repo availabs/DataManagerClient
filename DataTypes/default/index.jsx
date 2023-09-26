@@ -41,7 +41,7 @@ const Pages = {
     },
     meta_basic: {
         name: "Metadata",
-        path: "/meta_basic",
+        path: "/meta",
         hidden: false,
         component: MetadataBasic,
     },

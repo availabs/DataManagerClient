@@ -262,6 +262,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
 
+  console.log('SYMBOLOGY', tempSymbology)
+
   return (
     <div>
       {/*<div className='flex'>
