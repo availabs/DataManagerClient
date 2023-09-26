@@ -288,6 +288,11 @@ const Stats = ({source, views}) => {
                     sortType: (a, b) => {
                         return new Date(b.values.date) - new Date(a.values.date);
                     }
+                },
+                Cell: cell => {
+                    const textCols = ['incident_type', 'declaration_title', 'date', 'wds_disaster_number', 'disaster_number', 'nri_category', 'fema_incident_type']
+                    const value = textCols.includes(col) ? cell.value : fnumIndex(cell.value || 0, true);
+                    return <div>{value}</div>
                 }
             }))
     console.log('fusionVdDds', fusionVsDds)
