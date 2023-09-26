@@ -283,7 +283,12 @@ const Stats = ({source, views}) => {
         Object.keys(fusionVsDds[0] || {})
             .map(col => ({
                 Header: col.replaceAll('_', ' '),
-                accessor: col
+                accessor: col,
+                ... col === 'date' && {
+                    sortType: (a, b) => {
+                        return new Date(b.values.date) - new Date(a.values.date);
+                    }
+                }
             }))
     console.log('fusionVdDds', fusionVsDds)
     return (
@@ -315,7 +320,9 @@ const Stats = ({source, views}) => {
                 <Table
                     data={fusionVsDds}
                     columns={fusionVsDdsCols}
-                    pageSize={10}
+                    pageSize={80}
+                    sortBy={'date'}
+                    sortOrder={'desc'}
                 />
             </div>
             {/*<div className={`pt-4`}>*/}
