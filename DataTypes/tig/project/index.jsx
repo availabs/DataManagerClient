@@ -1,15 +1,17 @@
-import React from 'react'
+import React, {useMemo} from 'react'
 import MapPage from "../../gis_dataset/pages/Map";
 import CreatePage from "../../gis_dataset/pages/Create";
 import Table from "../../gis_dataset/pages/Table";
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
+import { Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 
 import { Combobox } from '@headlessui/react'
 
 import ProjectHoverComp from './MapHoverComp'
 
+import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
 import { DamaContext } from "~/pages/DataManager/store"
 import Selector from './Selector'
 // import Uploads from "./pages/Uploads";
@@ -143,8 +145,15 @@ const ProjectMapFilter = ({
     activeViewId,
     layer
   }) => { 
-
+  
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext)
+  let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
+  let year = useMemo(
+    () => (typeof activeVar === "string" ? activeVar.slice(-1) : "0"),
+    [activeVar]
+  );
+
+  console.log("what is the value of the activeVar: ", activeVar);
 
   let projectKey = (source?.metadata || []).map(d => d.name).includes('rtp_id') ? 'rtp_id' : 'tip_id'
   let newSymbology  = cloneDeep(tempSymbology)
@@ -166,7 +175,7 @@ const ProjectMapFilter = ({
         activeViewId,
         'databyIndex',
         [...Array(length).keys()],
-        ['ogc_fid',projectKey,'wkb_geometry']
+        ['ogc_fid',projectKey,'mpo', 'sponsor', 'ptype', 'wkb_geometry']
       ])
     
     }
@@ -181,11 +190,67 @@ const ProjectMapFilter = ({
     return {
       [projectKey] :  ['', ...new Set(Object.values(dataById || {})
         .map(d => d?.[projectKey] )
-        .filter(d => d))]
+        .filter(d => d))],
+      'mpos' : Object.values(dataById || {})
+        .reduce((out,curr) => {
+          if(!out.includes(curr.mpo)){
+            out.push(curr.mpo)
+          }
+          return out
+        },['']),
+      'sponsors' : Object.values(dataById || {})
+      .reduce((out,curr) => {
+        if(!out.includes(curr.sponsor)){
+          out.push(curr.sponsor)
+        }
+        return out
+      },['']),
+      'ptypes' : Object.values(dataById || {})
+        .reduce((out,curr) => {
+          if(!out.includes(curr.ptype)){
+            out.push(curr.ptype)
+          }
+          return out
+        },[''])
     }
   },[falcorCache])
-      
-  console.log(filterData)
+
+  React.useEffect(() => {
+    const dataById = get(falcorCache,
+      ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'],
+    {})
+    
+    const keys = Object.keys(dataById);
+    const shownData = keys.reduce((acc, key) => {
+      let currentData = dataById[key];
+
+      if(filters[projectKey] && dataById[key].tip_id != filters[projectKey]) {
+        currentData = null;
+      }
+
+      if(filters['mpo'] && dataById[key].mpo != filters['mpo']) {
+        currentData = null;
+      }
+
+      if(filters['sponsor'] && dataById[key].sponsor != filters['sponsor']) {
+        currentData = null;
+      }
+
+      if(filters['ptype'] && dataById[key].ptype != filters['ptype']) {
+        currentData = null;
+      }
+
+      if(currentData) {
+        acc.push(currentData);
+      }
+
+      return acc;
+    }, []);
+    // filter this down to array of values which 
+    // match data in filter object
+    
+    console.log('Num Values: ' + Object.values(shownData).length);
+  },[filters, falcorCache])
 
   if(!newSymbology?.source) {
     newSymbology.sources = metaData?.tiles?.sources || []
@@ -214,16 +279,122 @@ const ProjectMapFilter = ({
 
 
   return (
-    <div>
-      <Selector 
-        onChange={() => console.log('changed')} 
-        options={filterData[projectKey]}
-      />
+    <div style={{display:"flex"}}>
+      <div>
+        <Selector 
+          onChange={(v) => setFilters({...filters, [projectKey]: v })} 
+          options={filterData[projectKey]}
+        />
+      </div>
+      <div style={{display:"flex"}}>
+        <span className="align-middle">Mpo:</span> 
+        <Selector 
+          onChange={(v) => setFilters({...filters, ['mpo']: v })} 
+          options={filterData['mpos']}
+        />
+      </div>
+      <div style={{display:"flex"}}>
+        <span className="align-middle">Sponsor:</span> 
+        <Selector 
+          onChange={(v) => setFilters({...filters, ['sponsor']: v })} 
+          options={filterData['sponsors']}
+        />
+      </div>
+      <div style={{display:"flex"}}>
+        <span className="align-middle">Ptype:</span> 
+        <Selector 
+          onChange={(v) => setFilters({...filters, ['ptype']: v })} 
+          options={filterData['ptypes']}
+        />
+      </div>
+      <div>
+        <MapDataDownloader
+          activeViewId={ activeViewId }
+          year={ get(metaData, ["years", year]) }/>
+      </div>
     </div>
   )
-
-
 }
+
+const MapDataDownloader = ({ activeViewId, year }) => {
+  
+  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
+
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    
+    const loadData = async () => {
+      await falcor.chunk([
+        'dama',
+        pgEnv,
+        'viewsbyId',
+        activeViewId,
+        'databyIndex',
+        [...Array(length).keys()],
+        ['ogc_fid',projectKey,'mpo', 'sponsor', 'ptype', 'wkb_geometry']
+      ]);
+    }
+
+    loadData();
+
+    setLoading(true);
+
+    if (!(pgEnv && activeViewId)) return;
+  }, [falcor, pgEnv, activeViewId]);
+
+  const data = get(falcorCache,
+    ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'],
+  {})
+
+  
+  const downloadData = React.useCallback(() => {
+    // const length = get(falcorCache, ['dama', pgEnv, 'viewsbyId', activeViewId, 'data', 'length'], 0);
+    // const path = ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"];
+    // const collection = {
+    //   type: "FeatureCollection",
+    //   features: d3range(0, length).map(id => {
+    //     const data = get(falcorCache, [...path, id], {});
+    //     console.log("what is the value of data: ", data);
+    //     const value = get(data, null);
+    //     const county = get(data, "county", "unknown");
+    //     const geom = get(data, "wkb_geometry", "");
+    //     console.log('geom', geom, data)
+    //     return {
+    //       type: "Feature",
+    //       properties: {
+    //         [variable]: value,
+    //         county,
+    //         year
+    //       },
+    //       geometry: JSON.parse(geom)
+    //     }
+    //   })
+    // }
+    // const options = {
+    //   folder: "shapefiles",
+    //   file: variable,
+    //   types: {
+    //     point: 'points',
+    //     polygon: 'polygons',
+    //     line: 'lines'
+    //   }
+    // }
+    // shpDownload(collection, options);
+  }, [falcorCache, pgEnv, activeViewId, year]);
+
+  return (
+    <div>
+      <Button themeOptions={{size:'sm', color: 'primary'}}
+        onClick={ downloadData }
+        disabled={ loading }
+      >
+        Download
+      </Button>
+    </div>
+  )
+}
+
 
 const GisDatasetConfig = {
   map: {

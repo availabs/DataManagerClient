@@ -7,8 +7,7 @@ const TipHoverComp = ({ data, layer }) => {
 
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext)
   const id = React.useMemo(() => get(data, '[0]', null), [data])
-  let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
-
+  let activeVar = useMemo(() => get(filters, ""), [filters]);
   let getAttributes = typeof attributes?.[0] === 'string' ?
     attributes : attributes.map(d => d.name)
   //console.log('filters', filters , layer)
