@@ -168,7 +168,7 @@ const ProjectMapFilter = ({
       0)
 
           // console.log('length',length)
-      await falcor.chunk([
+      await falcor.get([
         'dama',
         pgEnv,
         'viewsbyId',
