@@ -2,14 +2,6 @@ import React, { useEffect, useMemo } from "react";
 import Select, { components } from "react-select";
 import makeAnimated from "react-select/animated";
 
-const ValueContainer = ({ children, ...props }) => {
-  const { getValue } = props;
-  return (
-    <components.ValueContainer {...props}>
-      {getValue().length} items selected
-    </components.ValueContainer>
-  );
-};
 const Option = (props) => {
   return (
     <div>
@@ -47,7 +39,6 @@ const MultiSelect = ({
       isMulti
       placeholder={"Variables"}
       components={{
-        // ValueContainer,
         Option,
         animatedComponents,
       }}

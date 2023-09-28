@@ -9,8 +9,6 @@ const TipHoverComp = ({ data, layer }) => {
   const id = React.useMemo(() => get(data, '[0]', null), [data])
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
 
-  //console.log('filters', filters , layer)
-
   React.useEffect(() => {
     falcor.get([
       'dama',
@@ -53,7 +51,6 @@ const TipHoverComp = ({ data, layer }) => {
     {col:'cost', name: 'Cost', display: d => d ? `$${d}M` : ''},
     
   ]
-
  
 
   return (

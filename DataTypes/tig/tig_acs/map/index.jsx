@@ -11,7 +11,7 @@ import {
   uniq,
 } from "lodash";
 
-import ckmeans from "../../../../utils/ckmeans";
+import ckmeans from "~/pages/DataManager/utils/ckmeans";
 import { getColorRange } from "~/modules/avl-components/src";
 import { useFalcor } from "~/modules/avl-components/src";
 import { DamaContext } from "~/pages/DataManager/store";
@@ -53,15 +53,22 @@ const ACSMapFilter = ({
     [geometry, viewYear]
   );
 
+  const metaYears = useMemo(
+    () => get(activeView, "metadata.years", []).sort(),
+    [activeView]
+  );
   let { counties = [], variables = [] } = useMemo(
     () => get(activeView, "metadata", {}),
     [activeView, activeViewId]
   );
 
-  const censusConfig = useMemo(
-    () =>
+  const [censusConfig, divisorKeys] = useMemo(
+    () => [
       (((variables || []).find((d) => d.label === activeVar) || {}).value || {})
         .censusKeys || [],
+      (((variables || []).find((d) => d.label === activeVar) || {}).value || {})
+        .divisorKeys || [],
+    ],
     [activeVar, variables]
   );
 
@@ -88,7 +95,7 @@ const ACSMapFilter = ({
   }, [pgEnv, activeViewId, activeView]);
 
   // ------ Updated -------
-  
+
   // const subGeoids = React.useMemo(async () => {
   //   async function getViewData() {
   //     falcor
@@ -210,11 +217,11 @@ const ACSMapFilter = ({
     async function getACSData() {
       const geoids = geometry === "county" ? counties : subGeoids;
       if (geoids.length > 0) {
-        falcor.chunk(["acs", geoids, year, censusConfig]);
+        falcor.chunk(["acs", geoids, year, [...censusConfig, ...divisorKeys]]);
       }
     }
     getACSData();
-  }, [counties, subGeoids, censusConfig, year, geometry]);
+  }, [counties, subGeoids, censusConfig, divisorKeys, year, geometry]);
 
   useEffect(() => {
     let geoids;
@@ -225,17 +232,56 @@ const ACSMapFilter = ({
     if (geometry === "county") geoids = counties;
     else if (geometry === "tract") geoids = subGeoids;
 
+    // -------- OLD --------
+    // const valueMap = (geoids || []).reduce((a, c) => {
+    //   let value = (censusConfig || []).reduce((aa, cc) => {
+    //     const v = get(falcorCache, ["acs", c, year, cc], -666666666);
+    //     if (v !== -666666666) {
+    //       aa += v;
+    //     }
+    //     return aa;
+    //   }, 0);
+    //   a[c] = value;
+    //   return a;
+    // }, {});
+    // -------- OLD --------
+
+    // -------- NEW --------
     const valueMap = (geoids || []).reduce((a, c) => {
-      let value = (censusConfig || []).reduce((aa, cc) => {
-        const v = get(falcorCache, ["acs", c, year, cc], -666666666);
-        if (v !== -666666666) {
-          aa += v;
+      let censusVal = 0,
+        divisorVal = 0,
+        censusFlag = false,
+        divisorFalg = false;
+      (censusConfig || []).forEach((cc) => {
+        const tmpVal = get(falcorCache, ["acs", c, year, cc], null);
+        if (tmpVal !== null) {
+          censusFlag = true;
+          censusVal += tmpVal;
         }
-        return aa;
-      }, 0);
-      a[c] = value;
+      });
+
+      let tempFlag = Boolean(divisorKeys.length);
+
+      if (tempFlag) {
+        if (divisorKeys.length > 0) {
+          (divisorKeys || []).forEach((cc) => {
+            const tmpVal = get(falcorCache, ["acs", c, year, cc], null);
+            if (tmpVal !== null) {
+              divisorFalg = true;
+              divisorVal += tmpVal;
+            }
+          });
+        }
+      }
+
+      if (tempFlag) {
+        a[c] = divisorFalg ? Math.round((censusVal / divisorVal) * 100) : null;
+      } else {
+        a[c] = censusFlag ? censusVal : null;
+      }
       return a;
     }, {});
+    // -------- NEW --------
 
     const ckmeansLen = Math.min((Object.values(valueMap) || []).length, 5);
     const values = Object.values(valueMap || {});
@@ -279,7 +325,7 @@ const ACSMapFilter = ({
       (newSymbology?.layers || []).forEach((l) => {
         unset(newSymbology, `${l?.id}`);
         // set(newSymbology, `${l?.id}.visibility.default.value`, "none");
-        set(newSymbology, `${l?.id}.fill-color.default.value`, 'rgba(0,0,0,0)');
+        set(newSymbology, `${l?.id}.fill-color.default.value`, "rgba(0,0,0,0)");
         // set(newSymbology, `${l?.id}.visibility.default.`, "none");
       });
 
@@ -302,6 +348,7 @@ const ACSMapFilter = ({
     activeLayerId,
     activeViewId,
     censusConfig,
+    divisorKeys,
     falcorCache,
     activeView,
     subGeoids,
@@ -367,7 +414,7 @@ const ACSMapFilter = ({
             });
           }}
         >
-          {(yearRange || []).map((k, i) => (
+          {(metaYears || []).map((k, i) => (
             <option key={i} className="ml-2 truncate" value={k}>
               {`${k}`}
             </option>

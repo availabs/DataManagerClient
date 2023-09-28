@@ -151,6 +151,15 @@ const TablePage = ({
     [tableData, attributes, transform, filters, years, source]
   );
 
+  const [sortBy, sortOrder] = React.useMemo(() => {
+    const col =  columns.filter(d => d.sortBy)?.[0]
+    console.log('the col', col)
+    return [col?.accessor || '', col?.sortBy || 'asc']
+  },[columns])
+  
+
+  console.log('sort', sortBy, columns)
+
   return (
     <div>
       <div className="flex">
@@ -160,7 +169,13 @@ const TablePage = ({
         <ViewSelector views={views} />
       </div>
       <div className="max-w-6xl">
-        <Table data={data} columns={columns} pageSize={50} />
+        <Table 
+          data={data} 
+          columns={columns} 
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          pageSize={50} 
+        />
         {/* <pre>
           {JSON.stringify(attributes,null,3)}
         </pre>*/}

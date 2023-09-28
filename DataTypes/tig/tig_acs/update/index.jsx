@@ -16,6 +16,9 @@ import {
   getAttributes,
 } from "../../../../components/attributes";
 
+import ACSVariableUpdate from "./variables";
+import ACSYearsUpdate from "./years";
+
 const Update = (props) => {
   const { falcor, falcorCache } = useFalcor();
   const navigate = useNavigate();
@@ -205,20 +208,17 @@ const Update = (props) => {
               options={viewOptions}
               setSelecteOptions={setSelecteView}
             />
-            <p className="text-gray-600 text-xs italic">Select View</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap -mx-3 mb-6">
-          <div className="w-full px-3">
-            <label
-              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-              for="grid-years"
-            >
-              Years
-            </label>
+        <label
+          className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+          for="grid-years"
+        >
+          Years
+        </label>
 
-            <MultiSelect
+        {/* <MultiSelect
               value={(selectedYears || [])
                 ?.map((values) =>
                   (yearsOptions || []).find(
@@ -239,19 +239,21 @@ const Update = (props) => {
 
             <p className="text-gray-600 text-xs italic">
               Select Years for the view
-            </p>
-          </div>
-        </div>
+            </p> */}
+      </div>
 
-        <div className="flex flex-wrap -mx-3 mb-6">
-          <div className="w-full px-3">
-            <label
-              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-              htmlFor="grid-counties"
-            >
-              Variables
-            </label>
-            <MultiSelect
+      <div className="flex-wrap">
+        <ACSYearsUpdate years={selectedYears} setYears={setSelectedYears} />
+      </div>
+
+      <div className="w-full max-w-lg mt-7">
+        <label
+          className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+          htmlFor="grid-counties"
+        >
+          Variables
+        </label>
+        {/* <MultiSelect
               value={selectedVariables || []}
               closeMenuOnSelect={false}
               options={[]}
@@ -263,12 +265,16 @@ const Update = (props) => {
             />
             <p className="text-gray-600 text-xs italic">
               Select Variables for the view
-            </p>
-          </div>
-        </div>
+            </p> */}
       </div>
 
-      <ACSCustomVariables addNewVariable={addNewVariable} />
+      <div className="flex-wrap">
+        <ACSVariableUpdate
+          variables={selectedVariables}
+          setVariables={setSelecteVariableOptions}
+        />
+      </div>
+      {/* <ACSCustomVariables addNewVariable={addNewVariable} /> */}
 
       <div className="mt-6 mb-6">
         <Button
@@ -282,14 +288,17 @@ const Update = (props) => {
                 years: selectedYears,
               })
             );
-            runScript({
-              ...selectedView,
-              metadata: Object.assign({}, metadata, {
-                variables: selectedVariables,
-                years: selectedYears,
-              }),
-              viewDependency,
-            }, navigate);
+            runScript(
+              {
+                ...selectedView,
+                metadata: Object.assign({}, metadata, {
+                  variables: selectedVariables,
+                  years: selectedYears,
+                }),
+                viewDependency,
+              },
+              navigate
+            );
           }}
         >
           {" "}

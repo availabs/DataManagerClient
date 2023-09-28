@@ -15,7 +15,21 @@ import { customRules } from "./sedCustomRules";
 import dbColsTaz from "./dbColsTaz.json";
 import dbColsCounty from "./dbColsCounty.json";
 // import { getAttributes } from '~/pages/DataManager/components/attributes'
-import TigSedOverview from "./TigSedOverview"
+import TigOverview from "../TigOverview"
+
+import { sedVars, sedVarsCounty } from "./sedCustom"
+
+const getVariables = (type) =>  
+  {
+    let vardata = type === 'tig_sed_taz' ?  sedVars : sedVarsCounty
+    return Object.keys(vardata)
+    .map(key => ({
+      key,
+      name: vardata[key].name
+    }))
+}
+
+
 
 
 export const tig_sed_taz = {
@@ -23,7 +37,7 @@ export const tig_sed_taz = {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedOverview
+    component: (props) => <TigOverview {...props} getVariables={getVariables}/>
   },
   map: {
     name: "Map",
@@ -96,7 +110,7 @@ export const tig_sed_county = {
     name: "Overview",
     path: "",
     tag: 'test',
-    component: TigSedOverview
+    component: (props) => <TigOverview {...props} getVariables={getVariables}/>
   },
   map: {
     name: "Map",

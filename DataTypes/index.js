@@ -9,7 +9,6 @@ import freight_atlas_shapefile from "./freight_atlas_shapefile";
 import gis_dataset from "./gis_dataset";
 import csv_dataset from "./csv_dataset";
 
-
 // ---------------------------
 // ---- NPMRDS Types
 // ---------------------------
@@ -27,6 +26,7 @@ import csv_dataset from "./csv_dataset";
 // ---- Hazard Mitigation Types
 // ---------------------------
 import disaster_declarations_summaries_v2 from "./hazard_mitigation/disaster_declarations_summaries_v2";
+import fema_web_disaster_summaries_v1 from "./hazard_mitigation/fema_web_disaster_summaries_v1/index.jsx";
 import fima_nfip_claims_v1 from "./hazard_mitigation/fema_nfip_claims_v1";
 import fima_nfip_claims_v1_enhanced from "./hazard_mitigation/fema_nfip_claims_v1_enhanced";
 import individuals_and_households_program_valid_registrations_v1
@@ -69,14 +69,14 @@ import tiger_counties from './tig/tiger_counties'
 import tiger_censustrack from './tig/tiger_censustrack'
 import tig_acs from './tig/tig_acs'
 import tig_bpm_perfomance_measures from './tig/bpm_performance_measures'
+import upwp_projects from './tig/upwp_projects';
 import tig_project from './tig/project'
 
 
-const DataTypes = {
+const damaDataTypes = {
   //freight_atlas_shapefile,
   gis_dataset,
   csv_dataset,
-
   // npmrds,
 
   // npmrds_travel_times_export_ritis,
@@ -98,13 +98,14 @@ const DataTypes = {
   ncei_storm_events_enhanced,
 
   //TIG
-  tig_sed_taz,
-  tig_sed_county,
-  tiger_counties,
-  tiger_censustrack,
-  tig_acs,
-  tig_bpm_perfomance_measures,
-  tig_project,
+  // tig_sed_taz,
+  // tig_sed_county,
+  // tiger_counties,
+  // tiger_censustrack,
+  // tig_acs,
+  // tig_bpm_perfomance_measures,
+  // tig_project,
+  // upwp_projects,
 
   // hazmit types: other data
   usda_crop_insurance_cause_of_loss,
@@ -115,6 +116,7 @@ const DataTypes = {
 
   // // hazmit types: open fema data types
   disaster_declarations_summaries_v2,
+  fema_web_disaster_summaries_v1,
   //fima_nfip_claims_v1,
   fima_nfip_claims_v1_enhanced,
   individuals_and_households_program_valid_registrations_v1,
@@ -137,4 +139,9 @@ const DataTypes = {
 
 };
 
-export { DataTypes, Pages };
+function registerDataType (name, dataType) {
+  damaDataTypes[name] = dataType
+}
+
+export { damaDataTypes, Pages, registerDataType };
+
