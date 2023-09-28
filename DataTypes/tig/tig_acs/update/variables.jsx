@@ -7,17 +7,19 @@ const ACSVariableUpdate = (props) => {
   const { variables = [], setVariables } = props;
 
   const setAddNewVariable = () => {
-    const newVariable = {
-      lable: currentVariable,
-      value: {
-        name: currentVariable,
-        censusKeys: "",
-        divisorKeys: "",
-      },
-    };
-    const tempVars = [...variables, newVariable];
-    setVariables(tempVars);
-    setCurrentVarialble(null);
+    if (currentVariable) {
+      const newVariable = {
+        lable: currentVariable,
+        value: {
+          name: currentVariable,
+          censusKeys: "",
+          divisorKeys: "",
+        },
+      };
+      const tempVars = [...variables, newVariable];
+      setVariables(tempVars);
+      setCurrentVarialble(null);
+    }
   };
 
   const setDeleteColumn = (ind) => {
@@ -45,23 +47,23 @@ const ACSVariableUpdate = (props) => {
       >
         Add a new Variable{" "}
       </button>
-      <div class="flex flex-col p-5 m-3">
+      <div class="flex flex-col px-5 mx-3">
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
             <div class="overflow-hidden">
               <table class="min-w-full text-left text-sm font-light">
                 <thead class="border-b font-medium ">
                   <tr>
-                    <th scope="col" class="px-6 py-4">
+                    <th scope="col" class="p-3">
                       Name
                     </th>
-                    <th scope="col" class="px-6 py-4">
+                    <th scope="col" class="p-3">
                       Census Keys
                     </th>
-                    <th scope="col" class="px-6 py-4">
+                    <th scope="col" class="p-3">
                       Divisor Keys
                     </th>
-                    <th scope="col" class="px-6 py-4">
+                    <th scope="col" class="p-3">
                       Delete
                     </th>
                   </tr>
@@ -70,10 +72,10 @@ const ACSVariableUpdate = (props) => {
                   {variables && variables.length > 0 ? (
                     variables.map((v, i) => (
                       <tr class="transition duration-300 ease-in-out ">
-                        <td class="whitespace-nowrap px-6 py-4 font-medium">
+                        <td class="whitespace-nowrap p-3 font-medium">
                           {v?.value?.name || ""}
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4">
+                        <td class="whitespace-nowrap p-3">
                           <Input
                             type="text"
                             className="p-2 m-2 flex-1 shadow bg-grey-50 focus:bg-blue-100 border-gray-300"

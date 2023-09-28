@@ -14,8 +14,10 @@ const ACSYearsUpdate = (props) => {
   }, [years, yearsOptions]);
 
   const setAddNewYear = () => {
-    const tempYears = [...years, currentYear];
-    setYears(tempYears);
+    if (currentYear) {
+      const tempYears = [...years, currentYear];
+      setYears(tempYears);
+    }
   };
 
   const setDeleteColumn = (ind) => {
@@ -26,6 +28,8 @@ const ACSYearsUpdate = (props) => {
   useEffect(() => {
     if (diffrence && diffrence.length) {
       setCurrentYear(diffrence[0]);
+    } else {
+      setCurrentYear(null);
     }
   }, [diffrence]);
 
@@ -61,9 +65,17 @@ const ACSYearsUpdate = (props) => {
         ) : null}
       </select>
 
+
+      {/* {!currentYear ? (
+        <span className="text-rose-800">
+          {"Years not available for Selection"}
+        </span>
+      ) : null} */}
+
       <button
         onClick={() => setAddNewYear()}
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4"
+        disabled={Boolean(!currentYear)}
       >
         Add a new year{" "}
       </button>
