@@ -11,7 +11,7 @@ import {
   uniq,
 } from "lodash";
 
-import ckmeans from "../../../../utils/ckmeans";
+import ckmeans from "~/pages/DataManager/utils/ckmeans";
 import { getColorRange } from "~/modules/avl-components/src";
 import { useFalcor } from "~/modules/avl-components/src";
 import { DamaContext } from "~/pages/DataManager/store";
