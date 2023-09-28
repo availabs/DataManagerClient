@@ -61,7 +61,7 @@ export const ACSCustomVariables = ({ addNewVariable }) => {
         disabled={!isInputValid}
         className="bg-blue-500 hover:bg-blue-700 disabled:opacity-25 text-white font-bold py-2 px-4"
       >
-        Add a new Variable{" "}
+        Add a new Variable {" "}
       </button>
     </>
   );
