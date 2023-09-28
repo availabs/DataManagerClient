@@ -174,7 +174,9 @@ const SedMapFilter = ({
     }
   }, [activeVar, setFilters, searchVar]);
 
-  //console.log('mapFilter', metaData.years, activeVar)
+  console.log('mapFilter', metaData.years, activeVar)
+  console.log("what is the value of the var list: ", varList);
+  console.log("what is the vlaue of the filters: ", filters);
 
   return (
     <div className="flex flex-1 border-blue-100">
@@ -239,7 +241,8 @@ const SedMapFilter = ({
 };
 
 const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
-  
+  console.log("what are the values of activevar: ", activeVar, " and variable: ", variable, " and year: ", year);
+
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
   const [loading, setLoading] = React.useState(true);
@@ -307,6 +310,7 @@ const MapDataDownloader = ({ activeViewId, activeVar, variable, year }) => {
     </div>
   )
 }
+
 
 const SedTableFilter = ({ source, filters, setFilters, data, columns }) => {
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);

@@ -26,6 +26,7 @@ import csv_dataset from "./csv_dataset";
 // ---- Hazard Mitigation Types
 // ---------------------------
 import disaster_declarations_summaries_v2 from "./hazard_mitigation/disaster_declarations_summaries_v2";
+import fema_web_disaster_summaries_v1 from "./hazard_mitigation/fema_web_disaster_summaries_v1/index.jsx";
 import fima_nfip_claims_v1 from "./hazard_mitigation/fema_nfip_claims_v1";
 import fima_nfip_claims_v1_enhanced from "./hazard_mitigation/fema_nfip_claims_v1_enhanced";
 import individuals_and_households_program_valid_registrations_v1
@@ -115,6 +116,7 @@ const damaDataTypes = {
 
   // // hazmit types: open fema data types
   disaster_declarations_summaries_v2,
+  fema_web_disaster_summaries_v1,
   //fima_nfip_claims_v1,
   fima_nfip_claims_v1_enhanced,
   individuals_and_households_program_valid_registrations_v1,

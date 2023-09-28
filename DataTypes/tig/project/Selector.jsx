@@ -17,8 +17,6 @@ export default function Example({options=[], onChange, selected}) {
             .includes(query.toLowerCase().replace(/\s+/g, ''))
         )
 
-  console.log('options', options)
-
   return (
     <div className="w-40 z-50">
       <Combobox value={selected} onChange={onChange}>

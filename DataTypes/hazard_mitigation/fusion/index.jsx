@@ -283,7 +283,17 @@ const Stats = ({source, views}) => {
         Object.keys(fusionVsDds[0] || {})
             .map(col => ({
                 Header: col.replaceAll('_', ' '),
-                accessor: col
+                accessor: col,
+                ... col === 'date' && {
+                    sortType: (a, b) => {
+                        return new Date(b.values.date) - new Date(a.values.date);
+                    }
+                },
+                Cell: cell => {
+                    const textCols = ['incident_type', 'declaration_title', 'date', 'wds_disaster_number', 'disaster_number', 'nri_category', 'fema_incident_type']
+                    const value = textCols.includes(col) ? cell.value : fnumIndex(cell.value || 0, true);
+                    return <div>{value}</div>
+                }
             }))
     console.log('fusionVdDds', fusionVsDds)
     return (
@@ -315,7 +325,9 @@ const Stats = ({source, views}) => {
                 <Table
                     data={fusionVsDds}
                     columns={fusionVsDdsCols}
-                    pageSize={10}
+                    pageSize={80}
+                    sortBy={'date'}
+                    sortOrder={'desc'}
                 />
             </div>
             {/*<div className={`pt-4`}>*/}
