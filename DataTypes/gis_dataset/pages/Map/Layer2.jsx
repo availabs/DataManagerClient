@@ -103,15 +103,20 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   )
 }
 
+const strictNaN = v => (v === null) || isNaN(v);
+const ordinalSort = (a, b) => {
+  return String(a).localeCompare(String(b));
+}
+
 const calcDomain = (type, data, length) => {
-  const values = data.map(d => +d.value);
+  const values = data.map(d => strictNaN(d.value) ? d.value : +d.value);
   switch (type) {
     case "quantize":
       return d3extent(values);
     case "threshold":
       return ckmeans(values.filter(Boolean), length ? length - 1 : 6);
     case "ordinal":
-      return [...new Set(values)];
+      return [...new Set(values)].sort(ordinalSort);
     default:
       return values;
   }
@@ -150,9 +155,6 @@ const GISDatasetRenderComponent = props => {
 
   const activeVar = get(filters, ["activeVar", "value"], "");
 
-// console.log("GISDatasetRenderComponent::symbology", symbology);
-// console.log("GISDatasetRenderComponent::layerProps", layerProps);
-
   const [legend, setLegend] = React.useState(null);
   const [layerData, setLayerData] = React.useState(null);
 
@@ -188,7 +190,7 @@ const GISDatasetRenderComponent = props => {
       legend.domain = calcDomain(type, data, range.length);
     }
     if (!range.length) {
-      legend.range = calcRange(type, domain.length, color, reverse);
+      legend.range = calcRange(type, legend.domain.length, color, reverse);
     }
 
     setLegend(legend);
@@ -216,8 +218,6 @@ const GISDatasetRenderComponent = props => {
           ...rest
         }
       });
-
-console.log("SAVING SYM:", toSave)
 
       falcor.call(
         ["dama", "sources", "metadata", "update"],
@@ -768,7 +768,7 @@ const RangeSizeSelector = ({ size, onChange }) => {
 }
 
 const LegendTypes = [
-  { value: "quantize", name: "Quantize" },
+  // { value: "quantize", name: "Quantize" },
   { value: "quantile", name: "Quantile" },
   { value: "threshold", name: "Threshold" },
   { value: "ordinal", name: "Ordinal" }

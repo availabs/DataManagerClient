@@ -88,7 +88,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [dataVariables, metaVariables]);
 
   const activeVar = get(filters, ["activeVar", "value"], "");
-  const varType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
+  const activeVarType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
 
   React.useEffect(() => {
     falcor.get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
@@ -130,11 +130,9 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
     const symbology = JSON.parse(JSON.stringify(get(source, ["metadata", "symbology"], {})));
 
-console.log("LOADING SYM:", symbology);
-
     const defaultSettings = {
       name: activeVar,
-      type: varType === "data-variable" ? 'threshold' : "ordinal",
+      type: activeVarType === "data-variable" ? 'threshold' : "ordinal",
       data
     }
 
@@ -159,7 +157,7 @@ console.log("LOADING SYM:", symbology);
 
     setTempSymbology(symbology);
 
-  }, [layer, data, setTempSymbology, activeVar, varType, source]);
+  }, [layer, data, setTempSymbology, activeVar, activeVarType, source]);
 
 
   return (
