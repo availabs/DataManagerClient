@@ -1,17 +1,12 @@
 import React from "react";
 
-import { DataManagerHeader, Header } from "./components/SourcesLayout";
-
+import { DataManagerHeader, Header } from "./Source/layout";
 import SourceList from "./Source/list";
 import SourceView from "./Source";
 import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
-// import { useFalcor } from '~/modules/avl-components/src'
-// import { withAuth } from '@availabs/ams'
-
-// import { useFalcor } from '~/modules/avl-falcor'
-// import { withAuth } from "~/modules/ams/src";
+import { registerDataType } from './DataTypes'
 
 import { DamaContext } from "./store"
 
@@ -22,6 +17,7 @@ const DamaRoutes = DAMA_ARGS => {
     defaultPgEnv = "pan",     // old position 1 arg
     auth = false,             // old position 2 arg
     components = {},
+    dataTypes = {},
     navSettings = {},
     useFalcor,
     useAuth
@@ -39,6 +35,9 @@ const DamaRoutes = DAMA_ARGS => {
     sideNav = { size: "none"},
     topNav = { size: "none" }
   } = navSettings
+
+  // register custom dataTypes for project
+  Object.keys(dataTypes).forEach(type => registerDataType(type,dataTypes[type]))
 
   const HeaderComp = () => {
     return (

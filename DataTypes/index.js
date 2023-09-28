@@ -72,11 +72,10 @@ import upwp_projects from './tig/upwp_projects';
 import tig_project from './tig/project'
 
 
-const DataTypes = {
+const damaDataTypes = {
   //freight_atlas_shapefile,
   gis_dataset,
   csv_dataset,
-  upwp_projects,
   // npmrds,
 
   // npmrds_travel_times_export_ritis,
@@ -98,13 +97,14 @@ const DataTypes = {
   ncei_storm_events_enhanced,
 
   //TIG
-  tig_sed_taz,
-  tig_sed_county,
-  tiger_counties,
-  tiger_censustrack,
-  tig_acs,
-  tig_bpm_perfomance_measures,
-  tig_project,
+  // tig_sed_taz,
+  // tig_sed_county,
+  // tiger_counties,
+  // tiger_censustrack,
+  // tig_acs,
+  // tig_bpm_perfomance_measures,
+  // tig_project,
+  // upwp_projects,
 
   // hazmit types: other data
   usda_crop_insurance_cause_of_loss,
@@ -137,4 +137,9 @@ const DataTypes = {
 
 };
 
-export { DataTypes, Pages };
+function registerDataType (name, dataType) {
+  damaDataTypes[name] = dataType
+}
+
+export { damaDataTypes, Pages, registerDataType };
+
