@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import Select, { components } from "react-select";
+import { Button } from "~/modules/avl-components/src";
+import download from "downloadjs"
 import makeAnimated from "react-select/animated";
 
 const Option = (props) => {
@@ -62,6 +64,8 @@ const AcsTableFilter = ({
   variables,
   years,
   geometries,
+  data,
+  columns,
   filters,
   setFilters,
   tableColumns,
@@ -90,6 +94,16 @@ const AcsTableFilter = ({
       });
     }
   }, []);
+
+  const downloadData = React.useCallback(() => {
+    const mapped = data.map(d => {
+      return columns.map(c => {
+        return d[c.accessor];
+      }).join(",")
+    })
+    mapped.unshift(columns.map(c => c.Header).join(","));
+    download(mapped.join("\n"), `${geometry_year}.csv`, "text/csv");
+  }, [data, columns]);
 
   return (
     <div className="flex flex-1 border-blue-100">
@@ -148,6 +162,11 @@ const AcsTableFilter = ({
           ))}
         </select>
       </div>
+      <Button themeOptions={{size:'sm', color: 'primary'}}
+          onClick={ downloadData }
+        >
+          Download
+        </Button>
     </div>
   );
 };
