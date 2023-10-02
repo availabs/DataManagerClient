@@ -62,6 +62,7 @@ const ACSMapFilter = ({
     [activeView, activeViewId]
   );
 
+  console.log('variables', variables)
   const [censusConfig, divisorKeys] = useMemo(
     () => [
       (((variables || []).find((d) => d.label === activeVar) || {}).value || {})
