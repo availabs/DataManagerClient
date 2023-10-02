@@ -394,7 +394,8 @@ const SedTableTransform = (tableData, attributes, filters, years,source) => {
   const columns = [
     {
       Header: source.type === 'tig_sed_county' ? "County" : "TAZ",
-      accessor: source.type === 'tig_sed_county' ? "county" : "taz"
+      accessor: source.type === 'tig_sed_county' ? "county" : "taz",
+      sortBy: 'asc'
     },
   ];
 
