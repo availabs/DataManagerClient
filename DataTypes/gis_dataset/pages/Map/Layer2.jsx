@@ -312,19 +312,19 @@ const GISDatasetRenderComponent = props => {
             get(symbology, `[${layer_id}][${paintProperty}][${activeVariable}]`, "")
             || get(symbology, `[${layer_id}][${paintProperty}][default]`, "");
 
-            
+
             // ----------- TIG -----------
             let { value, settings } = sym;
-            
+
             if (!value && settings) {
               const { type, domain, range, data } = settings;
               const scale = getScale(type, domain, range);
-            
+
               const colors = data.reduce((a, c) => {
                 a[c.id] = scale(c.value);
                 return a;
               }, {});
-            
+
               value = ["get", ["to-string", ["get", "geoid"]], ["literal", colors]];
             }
 
@@ -402,7 +402,7 @@ const GISDatasetRenderComponent = props => {
 
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
-  
+
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">

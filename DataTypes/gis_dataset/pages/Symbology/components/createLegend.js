@@ -5,16 +5,16 @@ import { getColorRange } from "~/modules/avl-map-2/src"
 
 import ckmeans from "~/pages/DataManager/utils/ckmeans";
 
-const strictNaN = v => (v === null) || isNaN(v);
+const strictNaN = v => (v === "") || (v === null) || isNaN(v);
 const ordinalSort = (a, b) => {
   return String(a).localeCompare(String(b));
 }
 
-const calcDomain = (type, data, length) => {
+export const calcDomain = (type, data, rangeLength) => {
   const values = data.map(d => strictNaN(d.value) ? d.value : +d.value);
   switch (type) {
     case "threshold": {
-      return ckmeans(values, length || 7).slice(1);
+      return ckmeans(values, rangeLength || 7).slice(1);
     }
     case "ordinal":
       return [...new Set(values)].sort(ordinalSort);
@@ -22,19 +22,22 @@ const calcDomain = (type, data, length) => {
       return values;
   }
 }
-const calcRange = (type, length, color, reverse) => {
+const calcRange = (type, domainLength, color, reverse) => {
   switch (type) {
     case "threshold":
-      return getColorRange(length ? length + 1 : 7, color, reverse);
+      return getColorRange(domainLength ? domainLength + 1 : 7, color, reverse);
     case "ordinal":
-      return getColorRange(Math.min(12, length), color, reverse);
+      return getColorRange(Math.min(12, domainLength), color, reverse);
     default:
       return getColorRange(7, color, reverse);
   }
 }
 
-const createLegend = (variable, data = []) => {
+export const createLegend = (variable, ppId, data = []) => {
   if (!data.length) {
+    return null;
+  }
+  if (!ppId.includes("color")) {
     return null;
   }
 
@@ -69,4 +72,3 @@ const createLegend = (variable, data = []) => {
 
   return legend;
 }
-export default createLegend;

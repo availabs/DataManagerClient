@@ -5,28 +5,37 @@ import isEqual from "lodash/isEqual"
 import { range as d3range } from "d3-array"
 
 import {
-  Legend,
   MultiLevelSelect,
   BooleanSlider,
   ColorRanges,
   ColorBar,
-  Input,
-  Button,
-  useTheme,
-  getScale,
-  useClickOutside
+  useTheme
 } from "~/modules/avl-map-2/src";
 
-const ColorEditor = ({ scale, updateScale, variableType }) => {
+import { calcDomain, createLegend } from "./createLegend"
+
+const ColorEditor = props => {
+
+  const {
+    variable,
+    updateScale,
+    variableType,
+    MapActions,
+    data
+  } = props
+
+  const {
+    scale
+  } = variable;
 
   const doUpdateScale = React.useCallback((key, value) => {
     if (typeof key === "string") {
-      updateScale({ ...scale, [key]: value });
+      updateScale({ [key]: value });
     }
     else if (typeof key === "object") {
-      updateScale({ ...scale, ...key });
+      updateScale({ ...key });
     }
-  }, [scale, updateScale]);
+  }, [updateScale]);
 
   const [reverseColors, setReverseColors] = React.useState(Boolean(scale.reverse));
 
@@ -71,6 +80,9 @@ const TypeSelector = ({ scaleType, updateScale, variableType }) => {
   const onChange = React.useCallback(t => {
     updateScale("type", t);
   }, [updateScale]);
+  const options = React.useMemo(() => {
+    return LegendTypes.filter(lt => lt.variableType === variableType);
+  }, [variableType]);
   return (
     <div className="grid grid-cols-2 gap-2">
       <div className="py-1 text-right">
@@ -79,7 +91,7 @@ const TypeSelector = ({ scaleType, updateScale, variableType }) => {
       <div>
         <MultiLevelSelect
           removable={ false }
-          options={ LegendTypes.filter(lt => lt.variableType === variableType) }
+          options={ options }
           displayAccessor={ t => t.name }
           valueAccessor={ t => t.value }
           onChange={ onChange }

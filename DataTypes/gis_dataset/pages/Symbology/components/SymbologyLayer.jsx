@@ -8,12 +8,57 @@ import { AvlLayer, getScale } from "~/modules/avl-map-2/src"
 
 import SymbologyInfoBox from "./SymbologyInfoBox"
 
-const SymbologyLayerRenderComponent = ({ maplibreMap, resourcesLoaded, ...props }) => {
+import { DAMA_HOST } from "~/config"
+
+const SymbologyLayerRenderComponent = props => {
+
+  const {
+    maplibreMap,
+    resourcesLoaded,
+    setLayerVisibility,
+    layer: avlLayer
+  } = props;
 
   const symbology = get(props, ["layerProps", "symbology"], null);
+  const activeViewId = get(props, ["layerProps", "activeViewId"], null);
+  const activeLayerId = get(props, ["layerProps", "activeLayerId"], null);
+  const activePaintProperty = get(props, ["layerProps", "activePaintProperty"], null);
 
-  const [activeViewId, setActiveViewId] = React.useState(null);
   const [variables, setVariables] = React.useState([]);
+
+  const activeView = React.useMemo(() => {
+    return get(symbology, "views", [])
+      .reduce((a, c) => {
+        return c.viewId === activeViewId ? c : a;
+      }, null)
+  }, [symbology, activeViewId]);
+  const activeLayer = React.useMemo(() => {
+    return get(activeView, "layers", [])
+      .reduce((a, c) => {
+        return c.layerId === activeLayerId ? c : a;
+      }, null);
+  }, [activeView, activeLayerId]);
+
+  React.useEffect(() => {
+    if (!symbology || !activeView) {
+      setVariables([]);
+      return;
+    }
+
+    const variables = activeView.layers.reduce((a, c) => {
+      return Object.keys(c.paintProperties)
+        .reduce((aa, cc) => {
+          const variable = get(c, ["paintProperties", cc, "variable"], null);
+          if (variable) {
+            aa.push(variable.variableId);
+          }
+          return aa;
+        }, a);
+    }, []);
+
+    setVariables(variables);
+
+  }, [symbology, activeView]);
 
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
@@ -42,64 +87,77 @@ const SymbologyLayerRenderComponent = ({ maplibreMap, resourcesLoaded, ...props 
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   React.useEffect(() => {
-    if (!symbology) return;
+    if (!maplibreMap) return;
+    if (!resourcesLoaded) return;
+    if (!activeLayer) return;
 
-    const [view] = symbology.views;
-    setActiveViewId(view.viewId);
+    avlLayer.layers.forEach(layer => {
+      const defaultPaint = { ...get(layer, "paint", {}) };
 
-    const variables = [];
+      if (layer.id === activeLayer.layerId) {
+        Object.keys(activeLayer.paintProperties)
+          .forEach(ppId => {
 
-    view.layers.forEach(layer => {
-      Object.keys(layer.paintProperties || {})
+            const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
+
+            const {
+              valueExpression,
+              paintExpression,
+              variable
+            } = paintProperty;
+
+            if (valueExpression) {
+              delete defaultPaint[ppId];
+console.log("SymbologyLayerRenderComponent::valueExpression", valueExpression);
+            }
+            else if (paintExpression) {
+              delete defaultPaint[ppId];
+console.log("SymbologyLayerRenderComponent::paintExpression", paintExpression);
+            }
+            else if (variable) {
+              delete defaultPaint[ppId];
+console.log("SymbologyLayerRenderComponent::variable", variable);
+              if (maplibreMap.getLayer(activeLayer.layerId)) {
+
+                const { type, domain, range } = variable.scale;
+
+                const scale = getScale(type, domain, range);
+
+                const dataById = getDataById();
+
+                const dataMap = Object.keys(dataById)
+                  .reduce((a, c) => {
+                    const value = get(dataById, [c, variable.variableId], null);
+                    if ((value !== 'null') && (value !== null)) {
+                      a[c] = scale(value);
+                    }
+                    return a;
+                  }, {});
+
+                const exp = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", dataMap]];
+
+                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, exp);
+              }
+            }
+          })
+        setLayerVisibility(activeLayer.layerId, "visible");
+      }
+      else {
+        setLayerVisibility(layer.id, "none");
+      }
+
+      Object.keys(defaultPaint)
         .forEach(ppId => {
-          const variable = get(layer, ["paintProperties", ppId, "variable"], null);
-          if (variable) {
-            variables.push(variable.variableId);
-            const scale = get(variable,"scale", null);
+          if (maplibreMap.getLayer(layer.id)) {
+            maplibreMap.setPaintProperty(layer.id, ppId, defaultPaint[ppId]);
           }
         })
     });
 
-    setVariables(variables);
-  }, [symbology]);
-
-  React.useEffect(() => {
-    if (!symbology) return;
-    if (!maplibreMap) return;
-    if (!resourcesLoaded) return;
-
-    symbology.views.forEach(view => {
-      if (view.viewId !== activeViewId) return;
-
-      view.layers.forEach(layer => {
-        Object.keys(layer.paintProperties)
-          .forEach(ppId => {
-            const variable = get(layer, ["paintProperties", ppId, "variable"], null);
-            if (variable) {
-              const { type, domain, range } = variable.scale;
-
-              const scale = getScale(type, domain, range);
-
-              const dataById = getDataById();
-
-              const colors = Object.keys(dataById)
-                .reduce((a, c) => {
-                  const value = get(dataById, [c, variable.variableId], null);
-                  if ((value !== 'null') && (value !== null)) {
-                    a[c] = scale(value);
-                  }
-                  return a;
-                }, {});
-
-              const exp = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", colors]];
-              maplibreMap.setPaintProperty(layer.layerId, ppId, exp);
-              maplibreMap.setLayoutProperty(layer.layerId, "visibility", "visible");
-            }
-          })
-      })
-    })
-
-  }, [maplibreMap, resourcesLoaded, symbology, activeViewId, getDataById])
+  }, [maplibreMap, resourcesLoaded, activeLayer,
+      getDataById, setLayerVisibility, avlLayer
+    ]
+  )
 
   return null;
 }
@@ -113,6 +171,21 @@ const SymbologyInfoBoxHeader = props => {
       { symName }
     </div>
   )
+}
+
+const $HOST = `${ DAMA_HOST }/tiles`
+
+const getValidSources = sources => {
+  return sources.map(src => {
+    const { id, source: { url, type } } = src;
+    return {
+      id,
+      source: {
+        type,
+        url: url.replace("$HOST", $HOST)
+      }
+    }
+  });
 }
 
 class SymbologyLayer extends AvlLayer {
@@ -133,7 +206,9 @@ class SymbologyLayer extends AvlLayer {
       return a;
     }, [[], []]);
 
-    this.sources = sources;
+console.log("SymbologyLayer::constructor", layers)
+
+    this.sources = getValidSources(sources);
     this.layers = layers;
   }
   RenderComponent = SymbologyLayerRenderComponent;

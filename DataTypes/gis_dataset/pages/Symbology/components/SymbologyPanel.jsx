@@ -6,7 +6,8 @@ import {
   Button,
   MultiLevelSelect,
   getColorRange,
-  useClickOutside
+  useClickOutside,
+  useTheme
 } from "~/modules/avl-map-2/src"
 
 const SymbologyButtons = ({ startNewSymbology, symbology }) => {
@@ -79,7 +80,8 @@ const SymbologyPanel = props => {
     <div className="flex flex-col h-full border border-current rounded p-1">
       <div className="flex-1">
         { !symbology ? null :
-          <Symbology symbology={ symbology }
+          <Symbology { ...props }
+            symbology={ symbology }
             setSymbology={ setSymbology }
             variables={ variables }/>
         }
@@ -156,6 +158,17 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
       name
     }));
   }, [setSymbology]);
+
+  const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
+  const setActiveViewId = get(props, ["layerProps", "symbology-layer", "setActiveViewId"], null);
+
+  const activeView = React.useMemo(() => {
+    return get(symbology, "views", [])
+      .reduce((a, c) => {
+        return c.viewId === activeViewId ? c : a;
+      }, null)
+  }, [symbology, activeViewId]);
+
   return (
     <div>
       <div className="flex pb-1 border-b border-current">
@@ -165,12 +178,20 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
             onChange={ updateSymbologyName }/>
         </div>
       </div>
-      <div>
-        { symbology.views.map(view => (
-            <ViewItem key={ view.viewId }
-              { ...props } view={ view }
-              setSymbology={ setSymbology }/>
-          ))
+      <div className="pt-1">
+        <div>
+          <MultiLevelSelect
+            removable={ false }
+            options={ symbology.views }
+            value={ activeViewId }
+            onChange={ setActiveViewId }
+            displayAccessor={ v => `View ID: ${ v.viewId }` }
+            valueAccessor={ v => v.viewId }/>
+        </div>
+        { !activeView ? null :
+          <ViewItem key={ activeView.viewId }
+            { ...props } view={ activeView }
+            setSymbology={ setSymbology }/>
         }
       </div>
     </div>
@@ -178,16 +199,31 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
 }
 
 const ViewItem = ({ view, ...props }) => {
+  const activeLayerId = get(props, ["layerProps", "symbology-layer", "activeLayerId"], null);
+  const setActiveLayerId = get(props, ["layerProps", "symbology-layer", "setActiveLayerId"], null);
+
+  const activeLayer = React.useMemo(() => {
+    return get(view, "layers", [])
+      .reduce((a, c) => {
+        return c.layerId === activeLayerId ? c : a;
+      }, null);
+  }, [view, activeLayerId]);
+
   return (
     <div>
-      <div>
-        View ID: { view.viewId }
-      </div>
-      <div className="ml-4">
-        { view.layers.map(layer => (
-            <LayerItem key={ layer.layerId }
-              { ...props } layer={ layer }/>
-          ))
+      <div className="ml-4 pt-1">
+        <div>
+          <MultiLevelSelect
+            removable={ false }
+            options={ view.layers }
+            value={ activeLayerId }
+            onChange={ setActiveLayerId }
+            displayAccessor={ v => `Layer ID: ${ v.layerId }` }
+            valueAccessor={ v => v.layerId }/>
+        </div>
+        { !activeLayer ? null :
+          <LayerItem key={ activeLayer.layerId }
+            { ...props } layer={ activeLayer }/>
         }
       </div>
     </div>
@@ -195,9 +231,9 @@ const ViewItem = ({ view, ...props }) => {
 }
 
 const PaintProperties = {
-  fill: ["fill-color"],//, "fill-opacity"],
-  circle: ["circle-color"],//, "circle-opacity", "circle-radius"],
-  line: ["line-color"],//, "line-opacity", "line-width", "line-offset"]
+  fill: ["fill-color", "fill-opacity"],
+  circle: ["circle-color", "circle-opacity"],//, "circle-radius"],
+  line: ["line-color", "line-opacity"],//, "line-width", "line-offset"]
 }
 
 const MultiSelectDisplay = ({ children }) => {
@@ -216,7 +252,15 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
     return get(PaintProperties, layerType, []);
   }, [layerType]);
 
-  const addPaintProperty = React.useCallback(pp => {
+  const activePaintProperty = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activePaintProperty"], null);
+  }, [props.layerProps]);
+  const setActivePaintProperty = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setActivePaintProperty"], null);
+  }, [props.layerProps]);
+
+  const addPaintProperty = React.useCallback(ppId => {
+    setActivePaintProperty(ppId);
     setSymbology(prev => {
       return {
         name: prev.name,
@@ -228,7 +272,7 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
                 ...layer,
                 paintProperties: {
                   ...layer.paintProperties,
-                  [pp]: {
+                  [ppId]: {
                     valueExpression: null,
                     paintExpression: null,
                     variable: null
@@ -241,11 +285,37 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
         }))
       }
     })
-  }, [setSymbology, layerId]);
+  }, [setSymbology, layerId, setActivePaintProperty]);
+
+  const removePaintProperty = React.useCallback(ppId => {
+    if (activePaintProperty === ppId) {
+      setActivePaintProperty(null);
+    }
+    setSymbology(prev => {
+      return {
+        name: prev.name,
+        views: prev.views.map(view => ({
+          viewId: view.viewId,
+          layers: view.layers.map(layer => {
+            if (layer.layerId === layerId) {
+              const paintProperties = {
+                ...layer.paintProperties
+              }
+              delete paintProperties[ppId];
+              return {
+                ...layer,
+                paintProperties
+              }
+            }
+            return layer;
+          })
+        }))
+      }
+    })
+  }, [setSymbology, layerId, activePaintProperty, setActivePaintProperty]);
 
   return (
     <div>
-      <div>Layer ID: { layer.layerId }</div>
       <div className="ml-4">
         <div>Layer Type: { layer.type }</div>
         <div>
@@ -260,11 +330,12 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
           <div className="ml-4 grid grid-cols-1 gap-1">
             { Object.keys(layer.paintProperties)
                 .map((pp, i)=> (
-                  <PaintProperty key={ i } { ...props }
+                  <PaintPropertyItem key={ i } { ...props }
                     layer={ layer }
                     ppId={ pp }
                     paintProperty={ layer.paintProperties[pp] }
-                    setSymbology={ setSymbology }/>
+                    setSymbology={ setSymbology }
+                    removePaintProperty={ removePaintProperty }/>
                 ))
             }
           </div>
@@ -274,26 +345,175 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
   )
 }
 
-const makeNewVarialbe = v => {
+const makeNewVarialbe = (variable, ppId) => {
   const newVar = {
-    variableId: v.variableId,
-    displayName: v.variableId,
-    type: v.type,
+    variableId: variable.variableId,
+    displayName: variable.variableId,
+    type: variable.type,
     filterExpression: null,
     paintExpression: null,
     scale: {
-      type: v.type === "data-variable" ? "quantile" : "ordinal",
+      type: variable.type === "data-variable" ? "quantile" : "ordinal",
       domain: [],
-      format: v.type === "data-variable" ? ".2s" : null,
-      color: v.type === "data-variable" ? "BrBG" : "Set3",
-      reverse: false
+      range: [],
+      format: variable.type === "data-variable" ? ".2s" : null
     }
   }
-  newVar.scale.range = getColorRange(7, newVar.scale.color);
+  if (ppId.includes("color")) {
+    newVar.scale.color = variable.type === "data-variable" ? "BrBG" : "Set3";
+    newVar.scale.range = getColorRange(7, newVar.scale.color);
+    newVar.scale.reverse = false;
+  }
+  if (ppId.includes("opacity")) {
+    newVar.scale.range = [0.2, 0.4, 0.6, 0.8];
+    newVar.scale.min = 0.2;
+    newVar.scale.max = 0.8;
+    newVar.scale.step = 0.2;
+  }
   return newVar;
 }
 
-const PaintProperty = ({ ppId, paintProperty, layer, variables, setSymbology }) => {
+const ActivePPToggle = ({ setActive, ppId, isActive }) => {
+  const doSetActive = React.useCallback(() => {
+    setActive(ppId);
+  }, [setActive, ppId]);
+  const theme = useTheme();
+  return (
+    <div>
+      <span onClick={ doSetActive }
+        className={ `
+          cursor-pointer
+          ${ isActive ? `fa fa-toggle-on ${ theme.textHighlight }` :
+            "fa fa-toggle-off text-gray-500"
+          }
+        ` }/>
+    </div>
+
+  )
+}
+
+const Radio = ({ value, onChange, isActive }) => {
+  const doOnChange = React.useCallback(e => {
+    onChange(value);
+  }, [onChange, value]);
+  const theme = useTheme();
+  return (
+    <div onClick={ doOnChange }
+      style={ { padding: "0.125rem" } }
+      className={ `
+        cursor-pointer p-1 border rounded-full mb-1
+        ${ isActive ? theme.borderHighlight : "border-gray-500" }
+      ` }
+    >
+      <div className={ `
+          w-2 h-2 rounded-full
+          ${ isActive ? theme.bgHighlight : "bg-gray-500" }
+        ` }/>
+    </div>
+  )
+}
+const RadioGroup = ({ value, onChange, options = [] }) => {
+  return (
+    <div>
+      { options.map(opt => (
+          <div key={ opt.value } className="flex pr-8 items-center">
+            <div className="flex-1">{ opt.label }</div>
+            <Radio value={ opt.value }
+              onChange={ onChange }
+              isActive={ value === opt.value }/>
+          </div>
+        ))
+      }
+    </div>
+  )
+}
+
+const RadioOptions = [
+  { label: "Select a Value:",
+    value: "value"
+  },
+  { label: "Write an Expression:",
+    value: "expression"
+  },
+  { label: "Add a Variable:",
+    value: "variable"
+  }
+]
+
+const RemovePaintPropertyButton = ({ removePaintProperty }) => {
+  const [seconds, setSeconds] = React.useState(0);
+  const timeout = React.useRef();
+
+  React.useEffect(() => {
+    if (seconds > 0) {
+      timeout.current = setTimeout(setSeconds, 1000, seconds - 1);
+    }
+  }, [seconds]);
+
+  const onClick = React.useCallback(e => {
+    e.stopPropagation();
+    if (seconds === 0) {
+      setSeconds(3);
+    }
+    else {
+      setSeconds(0);
+      clearTimeout(timeout.current);
+      removePaintProperty();
+    }
+  }, [removePaintProperty, seconds]);
+
+  return (
+    <div className={ `cursor-pointer px-1 relative` }
+      onClick={ onClick }
+    >
+      { !seconds ? null :
+        <span className="absolute inset-0 flex items-center justify-center text-white font-bold">
+          { seconds }
+        </span>
+      }
+      <span className="fa fa-trash text-red-500"/>
+    </div>
+  )
+}
+
+const PaintPropertyItem = props => {
+
+  const {
+    ppId,
+    paintProperty,
+    layer,
+    variables,
+    setSymbology,
+    layerProps,
+    removePaintProperty
+  } = props;
+
+  const doRemovePaintProperty = React.useCallback(e => {
+    removePaintProperty(ppId);
+  }, [ppId, removePaintProperty]);
+
+  const activePaintProperty = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "activePaintProperty"], null);
+  }, [layerProps]);
+  const setActivePaintProperty = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "setActivePaintProperty"], null);
+  }, [layerProps]);
+
+  const paintPropertyActions = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "paintPropertyActions"], null);
+  }, [layerProps]);
+  const setPaintPropertyActions = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "setPaintPropertyActions"], null);
+  }, [layerProps]);
+
+  const setAction = React.useCallback(a => {
+    setPaintPropertyActions(prev => ({ ...prev, [ppId]: a }));
+    setActivePaintProperty(ppId);
+  }, [setPaintPropertyActions, ppId, setActivePaintProperty]);
+
+  const action = React.useMemo(() => {
+    return get(paintPropertyActions, ppId, "variable");
+  }, [paintPropertyActions, ppId]);
 
   const { layerId } = layer;
 
@@ -301,6 +521,8 @@ const PaintProperty = ({ ppId, paintProperty, layer, variables, setSymbology }) 
     const variable = variables.reduce((a, c) => {
       return c.variableId === vid ? c : a;
     }, null);
+
+    setAction("variable");
 
     setSymbology(prev => {
       return {
@@ -316,7 +538,7 @@ const PaintProperty = ({ ppId, paintProperty, layer, variables, setSymbology }) 
                     if (pp === ppId) {
                       a[pp] = {
                         ...layer.paintProperties[pp],
-                        variable: makeNewVarialbe(variable)
+                        variable: makeNewVarialbe(variable, ppId)
                       }
                     }
                     else {
@@ -331,61 +553,45 @@ const PaintProperty = ({ ppId, paintProperty, layer, variables, setSymbology }) 
         }))
       }
     })
-  }, [setSymbology, layerId, ppId, variables]);
+  }, [setSymbology, layerId, ppId, variables, setAction]);
 
-  const [action, _setAction] = React.useState("variable")
-  const setAction = React.useCallback(e => {
-    _setAction(e.target.value);
-  }, []);
+  const theme = useTheme();
 
   return (
     <div className="border-b border-current py-1">
-      <div>
-        Paint Property: { ppId }
-      </div>
-      <div>
-        <div className="border-b border-current">Choose an Action</div>
-        <div>
-          <div className="flex pr-8">
-            <div className="flex-1">Add a Variable:</div>
-            <div>
-              <input type="radio" name={ `action-${ ppId }` } value="variable"
-                checked={ action === "variable" }
-                onChange={ setAction }/>
-            </div>
-          </div>
-          <div className="flex pr-8">
-            <div className="flex-1">Set a Value:</div>
-            <div>
-              <input type="radio" name={ `action-${ ppId }` } value="value"
-                checked={ action === "value" }
-                onChange={ setAction }/>
-            </div>
-          </div>
-          <div className="flex pr-8">
-            <div className="flex-1">Create an Expression:</div>
-            <div>
-              <input type="radio" name={ `action-${ ppId }` } value="expression"
-                checked={ action === "expression" }
-                onChange={ setAction }/>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <div>
-          Variable:
-        </div>
+      <div className="border-b border-current flex items-center">
+        <ActivePPToggle
+          setActive={ setActivePaintProperty }
+          ppId={ ppId }
+          isActive={ activePaintProperty === ppId }/>
         <div className="ml-1 flex-1">
-          <MultiLevelSelect
-            removable={ false }
-            options={ variables }
-            displayAccessor={ v => v.variableId }
-            valueAccessor={ v => v.variableId }
-            onChange={ addVariable }
-            value={ paintProperty.variable?.variableId }/>
+          Paint Property: { ppId }
         </div>
+        <RemovePaintPropertyButton
+          removePaintProperty={ doRemovePaintProperty }/>
       </div>
+      <div>
+        <RadioGroup
+          options={ RadioOptions }
+          value={ action }
+          onChange={ setAction }/>
+      </div>
+      { action !== "variable" ? null :
+        <div className="flex items-center">
+          <div>
+            Variable:
+          </div>
+          <div className="ml-1 flex-1">
+            <MultiLevelSelect
+              removable={ false }
+              options={ variables }
+              displayAccessor={ v => v.variableId }
+              valueAccessor={ v => v.variableId }
+              onChange={ addVariable }
+              value={ paintProperty.variable?.variableId }/>
+          </div>
+        </div>
+      }
     </div>
   )
 }

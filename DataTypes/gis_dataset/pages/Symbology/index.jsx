@@ -11,8 +11,8 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src"
 
-import SymbologyPanel from "./components/SymbologyPanel"
 import SymbologyLayer from "./components/SymbologyLayer"
+import SymbologyPanel from "./components/SymbologyPanel"
 
 const PMTilesProtocol = {
   type: "pmtiles",
@@ -46,9 +46,70 @@ const NewLibraryComponents = { InfoBoxSidebarContainer };
 const SymbologyEditor = ({ source, views }) => {
 
   const [symbology, setSymbology] = React.useState(null);
-  const [legend, setLegend] = React.useState(null);
+
+  const [activeViewId, _setActiveViewId] = React.useState(null);
+  const [activeLayerId, _setActiveLayerId] = React.useState(null);
+  const [activePaintProperty, setActivePaintProperty] = React.useState(null);
+  const [paintPropertyActions, setPaintPropertyActions] = React.useState({});
+
+  const reset = React.useCallback(() => {
+    _setActiveViewId(null);
+    _setActiveLayerId(null);
+    setActivePaintProperty(null);
+  }, []);
+
+  const setActiveViewId = React.useCallback(vid => {
+    _setActiveViewId(vid);
+    setActiveLayerId(null);
+    setActivePaintProperty(null);
+  }, []);
+  const setActiveLayerId = React.useCallback(lid => {
+    _setActiveLayerId(lid);
+    setActivePaintProperty(null);
+  }, []);
+
+  React.useEffect(() => {
+    if (!symbology) {
+      setActiveViewId(null);
+    }
+    else if (!activeViewId) {
+      setActiveViewId(get(symbology, ["views", 0, "viewId"], null));
+      setActiveLayerId(null);
+      setActivePaintProperty(null);
+    }
+  }, [symbology, activeViewId]);
+  React.useEffect(() => {
+    if (!symbology) {
+      setActiveLayerId(null);
+    }
+    else if (activeViewId && !activeLayerId) {
+      const activeView = symbology.views
+        .reduce((a, c) => {
+          return c.viewId === activeViewId ? c : a;
+        }, null);
+      setActiveLayerId(get(activeView, ["layers", 0, "layerId"], null));
+    }
+  }, [symbology, activeViewId, activeLayerId]);
+  React.useEffect(() => {
+    if (!symbology) {
+      setActivePaintProperty(null);
+    }
+    else if (activeViewId && activeLayerId && !activePaintProperty) {
+      const activeView = symbology.views
+        .reduce((a, c) => {
+          return c.viewId === activeViewId ? c : a;
+        }, null);
+      const activeLayer = activeView.layers
+        .reduce((a, c) => {
+          return c.layerId === activeLayerId ? c : a;
+        }, null);
+      const [paintProperty] = Object.keys(activeLayer.paintProperties);
+      setActivePaintProperty(paintProperty);
+    }
+  }, [symbology, activeViewId, activeLayerId, activePaintProperty]);
 
   const startNewSymbology = React.useCallback(() => {
+    reset();
     setSymbology({
       name: "",
       views: views.map(view => ({
@@ -64,7 +125,7 @@ const SymbologyEditor = ({ source, views }) => {
           }))
       }))
     })
-  }, [views]);
+  }, [views, reset]);
 
   const layers = React.useMemo(() => {
     return [new SymbologyLayer(views)];
@@ -73,10 +134,20 @@ const SymbologyEditor = ({ source, views }) => {
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSymbology, startNewSymbology, symbology, legend, setLegend
+        source, setSymbology, startNewSymbology, symbology,
+        activeViewId, setActiveViewId,
+        activeLayerId, setActiveLayerId,
+        activePaintProperty, setActivePaintProperty,
+        paintPropertyActions, setPaintPropertyActions
       }
     }
-  }, [source, setSymbology, startNewSymbology, symbology, legend, setLegend]);
+  }, [source, setSymbology, startNewSymbology, symbology,
+        activeViewId, setActiveViewId,
+        activeLayerId, setActiveLayerId,
+        activePaintProperty, setActivePaintProperty,
+        paintPropertyActions, setPaintPropertyActions
+      ]
+  );
 
   return (
     <div className="w-full h-[800px]">
