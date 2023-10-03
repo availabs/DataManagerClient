@@ -14,7 +14,7 @@ import { SedCustomAttribute } from "./sedCustomAttribute";
 import { customRules } from "./sedCustomRules";
 import dbColsTaz from "./dbColsTaz.json";
 import dbColsCounty from "./dbColsCounty.json";
-// import { getAttributes } from '~/pages/DataManager/components/attributes'
+// import { getAttributes } from '~/pages/DataManager/Source/attributes'
 import TigOverview from "../TigOverview"
 
 import { sedVars, sedVarsCounty } from "./sedCustom"

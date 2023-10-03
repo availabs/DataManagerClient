@@ -59,7 +59,7 @@ const ViewSelector = ({views}) => {
   )
 }
 
-// import { getAttributes } from '~/pages/DataManager/components/attributes'
+// import { getAttributes } from '~/pages/DataManager/Source/attributes'
 const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 

@@ -2,27 +2,26 @@ import React, {Fragment} from "react";
 import { Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getDamaApiRoutePrefix, makeAuthoritative } from "../../../utils/DamaControllerApi";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
 import Version, { VersionDownload } from "./version";
 
 import DeleteVersion from "./delete";
 
-const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
-  return (
-    <button
-      className={`${get(meta, "authoritative") === "true" ? `cursor-not-allowed bg-blue-100` : `bg-blue-50 hover:bg-blue-400 hover:text-white`} p-2`}
-      disabled={get(meta, "authoritative") === "true"}
-      onClick={async () => {
-        await makeAuthoritative(getDamaApiRoutePrefix(pgEnv), viewId);
-      }
-      }>
+// const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
+//   return (
+//     <button
+//       className={`${get(meta, "authoritative") === "true" ? `cursor-not-allowed bg-blue-100` : `bg-blue-50 hover:bg-blue-400 hover:text-white`} p-2`}
+//       disabled={get(meta, "authoritative") === "true"}
+//       onClick={async () => {
+//         await makeAuthoritative(getDamaApiRoutePrefix(pgEnv), viewId);
+//       }
+//       }>
 
-      {get(meta, "authoritative") === "true" ? <i className="fad fa-gavel"></i> : <i class="fa-regular fa-gavel"></i>}
-    </button>
-  );
-};
+//       {get(meta, "authoritative") === "true" ? <i className="fad fa-gavel"></i> : <i class="fa-regular fa-gavel"></i>}
+//     </button>
+//   );
+// };
 
 const DeleteButton = ({ viewId, sourceId, meta, navigate }) => {
   const { baseUrl } = React.useContext(DamaContext);

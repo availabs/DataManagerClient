@@ -4,12 +4,12 @@ import get from 'lodash/get'
 // import { useParams } from 'react-router-dom'
 import FreightAtlasLayer from './FreightAtlasLayer'
 import { AvlMap } from "~/modules/avl-maplibre/src"
-import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
+//import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 
 import Create from './create'
 import config from "~/config.json"
 
-// import { getAttributes } from '~/pages/DataManager/components/attributes'
+// import { getAttributes } from '~/pages/DataManager/Source/attributes'
     
 
 const Map = ({layers}) => {
@@ -179,10 +179,10 @@ const MapPage = ({source,views, user}) => {
       </div>
       {user.authLevel >= 5 ? 
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-        <SymbologyControls 
+        {/*<SymbologyControls 
           layer={layer} 
           onChange={(v) => save('symbology',v)}
-        />
+        />*/}
         <dl className="sm:divide-y sm:divide-gray-200">
           {['sources','layers','symbology']
             .map((attr,i) => {

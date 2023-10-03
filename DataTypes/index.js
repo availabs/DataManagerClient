@@ -7,7 +7,7 @@ import gis_dataset from "./gis_dataset";
 import csv_dataset from "./csv_dataset";
 
 
-const DataTypes = {
+const damaDataTypes = {
   gis_dataset,
   csv_dataset
 }
