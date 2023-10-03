@@ -463,7 +463,7 @@ const RemovePaintPropertyButton = ({ removePaintProperty }) => {
   }, [removePaintProperty, seconds]);
 
   return (
-    <div className={ `cursor-pointer px-1 relative` }
+    <div className="cursor-pointer px-1 relative text-red-500 hover:bg-gray-500 rounded"
       onClick={ onClick }
     >
       { !seconds ? null :
@@ -471,7 +471,7 @@ const RemovePaintPropertyButton = ({ removePaintProperty }) => {
           { seconds }
         </span>
       }
-      <span className="fa fa-trash text-red-500"/>
+      <span className="fa fa-trash"/>
     </div>
   )
 }
@@ -559,7 +559,7 @@ const PaintPropertyItem = props => {
 
   return (
     <div className="border-b border-current py-1">
-      <div className="border-b border-current flex items-center">
+      <div className="border-b mb-1 pb-1 border-current flex items-center">
         <ActivePPToggle
           setActive={ setActivePaintProperty }
           ppId={ ppId }
