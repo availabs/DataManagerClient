@@ -8,7 +8,7 @@ import { Pages, damaDataTypes } from "../DataTypes";
 
 import SourcesLayout from "./layout";
 
-import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/components/attributes";
+import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
 import baseUserViewAccess  from "../utils/authLevel";
 import { NoMatch } from "../utils/404";

@@ -1,7 +1,7 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
 import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
-import { SourceAttributes } from '~/pages/DataManager/components/attributes'
+import { SourceAttributes } from '~/pages/DataManager/Source/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
 import Versions from './Version/list'
 import { VersionEditor, VersionDownload } from './Version/version'
