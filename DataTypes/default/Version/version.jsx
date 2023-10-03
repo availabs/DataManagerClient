@@ -397,6 +397,8 @@ export default function Version() {
 
   const version = typeof view?.['version'] === 'object' ? null : view?.['version']
 
+  console.log('version', version, view)
+
   return (
     <div className="overflow-hidden flex flex-col md:flex-row">
         <div className='flex-1'>

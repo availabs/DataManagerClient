@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import get from "lodash/get";
-import { DataTypes } from "../../index";
+import { damaDataTypes } from "../../index";
 
 const AddVersion = ({ source, views, user, baseUrl }) => {
   const newVersion = Math.max(...views.map(v => parseInt(v.version) || 0)) + 1;
@@ -9,7 +9,7 @@ const AddVersion = ({ source, views, user, baseUrl }) => {
   const CreateComp = React.useMemo(() => {
     //console.log(source)
       let sourceTypeToFileNameMapping = get(source, 'type', '').substring(0, 3) === "tl_" ? "tiger_2017" : source.type;
-      return get(DataTypes, `[${sourceTypeToFileNameMapping}].sourceCreate.component`, () => <div> Cannot create new {source.type} version. </div>)
+      return get(damaDataTypes, `[${sourceTypeToFileNameMapping}].sourceCreate.component`, () => <div> Cannot create new {source.type} version. </div>)
     }, [source]);
 
   return <>
