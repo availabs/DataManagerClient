@@ -45,7 +45,7 @@ const identityMap = (tableData, attributes) => {
     })),
   };
 };
-// import { getAttributes } from '~/pages/DataManager/components/attributes'
+// import { getAttributes } from '~/pages/DataManager/Source/attributes'
 const TablePage = ({
   source,
   views,

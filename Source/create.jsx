@@ -8,7 +8,7 @@ import { damaDataTypes } from '../DataTypes'
 
 import SourcesLayout from './layout'
 
-import {SourceAttributes, /*ViewAttributes, getAttributes*/} from '../components/attributes'
+import {SourceAttributes, /*ViewAttributes, getAttributes*/} from './attributes'
     
 import { DamaContext } from "../store";
 
