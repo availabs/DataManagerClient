@@ -9,6 +9,7 @@ import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
 import {FnSelector} from "./FnSelector.jsx";
 import {TypeSelector} from "./TypeSelector.jsx";
 import {dmsDataTypes} from "~/modules/dms/src"
+import {IsCurrencySwitch} from "./IsCurrencySwitch.jsx";
 
 
 export const MetadataTable = ({source, colOrigin, ...props}) => {
@@ -152,6 +153,16 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                                         sourceId={source.source_id}
                                     /> :
                                     <div className='text-gray-400 italic'>{col.type}</div>
+                                }
+                                {
+                                    authLevel > 5 && ['integer', 'number'].includes(col.type) ?
+                                        <IsCurrencySwitch
+                                            metadata={metadata}
+                                            setMetadata={setMetadata}
+                                            col={col.name}
+                                            value={col.isDollar}
+                                            sourceId={source.source_id}
+                                        /> : null
                                 }
                             </dd>
 
