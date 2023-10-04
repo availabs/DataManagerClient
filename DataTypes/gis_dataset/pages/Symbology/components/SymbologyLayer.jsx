@@ -101,17 +101,20 @@ const SymbologyLayerRenderComponent = props => {
             const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
 
             const {
-              valueExpression,
+              value,
               paintExpression,
               variable
             } = paintProperty;
 
-            if (valueExpression) {
+            if (value) {
               delete defaultPaint[ppId];
-console.log("SymbologyLayerRenderComponent::valueExpression", valueExpression);
+console.log("SymbologyLayerRenderComponent::value", value);
+              if (maplibreMap.getLayer(activeLayer.layerId)) {
+                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, value);
+              }
             }
             else if (paintExpression) {
-              delete defaultPaint[ppId];
+              // delete defaultPaint[ppId];
 console.log("SymbologyLayerRenderComponent::paintExpression", paintExpression);
             }
             else if (variable) {

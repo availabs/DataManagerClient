@@ -231,9 +231,9 @@ const ViewItem = ({ view, ...props }) => {
 }
 
 const PaintProperties = {
-  fill: ["fill-color", "fill-opacity"],
-  circle: ["circle-color", "circle-opacity"],//, "circle-radius"],
-  line: ["line-color", "line-opacity"],//, "line-width", "line-offset"]
+  fill: ["fill-color"],//, "fill-opacity"],
+  circle: ["circle-color"],//, "circle-opacity"],//, "circle-radius"],
+  line: ["line-color"],//, "line-opacity"]//, "line-width", "line-offset"]
 }
 
 const MultiSelectDisplay = ({ children }) => {
@@ -273,7 +273,7 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
                 paintProperties: {
                   ...layer.paintProperties,
                   [ppId]: {
-                    valueExpression: null,
+                    value: null,
                     paintExpression: null,
                     variable: null
                   }
@@ -345,6 +345,8 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
   )
 }
 
+const Identity = i => i;
+
 const makeNewVarialbe = (variable, ppId) => {
   const newVar = {
     variableId: variable.variableId,
@@ -356,7 +358,7 @@ const makeNewVarialbe = (variable, ppId) => {
       type: variable.type === "data-variable" ? "quantile" : "ordinal",
       domain: [],
       range: [],
-      format: variable.type === "data-variable" ? ".2s" : null
+      format: variable.type === "data-variable" ? ".2s" : Identity
     }
   }
   if (ppId.includes("color")) {
@@ -521,9 +523,6 @@ const PaintPropertyItem = props => {
     const variable = variables.reduce((a, c) => {
       return c.variableId === vid ? c : a;
     }, null);
-
-    setAction("variable");
-
     setSymbology(prev => {
       return {
         name: prev.name,
@@ -537,7 +536,8 @@ const PaintPropertyItem = props => {
                   .reduce((a, pp) => {
                     if (pp === ppId) {
                       a[pp] = {
-                        ...layer.paintProperties[pp],
+                        value: null,
+                        paintExpression: null,
                         variable: makeNewVarialbe(variable, ppId)
                       }
                     }
@@ -553,12 +553,47 @@ const PaintPropertyItem = props => {
         }))
       }
     })
-  }, [setSymbology, layerId, ppId, variables, setAction]);
+  }, [setSymbology, layerId, ppId, variables]);
+
+  React.useEffect(() => {
+    if (action !== "variable") {
+      setSymbology(prev => {
+        return {
+          name: prev.name,
+          views: prev.views.map(view => ({
+            viewId: view.viewId,
+            layers: view.layers.map(layer => {
+              if (layer.layerId === layerId) {
+                return {
+                  ...layer,
+                  paintProperties: Object.keys(layer.paintProperties)
+                    .reduce((a, pp) => {
+                      if (pp === ppId) {
+                        a[pp] = {
+                          value: null,
+                          paintExpression: null,
+                          variable: null
+                        }
+                      }
+                      else {
+                        a[pp] = layer.paintProperties[pp];
+                      }
+                      return a;
+                    }, {})
+                }
+              }
+              return layer;
+            })
+          }))
+        }
+      })
+    }
+  }, [setSymbology, layerId, ppId, action]);
 
   const theme = useTheme();
 
   return (
-    <div className="border-b border-current py-1">
+    <div className="border-b-2 border-current py-1">
       <div className="border-b mb-1 pb-1 border-current flex items-center">
         <ActivePPToggle
           setActive={ setActivePaintProperty }
@@ -577,21 +612,31 @@ const PaintPropertyItem = props => {
           onChange={ setAction }/>
       </div>
       { action !== "variable" ? null :
-        <div className="flex items-center">
-          <div>
-            Variable:
-          </div>
-          <div className="ml-1 flex-1">
-            <MultiLevelSelect
-              removable={ false }
-              options={ variables }
-              displayAccessor={ v => v.variableId }
-              valueAccessor={ v => v.variableId }
-              onChange={ addVariable }
-              value={ paintProperty.variable?.variableId }/>
-          </div>
-        </div>
+        <VariableAdder
+          options={ variables }
+          onChange={ addVariable }
+          value={ paintProperty.variable?.variableId }/>
       }
+    </div>
+  )
+}
+
+const accessor = v => v.variableId;
+const VariableAdder = ({ onChange, value, options }) => {
+  return (
+    <div className="flex items-center">
+      <div>
+        Variable:
+      </div>
+      <div className="ml-1 flex-1">
+        <MultiLevelSelect
+          removable={ false }
+          options={ options }
+          displayAccessor={ accessor }
+          valueAccessor={ accessor }
+          onChange={ onChange }
+          value={ value }/>
+      </div>
     </div>
   )
 }

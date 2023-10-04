@@ -12,6 +12,7 @@ const ordinalSort = (a, b) => {
 
 export const calcDomain = (type, data, rangeLength) => {
   const values = data.map(d => strictNaN(d.value) ? d.value : +d.value);
+  if (!values.length) return [];
   switch (type) {
     case "threshold": {
       return ckmeans(values, rangeLength || 7).slice(1);
@@ -33,11 +34,8 @@ const calcRange = (type, domainLength, color, reverse) => {
   }
 }
 
-export const createLegend = (variable, ppId, data = []) => {
+export const createLegend = (variable, data = []) => {
   if (!data.length) {
-    return null;
-  }
-  if (!ppId.includes("color")) {
     return null;
   }
 

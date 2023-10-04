@@ -9,8 +9,9 @@ import useViewVariable from "./useViewVariable"
 
 import ColorEditor from "./ColorEditor"
 import RangeEditor from "./RangeEditor"
+import ColorPicker from "./ColorPicker"
 
-import { calcDomain, createLegend } from "./createLegend"
+import { calcDomain } from "./createLegend"
 
 const SymbologyInfoBox = props => {
 
@@ -21,49 +22,12 @@ const SymbologyInfoBox = props => {
     return get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
   }, [props]);
 
-  const updateScale = React.useCallback((viewId, layerId, ppId, varId, scale) => {
-    setSymbology(prev => {
-      return ({
-        name: prev.name,
-        views: prev.views.map(view => {
-          if (view.viewId === viewId) {
-            return {
-              viewId,
-              layers: view.layers.map(layer => {
-                if (layer.layerId === layerId) {
-                  return {
-                    ...layer,
-                    paintProperties: {
-                      ...layer.paintProperties,
-                      [ppId]: {
-                        ...layer.paintProperties[ppId],
-                        variable: {
-                          ...layer.paintProperties[ppId].variable,
-                          scale: {
-                            ...layer.paintProperties[ppId].variable.scale,
-                            ...scale
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                return layer;
-              })
-            }
-          }
-          return view;
-        })
-      })
-    })
-  }, [setSymbology]);
-
   return (
     <div>
       { !symbology ? "Start a new symbology..." :
         <SymbologyBox { ...props }
           symbology={ symbology }
-          updateScale={ updateScale }/>
+          setSymbology={ setSymbology }/>
       }
     </div>
   )
@@ -143,37 +107,62 @@ const LayerBox = ({ layer, ...props }) => {
   )
 }
 
-const getEditor = ppId => {
+const getVariableEditor = ppId => {
   if (ppId.includes("color")) {
-    return ColorEditor
+    return ColorEditor;
   }
-  if (ppId.includes("opacity")) {
-    return RangeEditor
-  }
-  if (ppId.includes("radius")) {
-    return RangeEditor
-  }
-  if (ppId.includes("width")) {
-    return RangeEditor
-  }
-  if (ppId.includes("offset")) {
-    return RangeEditor
-  }
+  return RangeEditor;
 }
 
 const VariableBox = props => {
   const {
     layerId,
     ppId,
-    variable,
+    paintProperty,
     activeViewId,
-    updateScale,
+    setSymbology,
+    MapActions,
     ...rest
   } = props;
 
-  const doUpdateScale = React.useCallback(scale => {
-    updateScale(activeViewId, layerId, ppId, variable.variableId, scale);
-  }, [updateScale, activeViewId, layerId, ppId, variable.variableId]);
+  const { variable } = paintProperty;
+
+  const updateScale = React.useCallback(scale => {
+    setSymbology(prev => {
+      return ({
+        name: prev.name,
+        views: prev.views.map(view => {
+          if (view.viewId === activeViewId) {
+            return {
+              viewId: activeViewId,
+              layers: view.layers.map(layer => {
+                if (layer.layerId === layerId) {
+                  return {
+                    ...layer,
+                    paintProperties: {
+                      ...layer.paintProperties,
+                      [ppId]: {
+                        ...layer.paintProperties[ppId],
+                        variable: {
+                          ...layer.paintProperties[ppId].variable,
+                          scale: {
+                            ...layer.paintProperties[ppId].variable.scale,
+                            ...scale
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                return layer;
+              })
+            }
+          }
+          return view;
+        })
+      })
+    })
+  }, [setSymbology, activeViewId, layerId, ppId]);
 
   const data = useViewVariable(activeViewId, variable.variableId);
 
@@ -183,21 +172,36 @@ const VariableBox = props => {
 
   React.useEffect(() => {
     if (domain.length && !isEqual(domain, variable.scale.domain)) {
-      doUpdateScale({ domain });
+      updateScale({ domain });
     }
-  }, [doUpdateScale, variable, domain]);
+  }, [updateScale, variable, domain]);
 
-  const Editor = React.useMemo(() => {
-    return getEditor(ppId);
+  React.useEffect(() => {
+    const dl = paintProperty.variable?.scale?.domain?.length;
+    const rl = paintProperty.variable?.scale?.range?.length;
+    if (dl && rl && ppId.includes("color")) {
+      MapActions.updateLegend({
+        ...variable.scale,
+        name: variable.displayName,
+        isActive: true
+      });
+    }
+    else {
+      MapActions.updateLegend({ isActive: false });
+    }
+  }, [MapActions.updateLegend, variable, ppId]);
+
+  const VariableEditor = React.useMemo(() => {
+    return getVariableEditor(ppId);
   }, [ppId]);
 
   return (
     <div>
       <div>Variable: { variable.displayName }</div>
       <div>
-        <Editor { ...rest }
+        <VariableEditor { ...rest }
           variable={ variable }
-          updateScale={ doUpdateScale }
+          updateScale={ updateScale }
           variableType={ variable.type }
           data={ data }/>
       </div>
@@ -205,10 +209,73 @@ const VariableBox = props => {
   )
 }
 
-const ValueBox = ({ min, max }) => {
+const ValuePicker = ({ min, max }) => {
+  return (
+    <div>
+      Value Picker: { `${ min } | ${ max }` }
+    </div>
+  )
+}
+
+const getValuePicker = ppId => {
+  if (ppId.includes("color")) {
+    return ColorPicker;
+  }
+  return ValuePicker;
+}
+
+const ValueBox = props => {
+  const {
+    layerId,
+    ppId,
+    activeViewId,
+    setSymbology,
+    min, max,
+    ...rest
+  } = props;
+
+  const Picker = React.useMemo(() => {
+    return getValuePicker(ppId);
+  }, [ppId]);
+
+  const setValue = React.useCallback(value => {
+    setSymbology(prev => {
+      return ({
+        name: prev.name,
+        views: prev.views.map(view => {
+          if (view.viewId === activeViewId) {
+            return {
+              viewId: activeViewId,
+              layers: view.layers.map(layer => {
+                if (layer.layerId === layerId) {
+                  return {
+                    ...layer,
+                    paintProperties: {
+                      ...layer.paintProperties,
+                      [ppId]: {
+                        value: value,
+                        paintExpression: null,
+                        variable: null
+                      }
+                    }
+                  }
+                }
+                return layer;
+              })
+            }
+          }
+          return view;
+        })
+      })
+    })
+  }, [setSymbology, activeViewId, layerId, ppId]);
+
   return (
     <div>
       VALUE BOX: { `${ min } | ${ max }` }
+      <div>
+        <Picker { ...props } setValue={ setValue }/>
+      </div>
     </div>
   )
 }
@@ -222,7 +289,10 @@ const ExpressionBox = ({ min, max }) => {
 
 const VariableBoxWrapper = Comp => {
   return props => {
-    return !props.variable ? null : <Comp { ...props }/>
+    const variable = React.useMemo(() => {
+      return get(props, ["paintProperty", "variable"], null);
+    }, [props.paintProperty])
+    return !variable ? null : <Comp { ...props }/>
   }
 }
 
@@ -240,13 +310,13 @@ const getPaintPropertyLimits = ppId => {
     return { min: 0.0, max: 1.0 };
   }
   if (ppId.includes("radius")) {
-    return { min: 0.0, max: Infinity };
+    return { min: 0.0, max: 50 };
   }
   if (ppId.includes("width")) {
-    return { min: 0.0, max: Infinity };
+    return { min: 0.0, max: 25 };
   }
   if (ppId.includes("offset")) {
-    return { min: -Infinity, max: Infinity };
+    return { min: -25, max: 25 };
   }
 }
 
@@ -267,11 +337,17 @@ const PaintPropertyBox = ({ ppId, paintProperty, layerProps, ...props }) => {
     return get(VariableActionMap, action, null);
   }, [action]);
 
+  React.useEffect(() => {
+    const dl = paintProperty.variable?.scale?.domain?.length;
+    const rl = paintProperty.variable?.scale?.range?.length;
+    if (!(dl && rl) || !ppId.includes("color")) {
+      props.MapActions.updateLegend({ isActive: false });
+    }
+  }, [props.MapActions, paintProperty. ppId]);
+
   const limits = React.useMemo(() => {
     return getPaintPropertyLimits(ppId);
   }, [ppId]);
-
-console.log("LIMITS:", limits)
 
   return (
     <div>
@@ -281,8 +357,7 @@ console.log("LIMITS:", limits)
       <div>
         { !Editor ? null :
           <Editor ppId={ ppId } { ...limits } { ...props }
-            paintProperty={ paintProperty }
-            variable={ paintProperty.variable }/>
+            paintProperty={ paintProperty }/>
         }
       </div>
     </div>

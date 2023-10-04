@@ -12,8 +12,6 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src";
 
-import { calcDomain, createLegend } from "./createLegend"
-
 const ColorEditor = props => {
 
   const {
