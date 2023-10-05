@@ -231,9 +231,9 @@ const ViewItem = ({ view, ...props }) => {
 }
 
 const PaintProperties = {
-  fill: ["fill-color"],//, "fill-opacity"],
-  circle: ["circle-color"],//, "circle-opacity"],//, "circle-radius"],
-  line: ["line-color"],//, "line-opacity"]//, "line-width", "line-offset"]
+  fill: ["fill-color", "fill-opacity"],
+  circle: ["circle-color", "circle-opacity", "circle-radius"],
+  line: ["line-color", "line-opacity", "line-width", "line-offset"]
 }
 
 const MultiSelectDisplay = ({ children }) => {
@@ -368,9 +368,19 @@ const makeNewVarialbe = (variable, ppId) => {
   }
   if (ppId.includes("opacity")) {
     newVar.scale.range = [0.2, 0.4, 0.6, 0.8];
-    newVar.scale.min = 0.2;
-    newVar.scale.max = 0.8;
     newVar.scale.step = 0.2;
+  }
+  if (ppId.includes("width")) {
+    newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
+    newVar.scale.step = 1;
+  }
+  if (ppId.includes("offset")) {
+    newVar.scale.range = [1, 2, 3, 4, 5];
+    newVar.scale.step = 1;
+  }
+  if (ppId.includes("radius")) {
+    newVar.scale.range = [5, 10, 15, 20, 25];
+    newVar.scale.step = 5;
   }
   return newVar;
 }

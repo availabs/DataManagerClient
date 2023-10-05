@@ -51,7 +51,7 @@ const SymbologyBox = ({ symbology, ...props }) => {
       <div>
         { !activeView ? null :
           <ViewBox key={ activeView.viewId }
-            { ...props }
+            { ...props } symbology={ symbology }
             view={ activeView }/>
         }
       </div>
@@ -307,16 +307,16 @@ const getPaintPropertyLimits = ppId => {
     return {};
   }
   if (ppId.includes("opacity")) {
-    return { min: 0.0, max: 1.0 };
+    return { min: 0.0, max: 1.0, steps: [0.1, 0.2, 0.25] };
   }
   if (ppId.includes("radius")) {
-    return { min: 0.0, max: 50 };
+    return { min: 0.0, max: 50, steps: [1, 2, 5] };
   }
   if (ppId.includes("width")) {
-    return { min: 0.0, max: 25 };
+    return { min: 0.0, max: 20, steps: [1, 2, 5] };
   }
   if (ppId.includes("offset")) {
-    return { min: -25, max: 25 };
+    return { min: -20, max: 20, steps: [1, 2, 5] };
   }
 }
 

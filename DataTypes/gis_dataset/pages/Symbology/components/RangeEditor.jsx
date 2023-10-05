@@ -2,11 +2,11 @@ import React from "react"
 
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
-import { range as d3range, bisectRight } from "d3-array"
+import { range as d3range, extent as d3extent, bisectRight, bisectLeft } from "d3-array"
 import { format as d3format } from "d3-format"
 import { brushX as d3brush } from "d3-brush"
-import { select as d3select } from "d3-selection"
-import { scaleLinear, scaleQuantize, scalePoint } from "d3-scale"
+import { select as d3select, pointers } from "d3-selection"
+import { scalePoint } from "d3-scale"
 
 import {
   MultiLevelSelect,
@@ -29,25 +29,27 @@ const RangeItem = ({ value }) => {
   )
 }
 
-const SimpleControls = ({ variable, updateScale }) => {
+const myrange = (min, max, step) => {
+  const mult = 1000.0;
+  const m1 = Math.trunc(min * mult);
+  const m2 = Math.trunc(max * mult);
+  const s = Math.trunc(step * mult);
+  return d3range(m1, m2, s).map(v => v / mult);
+}
 
-  const {
-    scale
-  } = variable;
+const SimpleControls = ({ variable, updateScale, min, max, steps, ...props }) => {
 
-  const {
-    min, max, step, range
-  } = scale;
+  const { scale } = variable;
 
-  React.useEffect(() => {
-    const rng = d3range(min, max + step, step);
-    if (!isEqual(range, rng)) {
-      updateScale({ range: rng })
-    }
-  }, [min, max, step, range, updateScale]);
+  // React.useEffect(() => {
+  //   const { min, max, step, range } = scale;
+  //   const rng = myrange(min, max + step, step);
+  //   if (!isEqual(range, rng)) {
+  //     updateScale({ range: rng })
+  //   }
+  // }, [scale, updateScale]);
 
   const [svgRef, setSvgRef] = React.useState(null);
-  const [ref, setRef] = React.useState(null);
   const [width, setWidth] = React.useState(0);
 
   React.useEffect(() => {
@@ -57,71 +59,139 @@ const SimpleControls = ({ variable, updateScale }) => {
   }, [svgRef]);
 
   React.useEffect(() => {
-    if (!width || !ref) return;
+    if (!width) return;
 
-    const scale = scalePoint()
-      .domain(d3range(0, 1 + step, step))
-      .range([0, width])
+    const height = 32;
+    const margin = 4;
+
+    const pointScale = scalePoint()
+      .domain(myrange(min, max + scale.step, scale.step))
+      .range([margin, width - margin])
       .padding(0.5);
 
-    const svg = d3select(svgRef);
+    const pointScaleRange = pointScale.domain().map(pointScale);
 
-    svg.selectAll("g.text-group")
-      .data(["text-group"])
-      .join("g")
-        .attr("class", d => d)
-        .attr("font-family", "var(--sans-serif)")
-        .attr("text-anchor", "middle")
-        // .attr("transform", `translate(${scale.bandwidth() / 2},${32 / 2})`)
-      .selectAll("text")
-      .data(scale.domain())
-      .join("text")
-        .attr("x", d => scale(d))
-        .attr("dy", "14px")
-        .text(d => d.toFixed(1));
+    const dx = pointScale.step() / 2;
 
-    function brushed({selection}) {
-      if (selection) {
-        const range = scale.domain().map(scale);
-        const i0 = bisectRight(range, selection[0]);
-        const i1 = bisectRight(range, selection[1]);
-        // bar.attr("fill", (d, i) => i0 <= i && i < i1 ? "orange" : null);
-        svg.property("value", scale.domain().slice(i0, i1)).dispatch("input");
-      } else {
-        // bar.attr("fill", null);
-        svg.property("value", []).dispatch("input");
+    const svgSelection = d3select(svgRef)
+      .attr("viewBox", [0, 0, width, height]);
+
+    const tickDensity = 8;
+
+    const density = 100 / tickDensity;
+    let tick = 0;
+    const domain = pointScale.domain();
+    const tickValues = [domain[0]];
+
+    for (let i = 1; i < domain.length; ++i) {
+      tick += pointScale(domain[i]) - pointScale(domain[i - 1]);
+      if (tick >= density) {
+        tickValues.push(domain[i]);
+        tick = 0;
       }
     }
 
-    function brushended({selection, sourceEvent}) {
+    svgSelection.select("g.text-group")
+      .attr("font-family", "var(--sans-serif)")
+      .attr("text-anchor", "middle")
+      .attr("transform", `translate(${ pointScale.bandwidth() / 2 }, ${ height / 2 })`)
+    .selectAll("text")
+    .data(tickValues)
+    .join("text")
+      .attr("x", pointScale)
+      .attr("dy", "0.25rem")
+      .attr("font-size", "0.625rem")
+      .text(d => scale.step >= 1 ? d : scale.step === 0.25 ? d.toFixed(2) : d.toFixed(1));
+
+    const bar = svgSelection.select("g.brush-group")
+    .selectAll("rect")
+    .data(pointScale.domain())
+    .join("rect")
+      .attr("class", "fill-gray-300")
+      .attr("fill-opacity", 1)
+      .attr("x", d => pointScale(d) - dx)
+      .attr("y", margin)
+      .attr("height", height - margin * 2)
+      .attr("width", pointScale.step());
+
+    function brushed({ selection }) {
+      if (selection) {
+        const i0 = bisectRight(pointScaleRange, selection[0]);
+        const i1 = bisectRight(pointScaleRange, selection[1]);
+        bar.attr("class", (d, i) => (i0 <= i) && (i < i1) ? "fill-teal-500" : "fill-gray-300");
+      } else {
+        bar.attr("class", "fill-gray-300");
+      }
+    }
+
+    function brushended({ selection, sourceEvent }) {
       if (!sourceEvent || !selection) return;
-      const range = scale.domain().map(scale)
-      const dx = scale.step() / 2;
-      const x0 = range[bisectRight(range, selection[0])] - dx;
-      const x1 = range[bisectRight(range, selection[1]) - 1] + dx;
-      d3select(this).transition().call(brush.move, x1 > x0 ? [x0, x1] : null);
+      const i0 = bisectRight(pointScaleRange, selection[0]);
+      const i1 = bisectRight(pointScaleRange, selection[1]);
+      const x0 = pointScaleRange[i0] - dx;
+      const x1 = pointScaleRange[i1 - 1] + dx;
+      if (x1 > x0) {
+        const range = pointScale.domain().slice(i0, i1);
+        updateScale({ range });
+      }
     }
 
     const brush = d3brush()
-      .extent([[0, 0], [width, 16]])
+      .extent([[margin, margin], [width - margin, height - margin]])
       .on("start brush end", brushed)
       .on("end.snap", brushended);
 
-    d3select(svgRef)
-      .attr("viewBox", [0, 0, width, 32]);
+    const extent = d3extent(scale.range);
 
-    d3select(ref).call(brush);
-  }, [width, min, max, step]);
+    svgSelection
+      .select("g.brush-group")
+        .call(brush)
+        .call(brush.move, [pointScale(extent[0]) - dx, pointScale(extent[1]) + dx]);
+
+    svgSelection
+      .select("rect.selection")
+        .attr("stroke", "none")
+        .attr("class", "selection fill-gray-500");
+
+    svgSelection
+      .selectAll("rect.handle")
+        .classed("fill-gray-600", true)
+
+  }, [width, min, max, scale, updateScale]);
+
+  const setStepSize = React.useCallback(step => {
+    step = +step;
+    const e1 = d3extent(scale.range);
+    const newValues = myrange(min, max + step, step);
+    const i0 = bisectLeft(newValues, e1[0]);
+    const i1 = bisectRight(newValues, e1[1]);
+    const r0 = newValues[i0];
+    const r1 = newValues[i1 - 1];
+    const range = myrange(r0, r1 + step, step);
+    updateScale({
+      range,
+      step
+    });
+  }, [scale]);
 
   return (
     <div>
       <svg ref={ setSvgRef }
         style={ { height: "32px" } }
-        className="w-full bg-gray-500"
+        className="block w-full bg-white"
       >
-        <g ref={ setRef }/>
-        <g className="text-group" />
+        <g className="brush-group"/>
+        <g className="text-group pointer-events-none"/>
       </svg>
+      <div className="flex items-center mt-1">
+        <div>Step Size:</div>
+        <div className="flex-1 ml-1">
+          <MultiLevelSelect removable={ false }
+            options={ steps }
+            value={ scale.step }
+            onChange={ setStepSize }/>
+        </div>
+      </div>
     </div>
   )
 }
@@ -150,27 +220,33 @@ const RangeEditor = props => {
     }
   }, [updateScale]);
 
-  const [controls, setControls] = React.useState("simple")
+  const [controls, setControls] = React.useState("simple");
+
+  const [e0, e1] = React.useMemo(() => {
+    const range = get(scale, "range", []);
+    return d3extent(range);
+  }, [scale]);
 
   return (
     <div>
-      RangeEditor: { `${ min }, ${ max }` }
       <div className="grid grid-cols-1 gap-1">
         <TypeSelector
           variableType={ variableType }
           scaleType={ scale.type }
           updateScale={ doUpdateScale }/>
-        <div className="grid gap-1"
-          style={ {
-            gridTemplateColumns: `repeat(${ scale.range.length + 1 }, minmax(0, 1fr))`
-          } }
-        >
-          <div>Range:</div>
-          { scale.range.map(r => (
-              <RangeItem key={ r } value={ r }/>
-            ))
-          }
-        </div>
+
+        { strictNaN(e0) ? null :
+          <div className="flex">
+            <div className="flex-1">Current Minimum Value:</div>
+            <div className="pr-8">{ e0 }</div>
+          </div>
+        }
+        { strictNaN(e1) ? null :
+          <div className="flex">
+            <div className="flex-1">Current Minimum Value:</div>
+            <div className="pr-8">{ e1 }</div>
+          </div>
+        }
 
         <SimpleControls { ...props }
           updateScale={ doUpdateScale }/>
@@ -187,8 +263,8 @@ const LegendTypes = [
   { value: "ordinal", name: "Ordinal", variableType: "meta-variable" }
 ]
 const TypeSelector = ({ scaleType, updateScale, variableType }) => {
-  const onChange = React.useCallback(t => {
-    updateScale("type", t);
+  const onChange = React.useCallback(type => {
+    updateScale({ type, domain: [] });
   }, [updateScale]);
   const options = React.useMemo(() => {
     return LegendTypes.filter(lt => lt.variableType === variableType);

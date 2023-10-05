@@ -10,6 +10,14 @@ import SymbologyInfoBox from "./SymbologyInfoBox"
 
 import { DAMA_HOST } from "~/config"
 
+const SymbologyLegend = ({ layerProps }) => {
+  return (
+    <div>
+      SymbologyLegend
+    </div>
+  )
+}
+
 const SymbologyLayerRenderComponent = props => {
 
   const {
@@ -162,7 +170,13 @@ console.log("SymbologyLayerRenderComponent::variable", variable);
     ]
   )
 
-  return null;
+  return (
+    <div className="p-1 pointer-events-auto bg-gray-100 rounded w-80">
+      <div className="bg-gray-300 border border-current rounded p-1">
+        <SymbologyLegend />
+      </div>
+    </div>
+  );
 }
 
 const SymbologyInfoBoxHeader = props => {
@@ -208,8 +222,6 @@ class SymbologyLayer extends AvlLayer {
       a[1].push(...layers);
       return a;
     }, [[], []]);
-
-console.log("SymbologyLayer::constructor", layers)
 
     this.sources = getValidSources(sources);
     this.layers = layers;

@@ -26,15 +26,6 @@ const ColorEditor = props => {
     scale
   } = variable;
 
-  const doUpdateScale = React.useCallback((key, value) => {
-    if (typeof key === "string") {
-      updateScale({ [key]: value });
-    }
-    else if (typeof key === "object") {
-      updateScale({ ...key });
-    }
-  }, [updateScale]);
-
   const [reverseColors, setReverseColors] = React.useState(Boolean(scale.reverse));
 
   const [rangeSize, setRangeSize] = React.useState(0);
@@ -49,7 +40,7 @@ const ColorEditor = props => {
       <TypeSelector
         variableType={ variableType }
         scaleType={ scale.type }
-        updateScale={ doUpdateScale }/>
+        updateScale={ updateScale }/>
 
       <RangeSizeSelector
         rangeSize={ rangeSize }
@@ -62,7 +53,7 @@ const ColorEditor = props => {
       <ColorSelector
         reverseColors={ reverseColors }
         rangeSize={ rangeSize }
-        updateScale={ doUpdateScale }
+        updateScale={ updateScale }
         range={ scale.range }/>
     </div>
   )
@@ -75,8 +66,8 @@ const LegendTypes = [
   { value: "ordinal", name: "Ordinal", variableType: "meta-variable" }
 ]
 const TypeSelector = ({ scaleType, updateScale, variableType }) => {
-  const onChange = React.useCallback(t => {
-    updateScale("type", t);
+  const onChange = React.useCallback(type => {
+    updateScale({ type, domain: [] });
   }, [updateScale]);
   const options = React.useMemo(() => {
     return LegendTypes.filter(lt => lt.variableType === variableType);

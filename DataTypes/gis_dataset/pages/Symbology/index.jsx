@@ -160,6 +160,7 @@ const SymbologyEditor = ({ source, views }) => {
             zoom: 6,
             protocols: [PMTilesProtocol]
           } }
+          mapActions={ false }
           leftSidebar={ {
             Panels: [{
               Panel: SymbologyPanel,
