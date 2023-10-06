@@ -3,6 +3,8 @@ import CreatePage from "./pages/Create";
 import Table from "./pages/Table";
 // import Uploads from "./pages/Uploads";
 
+import SymbologyEditor from "./pages/Symbology"
+
 // import { getAttributes } from 'pages/DataManager/components/attributes'
 
 const GisDatasetConfig = {
@@ -15,6 +17,11 @@ const GisDatasetConfig = {
     name: "Table",
     path: "/table",
     component: Table,
+  },
+  symbology: {
+    name: "Symbology",
+    path: "/symbology",
+    component: SymbologyEditor,
   },
   // This key is used to filter in src/pages/DataManager/Source/create.js
   sourceCreate: {

@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
-import SourcesLayout from "../components/SourcesLayout";
+import SourcesLayout from "./layout";
 import { useParams } from "react-router-dom";
 import { DamaContext } from "~/pages/DataManager/store";
-import { SourceAttributes, ViewAttributes, getAttributes } from "../components/attributes";
+import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)

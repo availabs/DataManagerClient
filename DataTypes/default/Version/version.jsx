@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
-import { ViewAttributes } from '~/pages/DataManager/components/attributes'
+import { ViewAttributes } from '~/pages/DataManager/Source/attributes'
 import { DamaContext } from "../../../store";
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -396,6 +396,8 @@ export default function Version() {
     view = get(falcorCache, ["dama", pgEnv, "views", "byId", viewId, 'attributes'], {});
 
   const version = typeof view?.['version'] === 'object' ? null : view?.['version']
+
+  console.log('version', version, view)
 
   return (
     <div className="overflow-hidden flex flex-col md:flex-row">

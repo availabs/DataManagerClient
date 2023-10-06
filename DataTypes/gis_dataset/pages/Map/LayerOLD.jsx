@@ -22,7 +22,7 @@ const HoverComp = ({ data, layer }) => {
     //   activeViewId,
     //   'databyId',
     //   id,
-    //   attributes
+    //   attributesf
     // ])
     falcor.get([
       "dama",

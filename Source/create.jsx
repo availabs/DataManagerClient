@@ -4,11 +4,11 @@ import { /*useFalcor,*//*TopNav,*/ Input /*withAuth, Input, Button*/ } from '~/m
 
 import get from 'lodash/get'
 // import { useParams } from 'react-router-dom'
-import { DataTypes } from '../DataTypes'
+import { damaDataTypes } from '../DataTypes'
 
-import SourcesLayout from '../components/SourcesLayout'
+import SourcesLayout from './layout'
 
-import {SourceAttributes, /*ViewAttributes, getAttributes*/} from '../components/attributes'
+import {SourceAttributes, /*ViewAttributes, getAttributes*/} from './attributes'
     
 import { DamaContext } from "../store";
 
@@ -32,11 +32,11 @@ const SourceCreate = ({baseUrl}) => {
     (async () => {
       const filteredDataTypeKeys = (
         await Promise.all(
-          Object.keys(DataTypes).map(async (dt) => {
+          Object.keys(damaDataTypes).map(async (dt) => {
             
 
-            if (DataTypes[dt].getIsAlreadyCreated) {
-              const exclude = await DataTypes[dt].getIsAlreadyCreated(pgEnv);
+            if (damaDataTypes[dt].getIsAlreadyCreated) {
+              const exclude = await damaDataTypes[dt].getIsAlreadyCreated(pgEnv);
 
               if (exclude) {
                 return null;
@@ -49,7 +49,7 @@ const SourceCreate = ({baseUrl}) => {
       ).filter(Boolean);
 
       const filteredDataTypes = filteredDataTypeKeys.reduce((acc, dt) => {
-        acc[dt] = DataTypes[dt];
+        acc[dt] = damaDataTypes[dt];
         return acc;
       }, {});
       //console.log('testing',filteredDataTypes)

@@ -4,11 +4,11 @@ import {  TopNav, SideNav } from "~/modules/avl-components/src";
 
 import get from "lodash/get";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { Pages, DataTypes } from "../DataTypes";
+import { Pages, damaDataTypes } from "../DataTypes";
 
-import SourcesLayout from "../components/SourcesLayout";
+import SourcesLayout from "./layout";
 
-import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/components/attributes";
+import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
 import baseUserViewAccess  from "../utils/authLevel";
 import { NoMatch } from "../utils/404";
@@ -82,12 +82,12 @@ const Source = ({}) => {
 
   const source = useMemo(() => {
     let attributes = getAttributes(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { "attributes": {} })["attributes"]);
-    if (DataTypes[attributes.type]) {
+    if (damaDataTypes[attributes.type]) {
 
       // check for pages to add
-      let typePages = Object.keys(DataTypes[attributes.type]).reduce((a, c) => {
-        if (DataTypes[attributes.type][c].path || c === 'overview') {
-          a[c] = DataTypes[attributes.type][c];
+      let typePages = Object.keys(damaDataTypes[attributes.type]).reduce((a, c) => {
+        if (damaDataTypes[attributes.type][c].path || c === 'overview') {
+          a[c] = damaDataTypes[attributes.type][c];
         }
         return a;
       }, {});
