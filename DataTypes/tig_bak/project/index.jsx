@@ -5,12 +5,15 @@ import Table from "../../gis_dataset/pages/Table";
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import get from 'lodash/get'
+import { range as d3range } from "d3-array"
 
 import { Combobox } from '@headlessui/react'
 
 import ProjectHoverComp from './MapHoverComp'
 
 import { download as shpDownload } from "~/pages/DataManager/utils/shp-write"
+
+import download from "downloadjs"
 import { DamaContext } from "~/pages/DataManager/store"
 import Selector from './Selector'
 // import Uploads from "./pages/Uploads";
@@ -142,9 +145,10 @@ const ProjectMapFilter = ({
     setTempSymbology,
     tempSymbology,
     activeViewId,
+    columns,
     layer
   }) => { 
-  
+
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext)
   let activeVar = useMemo(() => get(filters, "activeVar.value", ""), [filters]);
   let year = useMemo(
@@ -309,20 +313,18 @@ const ProjectMapFilter = ({
       <div>
         <MapDataDownloader
           activeViewId={ activeViewId }
-          year={ get(metaData, ["years", year]) }/>
+          source = { source }
+          projectKey = { projectKey } />
       </div>
     </div>
   )
 }
 
-const MapDataDownloader = ({ activeViewId, year }) => {
-  
+const MapDataDownloader = ({ activeViewId, source, projectKey }) => {
   const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
-
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    
     const loadData = async () => {
       await falcor.chunk([
         'dama',
@@ -336,7 +338,6 @@ const MapDataDownloader = ({ activeViewId, year }) => {
     }
 
     loadData();
-
     setLoading(true);
 
     if (!(pgEnv && activeViewId)) return;
@@ -345,48 +346,56 @@ const MapDataDownloader = ({ activeViewId, year }) => {
   const data = get(falcorCache,
     ['dama', pgEnv, 'viewsbyId', activeViewId, 'databyId'],
   {})
-
   
   const downloadData = React.useCallback(() => {
-    // const length = get(falcorCache, ['dama', pgEnv, 'viewsbyId', activeViewId, 'data', 'length'], 0);
-    // const path = ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"];
-    // const collection = {
-    //   type: "FeatureCollection",
-    //   features: d3range(0, length).map(id => {
-    //     const data = get(falcorCache, [...path, id], {});
-    //     console.log("what is the value of data: ", data);
-    //     const value = get(data, null);
-    //     const county = get(data, "county", "unknown");
-    //     const geom = get(data, "wkb_geometry", "");
-    //     console.log('geom', geom, data)
-    //     return {
-    //       type: "Feature",
-    //       properties: {
-    //         [variable]: value,
-    //         county,
-    //         year
-    //       },
-    //       geometry: JSON.parse(geom)
-    //     }
-    //   })
-    // }
-    // const options = {
-    //   folder: "shapefiles",
-    //   file: variable,
-    //   types: {
-    //     point: 'points',
-    //     polygon: 'polygons',
-    //     line: 'lines'
-    //   }
-    // }
-    // shpDownload(collection, options);
-  }, [falcorCache, pgEnv, activeViewId, year]);
+    const length = get(falcorCache, ['dama', pgEnv, 'viewsbyId', activeViewId, 'data', 'length'], 0);
+    const path = ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"];
+
+    const collection = {
+      type: "FeatureCollection",
+      features: d3range(0, length).map(id => {
+        const data = get(falcorCache, [...path, id], {});
+        const geom = get(data, "wkb_geometry", "");
+        
+        return {
+          type: "Feature",
+          properties: {
+            [id]: data
+          },
+          geometry: geom 
+        }
+      })
+    }
+
+    const options = {
+      folder: "shapefiles",
+      file: "map_geopoints",
+      types: {
+        point: 'points',
+        polygon: 'polygons',
+        line: 'lines'
+      }
+    }
+    shpDownload(collection, options);
+  }, [falcorCache, pgEnv, activeViewId]);
+
+  // const columns = ['ogc_fid', 'mpo', 'cost', 'ptype', 'sponsor', 'tip_id'];
+  // console.log("what is data: ", data);
+  // const dataKeys = Object.keys(data);
+  // const downloadData = React.useCallback(() => {
+  //   const mapped = dataKeys.map(d => {
+  //     return columns.map(c => {
+  //       return data[d][c];
+  //     }).join(",")
+  //   })
+  //   mapped.unshift(columns.map(c => c).join(","));
+  //   download(mapped.join("\n"), `tip_project.csv`, "text/csv");
+  // }, [data, columns]);
 
   return (
     <div>
       <Button themeOptions={{size:'sm', color: 'primary'}}
         onClick={ downloadData }
-        disabled={ loading }
       >
         Download
       </Button>
