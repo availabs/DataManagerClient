@@ -17,7 +17,7 @@ const Symbology = {
                 displayName: "string:default=variableId",
                 type: "string:enum:[data-variable, meta-variable]",
                 filterExpression: "?maplibreExpression",
-                paintExpression: "?maplibreExpression",
+                paintExpression: "maplibreExpression",
                 scale: {
                   type: "string:enum:[quantile, threshold, ordinal]",
                   range: "array:string",

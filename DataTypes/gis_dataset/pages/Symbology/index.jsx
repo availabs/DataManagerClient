@@ -49,24 +49,53 @@ const SymbologyEditor = ({ source, views }) => {
 
   const [activeViewId, _setActiveViewId] = React.useState(null);
   const [activeLayerId, _setActiveLayerId] = React.useState(null);
-  const [activePaintProperty, setActivePaintProperty] = React.useState(null);
-  const [paintPropertyActions, setPaintPropertyActions] = React.useState({});
+  const [activePaintPropertyId, setActivePaintPropertyId] = React.useState(null);
+  const [paintPropertyActions, setPaintPropertyActions] = React.useState(null);
 
   const reset = React.useCallback(() => {
     _setActiveViewId(null);
     _setActiveLayerId(null);
-    setActivePaintProperty(null);
+    setActivePaintPropertyId(null);
+    setPaintPropertyActions(null);
   }, []);
 
   const setActiveViewId = React.useCallback(vid => {
     _setActiveViewId(vid);
     setActiveLayerId(null);
-    setActivePaintProperty(null);
+    setActivePaintPropertyId(null);
+    setPaintPropertyActions(null);
   }, []);
+  const activeView = React.useMemo(() => {
+    return get(symbology, "views", [])
+      .reduce((a, c) => {
+        return c.viewId === activeViewId ? c : a;
+      }, null);
+  }, [symbology, activeViewId]);
+
   const setActiveLayerId = React.useCallback(lid => {
     _setActiveLayerId(lid);
-    setActivePaintProperty(null);
+    setActivePaintPropertyId(null);
+    setPaintPropertyActions(null);
   }, []);
+  const activeLayer = React.useMemo(() => {
+    return get(activeView, "layers", [])
+      .reduce((a, c) => {
+        return c.layerId === activeLayerId ? c : a;
+      }, null);
+  }, [activeView, activeLayerId]);
+
+  const activePaintProperty = React.useMemo(() => {
+    return get(activeLayer, ["paintProperties", activePaintPropertyId], null);
+  }, [activeLayer, activePaintPropertyId]);
+
+  const setActivePaintPropertyAction = React.useCallback((ppId, action) => {
+    setPaintPropertyActions(prev => ({ ...prev, [ppId]: action }));
+    setActivePaintPropertyId(ppId);
+  }, [setPaintPropertyActions, setActivePaintPropertyId]);
+
+  const activePaintPropertyAction = React.useMemo(() => {
+    return get(paintPropertyActions, activePaintPropertyId, null);
+  }, [activePaintPropertyId, paintPropertyActions]);
 
   React.useEffect(() => {
     if (!symbology) {
@@ -75,38 +104,43 @@ const SymbologyEditor = ({ source, views }) => {
     else if (!activeViewId) {
       setActiveViewId(get(symbology, ["views", 0, "viewId"], null));
       setActiveLayerId(null);
-      setActivePaintProperty(null);
+      setActivePaintPropertyId(null);
+      setPaintPropertyActions(null);
     }
   }, [symbology, activeViewId]);
   React.useEffect(() => {
     if (!symbology) {
       setActiveLayerId(null);
     }
-    else if (activeViewId && !activeLayerId) {
-      const activeView = symbology.views
-        .reduce((a, c) => {
-          return c.viewId === activeViewId ? c : a;
-        }, null);
+    else if (activeView && !activeLayerId) {
       setActiveLayerId(get(activeView, ["layers", 0, "layerId"], null));
+      setActivePaintPropertyId(null);
+      setPaintPropertyActions(null);
     }
-  }, [symbology, activeViewId, activeLayerId]);
+  }, [symbology, activeView, activeLayerId]);
   React.useEffect(() => {
     if (!symbology) {
-      setActivePaintProperty(null);
+      setActivePaintPropertyId(null);
     }
-    else if (activeViewId && activeLayerId && !activePaintProperty) {
-      const activeView = symbology.views
-        .reduce((a, c) => {
-          return c.viewId === activeViewId ? c : a;
-        }, null);
-      const activeLayer = activeView.layers
-        .reduce((a, c) => {
-          return c.layerId === activeLayerId ? c : a;
-        }, null);
-      const [paintProperty] = Object.keys(activeLayer.paintProperties);
-      setActivePaintProperty(paintProperty);
+    else if (activeLayer && !activePaintPropertyId) {
+      const [ppId = null] = Object.keys(activeLayer.paintProperties);
+      setActivePaintPropertyId(ppId);
+      setPaintPropertyActions(prev => {
+        if (prev && (ppId in prev)) {
+          return { [ppId]: prev[ppId] };
+        }
+        return null;
+      });
     }
-  }, [symbology, activeViewId, activeLayerId, activePaintProperty]);
+  }, [symbology, activeLayer, activePaintPropertyId]);
+  React.useEffect(() => {
+    if (!symbology) {
+      setPaintPropertyActions(null);
+    }
+    else if (activePaintPropertyId && !activePaintPropertyAction) {
+      setActivePaintPropertyAction(activePaintPropertyId, "variable");
+    }
+  }, [symbology, activePaintPropertyId, setActivePaintPropertyAction]);
 
   const startNewSymbology = React.useCallback(() => {
     reset();
@@ -135,17 +169,17 @@ const SymbologyEditor = ({ source, views }) => {
     return {
       "symbology-layer": {
         source, setSymbology, startNewSymbology, symbology,
-        activeViewId, setActiveViewId,
-        activeLayerId, setActiveLayerId,
-        activePaintProperty, setActivePaintProperty,
-        paintPropertyActions, setPaintPropertyActions
+        activeViewId, setActiveViewId, activeView,
+        activeLayerId, setActiveLayerId, activeLayer,
+        activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
+        paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction
       }
     }
   }, [source, setSymbology, startNewSymbology, symbology,
-        activeViewId, setActiveViewId,
-        activeLayerId, setActiveLayerId,
-        activePaintProperty, setActivePaintProperty,
-        paintPropertyActions, setPaintPropertyActions
+        activeViewId, setActiveViewId, activeView,
+        activeLayerId, setActiveLayerId, activeLayer,
+        activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
+        paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction
       ]
   );
 

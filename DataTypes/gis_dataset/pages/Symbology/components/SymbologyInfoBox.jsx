@@ -3,7 +3,9 @@ import React from "react"
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 
-import { Legend } from "~/modules/avl-map-2/src"
+import { DamaContext } from "~/pages/DataManager/store"
+
+import { Legend, getScale, strictNaN } from "~/modules/avl-map-2/src"
 
 import useViewVariable from "./useViewVariable"
 
@@ -35,17 +37,9 @@ const SymbologyInfoBox = props => {
 export default SymbologyInfoBox;
 
 const SymbologyBox = ({ symbology, ...props }) => {
-
-  const activeViewId = React.useMemo(() => {
-    return get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
-  }, [props]);
   const activeView = React.useMemo(() => {
-    return get(symbology, "views", [])
-      .reduce((a, c) => {
-        return c.viewId === activeViewId ? c : a;
-      }, null)
-  }, [symbology, activeViewId]);
-
+    return get(props, ["layerProps", "symbology-layer", "activeView"], null);
+  }, [props]);
   return (
     <div>
       <div>
@@ -60,22 +54,16 @@ const SymbologyBox = ({ symbology, ...props }) => {
 }
 
 const ViewBox = ({ view, ...props }) => {
-  const activeLayerId = React.useMemo(() => {
-    return get(props, ["layerProps", "symbology-layer", "activeLayerId"], null);
+  const activeLayer = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activeLayer"], null);
   }, [props]);
-  const avtiveLayer = React.useMemo(() => {
-    return get(view, "layers", [])
-      .reduce((a, c) => {
-        return c.layerId === activeLayerId ? c : a;
-      }, null);
-  }, [view, activeLayerId]);
   return (
     <div>
       <div>View ID: { view.viewId }</div>
       <div className="ml-4">
-        { !avtiveLayer ? null :
-          <LayerBox key={ avtiveLayer.layerId }
-            { ...props } layer={ avtiveLayer }
+        { !activeLayer ? null :
+          <LayerBox key={ activeLayer.layerId }
+            { ...props } layer={ activeLayer }
             activeViewId={ view.viewId }/>
         }
       </div>
@@ -83,23 +71,23 @@ const ViewBox = ({ view, ...props }) => {
   )
 }
 const LayerBox = ({ layer, ...props }) => {
-  const ppId = React.useMemo(() => {
+  const activePaintPropertyId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activePaintPropertyId"], null);
+  }, [props]);
+  const activePaintProperty = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "activePaintProperty"], null);
   }, [props]);
-  const paintProperty = React.useMemo(() => {
-    return get(layer, ["paintProperties", ppId], null);
-  }, [layer, ppId])
   return (
     <div>
       <div>Layer ID: { layer.layerId }</div>
       <div className="ml-4">
         <div>Layer Type: { layer.type }</div>
         <div className="ml-4">
-          { !ppId ? null :
-            <PaintPropertyBox key={ ppId } { ...props }
+          { !activePaintProperty ? null :
+            <PaintPropertyBox key={ activePaintPropertyId } { ...props }
               layerId={ layer.layerId }
-              ppId={ ppId }
-              paintProperty={ paintProperty }/>
+              ppId={ activePaintPropertyId }
+              paintProperty={ activePaintProperty }/>
           }
         </div>
       </div>
@@ -126,6 +114,40 @@ const VariableBox = props => {
   } = props;
 
   const { variable } = paintProperty;
+
+  const updateVariable = React.useCallback(update => {
+    setSymbology(prev => {
+      return ({
+        name: prev.name,
+        views: prev.views.map(view => {
+          if (view.viewId === activeViewId) {
+            return {
+              viewId: activeViewId,
+              layers: view.layers.map(layer => {
+                if (layer.layerId === layerId) {
+                  return {
+                    ...layer,
+                    paintProperties: {
+                      ...layer.paintProperties,
+                      [ppId]: {
+                        ...layer.paintProperties[ppId],
+                        variable: {
+                          ...layer.paintProperties[ppId].variable,
+                          ...update
+                        }
+                      }
+                    }
+                  }
+                }
+                return layer;
+              })
+            }
+          }
+          return view;
+        })
+      })
+    })
+  }, [setSymbology, activeViewId, layerId, ppId]);
 
   const updateScale = React.useCallback(scale => {
     setSymbology(prev => {
@@ -166,30 +188,58 @@ const VariableBox = props => {
 
   const data = useViewVariable(activeViewId, variable.variableId);
 
-  const domain = React.useMemo(() => {
-    return calcDomain(variable.scale.type, data, variable.scale.range.length)
+  const dataDomain = React.useMemo(() => {
+    return calcDomain(variable, data)
   }, [variable, data]);
 
-  React.useEffect(() => {
-    if (domain.length && !isEqual(domain, variable.scale.domain)) {
-      updateScale({ domain });
-    }
-  }, [updateScale, variable, domain]);
+  // React.useEffect(() => {
+  //   if (domain.length && !isEqual(domain, variable.scale?.domain)) {
+  //     updateScale({ domain });
+  //   }
+  // }, [updateScale, variable, domain]);
 
   React.useEffect(() => {
-    const dl = paintProperty.variable?.scale?.domain?.length;
-    const rl = paintProperty.variable?.scale?.range?.length;
-    if (dl && rl && ppId.includes("color")) {
-      MapActions.updateLegend({
-        ...variable.scale,
-        name: variable.displayName,
-        isActive: true
+
+  }, [variable, updateScale]);
+
+  React.useEffect(() => {
+    if (variable.scale && data.length && dataDomain.length) {
+
+      const { type, range = [] } = variable.scale;
+
+      if (!range.length) return;
+
+      const scale = getScale(type, dataDomain, range);
+
+      let domain = scale.domain();
+      if (type === "quantile") {
+        domain = scale.range().map(r => scale.invertExtent(r)[1]);
+      }
+
+      const dataMap = data.reduce((a, c) => {
+        if (!strictNaN(c.value)) {
+          a[c.id] = scale(c.value);
+        }
+        return a;
+      }, {});
+
+      const paintExpression = [
+        "get",
+        ["to-string", ["get", "ogc_fid"]],
+        ["literal", dataMap]
+      ];
+
+      if (isEqual(paintExpression, variable.paintExpression)) return;
+
+      updateVariable({
+        paintExpression,
+        scale: {
+          ...variable.scale,
+          domain
+        }
       });
     }
-    else {
-      MapActions.updateLegend({ isActive: false });
-    }
-  }, [MapActions.updateLegend, variable, ppId]);
+  }, [variable, data, updateVariable, dataDomain]);
 
   const VariableEditor = React.useMemo(() => {
     return getVariableEditor(ppId);
@@ -322,28 +372,13 @@ const getPaintPropertyLimits = ppId => {
 
 const PaintPropertyBox = ({ ppId, paintProperty, layerProps, ...props }) => {
 
-  const paintPropertyActions = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "paintPropertyActions"], null);
-  }, [layerProps]);
-  const setPaintPropertyActions = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "setPaintPropertyActions"], null);
-  }, [layerProps]);
-
   const action = React.useMemo(() => {
-    return get(paintPropertyActions, ppId, "variable");
-  }, [paintPropertyActions, ppId]);
+    return get(layerProps, ["symbology-layer", "activePaintPropertyAction"], null);
+  }, [layerProps]);
 
   const Editor = React.useMemo(() => {
     return get(VariableActionMap, action, null);
   }, [action]);
-
-  React.useEffect(() => {
-    const dl = paintProperty.variable?.scale?.domain?.length;
-    const rl = paintProperty.variable?.scale?.range?.length;
-    if (!(dl && rl) || !ppId.includes("color")) {
-      props.MapActions.updateLegend({ isActive: false });
-    }
-  }, [props.MapActions, paintProperty. ppId]);
 
   const limits = React.useMemo(() => {
     return getPaintPropertyLimits(ppId);

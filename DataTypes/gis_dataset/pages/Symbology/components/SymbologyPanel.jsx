@@ -63,13 +63,15 @@ const SymbologyPanel = props => {
   const dataVariables = React.useMemo(() => {
     return columns
       .filter(md => md.display === "data-variable")
-        .map(dv => ({ variableId: dv.name, type: dv.display }));
+        .map(dv => ({ variableId: dv.name, type: dv.display }))
+        .sort((a, b) => a.variableId.localeCompare(b.variableId));
   }, [columns]);
 
   const metaVariables = React.useMemo(() => {
     return columns
       .filter(md => md.display === "meta-variable")
-        .map(dv => ({ variableId: dv.name, type: dv.display }));
+        .map(dv => ({ variableId: dv.name, type: dv.display }))
+        .sort((a, b) => a.variableId.localeCompare(b.variableId));
   }, [columns]);
 
   const variables = React.useMemo(() => {
@@ -77,19 +79,20 @@ const SymbologyPanel = props => {
   }, [dataVariables, metaVariables]);
 
   return (
-    <div className="flex flex-col h-full border border-current rounded p-1">
-      <div className="flex-1">
+    <div className="absolute inset-0 border overflow-visible scrollbar-sm p-1">
+      <div className="mb-1 pb-1 border-b border-current">
+        <SymbologyButtons
+          startNewSymbology={ startNewSymbology }
+          symbology={ symbology }/>
+      </div>
+
+      <div>
         { !symbology ? null :
           <Symbology { ...props }
             symbology={ symbology }
             setSymbology={ setSymbology }
             variables={ variables }/>
         }
-      </div>
-      <div className="border-t border-current pt-1">
-        <SymbologyButtons
-          startNewSymbology={ startNewSymbology }
-          symbology={ symbology }/>
       </div>
     </div>
   )
@@ -161,13 +164,7 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
 
   const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
   const setActiveViewId = get(props, ["layerProps", "symbology-layer", "setActiveViewId"], null);
-
-  const activeView = React.useMemo(() => {
-    return get(symbology, "views", [])
-      .reduce((a, c) => {
-        return c.viewId === activeViewId ? c : a;
-      }, null)
-  }, [symbology, activeViewId]);
+  const activeView = get(props, ["layerProps", "symbology-layer", "activeView"], null);
 
   return (
     <div>
@@ -201,13 +198,7 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
 const ViewItem = ({ view, ...props }) => {
   const activeLayerId = get(props, ["layerProps", "symbology-layer", "activeLayerId"], null);
   const setActiveLayerId = get(props, ["layerProps", "symbology-layer", "setActiveLayerId"], null);
-
-  const activeLayer = React.useMemo(() => {
-    return get(view, "layers", [])
-      .reduce((a, c) => {
-        return c.layerId === activeLayerId ? c : a;
-      }, null);
-  }, [view, activeLayerId]);
+  const activeLayer = get(props, ["layerProps", "symbology-layer", "activeLayer"], null);
 
   return (
     <div>
@@ -252,15 +243,15 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
     return get(PaintProperties, layerType, []);
   }, [layerType]);
 
-  const activePaintProperty = React.useMemo(() => {
-    return get(props, ["layerProps", "symbology-layer", "activePaintProperty"], null);
+  const activePaintPropertyId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activePaintPropertyId"], null);
   }, [props.layerProps]);
-  const setActivePaintProperty = React.useMemo(() => {
-    return get(props, ["layerProps", "symbology-layer", "setActivePaintProperty"], null);
+  const setActivePaintPropertyId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setActivePaintPropertyId"], null);
   }, [props.layerProps]);
 
   const addPaintProperty = React.useCallback(ppId => {
-    setActivePaintProperty(ppId);
+    setActivePaintPropertyId(ppId);
     setSymbology(prev => {
       return {
         name: prev.name,
@@ -285,11 +276,11 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
         }))
       }
     })
-  }, [setSymbology, layerId, setActivePaintProperty]);
+  }, [setSymbology, layerId, setActivePaintPropertyId]);
 
   const removePaintProperty = React.useCallback(ppId => {
-    if (activePaintProperty === ppId) {
-      setActivePaintProperty(null);
+    if (activePaintPropertyId === ppId) {
+      setActivePaintPropertyId(null);
     }
     setSymbology(prev => {
       return {
@@ -312,21 +303,23 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
         }))
       }
     })
-  }, [setSymbology, layerId, activePaintProperty, setActivePaintProperty]);
+  }, [setSymbology, layerId, activePaintPropertyId, setActivePaintPropertyId]);
 
   return (
     <div>
       <div className="ml-4">
         <div>Layer Type: { layer.type }</div>
-        <div>
-          <MultiLevelSelect isDropdown
-            options={ paintProperties }
-            onChange={ addPaintProperty }
-          >
-            <MultiSelectDisplay>
-              Add a Paint Property
-            </MultiSelectDisplay>
-          </MultiLevelSelect>
+        <div className="relative">
+          <div className="mb-1">
+            <MultiLevelSelect isDropdown
+              options={ paintProperties }
+              onChange={ addPaintProperty }
+            >
+              <MultiSelectDisplay>
+                Add a Paint Property
+              </MultiSelectDisplay>
+            </MultiLevelSelect>
+          </div>
           <div className="ml-4 grid grid-cols-1 gap-1">
             { Object.keys(layer.paintProperties)
                 .map((pp, i)=> (
@@ -363,6 +356,7 @@ const makeNewVarialbe = (variable, ppId) => {
   }
   if (ppId.includes("color")) {
     newVar.scale.color = variable.type === "data-variable" ? "BrBG" : "Set3";
+    newVar.scale.domain = [];
     newVar.scale.range = getColorRange(7, newVar.scale.color);
     newVar.scale.reverse = false;
   }
@@ -375,7 +369,7 @@ const makeNewVarialbe = (variable, ppId) => {
     newVar.scale.step = 1;
   }
   if (ppId.includes("offset")) {
-    newVar.scale.range = [1, 2, 3, 4, 5];
+    newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
     newVar.scale.step = 1;
   }
   if (ppId.includes("radius")) {
@@ -504,28 +498,26 @@ const PaintPropertyItem = props => {
     removePaintProperty(ppId);
   }, [ppId, removePaintProperty]);
 
-  const activePaintProperty = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "activePaintProperty"], null);
+  const activePaintPropertyId = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "activePaintPropertyId"], null);
   }, [layerProps]);
-  const setActivePaintProperty = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "setActivePaintProperty"], null);
-  }, [layerProps]);
-
-  const paintPropertyActions = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "paintPropertyActions"], null);
-  }, [layerProps]);
-  const setPaintPropertyActions = React.useMemo(() => {
-    return get(layerProps, ["symbology-layer", "setPaintPropertyActions"], null);
+  const setActivePaintPropertyId = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "setActivePaintPropertyId"], null);
   }, [layerProps]);
 
-  const setAction = React.useCallback(a => {
-    setPaintPropertyActions(prev => ({ ...prev, [ppId]: a }));
-    setActivePaintProperty(ppId);
-  }, [setPaintPropertyActions, ppId, setActivePaintProperty]);
+  const isActive = activePaintPropertyId === ppId;
 
   const action = React.useMemo(() => {
-    return get(paintPropertyActions, ppId, "variable");
-  }, [paintPropertyActions, ppId]);
+    return get(layerProps, ["symbology-layer", "paintPropertyActions", ppId], null);
+  }, [layerProps]);
+
+  const setActivePaintPropertyAction = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "setActivePaintPropertyAction"], null);
+  }, [layerProps]);
+
+  const setAction = React.useCallback(action => {
+    setActivePaintPropertyAction(ppId, action);
+  }, [setActivePaintPropertyAction, ppId]);
 
   const { layerId } = layer;
 
@@ -603,30 +595,35 @@ const PaintPropertyItem = props => {
   const theme = useTheme();
 
   return (
-    <div className="border-b-2 border-current py-1">
-      <div className="border-b mb-1 pb-1 border-current flex items-center">
+    <div className="border-b border-current py-1">
+      <div className="flex items-center">
         <ActivePPToggle
-          setActive={ setActivePaintProperty }
+          setActive={ setActivePaintPropertyId }
           ppId={ ppId }
-          isActive={ activePaintProperty === ppId }/>
+          isActive={ activePaintPropertyId === ppId }/>
         <div className="ml-1 flex-1">
           Paint Property: { ppId }
         </div>
         <RemovePaintPropertyButton
           removePaintProperty={ doRemovePaintProperty }/>
       </div>
-      <div>
-        <RadioGroup
-          options={ RadioOptions }
-          value={ action }
-          onChange={ setAction }/>
+      <div className={ `
+          ${ isActive ? "block" : "invisible h-0 overflow-hidden" }
+        ` }
+      >
+        <div>
+          <RadioGroup
+            options={ RadioOptions }
+            value={ action }
+            onChange={ setAction }/>
+        </div>
+        { action !== "variable" ? null :
+          <VariableAdder
+            options={ variables }
+            onChange={ addVariable }
+            value={ paintProperty.variable?.variableId }/>
+        }
       </div>
-      { action !== "variable" ? null :
-        <VariableAdder
-          options={ variables }
-          onChange={ addVariable }
-          value={ paintProperty.variable?.variableId }/>
-      }
     </div>
   )
 }
@@ -646,16 +643,6 @@ const VariableAdder = ({ onChange, value, options }) => {
           valueAccessor={ accessor }
           onChange={ onChange }
           value={ value }/>
-      </div>
-    </div>
-  )
-}
-
-const VariableItem = ({ variable }) => {
-  return (
-    <div>
-      <div>
-        { variable.displayName }
       </div>
     </div>
   )

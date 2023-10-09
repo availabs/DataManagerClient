@@ -1,21 +1,22 @@
 import get from "lodash/get"
 import { extent as d3extent } from "d3-array"
 
-import { getColorRange } from "~/modules/avl-map-2/src"
+import { getColorRange, strictNaN } from "~/modules/avl-map-2/src"
 
 import ckmeans from "~/pages/DataManager/utils/ckmeans";
 
-const strictNaN = v => (v === "") || (v === null) || isNaN(v);
 const ordinalSort = (a, b) => {
   return String(a).localeCompare(String(b));
 }
 
-export const calcDomain = (type, data, rangeLength) => {
+export const calcDomain = (variable, data) => {
+  const { scale } = variable;
+  const { type, range = [] } = scale;
   const values = data.map(d => strictNaN(d.value) ? d.value : +d.value);
   if (!values.length) return [];
   switch (type) {
     case "threshold": {
-      return ckmeans(values, rangeLength || 7).slice(1);
+      return ckmeans(values, range.length || 7).slice(1);
     }
     case "ordinal":
       return [...new Set(values)].sort(ordinalSort);
@@ -23,12 +24,14 @@ export const calcDomain = (type, data, rangeLength) => {
       return values;
   }
 }
-const calcRange = (type, domainLength, color, reverse) => {
+const calcRange = variable => {
+  const { scale } = variable;
+  const { type, domain = [], color, reverse } = scale;
   switch (type) {
     case "threshold":
-      return getColorRange(domainLength ? domainLength + 1 : 7, color, reverse);
+      return getColorRange(domain.length ? domain.length + 1 : 7, color, reverse);
     case "ordinal":
-      return getColorRange(Math.min(12, domainLength), color, reverse);
+      return getColorRange(Math.min(12, domain.length || 7), color, reverse);
     default:
       return getColorRange(7, color, reverse);
   }

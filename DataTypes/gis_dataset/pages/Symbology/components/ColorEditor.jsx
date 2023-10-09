@@ -129,7 +129,7 @@ const EditorColorBar = ({ colors, reverse, range, updateScale }) => {
   }, [colors, range]);
 
   const onClick = React.useCallback(() => {
-    updateScale({ range: colors, reverse });
+    updateScale({ range: colors, domain: [], reverse });
   }, [updateScale, colors, reverse]);
 
   return (

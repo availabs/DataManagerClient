@@ -10,13 +10,7 @@ import SymbologyInfoBox from "./SymbologyInfoBox"
 
 import { DAMA_HOST } from "~/config"
 
-const SymbologyLegend = ({ layerProps }) => {
-  return (
-    <div>
-      SymbologyLegend
-    </div>
-  )
-}
+import SymbologyLegend from "./SymbologyLegend"
 
 const SymbologyLayerRenderComponent = props => {
 
@@ -68,36 +62,14 @@ const SymbologyLayerRenderComponent = props => {
 
   }, [symbology, activeView]);
 
-  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
-
-  const getDataById = React.useCallback(() => {
-    return get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
-  }, [falcorCache, pgEnv, activeViewId]);
-
-  React.useEffect(() => {
-    if (!activeViewId) return;
-    falcor.get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
-  }, [falcor, pgEnv, activeViewId]);
-
-  const [dataLength, setDataLength] = React.useState(0);
-  React.useEffect(() => {
-    if (!activeViewId) return;
-    const dl = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"], 0);
-    setDataLength(dl);
-  }, [falcorCache, pgEnv, activeViewId]);
-
-  React.useEffect(() => {
-    if (!(dataLength && variables.length)) return;
-    falcor.get([
-      "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      { from: 0, to: dataLength - 1 }, variables
-    ])
-  }, [falcor, pgEnv, activeViewId, dataLength, variables]);
+  const [legend, setLegend] = React.useState(null);
 
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!activeLayer) return;
+
+    let legend = null;
 
     avlLayer.layers.forEach(layer => {
       const defaultPaint = { ...get(layer, "paint", {}) };
@@ -116,38 +88,30 @@ const SymbologyLayerRenderComponent = props => {
 
             if (value) {
               delete defaultPaint[ppId];
-console.log("SymbologyLayerRenderComponent::value", value);
+// console.log("SymbologyLayerRenderComponent::value", value);
               if (maplibreMap.getLayer(activeLayer.layerId)) {
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, value);
               }
             }
             else if (paintExpression) {
               // delete defaultPaint[ppId];
-console.log("SymbologyLayerRenderComponent::paintExpression", paintExpression);
+// console.log("SymbologyLayerRenderComponent::paintExpression", paintExpression);
             }
             else if (variable) {
               delete defaultPaint[ppId];
-console.log("SymbologyLayerRenderComponent::variable", variable);
+// console.log("SymbologyLayerRenderComponent::variable", variable);
               if (maplibreMap.getLayer(activeLayer.layerId)) {
 
-                const { type, domain, range } = variable.scale;
+                const { paintExpression, scale } = variable;
 
-                const scale = getScale(type, domain, range);
+                if (ppId.includes("color")) {
+                  legend = {
+                    name: variable.displayName,
+                    ...scale
+                  };
+                }
 
-                const dataById = getDataById();
-
-                const dataMap = Object.keys(dataById)
-                  .reduce((a, c) => {
-                    const value = get(dataById, [c, variable.variableId], null);
-                    if ((value !== 'null') && (value !== null)) {
-                      a[c] = scale(value);
-                    }
-                    return a;
-                  }, {});
-
-                const exp = ["get", ["to-string", ["get", "ogc_fid"]], ["literal", dataMap]];
-
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, exp);
+                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
               }
             }
           })
@@ -165,15 +129,27 @@ console.log("SymbologyLayerRenderComponent::variable", variable);
         })
     });
 
+    setLegend(legend);
+
   }, [maplibreMap, resourcesLoaded, activeLayer,
-      getDataById, setLayerVisibility, avlLayer
+      setLayerVisibility, avlLayer
     ]
   )
 
-  return (
-    <div className="p-1 pointer-events-auto bg-gray-100 rounded w-80">
+  return !legend ? null : (
+    <div className="p-1 pointer-events-auto bg-gray-100 rounded"
+      style={ {
+        width: "100%",
+        maxWidth: "25rem"
+      } }
+    >
       <div className="bg-gray-300 border border-current rounded p-1">
-        <SymbologyLegend />
+        <div>
+          { legend.name }
+        </div>
+        <div>
+          <SymbologyLegend { ...legend }/>
+        </div>
       </div>
     </div>
   );

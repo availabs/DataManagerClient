@@ -15,12 +15,11 @@ import {
   ColorBar,
   Input,
   Button,
-  useTheme
+  useTheme,
+  strictNaN
 } from "~/modules/avl-map-2/src";
 
 import "./brush.css"
-
-const strictNaN = v => (v === "") || (v === null) || isNaN(v);
 
 const RangeItem = ({ value }) => {
   const format = d3format(",.1f");
