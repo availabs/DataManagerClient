@@ -110,17 +110,16 @@ const TablePage = ({
       let maxData = Math.min(dataLength, 10000);
       console.time("getViewData", maxData);
       falcor
-        .chunk(
+        .get(
           [
             "dama",
             pgEnv,
             "viewsbyId",
             activeViewId,
             "databyIndex",
-            [...Array(maxData).keys()],
+            {"from":0, "to": maxData-1},
             attributes,
-          ],
-          { chunkSize: 500 }
+          ]
         )
         .then((d) => {
           console.timeEnd("getViewData", maxData);
