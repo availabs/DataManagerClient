@@ -43,7 +43,7 @@ export const InfoBoxSidebarContainer = ({ open, children }) => {
 }
 const NewLibraryComponents = { InfoBoxSidebarContainer };
 
-const SymbologyEditor = ({ source, views }) => {
+const SymbologyEditor = ({ source, views, ...props }) => {
 
   const [symbology, setSymbology] = React.useState(null);
 
@@ -68,7 +68,7 @@ const SymbologyEditor = ({ source, views }) => {
   const activeView = React.useMemo(() => {
     return get(symbology, "views", [])
       .reduce((a, c) => {
-        return c.viewId === activeViewId ? c : a;
+        return +c.viewId === +activeViewId ? c : a;
       }, null);
   }, [symbology, activeViewId]);
 
@@ -146,8 +146,9 @@ const SymbologyEditor = ({ source, views }) => {
     reset();
     setSymbology({
       name: "",
-      views: views.map(view => ({
+      views: views.map((view, i) => ({
         viewId: view.view_id,
+        version: view.version || `View ID ${ view.view_id }`,
         layers: get(view, ["metadata", "tiles", "layers"], [])
           .map(layer => ({
             layerId: layer.id,
@@ -169,14 +170,14 @@ const SymbologyEditor = ({ source, views }) => {
     return {
       "symbology-layer": {
         source, setSymbology, startNewSymbology, symbology,
-        activeViewId, setActiveViewId, activeView,
+        activeViewId, /*setActiveViewId,*/ activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction
       }
     }
   }, [source, setSymbology, startNewSymbology, symbology,
-        activeViewId, setActiveViewId, activeView,
+        activeViewId, /*setActiveViewId,*/ activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction

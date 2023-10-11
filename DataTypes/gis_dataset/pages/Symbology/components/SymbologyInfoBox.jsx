@@ -11,6 +11,7 @@ import useViewVariable from "./useViewVariable"
 
 import ColorEditor from "./ColorEditor"
 import RangeEditor from "./RangeEditor"
+import OrdinalRangeEditor from "./OrdinalRangeEditor"
 import ColorPicker from "./ColorPicker"
 
 import { calcDomain } from "./createLegend"
@@ -95,9 +96,12 @@ const LayerBox = ({ layer, ...props }) => {
   )
 }
 
-const getVariableEditor = ppId => {
+const getVariableEditor = (ppId, type) => {
   if (ppId.includes("color")) {
     return ColorEditor;
+  }
+  if (type === "ordinal") {
+    return OrdinalRangeEditor;
   }
   return RangeEditor;
 }
@@ -122,7 +126,7 @@ const VariableBox = props => {
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
-              viewId: activeViewId,
+              ...view,
               layers: view.layers.map(layer => {
                 if (layer.layerId === layerId) {
                   return {
@@ -156,7 +160,7 @@ const VariableBox = props => {
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
-              viewId: activeViewId,
+              ...view,
               layers: view.layers.map(layer => {
                 if (layer.layerId === layerId) {
                   return {
@@ -191,12 +195,6 @@ const VariableBox = props => {
   const dataDomain = React.useMemo(() => {
     return calcDomain(variable, data)
   }, [variable, data]);
-
-  // React.useEffect(() => {
-  //   if (domain.length && !isEqual(domain, variable.scale?.domain)) {
-  //     updateScale({ domain });
-  //   }
-  // }, [updateScale, variable, domain]);
 
   React.useEffect(() => {
 
@@ -242,12 +240,12 @@ const VariableBox = props => {
   }, [variable, data, updateVariable, dataDomain]);
 
   const VariableEditor = React.useMemo(() => {
-    return getVariableEditor(ppId);
-  }, [ppId]);
+    return getVariableEditor(ppId, variable?.scale?.type);
+  }, [ppId, variable]);
 
   return (
     <div>
-      <div>Variable: { variable.displayName }</div>
+      <div>Variable: { variable.variableId }</div>
       <div>
         <VariableEditor { ...rest }
           variable={ variable }
@@ -295,7 +293,7 @@ const ValueBox = props => {
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
-              viewId: activeViewId,
+              ...view,
               layers: view.layers.map(layer => {
                 if (layer.layerId === layerId) {
                   return {

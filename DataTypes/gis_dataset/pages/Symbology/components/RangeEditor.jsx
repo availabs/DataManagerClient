@@ -28,12 +28,12 @@ const RangeItem = ({ value }) => {
   )
 }
 
-const myrange = (min, max, step) => {
+export const myrange = (min, max, step = 1) => {
   const mult = 1000.0;
   const m1 = Math.trunc(min * mult);
   const m2 = Math.trunc(max * mult);
   const s = Math.trunc(step * mult);
-  return d3range(m1, m2, s).map(v => v / mult);
+  return d3range(m1, m2 + s, s).map(v => v / mult);
 }
 
 const SimpleControls = ({ variable, updateScale, min, max, steps, ...props }) => {
@@ -64,7 +64,7 @@ const SimpleControls = ({ variable, updateScale, min, max, steps, ...props }) =>
     const margin = 4;
 
     const pointScale = scalePoint()
-      .domain(myrange(min, max + scale.step, scale.step))
+      .domain(myrange(min, max, scale.step))
       .range([margin, width - margin])
       .padding(0.5);
 
@@ -161,12 +161,12 @@ const SimpleControls = ({ variable, updateScale, min, max, steps, ...props }) =>
   const setStepSize = React.useCallback(step => {
     step = +step;
     const e1 = d3extent(scale.range);
-    const newValues = myrange(min, max + step, step);
+    const newValues = myrange(min, max, step);
     const i0 = bisectLeft(newValues, e1[0]);
     const i1 = bisectRight(newValues, e1[1]);
     const r0 = newValues[i0];
     const r1 = newValues[i1 - 1];
-    const range = myrange(r0, r1 + step, step);
+    const range = myrange(r0, r1, step);
     updateScale({
       range,
       step
@@ -242,7 +242,7 @@ const RangeEditor = props => {
         }
         { strictNaN(e1) ? null :
           <div className="flex">
-            <div className="flex-1">Current Minimum Value:</div>
+            <div className="flex-1">Current Maximum Value:</div>
             <div className="pr-8">{ e1 }</div>
           </div>
         }

@@ -12,7 +12,7 @@ import { DAMA_HOST } from "~/config"
 
 import SymbologyLegend from "./SymbologyLegend"
 
-const SymbologyLayerRenderComponent = props => {
+export const SymbologyLayerRenderComponent = props => {
 
   const {
     maplibreMap,
@@ -21,46 +21,7 @@ const SymbologyLayerRenderComponent = props => {
     layer: avlLayer
   } = props;
 
-  const symbology = get(props, ["layerProps", "symbology"], null);
-  const activeViewId = get(props, ["layerProps", "activeViewId"], null);
-  const activeLayerId = get(props, ["layerProps", "activeLayerId"], null);
-  const activePaintProperty = get(props, ["layerProps", "activePaintProperty"], null);
-
-  const [variables, setVariables] = React.useState([]);
-
-  const activeView = React.useMemo(() => {
-    return get(symbology, "views", [])
-      .reduce((a, c) => {
-        return c.viewId === activeViewId ? c : a;
-      }, null)
-  }, [symbology, activeViewId]);
-  const activeLayer = React.useMemo(() => {
-    return get(activeView, "layers", [])
-      .reduce((a, c) => {
-        return c.layerId === activeLayerId ? c : a;
-      }, null);
-  }, [activeView, activeLayerId]);
-
-  React.useEffect(() => {
-    if (!symbology || !activeView) {
-      setVariables([]);
-      return;
-    }
-
-    const variables = activeView.layers.reduce((a, c) => {
-      return Object.keys(c.paintProperties)
-        .reduce((aa, cc) => {
-          const variable = get(c, ["paintProperties", cc, "variable"], null);
-          if (variable) {
-            aa.push(variable.variableId);
-          }
-          return aa;
-        }, a);
-    }, []);
-
-    setVariables(variables);
-
-  }, [symbology, activeView]);
+  const activeLayer = get(props, ["layerProps", "activeLayer"], null);
 
   const [legend, setLegend] = React.useState(null);
 
@@ -112,10 +73,10 @@ const SymbologyLayerRenderComponent = props => {
                 }
 
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
+                setLayerVisibility(layer.id, "visible");
               }
             }
           })
-        setLayerVisibility(activeLayer.layerId, "visible");
       }
       else {
         setLayerVisibility(layer.id, "none");
@@ -144,7 +105,7 @@ const SymbologyLayerRenderComponent = props => {
       } }
     >
       <div className="bg-gray-300 border border-current rounded p-1">
-        <div>
+        <div className="font-bold">
           { legend.name }
         </div>
         <div>
