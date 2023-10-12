@@ -13,9 +13,6 @@ const useFormat = format => {
 }
 
 const OrdinalLegend = ({ domain, range, format }) => {
-
-  const Format = useFormat(format);
-
   return (
     <div>
       <div className="grid gap-1"
@@ -33,16 +30,13 @@ const OrdinalLegend = ({ domain, range, format }) => {
           gridTemplateColumns: `repeat(${ domain.length }, minmax(0, 1fr))`
         } }
       >
-        { domain.map(d => <div key={ d } className="pr-1">{ d }</div>) }
+        { domain.map(d => <div key={ d } className="pr-1">{ format(d) }</div>) }
       </div>
     </div>
   )
 }
 
 const VerticalOrdinalLegend = ({ domain, range, format }) => {
-
-  const Format = useFormat(format);
-
   return (
     <div>
       { domain.map((d, i) => (
@@ -50,38 +44,13 @@ const VerticalOrdinalLegend = ({ domain, range, format }) => {
             <div className="w-8 mb-1 mr-1">
               <ColorBar key={ i } colors={ [range[i % range.length]] } height={ 3 }/>
             </div>
-            <div className="flex-1">{ d }</div>
+            <div className="flex-1">{ format(d) }</div>
           </div>
         ))
       }
     </div>
   )
 }
-
-const NonOrdinalLegend = ({ type, domain, range, format = ",d" }) => {
-
-  const Format = useFormat(format);
-
-  return (
-    <div>
-      <ColorBar colors={ range } height={ 3 }/>
-      <LegendTicks type={ type }
-        domain={ domain }
-        range={ range }
-        format={ Format }/>
-    </div>
-  )
-}
-const Legend = ({ type, isVertical = false, ...props }) => {
-  return (
-    type === "ordinal" ?
-      isVertical ?
-        <VerticalOrdinalLegend { ...props }/> :
-        <OrdinalLegend { ...props }/> :
-      <NonOrdinalLegend type={ type } { ...props }/>
-  )
-}
-export default Legend;
 
 const LegendTicks = ({ type, domain, range, format }) => {
   const size = range.length;
@@ -112,3 +81,24 @@ const LegendTicks = ({ type, domain, range, format }) => {
     </div>
   )
 }
+
+const NonOrdinalLegend = ({ range, ...rest }) => {
+  return (
+    <div>
+      <ColorBar colors={ range } height={ 3 }/>
+      <LegendTicks range={ range } { ...rest }/>
+    </div>
+  )
+}
+
+const Legend = ({ type, isVertical = false, format, ...rest }) => {
+  const Format = useFormat(format);
+  return (
+    type === "ordinal" ?
+      isVertical ?
+        <VerticalOrdinalLegend { ...rest } format={ Format }/> :
+        <OrdinalLegend { ...rest } format={ Format }/> :
+      <NonOrdinalLegend type={ type } { ...rest } format={ Format }/>
+  )
+}
+export default Legend;

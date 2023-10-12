@@ -216,7 +216,7 @@ class SymbologyLayer extends AvlLayer {
   modals = {
     "symbology-editor": {
       Component: SymbologyEditorModal,
-      Header: "Symbology Editor",
+      Header: "Symbology Editor (Edit at your own risk!!!)",
       startPos: [160, 90]
     }
   }

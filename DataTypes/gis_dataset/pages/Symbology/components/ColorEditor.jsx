@@ -42,9 +42,11 @@ const ColorEditor = props => {
         scaleType={ scale.type }
         updateScale={ updateScale }/>
 
-      <VerticvalSlider
-        isVertical={ scale.isVertical }
-        updateScale={ updateScale }/>
+      { scale.type !== "ordinal" ? null :
+        <VerticvalSlider
+          isVertical={ scale.isVertical }
+          updateScale={ updateScale }/>
+      }
 
       <RangeSizeSelector
         rangeSize={ rangeSize }
