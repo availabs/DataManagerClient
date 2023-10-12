@@ -5,6 +5,8 @@ import isEqual from "lodash/isEqual"
 
 import { DamaContext } from "~/pages/DataManager/store"
 
+import ckmeans from "~/pages/DataManager/utils/ckmeans";
+
 import { Legend, getScale, strictNaN } from "~/modules/avl-map-2/src"
 
 import useViewVariable from "./useViewVariable"
@@ -104,6 +106,9 @@ const getVariableEditor = (ppId, type) => {
   return RangeEditor;
 }
 
+const ordinalSort = (a, b) => {
+  return String(a).localeCompare(String(b));
+}
 const calcDomain = (variable, data) => {
   const { scale } = variable;
   const { type, range = [] } = scale;
