@@ -64,7 +64,7 @@ export const SymbologyLayerRenderComponent = props => {
               delete defaultPaint[ppId];
               if (maplibreMap.getLayer(activeLayer.layerId)) {
 
-                const { paintExpression, scale } = variable;
+                const { paintExpression, filterExpression, scale } = variable;
 
                 if (ppId.includes("color")) {
                   legend = {
@@ -74,6 +74,10 @@ export const SymbologyLayerRenderComponent = props => {
                 }
 
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
+
+                if (filterExpression) {
+                  maplibreMap.setFilter(activeLayer.layerId, filterExpression);
+                }
               }
             }
           })
