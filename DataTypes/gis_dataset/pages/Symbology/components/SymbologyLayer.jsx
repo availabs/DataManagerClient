@@ -75,9 +75,7 @@ export const SymbologyLayerRenderComponent = props => {
 
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
 
-                if (filterExpression) {
-                  maplibreMap.setFilter(activeLayer.layerId, filterExpression);
-                }
+                maplibreMap.setFilter(activeLayer.layerId, filterExpression);
               }
             }
           })
