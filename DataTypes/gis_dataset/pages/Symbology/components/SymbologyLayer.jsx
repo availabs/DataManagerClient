@@ -37,32 +37,31 @@ export const SymbologyLayerRenderComponent = props => {
     let legend = null;
 
     avlLayer.layers.forEach(layer => {
-      const defaultPaint = { ...get(layer, "paint", {}) };
+      if (maplibreMap.getLayer(layer.id)) {
+        const defaultPaint = { ...get(layer, "paint", {}) };
 
-      if (layer.id === activeLayer.layerId) {
-        Object.keys(activeLayer.paintProperties)
-          .forEach(ppId => {
+        if (layer.id === activeLayer.layerId) {
+          Object.keys(activeLayer.paintProperties)
+            .forEach(ppId => {
 
-            const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
+              const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
 
-            const {
-              value,
-              paintExpression,
-              variable
-            } = paintProperty;
+              const {
+                value,
+                paintExpression,
+                variable
+              } = paintProperty;
 
-            if (value) {
-              delete defaultPaint[ppId];
-              if (maplibreMap.getLayer(activeLayer.layerId)) {
+              if (value) {
+                delete defaultPaint[ppId];
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, value);
               }
-            }
-            else if (paintExpression) {
-
-            }
-            else if (variable) {
-              delete defaultPaint[ppId];
-              if (maplibreMap.getLayer(activeLayer.layerId)) {
+              else if (paintExpression) {
+                delete defaultPaint[ppId];
+                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
+              }
+              else if (variable) {
+                delete defaultPaint[ppId];
 
                 const { paintExpression, filterExpression, scale } = variable;
 
@@ -77,20 +76,18 @@ export const SymbologyLayerRenderComponent = props => {
 
                 maplibreMap.setFilter(activeLayer.layerId, filterExpression);
               }
-            }
-          })
-        setLayerVisibility(layer.id, "visible");
-      }
-      else {
-        setLayerVisibility(layer.id, "none");
-      }
+            })
+          setLayerVisibility(activeLayer.layerId, "visible");
+        }
+        else {
+          setLayerVisibility(layer.id, "none");
+        }
 
-      Object.keys(defaultPaint)
-        .forEach(ppId => {
-          if (maplibreMap.getLayer(layer.id)) {
+        Object.keys(defaultPaint)
+          .forEach(ppId => {
             maplibreMap.setPaintProperty(layer.id, ppId, defaultPaint[ppId]);
-          }
-        })
+          })
+      }
     });
 
     setLegend(legend);
