@@ -14,8 +14,6 @@ import RangeEditor from "./RangeEditor"
 import OrdinalRangeEditor from "./OrdinalRangeEditor"
 import ColorPicker from "./ColorPicker"
 
-import { calcDomain } from "./createLegend"
-
 const SymbologyInfoBox = props => {
 
   const symbology = React.useMemo(() => {
@@ -104,6 +102,23 @@ const getVariableEditor = (ppId, type) => {
     return OrdinalRangeEditor;
   }
   return RangeEditor;
+}
+
+const calcDomain = (variable, data) => {
+  const { scale } = variable;
+  const { type, range = [] } = scale;
+  const values = data.map(d => strictNaN(d.value) ? d.value : +d.value)
+    .filter(v => (v !== "") && (v !== null) && (v !== "null"));
+  if (!values.length) return [];
+  switch (type) {
+    case "threshold": {
+      return ckmeans(values, range.length || 7).slice(1);
+    }
+    case "ordinal":
+      return [...new Set(values)].sort(ordinalSort);
+    default:
+      return values;
+  }
 }
 
 const VariableBox = props => {
@@ -211,7 +226,10 @@ const VariableBox = props => {
       }
 
       const dataMap = data.reduce((a, c) => {
-        if (!strictNaN(c.value)) {
+        if ((type ==="ordinal") && c.value && (c.value !== "null")) {
+          a[c.id] = scale(c.value);
+        }
+        else if (!strictNaN(c.value)) {
           a[c.id] = scale(c.value);
         }
         return a;

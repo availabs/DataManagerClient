@@ -9,7 +9,7 @@ import {
 
 import { myrange } from "./RangeEditor"
 
-const OrdinalRangeEditor = ({ variable, min, max, ...props }) => {
+const OrdinalRangeEditor = ({ variable, min, max, steps, ...props }) => {
 
   const domain = React.useMemo(() => {
     return get(variable, ["scale", "domain"], []);
@@ -19,8 +19,8 @@ const OrdinalRangeEditor = ({ variable, min, max, ...props }) => {
   }, [variable]);
 
   const rangeValues = React.useMemo(() => {
-    return myrange(min, max);
-  }, [min, max]);
+    return myrange(min, max, steps[0]);
+  }, [min, max, steps]);
 
   return (
     <div>
