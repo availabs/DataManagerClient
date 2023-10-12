@@ -4,7 +4,11 @@ import get from "lodash/get"
 
 import { DamaContext } from "~/pages/DataManager/store"
 
-import { AvlLayer, getScale } from "~/modules/avl-map-2/src"
+import {
+  AvlLayer,
+  Button,
+  getScale
+} from "~/modules/avl-map-2/src"
 
 import SymbologyInfoBox from "./SymbologyInfoBox"
 
@@ -98,10 +102,10 @@ export const SymbologyLayerRenderComponent = props => {
   )
 
   return !legend ? null : (
-    <div className="p-1 pointer-events-auto bg-gray-100 rounded"
+    <div className="p-1 pointer-events-auto bg-gray-100 rounded min-w-fit"
       style={ {
         width: "100%",
-        maxWidth: "25rem"
+        maxWidth: legend.isVertical ? "10rem" : "25rem"
       } }
     >
       <div className="bg-gray-300 border border-current rounded p-1">
@@ -142,6 +146,46 @@ const getValidSources = sources => {
   });
 }
 
+const SymbologyEditorModal = props => {
+
+  const symbology = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "symbology"], null);
+  }, [props.layerProps]);
+  const setSymbology = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
+  }, [props.layerProps]);
+
+  const [edit, setEdit] = React.useState(JSON.stringify(symbology, null, 3));
+  const onChange = React.useCallback(e => {
+    setEdit(e.target.value);
+  }, []);
+
+  const saveSymbology = React.useCallback(e => {
+    setSymbology(JSON.parse(edit));
+  }, [setSymbology, edit]);
+
+  return (
+    <div className="whitespace-pre-wrap relative h-fit"
+      style={ {
+        width: "calc(100vw - 320px)",
+        minHeight: "calc(100vh - 180px)"
+      } }
+    >
+      <Button className="buttonPrimary mb-1"
+        onClick={ saveSymbology }
+      >
+        Save Symbology
+      </Button>
+      <div className="absolute mt-9 inset-0">
+        <textarea className="block w-full h-full p-1 rounded scrollbar"
+          style={ { resize: "none" } }
+          value={ edit }
+          onChange={ onChange }/>
+      </div>
+    </div>
+  )
+}
+
 class SymbologyLayer extends AvlLayer {
   constructor(views) {
     super();
@@ -169,5 +213,12 @@ class SymbologyLayer extends AvlLayer {
       Component: SymbologyInfoBox
     }
   ]
+  modals = {
+    "symbology-editor": {
+      Component: SymbologyEditorModal,
+      Header: "Symbology Editor",
+      startPos: [160, 90]
+    }
+  }
 }
 export default SymbologyLayer;

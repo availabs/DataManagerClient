@@ -197,10 +197,6 @@ const VariableBox = props => {
   }, [variable, data]);
 
   React.useEffect(() => {
-
-  }, [variable, updateScale]);
-
-  React.useEffect(() => {
     if (variable.scale && data.length && dataDomain.length) {
 
       const { type, range = [] } = variable.scale;
@@ -227,17 +223,14 @@ const VariableBox = props => {
         ["literal", dataMap]
       ];
 
-      if (isEqual(paintExpression, variable.paintExpression)) return;
-
-      updateVariable({
-        paintExpression,
-        scale: {
-          ...variable.scale,
-          domain
-        }
-      });
+      if (!isEqual(paintExpression, variable.paintExpression)) {
+        updateVariable({ paintExpression });
+      };
+      if (!isEqual(domain, variable.scale?.domain)) {
+        updateScale({ domain });
+      }
     }
-  }, [variable, data, updateVariable, dataDomain]);
+  }, [variable, data, updateVariable, updateScale, dataDomain]);
 
   const VariableEditor = React.useMemo(() => {
     return getVariableEditor(ppId, variable?.scale?.type);

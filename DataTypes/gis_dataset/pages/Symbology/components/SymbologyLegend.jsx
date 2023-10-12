@@ -4,9 +4,10 @@ import { format as d3format } from "d3-format"
 
 import { ColorBar } from "~/modules/avl-map-2/src"
 
+const Identity = i => i;
 const useFormat = format => {
   return React.useMemo(() => {
-    if (typeof format === "function") return format;
+    if (typeof format !== "string") return Identity;
     return d3format(format);
   }, [format]);
 }
@@ -22,8 +23,8 @@ const OrdinalLegend = ({ domain, range, format }) => {
           gridTemplateColumns: `repeat(${ domain.length }, minmax(0, 1fr))`
         } }
       >
-        { range.map(r => (
-            <ColorBar key={ r } colors={ [r] } height={ 3 }/>
+        { domain.map((d, i) => (
+            <ColorBar key={ i } colors={ [range[i % range.length]] } height={ 3 }/>
           ))
         }
       </div>
@@ -34,6 +35,25 @@ const OrdinalLegend = ({ domain, range, format }) => {
       >
         { domain.map(d => <div key={ d } className="pr-1">{ d }</div>) }
       </div>
+    </div>
+  )
+}
+
+const VerticalOrdinalLegend = ({ domain, range, format }) => {
+
+  const Format = useFormat(format);
+
+  return (
+    <div>
+      { domain.map((d, i) => (
+          <div className="flex items-center" key={ i }>
+            <div className="w-8 mb-1 mr-1">
+              <ColorBar key={ i } colors={ [range[i % range.length]] } height={ 3 }/>
+            </div>
+            <div className="flex-1">{ d }</div>
+          </div>
+        ))
+      }
     </div>
   )
 }
@@ -52,10 +72,12 @@ const NonOrdinalLegend = ({ type, domain, range, format = ",d" }) => {
     </div>
   )
 }
-const Legend = ({ type, ...props }) => {
+const Legend = ({ type, isVertical = false, ...props }) => {
   return (
     type === "ordinal" ?
-      <OrdinalLegend { ...props }/> :
+      isVertical ?
+        <VerticalOrdinalLegend { ...props }/> :
+        <OrdinalLegend { ...props }/> :
       <NonOrdinalLegend type={ type } { ...props }/>
   )
 }

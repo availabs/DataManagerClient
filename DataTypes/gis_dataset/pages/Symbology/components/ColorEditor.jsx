@@ -42,6 +42,10 @@ const ColorEditor = props => {
         scaleType={ scale.type }
         updateScale={ updateScale }/>
 
+      <VerticvalSlider
+        isVertical={ scale.isVertical }
+        updateScale={ updateScale }/>
+
       <RangeSizeSelector
         rangeSize={ rangeSize }
         onChange={ setRangeSize }/>
@@ -85,6 +89,24 @@ const TypeSelector = ({ scaleType, updateScale, variableType }) => {
           valueAccessor={ t => t.value }
           onChange={ onChange }
           value={ scaleType }/>
+      </div>
+    </div>
+  )
+}
+
+const VerticvalSlider = ({ isVertical, updateScale }) => {
+  const onChange = React.useCallback(v => {
+    updateScale({ isVertical: v });
+  }, [updateScale]);
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="py-1 text-right">
+        Use Vertical Legend:
+      </div>
+      <div>
+        <BooleanSlider
+          value={ isVertical }
+          onChange={ onChange }/>
       </div>
     </div>
   )

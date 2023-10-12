@@ -52,6 +52,15 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [activePaintPropertyId, setActivePaintPropertyId] = React.useState(null);
   const [paintPropertyActions, setPaintPropertyActions] = React.useState(null);
 
+  const savedSymbologies = React.useMemo(() => {
+    return views.reduce((a, c) => {
+      if (c.metadata?.symbologies?.length) {
+        a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
+      }
+      return a;
+    }, []);
+  }, [activeViewId, views]);
+
   const reset = React.useCallback(() => {
     _setActiveViewId(null);
     _setActiveLayerId(null);
@@ -68,7 +77,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const activeView = React.useMemo(() => {
     return get(symbology, "views", [])
       .reduce((a, c) => {
-        return +c.viewId === +activeViewId ? c : a;
+        return c.viewId == activeViewId ? c : a;
       }, null);
   }, [symbology, activeViewId]);
 
@@ -169,14 +178,14 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSymbology, startNewSymbology, symbology,
+        source, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, /*setActiveViewId,*/ activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction
       }
     }
-  }, [source, setSymbology, startNewSymbology, symbology,
+  }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, /*setActiveViewId,*/ activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,

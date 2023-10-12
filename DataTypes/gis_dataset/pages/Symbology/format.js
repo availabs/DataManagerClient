@@ -20,8 +20,8 @@ const Symbology = {
                 paintExpression: "maplibreExpression",
                 scale: {
                   type: "string:enum:[quantile, threshold, ordinal]",
-                  range: "array:string",
-                  domain: "?array:string|integer",
+                  domain: "array:string",
+                  range: "?array:string|integer",
                   format: "?string"
                 }
               }
