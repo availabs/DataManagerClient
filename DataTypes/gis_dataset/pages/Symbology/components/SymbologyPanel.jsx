@@ -32,7 +32,7 @@ const setSymbologyId = symbology => {
             .reduce((aaa, ccc) => {
               aaa.push(ccc);
               const v = get(cc, ["paintProperties", ccc, "variable"], null);
-              if (v.variableId) {
+              if (v?.variableId) {
                 aaa.push(v.variableId);
               }
               return aaa;
