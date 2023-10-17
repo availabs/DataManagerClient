@@ -210,7 +210,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     return {
       "symbology-layer": {
         source, setSymbology, startNewSymbology, symbology, savedSymbologies,
-        activeViewId, /*setActiveViewId,*/ activeView,
+        activeViewId, setActiveViewId, activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction,
@@ -218,7 +218,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
       }
     }
   }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
-        activeViewId, /*setActiveViewId,*/ activeView,
+        activeViewId, setActiveViewId, activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction,
