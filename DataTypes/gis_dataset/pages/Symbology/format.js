@@ -26,6 +26,12 @@ const Symbology = {
                 }
               }
             }
+          },
+          filters: {
+            variableId: {
+              filter: [],
+              filterExpression: "maplibreExpression"
+            }
           }
         }
       ]

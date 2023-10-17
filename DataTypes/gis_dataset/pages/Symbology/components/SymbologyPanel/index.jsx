@@ -13,6 +13,8 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src"
 
+import FilterItem from "./FilterItem"
+
 const NameRegex = /^\w+/;
 
 const paintPropertyHasValue = paintProperty => {
@@ -345,7 +347,9 @@ const MultiSelectDisplay = ({ children }) => {
   )
 }
 
-const LayerItem = ({ layer, setSymbology, ...props }) => {
+const VariableAccessor = v => v.variableId;
+
+const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
 
   const { layerId, type: layerType  } = layer;
 
@@ -360,11 +364,18 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
     return get(props, ["layerProps", "symbology-layer", "setActivePaintPropertyId"], null);
   }, [props.layerProps]);
 
+  const activeFilterVariableId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activeFilterVariableId"], null);
+  }, [props.layerProps]);
+  const setActiveFilterVariableId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setActiveFilterVariableId"], null);
+  }, [props.layerProps]);
+
   const addPaintProperty = React.useCallback(ppId => {
     setActivePaintPropertyId(ppId);
     setSymbology(prev => {
       return {
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
@@ -385,7 +396,7 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
           })
         }))
       }
-    })
+    });
   }, [setSymbology, layerId, setActivePaintPropertyId]);
 
   const removePaintProperty = React.useCallback(ppId => {
@@ -394,7 +405,7 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
     }
     setSymbology(prev => {
       return {
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
@@ -412,13 +423,74 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
           })
         }))
       }
-    })
+    });
   }, [setSymbology, layerId, activePaintPropertyId, setActivePaintPropertyId]);
+
+  const addFilter = React.useCallback(vid => {
+    setActiveFilterVariableId(vid);
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => ({
+          ...view,
+          layers: view.layers.map(layer => {
+            if (layer.layerId === layerId) {
+              return {
+                ...layer,
+                filters: {
+                  ...layer.filters,
+                  [vid]: {
+                    filter: [],
+                    filterExpression: null
+                  }
+                }
+              }
+            }
+            return layer;
+          })
+        }))
+      }
+    });
+  }, [setSymbology, layerId, setActiveFilterVariableId]);
+
+  const removeFilter = React.useCallback(vid => {
+    if (activeFilterVariableId === vid) {
+      setActiveFilterVariableId(null);
+    }
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => ({
+          ...view,
+          layers: view.layers.map(layer => {
+            if (layer.layerId === layerId) {
+              const filters = {
+                ...layer.filters
+              }
+              delete filters[vid];
+              return {
+                ...layer,
+                filters
+              }
+            }
+            return layer;
+          })
+        }))
+      }
+    });
+  }, [setSymbology, layerId, activeFilterVariableId, setActiveFilterVariableId]);
+
+  const metaVariables = React.useMemo(() => {
+    return variables.filter(v => {
+      return v.type === "meta-variable";
+    })
+  }, [variables]);
 
   return (
     <div>
       <div className="ml-4">
         <div>Layer Type: { layer.type }</div>
+
         <div className="relative">
           <div className="mb-1">
             <MultiLevelSelect isDropdown
@@ -433,9 +505,10 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
           <div className="ml-4 grid grid-cols-1 gap-1">
             { Object.keys(layer.paintProperties)
                 .map((pp, i)=> (
-                  <PaintPropertyItem key={ i } { ...props }
+                  <PaintPropertyItem key={ pp } { ...props }
                     layer={ layer }
                     ppId={ pp }
+                    variables={ variables }
                     paintProperty={ layer.paintProperties[pp] }
                     setSymbology={ setSymbology }
                     removePaintProperty={ removePaintProperty }/>
@@ -443,6 +516,36 @@ const LayerItem = ({ layer, setSymbology, ...props }) => {
             }
           </div>
         </div>
+
+        { !metaVariables.length ? null :
+          <div className="relative">
+            <div className="mb-1">
+              <MultiLevelSelect isDropdown
+                options={ metaVariables }
+                displayAccessor={ VariableAccessor }
+                valueAccessor={ VariableAccessor }
+                onChange={ addFilter }
+              >
+                <MultiSelectDisplay>
+                  Add a Filter
+                </MultiSelectDisplay>
+              </MultiLevelSelect>
+            </div>
+            <div className="ml-4 grid grid-cols-1 gap-1">
+              { Object.keys(layer.filters)
+                  .map((vid, i)=> (
+                    <FilterItem key={ vid } { ...props }
+                      layer={ layer }
+                      variableId={ vid }
+                      filter={ layer.filters[vid] }
+                      setSymbology={ setSymbology }
+                      removeFilter={ removeFilter }/>
+                  ))
+              }
+            </div>
+          </div>
+        }
+
       </div>
     </div>
   )
@@ -453,6 +556,7 @@ const makeNewVarialbe = (variable, ppId) => {
     variableId: variable.variableId,
     displayName: variable.variableId,
     type: variable.type,
+    filter: [],
     filterExpression: null,
     paintExpression: null,
     scale: {
@@ -632,7 +736,7 @@ const PaintPropertyItem = props => {
     if (action !== prevAction) {
       setSymbology(prev => {
         return {
-          name: prev.name,
+          ...prev,
           views: prev.views.map(view => ({
             ...view,
             layers: view.layers.map(layer => {
@@ -672,7 +776,7 @@ const PaintPropertyItem = props => {
 
     setSymbology(prev => {
       return {
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
@@ -705,7 +809,7 @@ const PaintPropertyItem = props => {
   const updateVariableDispayName = React.useCallback(dn => {
     setSymbology(prev => {
       return {
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
@@ -736,7 +840,7 @@ const PaintPropertyItem = props => {
         }))
       }
     })
-  }, [setSymbology, layerId, ppId, paintProperty.variable])
+  }, [setSymbology, layerId, ppId, paintProperty.variable]);
 
   const theme = useTheme();
 
@@ -786,7 +890,6 @@ const PaintPropertyItem = props => {
   )
 }
 
-const accessor = v => v.variableId;
 const VariableAdder = ({ onChange, value, options }) => {
   return (
     <div className="flex items-center">
@@ -797,8 +900,8 @@ const VariableAdder = ({ onChange, value, options }) => {
         <MultiLevelSelect
           removable={ false }
           options={ options }
-          displayAccessor={ accessor }
-          valueAccessor={ accessor }
+          displayAccessor={ VariableAccessor }
+          valueAccessor={ VariableAccessor }
           onChange={ onChange }
           value={ value }/>
       </div>

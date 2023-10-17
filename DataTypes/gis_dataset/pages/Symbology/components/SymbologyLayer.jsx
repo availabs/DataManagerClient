@@ -11,10 +11,10 @@ import {
 } from "~/modules/avl-map-2/src"
 
 import SymbologyInfoBox from "./SymbologyInfoBox"
+import MetaVariableFilterEditor from "./MetaVariableFilterEditor"
+import SymbologyLegend from "./SymbologyLegend"
 
 import { DAMA_HOST } from "~/config"
-
-import SymbologyLegend from "./SymbologyLegend"
 
 export const SymbologyLayerRenderComponent = props => {
 
@@ -63,7 +63,7 @@ export const SymbologyLayerRenderComponent = props => {
               else if (variable) {
                 delete defaultPaint[ppId];
 
-                const { paintExpression, filterExpression, scale } = variable;
+                const { paintExpression, scale } = variable;
 
                 if (ppId.includes("color")) {
                   legend = {
@@ -73,10 +73,13 @@ export const SymbologyLayerRenderComponent = props => {
                 }
 
                 maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
-
-                maplibreMap.setFilter(activeLayer.layerId, filterExpression);
               }
             })
+
+            Object.values(activeLayer.filters || {})
+              .forEach(({ filterExpression }) => {
+                maplibreMap.setFilter(activeLayer.layerId, filterExpression)
+              })
           setLayerVisibility(activeLayer.layerId, "visible");
         }
         else {
@@ -207,6 +210,14 @@ class SymbologyLayer extends AvlLayer {
   infoBoxes = [
     { Header: SymbologyInfoBoxHeader,
       Component: SymbologyInfoBox
+    },
+    { Header: "Filter Editor",
+      Component: MetaVariableFilterEditor,
+      startOpen: false,
+      isActive: props => {
+        const activeFilter = get(props, ["layerProps", "symbology-layer", "activeFilter"], null);
+        return Boolean(activeFilter);
+      }
     }
   ]
   modals = {
