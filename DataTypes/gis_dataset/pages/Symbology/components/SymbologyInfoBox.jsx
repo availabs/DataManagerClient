@@ -109,10 +109,10 @@ const getVariableEditor = (ppId, type) => {
 const ordinalSort = (a, b) => {
   return String(a).localeCompare(String(b));
 }
-const calcDomain = (variable, data) => {
-  const { scale } = variable;
+export const calcDomain = (variable, data) => {
+  const { scale, variableId: vid } = variable;
   const { type, range = [] } = scale;
-  const values = data.map(d => strictNaN(d.value) ? d.value : +d.value)
+  const values = data.map(d => strictNaN(d[vid]) ? d[vid] : +d[vid])
     .filter(v => (v !== "") && (v !== null) && (v !== "null"));
   if (!values.length) return [];
   switch (type) {
@@ -134,15 +134,23 @@ const VariableBox = props => {
     activeViewId,
     setSymbology,
     MapActions,
+    layerProps,
     ...rest
   } = props;
 
-  const { variable } = paintProperty;
+    const { variable } = paintProperty;
+
+  const activeLayer = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "activeLayer"], null);
+  }, [layerProps]);
+  const filteredVariableIds = React.useMemo(() => {
+    return Object.keys(get(activeLayer, "filters", {}));
+  }, [activeLayer]);
 
   const updateVariable = React.useCallback(update => {
     setSymbology(prev => {
       return ({
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
@@ -176,7 +184,7 @@ const VariableBox = props => {
   const updateScale = React.useCallback(scale => {
     setSymbology(prev => {
       return ({
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
@@ -210,32 +218,60 @@ const VariableBox = props => {
     })
   }, [setSymbology, activeViewId, layerId, ppId]);
 
-  const data = useViewVariable(activeViewId, variable.variableId);
+  const data = useViewVariable(activeViewId, variable, filteredVariableIds);
 
-  const dataDomain = React.useMemo(() => {
-    return calcDomain(variable, data)
-  }, [variable, data]);
+  const filtersMap = React.useMemo(() => {
+    const filters = get(activeLayer, "filters", {});
+    return Object.keys(filters)
+      .reduce((a, c) => {
+        a[c] = get(filters, [c, "filter"], []);
+        return a;
+      }, {});
+  }, [activeLayer, data]);
+
+  const filteredOgcFids = React.useMemo(() => {
+    return data.reduce((a, c) => {
+      Object.keys(filtersMap).forEach(vid => {
+        const filter = get(filtersMap, vid, []);
+        const value = get(c, vid, null);
+        if (filter.includes(value)) {
+          a.add(c.id);
+        }
+      })
+      return a;
+    }, new Set());
+  }, [activeLayer, data, filtersMap]);
+
+  const filteredData = React.useMemo(() => {
+    return data.filter(d => !filteredOgcFids.has(d.id));
+  }, [data, filteredOgcFids]);
+
+  const d3scaleDomain = React.useMemo(() => {
+    return calcDomain(variable, filteredData);
+  }, [variable, filteredData]);
 
   React.useEffect(() => {
-    if (variable.scale && data.length && dataDomain.length) {
+    if (variable.scale && filteredData.length && d3scaleDomain.length) {
 
-      const { type, range = [] } = variable.scale;
+      const { variableId: vid, scale = {} } = variable;
+
+      const { type, range = [] } = scale;
 
       if (!range.length) return;
 
-      const scale = getScale(type, dataDomain, range);
+      const d3scale = getScale(type, d3scaleDomain, range);
 
-      let domain = scale.domain();
+      let domain = d3scale.domain();
       if (type === "quantile") {
-        domain = scale.range().map(r => scale.invertExtent(r)[1]);
+        domain = d3scale.range().map(r => d3scale.invertExtent(r)[1]);
       }
 
-      const dataMap = data.reduce((a, c) => {
-        if ((type ==="ordinal") && c.value && (c.value !== "null")) {
-          a[c.id] = scale(c.value);
+      const dataMap = filteredData.reduce((a, c) => {
+        if ((type ==="ordinal") && c[vid]) {
+          a[c.id] = d3scale(c[vid]);
         }
-        else if (!strictNaN(c.value)) {
-          a[c.id] = scale(c.value);
+        else if (!strictNaN(c[vid])) {
+          a[c.id] = d3scale(c[vid]);
         }
         return a;
       }, {});
@@ -253,7 +289,7 @@ const VariableBox = props => {
         updateScale({ domain });
       }
     }
-  }, [variable, data, updateVariable, updateScale, dataDomain]);
+  }, [variable, filteredData, updateVariable, updateScale, d3scaleDomain]);
 
   const VariableEditor = React.useMemo(() => {
     return getVariableEditor(ppId, variable?.scale?.type);
@@ -305,7 +341,7 @@ const ValueBox = props => {
   const setValue = React.useCallback(value => {
     setSymbology(prev => {
       return ({
-        name: prev.name,
+        ...prev,
         views: prev.views.map(view => {
           if (view.viewId === activeViewId) {
             return {
@@ -406,7 +442,8 @@ const PaintPropertyBox = ({ ppId, paintProperty, layerProps, ...props }) => {
       <div>
         { !Editor ? null :
           <Editor ppId={ ppId } { ...limits } { ...props }
-            paintProperty={ paintProperty }/>
+            paintProperty={ paintProperty }
+            layerProps={ layerProps }/>
         }
       </div>
     </div>
