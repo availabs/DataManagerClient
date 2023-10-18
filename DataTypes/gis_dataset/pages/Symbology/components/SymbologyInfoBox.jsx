@@ -276,11 +276,17 @@ const VariableBox = props => {
         return a;
       }, {});
 
+      console.log('variable', ppId, paintProperty)
       const paintExpression = [
-        "get",
-        ["to-string", ["get", "ogc_fid"]],
-        ["literal", dataMap]
+        "coalesce",
+        ["get",
+          ["to-string", ["get", "ogc_fid"]],
+          ["literal", dataMap]
+        ],
+        ppId.includes('color') ? "rgba(0, 0, 0, 0)" : 0
       ];
+
+
 
       if (!isEqual(paintExpression, variable.paintExpression)) {
         updateVariable({ paintExpression });

@@ -36,29 +36,31 @@ const HoverComp = ({ data, layer }) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
-  let getAttributes = typeof attributes?.[0] === 'string' ?
-    attributes : attributes.map(d => d.name)
+  let getAttributes = (typeof attributes?.[0] === 'string' ?
+    attributes : attributes.map(d => d.name)).filter(d => !['wkb_geometry'].includes(d))
 
-  // React.useEffect(() => {
-  //   falcor.get([
-  //     "dama",
-  //     pgEnv,
-  //     "viewsbyId",
-  //     activeViewId,
-  //     "databyId",
-  //     id,
-  //     attributes,
-  //   ]);
-  // }, [falcor, pgEnv, activeViewId, id, attributes]);
+  
+  React.useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      activeViewId,
+      "databyId",
+      id,
+      getAttributes
+    ]).then(d => console.log('got attributes', d));
+  }, [falcor, pgEnv, activeViewId, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id, getAttributes],
+      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id],
       {}
     );
   }, [id, falcorCache, activeViewId, pgEnv]);
 
+  
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
@@ -809,7 +811,7 @@ class GISDatasetLayer extends AvlLayer {
       return data;
     },
     Component: this.hoverComp || HoverComp,
-    isPinnable: this.isPinnable || false
+    isPinnable: this.isPinnable || true
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {
