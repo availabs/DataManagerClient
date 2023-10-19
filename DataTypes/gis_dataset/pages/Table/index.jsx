@@ -52,6 +52,7 @@ const TablePage = ({
   transform = identityMap,
   filterData = {},
   TableFilter = DefaultTableFilter,
+  showViewSelector = true
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
@@ -75,7 +76,7 @@ const TablePage = ({
 
   React.useEffect(() => {
     console.time("getviewLength");
-    console.log('getviewLength', pgEnv,activeViewId)
+    //console.log('getviewLength', pgEnv,activeViewId)
     falcor
       .get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
       .then((d) => {
@@ -165,7 +166,7 @@ const TablePage = ({
         {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
           data={tableData} columns={columns}/>
-        <ViewSelector views={views} />
+        { showViewSelector ? <ViewSelector views={views} /> : '' }
       </div>
       <div className="max-w-6xl">
         <Table 
