@@ -105,20 +105,25 @@ const TablePage = ({
   }, [source]);
 
   // const metadata = get(source,'metadata',[])
+
+  // falcor.chunk([
+    //   "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
+    //   , variables
+    // ])
   React.useEffect(() => {
     if (dataLength > 0) {
       console.log("dataLength", dataLength);
       let maxData = Math.min(dataLength, 10000);
       console.time("getViewData", maxData);
       falcor
-        .get(
+        .chunk(
           [
             "dama",
             pgEnv,
             "viewsbyId",
             activeViewId,
             "databyIndex",
-            {"from":0, "to": maxData-1},
+            Array.from(Array(maxData-1).keys()),//{"from":0, "to": maxData-1},
             attributes,
           ]
         )
