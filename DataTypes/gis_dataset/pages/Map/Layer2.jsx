@@ -1,5 +1,5 @@
 import React from "react";
-// import { Legend } from "~/modules/avl-components/src";
+import { Legend } from "~/modules/avl-components/src";
 import get from "lodash/get";
 import set from "lodash/set";
 import isEqual from "lodash/isEqual";
@@ -7,7 +7,7 @@ import cloneDeep from "lodash/cloneDeep"
 
 import {
   AvlLayer,
-  Legend,
+  // Legend,
   ActionButton,
   MultiLevelSelect,
   // ColorRangesByType,
@@ -36,29 +36,31 @@ const HoverComp = ({ data, layer }) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
 
-  let getAttributes = typeof attributes?.[0] === 'string' ?
-    attributes : attributes.map(d => d.name)
+  let getAttributes = (typeof attributes?.[0] === 'string' ?
+    attributes : attributes.map(d => d.name)).filter(d => !['wkb_geometry'].includes(d))
 
-  // React.useEffect(() => {
-  //   falcor.get([
-  //     "dama",
-  //     pgEnv,
-  //     "viewsbyId",
-  //     activeViewId,
-  //     "databyId",
-  //     id,
-  //     attributes,
-  //   ]);
-  // }, [falcor, pgEnv, activeViewId, id, attributes]);
+  
+  React.useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      activeViewId,
+      "databyId",
+      id,
+      getAttributes
+    ]).then(d => console.log('got attributes', d));
+  }, [falcor, pgEnv, activeViewId, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id, getAttributes],
+      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id],
       {}
     );
   }, [id, falcorCache, activeViewId, pgEnv]);
 
+  
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
@@ -85,12 +87,12 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
     <div className={ `p-1 rounded ${ theme.bg }` }>
       <div className={ `
           p-1 relative rounded border pointer-events-auto
-          ${ theme.bgAccent2 } ${ theme.border }
+          
         ` }
       >
         <div className="flex mb-1">
-          <div className="flex-1 font-bold">{ name || title }</div>
-          <div onClick={ toggle }
+          <div className="flex-1 font-medium">{ name || title }</div>
+          {/*<div onClick={ toggle }
             className={ `
               px-2 rounded cursor-pointer
               ${ theme.bgAccent3Hover }
@@ -99,7 +101,7 @@ export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
             <span className={ `
                 fa-solid ${ isOpen ? "fa-chevron-up" : "fa-chevron-down" }
               ` }/>
-          </div>
+          </div>*/}
         </div>
         <div>{ children }</div>
       </div>
@@ -408,14 +410,13 @@ const GISDatasetRenderComponent = props => {
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
 { /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
-        <ThemeUpdater themeUpdate={ ThemeUpdate }>
           <LegendContainer { ...legend }
             toggle={ toggle }
             isOpen={ isOpen }
           >
             <Legend { ...legend }/>
           </LegendContainer>
-        </ThemeUpdater>
+       
       </div>
 
       <div className="z-0">
@@ -809,7 +810,7 @@ class GISDatasetLayer extends AvlLayer {
       return data;
     },
     Component: this.hoverComp || HoverComp,
-    isPinnable: this.isPinnable || false
+    isPinnable: this.isPinnable || true
   };
 
   getColorScale(domain, numBins = 5, color = "Reds") {

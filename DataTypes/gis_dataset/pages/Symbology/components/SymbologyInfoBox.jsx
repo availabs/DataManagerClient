@@ -336,6 +336,7 @@ const VariableBox = props => {
         return a;
       }, {});
 
+      console.log('variable', ppId, paintProperty)
       const paintExpression = [
         "coalesce",
         ["get",
@@ -344,6 +345,8 @@ const VariableBox = props => {
         ],
         defaultValue
       ];
+
+
 
       if (!isEqual(paintExpression, variable.paintExpression)) {
         updateVariable({ paintExpression });
