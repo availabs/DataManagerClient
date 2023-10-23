@@ -88,7 +88,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   }, [dataVariables, metaVariables]);
 
   const activeVar = get(filters, ["activeVar", "value"], "");
-  const varType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
+  const activeVarType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
 
   React.useEffect(() => {
     falcor.get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
@@ -106,6 +106,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
       "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
       { from: 0, to: dataLength - 1 }, variables
     ])
+    // falcor.chunk([
+    //   "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
+    //   Array.from(Array(dataLength-1).keys()), variables
+    // ])
   }, [falcor, pgEnv, activeViewId, dataLength, variables]);
 
   const [data, setData] = React.useState([]);
@@ -130,11 +134,9 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 
     const symbology = JSON.parse(JSON.stringify(get(source, ["metadata", "symbology"], {})));
 
-console.log("LOADING SYM:", symbology);
-
     const defaultSettings = {
       name: activeVar,
-      type: varType === "data-variable" ? 'threshold' : "ordinal",
+      type: activeVarType === "data-variable" ? 'threshold' : "ordinal",
       data
     }
 
@@ -159,7 +161,7 @@ console.log("LOADING SYM:", symbology);
 
     setTempSymbology(symbology);
 
-  }, [layer, data, setTempSymbology, activeVar, varType, source]);
+  }, [layer, data, setTempSymbology, activeVar, activeVarType, source]);
 
 
   return (
@@ -185,7 +187,7 @@ console.log("LOADING SYM:", symbology);
   )
 }
 
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {} }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true }) => {
 
   const { /*sourceId,*/ viewId } = useParams()
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
@@ -264,7 +266,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
 
-  console.log('SYMBOLOGY', tempSymbology)
+  //console.log('SYMBOLOGY', tempSymbology)
 
   return (
     <div>
@@ -286,7 +288,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeViewId={activeViewId}
             layer={layer}
         />
-        <ViewSelector views={views} />
+        {showViewSelector ? <ViewSelector views={views} /> : ''}
       </div>
       <div className='w-full h-[900px]'>
         <Map
