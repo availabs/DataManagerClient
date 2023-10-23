@@ -16,13 +16,13 @@ const Symbology = {
                 variableId: "string",
                 displayName: "string:default=variableId",
                 type: "string:enum:[data-variable, meta-variable]",
-                filterExpression: "?maplibreExpression",
                 paintExpression: "maplibreExpression",
+                includeInLegend: "boolean:default=true",
                 scale: {
                   type: "string:enum:[quantile, threshold, ordinal]",
-                  domain: "array:string",
-                  range: "?array:string|integer",
-                  format: "?string"
+                  range: "array:integer",
+                  // domain: "array:integer|string",
+                  // format: "?string"
                 }
               }
             }
@@ -33,6 +33,15 @@ const Symbology = {
               filterExpression: "maplibreExpression"
             }
           }
+        }
+      ],
+      legends: [
+        { id: "paintProperty|variableId",
+          name: "string",
+          type: "string:enum:[quantile, threshold, ordinal]",
+          domain: "array:string",
+          range: "array:string|integer",
+          format: "?string"
         }
       ]
     }

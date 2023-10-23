@@ -19,8 +19,6 @@ import {
   strictNaN
 } from "~/modules/avl-map-2/src";
 
-import "./brush.css"
-
 const RangeItem = ({ value }) => {
   const format = d3format(",.1f");
   return (
@@ -36,9 +34,9 @@ export const myrange = (min, max, step = 1) => {
   return d3range(m1, m2 + s, s).map(v => v / mult);
 }
 
-const SimpleControls = ({ variable, updateScale, min, max, steps, ...props }) => {
+const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
 
-  const { scale } = variable;
+  // const { scale } = variable;
 
   // React.useEffect(() => {
   //   const { min, max, step, range } = scale;
@@ -199,6 +197,7 @@ const RangeEditor = props => {
 
   const {
     variable,
+    scale,
     updateScale,
     variableType,
     MapActions,
@@ -206,18 +205,18 @@ const RangeEditor = props => {
     data
   } = props;
 
-  const {
-    scale
-  } = variable;
+  // const {
+  //   scale
+  // } = variable;
 
-  const doUpdateScale = React.useCallback((key, value) => {
-    if (typeof key === "string") {
-      updateScale({ [key]: value });
-    }
-    else if (typeof key === "object") {
-      updateScale({ ...key });
-    }
-  }, [updateScale]);
+  // const doUpdateScale = React.useCallback((key, value) => {
+  //   if (typeof key === "string") {
+  //     updateScale({ [key]: value });
+  //   }
+  //   else if (typeof key === "object") {
+  //     updateScale({ ...key });
+  //   }
+  // }, [updateScale]);
 
   const [controls, setControls] = React.useState("simple");
 
@@ -232,7 +231,7 @@ const RangeEditor = props => {
         <TypeSelector
           variableType={ variableType }
           scaleType={ scale.type }
-          updateScale={ doUpdateScale }/>
+          updateScale={ updateScale }/>
 
         { strictNaN(e0) ? null :
           <div className="flex">
@@ -248,7 +247,7 @@ const RangeEditor = props => {
         }
 
         <SimpleControls { ...props }
-          updateScale={ doUpdateScale }/>
+          updateScale={ updateScale }/>
 
       </div>
     </div>

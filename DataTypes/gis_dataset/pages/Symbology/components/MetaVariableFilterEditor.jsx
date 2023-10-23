@@ -40,7 +40,7 @@ const MetaVariableFilterEditor = props => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === activeLayerId) {
+            if (layer.uniqueId === activeLayerId) {
               return {
                 ...layer,
                 filters: Object.keys(layer.filters)
@@ -87,7 +87,7 @@ const MetaVariableFilterEditor = props => {
 
   React.useEffect(() => {
     const vid = activeFilterVariableId;
-    
+
     if (filter.length && allDomainValues.length && filtered.length) {
         const filterMap = data.reduce((a, c) => {
           if (c[vid] && filtered.includes(c[vid])) {

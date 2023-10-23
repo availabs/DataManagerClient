@@ -8,11 +8,14 @@ import {
   AvlMap as AvlMap2,
   ThemeProvider,
   ComponentLibrary,
-  useTheme
+  useTheme,
+  getColorRange
 } from "~/modules/avl-map-2/src"
 
 import SymbologyLayer from "./components/SymbologyLayer"
 import SymbologyPanel from "./components/SymbologyPanel"
+
+import ViewLayer from "./components/ViewLayer"
 
 const PMTilesProtocol = {
   type: "pmtiles",
@@ -27,21 +30,29 @@ const PMTilesProtocol = {
   }
 }
 
-export const InfoBoxSidebarContainer = ({ open, children }) => {
-  const theme = useTheme();
-  return (
-    <div className="relative h-full">
-      <div className={ `
-          w-96 ${ theme.bg } rounded pointer-events-auto
-          max-h-full h-fit scrollbar-sm
-        ` }
-      >
-        { children }
-      </div>
-    </div>
-  )
+const getSymbologyId = symbology => {
+  return get(symbology, "views", [])
+    .reduce((a, c) => {
+      a.push(c.viewId);
+      return get(c, "layers", [])
+        .reduce((aa, cc) => {
+          aa.push(cc.layerId);
+          return Object.keys(get(cc, "paintProperties", {}))
+            .reduce((aaa, ccc) => {
+              aaa.push(ccc);
+              const v = get(cc, ["paintProperties", ccc, "variable"], null);
+              if (v.variableId) {
+                aaa.push(v.variableId);
+              }
+              return aaa;
+            }, aa);
+        }, a);
+    }, [`${ symbology.name.replace(/\s+/g, "_") }|${ Date.now() }`]).join("|")
 }
-const NewLibraryComponents = { InfoBoxSidebarContainer };
+const setSymbologyId = symbology => {
+  symbology.id = symbology.id || getSymbologyId(symbology);
+  return symbology;
+}
 
 const SymbologyEditor = ({ source, views, ...props }) => {
 
@@ -57,7 +68,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [activeFilterVariableId, setActiveFilterVariableId] = React.useState(null);
 
   const savedSymbologies = React.useMemo(() => {
-    return views.reduce((a, c) => {
+    const symbologies = views.reduce((a, c) => {
       if (c.metadata?.symbologies?.length) {
         a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
       }
@@ -74,6 +85,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
         }))
       }))
     }));
+    return symbologies.map(setSymbologyId);
   }, [activeViewId, views]);
 
   const reset = React.useCallback(() => {
@@ -104,7 +116,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const activeLayer = React.useMemo(() => {
     return get(activeView, "layers", [])
       .reduce((a, c) => {
-        return c.layerId === activeLayerId ? c : a;
+        return c.uniqueId === activeLayerId ? c : a;
       }, null);
   }, [activeView, activeLayerId]);
 
@@ -141,7 +153,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
       setActiveLayerId(null);
     }
     else if (activeView && !activeLayerId) {
-      setActiveLayerId(get(activeView, ["layers", 0, "layerId"], null));
+      setActiveLayerId(get(activeView, ["layers", 0, "uniqueId"], null));
       setActivePaintPropertyId(null);
       setPaintPropertyActions({});
     }
@@ -181,14 +193,15 @@ const SymbologyEditor = ({ source, views, ...props }) => {
 
   const startNewSymbology = React.useCallback(() => {
     reset();
-    setSymbology({
+    const newSym = {
       name: "",
       views: views.map((view, i) => ({
         viewId: view.view_id,
         version: view.version || `View ID ${ view.view_id }`,
+        legends: [],
         layers: get(view, ["metadata", "tiles", "layers"], [])
           .map(layer => ({
-            uniqueId: `${ layer.id }-${ performance.now() }`,
+            uniqueId: `${ layer.id }-${ Date.now() }-${ performance.now() }`,
             copy: 0,
             layerId: layer.id,
             type: layer.type,
@@ -199,30 +212,159 @@ const SymbologyEditor = ({ source, views, ...props }) => {
             filters: {}
           }))
       }))
-    })
+    };
+    newSym.id = getSymbologyId(newSym);
+    setSymbology(newSym);
   }, [views, reset]);
 
-  const layers = React.useMemo(() => {
-    return [new SymbologyLayer(views)];
+  const symbologyLayer = React.useMemo(() => {
+    return new SymbologyLayer(views);
   }, [views]);
+
+  const viewsMap = React.useMemo(() => {
+    return views.reduce((a, c) => {
+      a[c.view_id] = c;
+      return a;
+    }, {});
+  }, [views]);
+
+  const [symbologyViewMap, setSymbologyViewMap] = React.useState({});
+
+  React.useEffect(() => {
+    setSymbologyViewMap(prev => {
+      return get(symbology, "views", [])
+        .reduce((a, c) => {
+          return c.layers.reduce((aa, cc) => {
+            if (cc.uniqueId in prev) {
+              aa[cc.uniqueId] = prev[cc.uniqueId];
+            }
+            else {
+              aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
+            }
+            return aa;
+          }, a);
+        }, {});
+    })
+  }, [symbology, viewsMap]);
+
+  const layers = React.useMemo(() => {
+    return [
+      symbologyLayer,
+      ...Object.values(symbologyViewMap)
+    ]
+  }, [symbologyLayer, symbologyViewMap]);
+
+  const symbologyLayersMap = React.useMemo(() => {
+    return get(symbology, "views", []).reduce((a, c) => {
+      return c.layers.reduce((aa, cc) => {
+        aa[cc.uniqueId] = { symbologyLayer: cc };
+        return aa;
+      }, a);
+    }, {});
+  }, [symbology]);
+
+// CREATE LEGENDS
+  React.useEffect(() => {
+    if (!symbology) return;
+    if (!activeView) return;
+
+    const legendIds = activeView.layers.reduce((aa, cc) => {
+      return Object.keys(cc.paintProperties)
+        .filter(ppId => ppId.includes("color"))
+        .reduce((aaa, ccc) => {
+          const hasVar = Boolean(cc.paintProperties[ccc]?.variable);
+          const inLgnd = hasVar && Boolean(cc.paintProperties[ccc].variable.includeInLegend);
+          if (hasVar && inLgnd) {
+            const vid = cc.paintProperties[ccc].variable.variableId;
+            const id = `${ ccc }|${ vid }`;
+            if (!aaa.includes(id)) {
+              aaa.push(id);
+            }
+          }
+          return aaa;
+        }, aa);
+    }, []);
+
+    const [neededLegendId] = legendIds.filter(lid => {
+      return !activeView.legends.filter(l => l.id === lid).length;
+    });
+
+    if (neededLegendId) {
+      const [ppId, variableId] = neededLegendId.split("|");
+      setSymbology(prev => {
+        return {
+          ...prev,
+          views: prev.views.map(view => {
+            if (view === activeView) {
+              return {
+                ...view,
+                legends: [
+                  ...view.legends,
+                  { id: neededLegendId,
+                    name: variableId,
+                    color: "BrBG",
+                    range: getColorRange(7, "BrBG"),
+                    defaultValue: "rgba(0, 0, 0, 0)",
+                    type: "quantile",
+                    domain: [],
+                    reverse: false
+                  }
+                ]
+              }
+            }
+            return view;
+          })
+        }
+      });
+    }
+
+    const [unneededLegendId] = activeView.legends
+      .filter(l => !legendIds.includes(l.id))
+      .map(l => l.id);
+
+    if (unneededLegendId) {
+      setSymbology(prev => {
+        return {
+          ...prev,
+          views: prev.views.map(view => {
+            if (view === activeView) {
+              return {
+                ...view,
+                legends: view.legends.filter(l => l.id !== unneededLegendId)
+              }
+            }
+            return view;
+          })
+        }
+      });
+    }
+
+  }, [setSymbology, symbology, activeView]);
+
+console.log("symbology", symbology)
 
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
         source, setSymbology, startNewSymbology, symbology, savedSymbologies,
-        activeViewId, /*setActiveViewId,*/ activeView,
+        activeViewId, setActiveViewId, activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction,
         activeFilterVariableId, setActiveFilterVariableId, activeFilter
-      }
+      },
+      ...layers.slice(1).reduce((a, c) => {
+        a[c.id] = symbologyLayersMap[c.id]
+        return a;
+      }, {})
     }
   }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
-        activeViewId, /*setActiveViewId,*/ activeView,
+        activeViewId, setActiveViewId, activeView,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
         paintPropertyActions, activePaintPropertyAction, setActivePaintPropertyAction,
-        activeFilterVariableId, setActiveFilterVariableId, activeFilter
+        activeFilterVariableId, setActiveFilterVariableId, activeFilter,
+        symbologyLayersMap
       ]
   );
 
