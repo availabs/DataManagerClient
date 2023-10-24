@@ -139,9 +139,7 @@ const getDisplayItem = remove =>
     }, [value, seconds]);
 
     return (
-      <div className="flex bg-gray-200 hover:bg-gray-300 px-2 py-1 items-center"
-        onClick={ stopPropagation }
-      >
+      <div className="flex bg-gray-200 hover:bg-gray-300 px-2 py-1 items-center">
         <div className="flex-1">{ children }</div>
         <div className="relative">
           { !seconds ? null :
@@ -170,6 +168,9 @@ const SymbologyPanel = props => {
   }, [props]);
   const setSymbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
+  }, [props]);
+  const loadSavedSymbology = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "loadSavedSymbology"], null);
   }, [props]);
   const startNewSymbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "startNewSymbology"], null);
@@ -235,7 +236,7 @@ const SymbologyPanel = props => {
             displayAccessor={ s => s.name }
             options={ savedSymbologies }
             value={ symbology }
-            onChange={ setSymbology }
+            onChange={ loadSavedSymbology }
           >
             <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
               Load and Edit a Symbology
@@ -699,7 +700,8 @@ const makeNewVarialbe = (variable, ppId) => {
     scale: {
       type: variable.type === "data-variable" ? "quantile" : "ordinal",
       domain: [],
-      range: []
+      range: [],
+      format: ".2s"
     }
   }
   if (ppId.includes("color")) {

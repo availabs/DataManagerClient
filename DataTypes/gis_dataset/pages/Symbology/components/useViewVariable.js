@@ -30,7 +30,6 @@ const useViewVariable = (viewId, variable, filteredVariableIds = EmptyArray) => 
 
   React.useEffect(() => {
     if (!(dataLength && variables.length)) return;
-    console.log('getting vars', variables)
     falcor.get([
       "dama", pgEnv, "viewsbyId", viewId, "databyIndex",
       { from: 0, to: dataLength - 1 }, variables

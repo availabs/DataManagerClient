@@ -148,17 +148,15 @@ const VariableBox = props => {
 
   const [variable, scale] = React.useMemo(() => {
     const { variable } = paintProperty;
-    if (ppId.includes("color") && variable.includeInLegend) {
-      const legendId = `${ ppId }|${ variable.variableId }`;
-      const legend = activeView.legends.reduce((a, c) => {
-        return c.id === legendId ? c : a;
-      }, null);
-      return [variable, legend];
-    }
+    // if (ppId.includes("color") && variable.includeInLegend) {
+    //   const legendId = `${ ppId }|${ variable.variableId }`;
+    //   const legend = activeView.legends.reduce((a, c) => {
+    //     return c.id === legendId ? c : a;
+    //   }, null);
+    //   return [variable, legend];
+    // }
     return [variable, variable.scale];
   }, [activeView, ppId, paintProperty]);
-
-// console.log("VariableBox", variable, scale);
 
   const activeLayer = React.useMemo(() => {
     return get(layerProps, ["symbology-layer", "activeLayer"], null);
@@ -262,9 +260,9 @@ const VariableBox = props => {
   }, [setSymbology, activeViewId, uniqueId, ppId]);
 
   const [updateVariable, updateScale] = React.useMemo(() => {
-    if (ppId.includes("color")) {
-      return [_updateVariable, _updateLegend];
-    }
+    // if (ppId.includes("color")) {
+    //   return [_updateVariable, _updateLegend];
+    // }
     return [_updateVariable, _updateScale];
   }, [ppId, _updateLegend, _updateVariable, _updateScale]);
 
@@ -277,7 +275,7 @@ const VariableBox = props => {
   const filtersMap = React.useMemo(() => {
     return Object.keys(get(activeLayer, "filters", {}))
       .reduce((a, c) => {
-        a[c] = get(filters, [c, "filter"], []);
+        a[c] = get(activeLayer, [c, "filter"], []);
         return a;
       }, {});
   }, [activeLayer, data]);
@@ -299,8 +297,6 @@ const VariableBox = props => {
     return data.filter(d => !filteredOgcFids.has(d.id));
   }, [data, filteredOgcFids]);
 
-// console.log("VariableBox", variable, scale)
-
   const d3scaleDomain = React.useMemo(() => {
     return calcDomain(variable, scale, filteredData);
   }, [variable, scale, filteredData]);
@@ -321,10 +317,10 @@ const VariableBox = props => {
 
       const d3scale = getScale(type, d3scaleDomain, range);
 
-      // let domain = d3scale.domain();
-      // if (type === "quantile") {
-      //   domain = d3scale.range().map(r => d3scale.invertExtent(r)[1]);
-      // }
+      let domain = d3scale.domain();
+      if (type === "quantile") {
+        domain = d3scale.range().map(r => d3scale.invertExtent(r)[1]);
+      }
 
       const dataMap = filteredData.reduce((a, c) => {
         if ((type ==="ordinal") && c[vid]) {
@@ -336,7 +332,6 @@ const VariableBox = props => {
         return a;
       }, {});
 
-      console.log('variable', ppId, paintProperty)
       const paintExpression = [
         "coalesce",
         ["get",
@@ -351,14 +346,14 @@ const VariableBox = props => {
       if (!isEqual(paintExpression, variable.paintExpression)) {
         updateVariable({ paintExpression });
       };
-      // if (!isEqual(domain, variable.scale?.domain)) {
-      //   updateScale({ domain });
-      // }
+      if (!isEqual(domain, variable.scale?.domain)) {
+        updateScale({ domain });
+      }
     }
     else if (variable.paintExpression) {
       updateVariable({ paintExpression: null });
     }
-  }, [variable, scale, filteredData, updateVariable/*, updateScale*/, d3scaleDomain]);
+  }, [variable, scale, filteredData, updateVariable, updateScale, d3scaleDomain]);
 
   const VariableEditor = React.useMemo(() => {
     return getVariableEditor(ppId, scale?.type);

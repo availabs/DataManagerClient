@@ -27,96 +27,48 @@ export const SymbologyLayerRenderComponent = props => {
 
   const activeView = get(props, ["layerProps", "activeView"], null);
 
-  const [legend, setLegend] = React.useState(null);
+  const [legends, setLegends] = React.useState([]);
 
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!activeView) return;
 
-    let legend = null;
-
-    const defaultPaints = avlLayer.layers.reduce((a, c) => {
-      a[c.id] = c.paint;
-      return a;
-    }, {});
-
-    avlLayer.layers.forEach(layer => {
-      setLayerVisibility(layer.id, "none");
-    });
-
-    activeView.layers.forEach(layer => {
-      const defaultPaint = { ...defaultPaints[layer.layerId] };
-
-      Object.keys(layer.paintProperties)
-        .forEach(ppId => {
-
-          const paintProperty = get(layer, ["paintProperties", ppId], {});
-
-          const {
-            value,
-            paintExpression,
-            variable
-          } = paintProperty;
-
-          if (value) {
-            delete defaultPaint[ppId];
-            maplibreMap.setPaintProperty(layer.layerId, ppId, value);
+    const legends = activeView.layers.reduce((a, c) => {
+      return Object.values(c.paintProperties)
+        .reduce((aa, cc) => {
+          if (cc.variable && cc.variable.includeInLegend) {
+            aa.push({
+              name: cc.variable.displayName,
+              ...cc.variable.scale
+            })
           }
-          else if (paintExpression) {
-            delete defaultPaint[ppId];
-            maplibreMap.setPaintProperty(layer.layerId, ppId, paintExpression);
-          }
-          else if (variable) {
-            delete defaultPaint[ppId];
+          return aa;
+        }, a)
+    }, []);
 
-            const { paintExpression, scale } = variable;
+    setLegends(legends);
 
-            if (ppId.includes("color")) {
-              legend = {
-                name: variable.displayName,
-                ...scale
-              };
-            }
+  }, [maplibreMap, resourcesLoaded, activeView]);
 
-            maplibreMap.setPaintProperty(layer.layerId, ppId, paintExpression);
-          }
-        })
-
-        Object.values(layer.filters || {})
-          .forEach(({ filterExpression }) => {
-            maplibreMap.setFilter(layer.layerId, filterExpression)
-          })
-      setLayerVisibility(layer.layerId, "visible");
-
-      Object.keys(defaultPaint)
-        .forEach(ppId => {
-          maplibreMap.setPaintProperty(layer.layerId, ppId, defaultPaint[ppId]);
-        })
-    })
-
-    setLegend(legend);
-
-  }, [maplibreMap, resourcesLoaded, activeView,
-      setLayerVisibility, avlLayer
-    ]
-  )
-
-  return !legend ? null : (
-    <div className="p-1 pointer-events-auto bg-gray-100 rounded min-w-fit"
+  return !legends.length ? null : (
+    <div className="p-1 pointer-events-auto bg-gray-100 rounded min-w-fit grid grid-cols-1 gap-1"
       style={ {
         width: "100%",
-        maxWidth: legend.isVertical ? "10rem" : "25rem"
+        maxWidth: "25rem"
       } }
     >
-      <div className="bg-gray-300 border border-current rounded p-1">
-        <div className="font-bold">
-          { legend.name }
-        </div>
-        <div>
-          <SymbologyLegend { ...legend }/>
-        </div>
-      </div>
+      { legends.map((legend, i) => (
+          <div key={ i } className="bg-gray-300 border border-current rounded p-1">
+            <div className="font-bold">
+              { legend.name }
+            </div>
+            <div>
+              <SymbologyLegend { ...legend }/>
+            </div>
+          </div>
+        ))
+      }
     </div>
   );
 }
@@ -208,7 +160,7 @@ class SymbologyLayer extends AvlLayer {
     // this.sources = getValidSources(sources);
     // this.layers = layers;
   }
-  // RenderComponent = SymbologyLayerRenderComponent;
+  RenderComponent = SymbologyLayerRenderComponent;
   infoBoxes = [
     { Header: SymbologyInfoBoxHeader,
       Component: SymbologyInfoBox

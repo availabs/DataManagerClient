@@ -11,20 +11,35 @@ const ViewLayerRenderComponent = props => {
     layer: avlLayer,
     layerProps,
     resourcesLoaded,
-    setLayerVisibility
+    setLayerVisibility,
+    allLayerProps
   } = props;
 
   const {
     symbologyLayer
   } = layerProps;
 
+  const activeView = get(allLayerProps, ["symbology-layer", "activeView"], null);
+
+  const visibility = React.useMemo(() => {
+    if (!maplibreMap) return "none";
+    if (!resourcesLoaded) return "none";
+    if (!activeView) return "none";
+    if (!symbologyLayer) return "none";
+    return activeView.layers.includes(symbologyLayer) ? "visibile" : "none";
+  }, [maplibreMap, resourcesLoaded, activeView, symbologyLayer]);
+
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!symbologyLayer) return;
 
+    setLayerVisibility(symbologyLayer.uniqueId, visibility);
+    if (visibility === "none") return;
+
+console.log("RENDERING:", symbologyLayer)
+
     const [layer] = avlLayer.layers;
-    setLayerVisibility(layer.id, "visible");
 
     const defaultPaint = { ...layer.paint };
 
@@ -80,7 +95,10 @@ const ViewLayerRenderComponent = props => {
     else {
       maplibreMap.setFilter(layer.id, null);
     }
-  }, [maplibreMap, resourcesLoaded, avlLayer, symbologyLayer, setLayerVisibility]);
+  }, [maplibreMap, resourcesLoaded, avlLayer, symbologyLayer,
+      setLayerVisibility, visibility
+    ]
+  );
 
   return null;
 }
@@ -107,7 +125,7 @@ class ViewLayer extends AvlLayer {
         ({ ...l,
           id: layer.uniqueId,
           source: layer.uniqueId,
-          layout: { visibility: "visible" }
+          layout: { visibility: "none" }
         })
       );
   }
