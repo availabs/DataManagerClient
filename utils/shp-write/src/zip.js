@@ -11,7 +11,6 @@ export default function zip (gj, options, aliasString, tmcMetaString) {
     const geoms = [geojson.point(gj), geojson.line(gj), geojson.polygon(gj)];
 
     geoms.forEach(function(l, i) {
-console.log("???????????????", l)
       if (l.geometries.length && l.geometries[0].length) {
           console.log('l.geo',l.geometries, i, l)
           write(

@@ -25,77 +25,79 @@ export const SymbologyLayerRenderComponent = props => {
     layer: avlLayer
   } = props;
 
-  const activeLayer = get(props, ["layerProps", "activeLayer"], null);
+  const activeView = get(props, ["layerProps", "activeView"], null);
 
   const [legend, setLegend] = React.useState(null);
 
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
-    if (!activeLayer) return;
+    if (!activeView) return;
 
     let legend = null;
 
+    const defaultPaints = avlLayer.layers.reduce((a, c) => {
+      a[c.id] = c.paint;
+      return a;
+    }, {});
+
     avlLayer.layers.forEach(layer => {
-      if (maplibreMap.getLayer(layer.id)) {
-        const defaultPaint = { ...get(layer, "paint", {}) };
-
-        if (layer.id === activeLayer.layerId) {
-          Object.keys(activeLayer.paintProperties)
-            .forEach(ppId => {
-
-              const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
-
-              const {
-                value,
-                paintExpression,
-                variable
-              } = paintProperty;
-
-              if (value) {
-                delete defaultPaint[ppId];
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, value);
-              }
-              else if (paintExpression) {
-                delete defaultPaint[ppId];
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
-              }
-              else if (variable) {
-                delete defaultPaint[ppId];
-
-                const { paintExpression, scale } = variable;
-
-                if (ppId.includes("color")) {
-                  legend = {
-                    name: variable.displayName,
-                    ...scale
-                  };
-                }
-
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
-              }
-            })
-
-            Object.values(activeLayer.filters || {})
-              .forEach(({ filterExpression }) => {
-                maplibreMap.setFilter(activeLayer.layerId, filterExpression)
-              })
-          setLayerVisibility(activeLayer.layerId, "visible");
-        }
-        else {
-          setLayerVisibility(layer.id, "none");
-        }
-
-        Object.keys(defaultPaint)
-          .forEach(ppId => {
-            maplibreMap.setPaintProperty(layer.id, ppId, defaultPaint[ppId]);
-          })
-      }
+      setLayerVisibility(layer.id, "none");
     });
+
+    activeView.layers.forEach(layer => {
+      const defaultPaint = { ...defaultPaints[layer.layerId] };
+
+      Object.keys(layer.paintProperties)
+        .forEach(ppId => {
+
+          const paintProperty = get(layer, ["paintProperties", ppId], {});
+
+          const {
+            value,
+            paintExpression,
+            variable
+          } = paintProperty;
+
+          if (value) {
+            delete defaultPaint[ppId];
+            maplibreMap.setPaintProperty(layer.layerId, ppId, value);
+          }
+          else if (paintExpression) {
+            delete defaultPaint[ppId];
+            maplibreMap.setPaintProperty(layer.layerId, ppId, paintExpression);
+          }
+          else if (variable) {
+            delete defaultPaint[ppId];
+
+            const { paintExpression, scale } = variable;
+
+            if (ppId.includes("color")) {
+              legend = {
+                name: variable.displayName,
+                ...scale
+              };
+            }
+
+            maplibreMap.setPaintProperty(layer.layerId, ppId, paintExpression);
+          }
+        })
+
+        Object.values(layer.filters || {})
+          .forEach(({ filterExpression }) => {
+            maplibreMap.setFilter(layer.layerId, filterExpression)
+          })
+      setLayerVisibility(layer.layerId, "visible");
+
+      Object.keys(defaultPaint)
+        .forEach(ppId => {
+          maplibreMap.setPaintProperty(layer.layerId, ppId, defaultPaint[ppId]);
+        })
+    })
 
     setLegend(legend);
 
-  }, [maplibreMap, resourcesLoaded, activeLayer,
+  }, [maplibreMap, resourcesLoaded, activeView,
       setLayerVisibility, avlLayer
     ]
   )
@@ -194,19 +196,19 @@ class SymbologyLayer extends AvlLayer {
 
     this.startActive = true;
 
-    const [sources, layers] = views.reduce((a, c) => {
-      const sources = get(c, ["metadata", "tiles", "sources"], []);
-      a[0].push(...sources);
-      const layers = get(c, ["metadata", "tiles", "layers"], [])
-        .map(layer => ({ ...layer, layout: { visibility: "none" } }));
-      a[1].push(...layers);
-      return a;
-    }, [[], []]);
-
-    this.sources = getValidSources(sources);
-    this.layers = layers;
+    // const [sources, layers] = views.reduce((a, c) => {
+    //   const sources = get(c, ["metadata", "tiles", "sources"], []);
+    //   a[0].push(...sources);
+    //   const layers = get(c, ["metadata", "tiles", "layers"], [])
+    //     .map(layer => ({ ...layer, layout: { visibility: "none" } }));
+    //   a[1].push(...layers);
+    //   return a;
+    // }, [[], []]);
+    //
+    // this.sources = getValidSources(sources);
+    // this.layers = layers;
   }
-  RenderComponent = SymbologyLayerRenderComponent;
+  // RenderComponent = SymbologyLayerRenderComponent;
   infoBoxes = [
     { Header: SymbologyInfoBoxHeader,
       Component: SymbologyInfoBox
