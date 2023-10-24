@@ -23,28 +23,15 @@ const paintPropertyHasValue = paintProperty => {
   return Boolean(get(paintProperty, ["variable", "paintExpression", "length"], 0));
 }
 
-const setSymbologyId = symbology => {
-  symbology.id = symbology.id || get(symbology, "views", [])
-    .reduce((a, c) => {
-      a.push(c.viewId);
-      return get(c, "layers", [])
-        .reduce((aa, cc) => {
-          aa.push(cc.layerId);
-          return Object.keys(get(cc, "paintProperties", {}))
-            .reduce((aaa, ccc) => {
-              aaa.push(ccc);
-              const v = get(cc, ["paintProperties", ccc, "variable"], null);
-              if (v?.variableId) {
-                aaa.push(v.variableId);
-              }
-              return aaa;
-            }, aa);
-        }, a);
-    }, [symbology.name.replace(/\s+/g, "_")]).join("|");
-  return symbology;
-}
+const SymbologyButtons = props => {
 
-const SymbologyButtons = ({ startNewSymbology, symbology, activeViewId, MapActions }) => {
+  const {
+    startNewSymbology,
+    symbology,
+    savedSymbologies,
+    activeViewId,
+    MapActions
+  } = props;
 
   const okToSave = React.useMemo(() => {
     if (!symbology) return false;
@@ -63,29 +50,27 @@ const SymbologyButtons = ({ startNewSymbology, symbology, activeViewId, MapActio
     return Boolean(length);
   }, [symbology, activeViewId]);
 
-  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
+  const { falcor, pgEnv } = React.useContext(DamaContext);
 
   const saveSymbology = React.useCallback(() => {
-    const current = get(
-      falcorCache,
-      ["dama", pgEnv, "views", "byId", activeViewId,
-        "attributes", "metadata", "value", "symbologies"],
-      []
-    ).map(setSymbologyId);
 
-    const toSave = setSymbologyId({
+    const toSave = {
       name: symbology.name,
+      id: symbology.id,
       views: symbology.views
         .filter(view => view.viewId == activeViewId)
-    });
+    };
 
-    const symbologies = [...current.filter(s => s.id !== toSave.id), toSave];
+    const symbologies = [
+      ...savedSymbologies.filter(s => s.id !== toSave.id),
+      toSave
+    ];
 
     falcor.call(
       ["dama", "views", "metadata", "update"],
       [pgEnv, activeViewId, { symbologies }]
     ).then(() => {})
-  }, [falcor, pgEnv, activeViewId, symbology, falcorCache]);
+  }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies]);
 
   const openEditModal = React.useCallback(e => {
     MapActions.openModal("symbology-layer", "symbology-editor");
@@ -125,6 +110,57 @@ const SymbologyButtons = ({ startNewSymbology, symbology, activeViewId, MapActio
   )
 }
 
+const getDisplayItem = remove =>
+  ({ children, value }) => {
+
+    const [seconds, setSeconds] = React.useState(0);
+    const timeout = React.useRef();
+
+    React.useEffect(() => {
+      if (seconds > 0) {
+        timeout.current = setTimeout(setSeconds, 1000, seconds - 1);
+      }
+    }, [seconds]);
+
+    const stopPropagation = React.useCallback(e => {
+      e.stopPropagation();
+    }, []);
+
+    const onClick = React.useCallback(e => {
+      e.stopPropagation();
+      if (seconds === 0) {
+        setSeconds(3);
+      }
+      else {
+        setSeconds(0);
+        clearTimeout(timeout.current);
+        remove(value);
+      }
+    }, [value, seconds]);
+
+    return (
+      <div className="flex bg-gray-200 hover:bg-gray-300 px-2 py-1 items-center">
+        <div className="flex-1">{ children }</div>
+        <div className="relative">
+          { !seconds ? null :
+            <span className={ `
+                absolute inset-0 flex items-center justify-center
+                text-white font-bold pointer-events-none
+              ` }
+            >
+              { seconds }
+            </span>
+          }
+          <span onClick={ onClick }
+            className={ `
+              cursor-pointer text-red-500 hover:bg-gray-500 rounded
+              fas fa-trash rounded px-2 py-1
+            ` }/>
+        </div>
+      </div>
+    )
+  }
+
 const SymbologyPanel = props => {
 
   const symbology = React.useMemo(() => {
@@ -132,6 +168,9 @@ const SymbologyPanel = props => {
   }, [props]);
   const setSymbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
+  }, [props]);
+  const loadSavedSymbology = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "loadSavedSymbology"], null);
   }, [props]);
   const startNewSymbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "startNewSymbology"], null);
@@ -171,17 +210,33 @@ const SymbologyPanel = props => {
     return [...dataVariables, ...metaVariables];
   }, [dataVariables, metaVariables]);
 
+  const { falcor, pgEnv } = React.useContext(DamaContext);
+
   const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
 
+  const removeSavedSymbology = React.useCallback(sym => {
+    const [{ viewId }] = sym.views;
+    const symbologies = savedSymbologies.filter(s => s.id !== sym.id);
+    falcor.call(
+      ["dama", "views", "metadata", "update"],
+      [pgEnv, viewId, { symbologies }]
+    ).then(() => {});
+  }, [falcor, pgEnv, savedSymbologies]);
+
+  const DisplayItem = React.useMemo(() => {
+    return getDisplayItem(removeSavedSymbology);
+  }, [removeSavedSymbology]);
+
   return (
-    <div className="absolute inset-0 border overflow-visible scrollbar-sm p-1">
+    <div className="absolute inset-0 overflow-visible scrollbar-sm p-1">
       { !savedSymbologies.length ? null :
         <div className="mb-1 pb-1 border-b border-current">
           <MultiLevelSelect isDropdown
+            DisplayItem={ DisplayItem }
             displayAccessor={ s => s.name }
             options={ savedSymbologies }
             value={ symbology }
-            onChange={ setSymbology }
+            onChange={ loadSavedSymbology }
           >
             <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
               Load and Edit a Symbology
@@ -192,6 +247,7 @@ const SymbologyPanel = props => {
       <div className="mb-1 pb-1 border-b border-current">
         <SymbologyButtons
           startNewSymbology={ startNewSymbology }
+          savedSymbologies={ savedSymbologies }
           symbology={ symbology }
           activeViewId={ activeViewId }
           MapActions={ props.MapActions }/>
@@ -256,8 +312,8 @@ const NameEditor = ({ value, onChange }) => {
           { value || "enter symbology name" }
         </div>
       }
-      <Button className="button ml-1" onClick={ editing ? stopEditing : startEditing }>
-        <span className="fas fa-lg fa-pen-to-square"/>
+      <Button className="buttonPrimary ml-1" onClick={ editing ? stopEditing : startEditing }>
+        <span className="fas fa-pen-to-square"/>
       </Button>
     </div>
   )
@@ -308,24 +364,105 @@ const Symbology = ({ symbology, setSymbology, ...props }) => {
 }
 
 const ViewItem = ({ view, ...props }) => {
+  const setSymbology = get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
+  const activeView = get(props, ["layerProps", "symbology-layer", "activeView"], null);
   const activeLayerId = get(props, ["layerProps", "symbology-layer", "activeLayerId"], null);
   const setActiveLayerId = get(props, ["layerProps", "symbology-layer", "setActiveLayerId"], null);
   const activeLayer = get(props, ["layerProps", "symbology-layer", "activeLayer"], null);
 
+  const copyLayer = React.useCallback(e => {
+    e.stopPropagation();
+    const maxCopy = activeView.layers
+      .filter(l => l.layerId === activeLayer.layerId)
+      .reduce((a, c) => {
+        return Math.max(+a, +c.copy);
+      }, 0)
+    const layer = {
+      uniqueId: `${ activeLayer.layerId }-${ Date.now() }-${ performance.now() }`,
+      copy: maxCopy + 1,
+      layerId: activeLayer.layerId,
+      type: activeLayer.type,
+      show: true,
+      minZoom: null,
+      maxZoom: null,
+      paintProperties: {},
+      filters: {}
+    }
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => {
+          if (view.viewId === activeView.viewId) {
+            return {
+              ...view,
+              layers: [
+                ...view.layers,
+                layer
+              ]
+            }
+          }
+          return view;
+        })
+      }
+    })
+    setActiveLayerId(layer.uniqueId);
+  }, [setSymbology, activeView, activeLayer, setActiveLayerId]);
+
+  const removeLayerCopy = React.useCallback(uid => {
+    if (uid === activeLayer.uniqueId) {
+      setActiveLayerId(null);
+    }
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => {
+          if (view.viewId === activeView.viewId) {
+            return {
+              ...view,
+              layers: view.layers.filter(layer => layer.uniqueId !== uid)
+            }
+          }
+          return view;
+        })
+      }
+    })
+  }, [setSymbology, activeView, activeLayer, setActiveLayerId]);
+
+  const Options = React.useMemo(() => {
+    return view.layers.map(layer => {
+      if (layer.copy) {
+        return {
+          ...layer,
+          DisplayItem: getDisplayItem(removeLayerCopy)
+        }
+      }
+      return layer;
+    })
+  }, [view.layers, removeLayerCopy]);
+
   return (
     <div>
       <div className="ml-4 pt-1">
-        <div>
-          <MultiLevelSelect
-            removable={ false }
-            options={ view.layers }
-            value={ activeLayerId }
-            onChange={ setActiveLayerId }
-            displayAccessor={ v => `Layer ID: ${ v.layerId }` }
-            valueAccessor={ v => v.layerId }/>
+        <div className="flex items-center">
+          <div className="flex-1 mr-1">
+            <MultiLevelSelect
+              removable={ false }
+              options={ Options }
+              value={ activeLayerId }
+              onChange={ setActiveLayerId }
+              displayAccessor={ v => `Layer ID: ${ v.layerId } (${ v.copy })` }
+              valueAccessor={ v => v.uniqueId }/>
+          </div>
+          <div>
+            <Button className="py-2 button"
+              onClick={ copyLayer }
+            >
+              <span className="fas fa-plus"/>
+            </Button>
+          </div>
         </div>
         { !activeLayer ? null :
-          <LayerItem key={ activeLayer.layerId }
+          <LayerItem key={ activeLayer.uniqueId }
             { ...props } layer={ activeLayer }/>
         }
       </div>
@@ -351,7 +488,7 @@ const VariableAccessor = v => v.variableId;
 
 const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
 
-  const { layerId, type: layerType  } = layer;
+  const { uniqueId, type: layerType  } = layer;
 
   const paintProperties = React.useMemo(() => {
     return get(PaintProperties, layerType, []);
@@ -379,7 +516,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               return {
                 ...layer,
                 paintProperties: {
@@ -397,7 +534,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         }))
       }
     });
-  }, [setSymbology, layerId, setActivePaintPropertyId]);
+  }, [setSymbology, uniqueId, setActivePaintPropertyId]);
 
   const removePaintProperty = React.useCallback(ppId => {
     if (activePaintPropertyId === ppId) {
@@ -409,7 +546,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               const paintProperties = {
                 ...layer.paintProperties
               }
@@ -424,7 +561,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         }))
       }
     });
-  }, [setSymbology, layerId, activePaintPropertyId, setActivePaintPropertyId]);
+  }, [setSymbology, uniqueId, activePaintPropertyId, setActivePaintPropertyId]);
 
   const addFilter = React.useCallback(vid => {
     setActiveFilterVariableId(vid);
@@ -434,7 +571,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               return {
                 ...layer,
                 filters: {
@@ -451,7 +588,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         }))
       }
     });
-  }, [setSymbology, layerId, setActiveFilterVariableId]);
+  }, [setSymbology, uniqueId, setActiveFilterVariableId]);
 
   const removeFilter = React.useCallback(vid => {
     if (activeFilterVariableId === vid) {
@@ -463,7 +600,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               const filters = {
                 ...layer.filters
               }
@@ -478,7 +615,7 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
         }))
       }
     });
-  }, [setSymbology, layerId, activeFilterVariableId, setActiveFilterVariableId]);
+  }, [setSymbology, uniqueId, activeFilterVariableId, setActiveFilterVariableId]);
 
   const metaVariables = React.useMemo(() => {
     return variables.filter(v => {
@@ -559,35 +696,40 @@ const makeNewVarialbe = (variable, ppId) => {
     filter: [],
     filterExpression: null,
     paintExpression: null,
+    includeInLegend: ppId.includes("color") ? true : false,
     scale: {
       type: variable.type === "data-variable" ? "quantile" : "ordinal",
       domain: [],
       range: [],
-      format: variable.type === "data-variable" ? ".2s" : undefined,
-      isVertical: false
+      format: ".2s"
     }
   }
   if (ppId.includes("color")) {
     newVar.scale.color = variable.type === "data-variable" ? "BrBG" : "Set3";
     newVar.scale.domain = [];
     newVar.scale.range = getColorRange(7, newVar.scale.color);
+    newVar.scale.defaultValue = "rgba(0, 0, 0, 0)";
     newVar.scale.reverse = false;
   }
   if (ppId.includes("opacity")) {
     newVar.scale.range = [0.2, 0.4, 0.6, 0.8];
     newVar.scale.step = 0.2;
+    newVar.scale.defaultValue = 0;
   }
   if (ppId.includes("width")) {
     newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
     newVar.scale.step = 1;
+    newVar.scale.defaultValue = 0;
   }
   if (ppId.includes("offset")) {
     newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
     newVar.scale.step = 1;
+    newVar.scale.defaultValue = 0;
   }
   if (ppId.includes("radius")) {
     newVar.scale.range = [5, 10, 15, 20, 25];
     newVar.scale.step = 5;
+    newVar.scale.defaultValue = 0;
   }
   return newVar;
 }
@@ -707,7 +849,7 @@ const PaintPropertyItem = props => {
     removePaintProperty
   } = props;
 
-  const { layerId } = layer;
+  const { uniqueId } = layer;
 
   const doRemovePaintProperty = React.useCallback(e => {
     removePaintProperty(ppId);
@@ -740,7 +882,7 @@ const PaintPropertyItem = props => {
           views: prev.views.map(view => ({
             ...view,
             layers: view.layers.map(layer => {
-              if (layer.layerId === layerId) {
+              if (layer.uniqueId === uniqueId) {
                 return {
                   ...layer,
                   paintProperties: Object.keys(layer.paintProperties)
@@ -766,7 +908,7 @@ const PaintPropertyItem = props => {
       })
       setPrevAction(action);
     }
-  }, [setActivePaintPropertyAction, ppId, setSymbology, layerId, prevAction]);
+  }, [setActivePaintPropertyAction, ppId, setSymbology, uniqueId, prevAction]);
 
   const addVariable = React.useCallback(vid => {
 
@@ -780,7 +922,7 @@ const PaintPropertyItem = props => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               return {
                 ...layer,
                 paintProperties: Object.keys(layer.paintProperties)
@@ -804,7 +946,7 @@ const PaintPropertyItem = props => {
         }))
       }
     })
-  }, [setSymbology, layerId, ppId, variables]);
+  }, [setSymbology, uniqueId, ppId, variables]);
 
   const updateVariableDispayName = React.useCallback(dn => {
     setSymbology(prev => {
@@ -813,7 +955,7 @@ const PaintPropertyItem = props => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === layerId) {
+            if (layer.uniqueId === uniqueId) {
               return {
                 ...layer,
                 paintProperties: Object.keys(layer.paintProperties)
@@ -840,7 +982,7 @@ const PaintPropertyItem = props => {
         }))
       }
     })
-  }, [setSymbology, layerId, ppId, paintProperty.variable]);
+  }, [setSymbology, uniqueId, ppId, paintProperty.variable]);
 
   const theme = useTheme();
 

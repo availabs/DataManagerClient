@@ -16,15 +16,16 @@ const ColorEditor = props => {
 
   const {
     variable,
+    scale,
     updateScale,
     variableType,
     MapActions,
     data
   } = props
 
-  const {
-    scale
-  } = variable;
+  // const {
+  //   scale
+  // } = variable;
 
   const [reverseColors, setReverseColors] = React.useState(Boolean(scale.reverse));
 
@@ -197,7 +198,7 @@ const ColorSelector = props => {
           overflow-auto px-2 rounded ${ theme.bgAccent2 }
           scrollbar-sm scrollbar-blue
         ` }
-        style={ { height: "24rem" } }
+        style={ { height: "20rem" } }
       >
         { Colors.map(color => (
             <EditorColorBar key={ color.name }

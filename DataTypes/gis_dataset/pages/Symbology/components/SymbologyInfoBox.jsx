@@ -58,12 +58,13 @@ const ViewBox = ({ view, ...props }) => {
   const activeLayer = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "activeLayer"], null);
   }, [props]);
+
   return (
     <div>
       <div>View ID: { view.viewId }</div>
       <div className="ml-4">
         { !activeLayer ? null :
-          <LayerBox key={ activeLayer.layerId }
+          <LayerBox key={ activeLayer.uniqueId }
             { ...props } layer={ activeLayer }
             activeViewId={ view.viewId }/>
         }
@@ -86,7 +87,7 @@ const LayerBox = ({ layer, ...props }) => {
         <div className="ml-4">
           { !activePaintProperty ? null :
             <PaintPropertyBox key={ activePaintPropertyId } { ...props }
-              layerId={ layer.layerId }
+              uniqueId={ layer.uniqueId }
               ppId={ activePaintPropertyId }
               paintProperty={ activePaintProperty }/>
           }
@@ -97,6 +98,8 @@ const LayerBox = ({ layer, ...props }) => {
 }
 
 const getVariableEditor = (ppId, type) => {
+  if (!type) return null;
+
   if (ppId.includes("color")) {
     return ColorEditor;
   }
@@ -109,8 +112,9 @@ const getVariableEditor = (ppId, type) => {
 const ordinalSort = (a, b) => {
   return String(a).localeCompare(String(b));
 }
-export const calcDomain = (variable, data) => {
-  const { scale, variableId: vid } = variable;
+export const calcDomain = (variable, scale, data) => {
+  if (!variable || !scale) return [];
+  const { variableId: vid } = variable;
   const { type, range = [] } = scale;
   const values = data.map(d => strictNaN(d[vid]) ? d[vid] : +d[vid])
     .filter(v => (v !== "") && (v !== null) && (v !== "null"));
@@ -128,7 +132,7 @@ export const calcDomain = (variable, data) => {
 
 const VariableBox = props => {
   const {
-    layerId,
+    uniqueId,
     ppId,
     paintProperty,
     activeViewId,
@@ -138,16 +142,53 @@ const VariableBox = props => {
     ...rest
   } = props;
 
+  const activeView = React.useMemo(() => {
+    return get(layerProps, ["symbology-layer", "activeView"], null);
+  }, [layerProps]);
+
+  const [variable, scale] = React.useMemo(() => {
     const { variable } = paintProperty;
+    // if (ppId.includes("color") && variable.includeInLegend) {
+    //   const legendId = `${ ppId }|${ variable.variableId }`;
+    //   const legend = activeView.legends.reduce((a, c) => {
+    //     return c.id === legendId ? c : a;
+    //   }, null);
+    //   return [variable, legend];
+    // }
+    return [variable, variable.scale];
+  }, [activeView, ppId, paintProperty]);
 
   const activeLayer = React.useMemo(() => {
     return get(layerProps, ["symbology-layer", "activeLayer"], null);
   }, [layerProps]);
-  const filteredVariableIds = React.useMemo(() => {
-    return Object.keys(get(activeLayer, "filters", {}));
-  }, [activeLayer]);
 
-  const updateVariable = React.useCallback(update => {
+  const _updateLegend = React.useCallback(update => {
+    setSymbology(prev => {
+      return ({
+        ...prev,
+        views: prev.views.map(view => {
+          if (view.viewId === activeViewId) {
+            const legendId = `${ ppId }|${ variable.variableId }`;
+            return {
+              ...view,
+              legends: view.legends.map(legend => {
+                if (legend.id === legendId) {
+                  return {
+                    ...legend,
+                    ...update
+                  }
+                }
+                return legend;
+              })
+            }
+          }
+          return view;
+        })
+      })
+    })
+  }, [setSymbology, activeViewId, uniqueId, ppId, variable])
+
+  const _updateVariable = React.useCallback(update => {
     setSymbology(prev => {
       return ({
         ...prev,
@@ -156,7 +197,7 @@ const VariableBox = props => {
             return {
               ...view,
               layers: view.layers.map(layer => {
-                if (layer.layerId === layerId) {
+                if (layer.uniqueId === uniqueId) {
                   return {
                     ...layer,
                     paintProperties: {
@@ -179,9 +220,9 @@ const VariableBox = props => {
         })
       })
     })
-  }, [setSymbology, activeViewId, layerId, ppId]);
+  }, [setSymbology, activeViewId, uniqueId, ppId]);
 
-  const updateScale = React.useCallback(scale => {
+  const _updateScale = React.useCallback(update => {
     setSymbology(prev => {
       return ({
         ...prev,
@@ -190,7 +231,7 @@ const VariableBox = props => {
             return {
               ...view,
               layers: view.layers.map(layer => {
-                if (layer.layerId === layerId) {
+                if (layer.uniqueId === uniqueId) {
                   return {
                     ...layer,
                     paintProperties: {
@@ -201,7 +242,7 @@ const VariableBox = props => {
                           ...layer.paintProperties[ppId].variable,
                           scale: {
                             ...layer.paintProperties[ppId].variable.scale,
-                            ...scale
+                            ...update
                           }
                         }
                       }
@@ -216,15 +257,25 @@ const VariableBox = props => {
         })
       })
     })
-  }, [setSymbology, activeViewId, layerId, ppId]);
+  }, [setSymbology, activeViewId, uniqueId, ppId]);
+
+  const [updateVariable, updateScale] = React.useMemo(() => {
+    // if (ppId.includes("color")) {
+    //   return [_updateVariable, _updateLegend];
+    // }
+    return [_updateVariable, _updateScale];
+  }, [ppId, _updateLegend, _updateVariable, _updateScale]);
+
+  const filteredVariableIds = React.useMemo(() => {
+    return Object.keys(get(activeLayer, "filters", {}));
+  }, [activeLayer]);
 
   const data = useViewVariable(activeViewId, variable, filteredVariableIds);
 
   const filtersMap = React.useMemo(() => {
-    const filters = get(activeLayer, "filters", {});
-    return Object.keys(filters)
+    return Object.keys(get(activeLayer, "filters", {}))
       .reduce((a, c) => {
-        a[c] = get(filters, [c, "filter"], []);
+        a[c] = get(activeLayer, [c, "filter"], []);
         return a;
       }, {});
   }, [activeLayer, data]);
@@ -247,17 +298,22 @@ const VariableBox = props => {
   }, [data, filteredOgcFids]);
 
   const d3scaleDomain = React.useMemo(() => {
-    return calcDomain(variable, filteredData);
-  }, [variable, filteredData]);
+    return calcDomain(variable, scale, filteredData);
+  }, [variable, scale, filteredData]);
 
   React.useEffect(() => {
-    if (variable.scale && filteredData.length && d3scaleDomain.length) {
+    if (variable && scale && filteredData.length && d3scaleDomain.length) {
 
-      const { variableId: vid, scale = {} } = variable;
+      const { variableId: vid } = variable;
 
-      const { type, range = [] } = scale;
+      const { type, range = [], defaultValue } = scale;
 
-      if (!range.length) return;
+      if (!range.length) {
+        if (variable.paintExpression) {
+          updateVariable({ paintExpression: null });
+        }
+        return;
+      };
 
       const d3scale = getScale(type, d3scaleDomain, range);
 
@@ -276,14 +332,13 @@ const VariableBox = props => {
         return a;
       }, {});
 
-      console.log('variable', ppId, paintProperty)
       const paintExpression = [
         "coalesce",
         ["get",
           ["to-string", ["get", "ogc_fid"]],
           ["literal", dataMap]
         ],
-        ppId.includes('color') ? "rgba(0, 0, 0, 0)" : 0
+        defaultValue
       ];
 
 
@@ -295,21 +350,27 @@ const VariableBox = props => {
         updateScale({ domain });
       }
     }
-  }, [variable, filteredData, updateVariable, updateScale, d3scaleDomain]);
+    else if (variable.paintExpression) {
+      updateVariable({ paintExpression: null });
+    }
+  }, [variable, scale, filteredData, updateVariable, updateScale, d3scaleDomain]);
 
   const VariableEditor = React.useMemo(() => {
-    return getVariableEditor(ppId, variable?.scale?.type);
-  }, [ppId, variable]);
+    return getVariableEditor(ppId, scale?.type);
+  }, [ppId, scale]);
 
   return (
     <div>
       <div>Variable: { variable.variableId }</div>
       <div>
-        <VariableEditor { ...rest }
+        { !VariableEditor ? null :
+          <VariableEditor { ...rest }
           variable={ variable }
+          scale={ scale }
           updateScale={ updateScale }
           variableType={ variable.type }
           data={ data }/>
+        }
       </div>
     </div>
   )
@@ -332,7 +393,7 @@ const getValuePicker = ppId => {
 
 const ValueBox = props => {
   const {
-    layerId,
+    uniqueId,
     ppId,
     activeViewId,
     setSymbology,
@@ -353,7 +414,7 @@ const ValueBox = props => {
             return {
               ...view,
               layers: view.layers.map(layer => {
-                if (layer.layerId === layerId) {
+                if (layer.uniqueId === uniqueId) {
                   return {
                     ...layer,
                     paintProperties: {
@@ -374,7 +435,7 @@ const ValueBox = props => {
         })
       })
     })
-  }, [setSymbology, activeViewId, layerId, ppId]);
+  }, [setSymbology, activeViewId, uniqueId, ppId]);
 
   return (
     <div>
@@ -406,6 +467,12 @@ const VariableActionMap = {
   value: ValueBox,
   expression: ExpressionBox,
   variable: VariableBoxWrapper(VariableBox)
+}
+
+const getVariableActionComponent = (action, ppId) => {
+  if ((action === "variable") && ppId.includes("color")) {
+
+  }
 }
 
 const getPaintPropertyLimits = ppId => {

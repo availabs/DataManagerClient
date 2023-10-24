@@ -9,14 +9,14 @@ import {
 
 import { myrange } from "./RangeEditor"
 
-const OrdinalRangeEditor = ({ variable, min, max, steps, ...props }) => {
+const OrdinalRangeEditor = ({ variable, scale, min, max, steps, ...props }) => {
 
   const domain = React.useMemo(() => {
-    return get(variable, ["scale", "domain"], []);
-  }, [variable]);
+    return get(scale, "domain", []);
+  }, [scale]);
   const range = React.useMemo(() => {
-    return get(variable, ["scale", "range"], []);
-  }, [variable]);
+    return get(scale, "range", []);
+  }, [scale]);
 
   const rangeValues = React.useMemo(() => {
     return myrange(min, max, steps[0]);
@@ -32,6 +32,7 @@ const OrdinalRangeEditor = ({ variable, min, max, steps, ...props }) => {
         { domain.map((d, i) => (
             <DomainItem key={ d } { ...props }
               variable={ variable }
+              scale={ scale }
               domainValue={ d }
               rangeValue={ get(range, i, null) }
               index={ i }
@@ -50,19 +51,20 @@ const DomainItem = props => {
     rangeValue,
     index,
     variable,
+    scale,
     updateScale,
     rangeValues
   } = props;
 
   const updateScaleRange = React.useCallback(v => {
-    const domain = get(variable, ["scale", "domain"], []);
-    const range = get(variable, ["scale", "range"], []);
+    const domain = get(scale, "domain", []);
+    const range = get(scale, "range", []);
     while (range.length < domain.length) {
       range.push(null);
     }
     range.splice(index, 1, v);
     updateScale({ range });
-  }, [variable, updateScale, index]);
+  }, [scale, updateScale, index]);
 
   return (
     <div className="grid grid-cols-2 gap-2">

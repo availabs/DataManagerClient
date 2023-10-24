@@ -25,96 +25,50 @@ export const SymbologyLayerRenderComponent = props => {
     layer: avlLayer
   } = props;
 
-  const activeLayer = get(props, ["layerProps", "activeLayer"], null);
+  const activeView = get(props, ["layerProps", "activeView"], null);
 
-  const [legend, setLegend] = React.useState(null);
+  const [legends, setLegends] = React.useState([]);
 
   React.useEffect(() => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
-    if (!activeLayer) return;
+    if (!activeView) return;
 
-    let legend = null;
-
-    avlLayer.layers.forEach(layer => {
-      if (maplibreMap.getLayer(layer.id)) {
-        const defaultPaint = { ...get(layer, "paint", {}) };
-
-        if (layer.id === activeLayer.layerId) {
-          Object.keys(activeLayer.paintProperties)
-            .forEach(ppId => {
-
-              const paintProperty = get(activeLayer, ["paintProperties", ppId], {});
-
-              const {
-                value,
-                paintExpression,
-                variable
-              } = paintProperty;
-
-              if (value) {
-                delete defaultPaint[ppId];
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, value);
-              }
-              else if (paintExpression) {
-                delete defaultPaint[ppId];
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
-              }
-              else if (variable) {
-                delete defaultPaint[ppId];
-
-                const { paintExpression, scale } = variable;
-
-                if (ppId.includes("color")) {
-                  legend = {
-                    name: variable.displayName,
-                    ...scale
-                  };
-                }
-
-                maplibreMap.setPaintProperty(activeLayer.layerId, ppId, paintExpression);
-              }
+    const legends = activeView.layers.reduce((a, c) => {
+      return Object.values(c.paintProperties)
+        .reduce((aa, cc) => {
+          if (cc.variable && cc.variable.includeInLegend) {
+            aa.push({
+              name: cc.variable.displayName,
+              ...cc.variable.scale
             })
+          }
+          return aa;
+        }, a)
+    }, []);
 
-            Object.values(activeLayer.filters || {})
-              .forEach(({ filterExpression }) => {
-                maplibreMap.setFilter(activeLayer.layerId, filterExpression)
-              })
-          setLayerVisibility(activeLayer.layerId, "visible");
-        }
-        else {
-          setLayerVisibility(layer.id, "none");
-        }
+    setLegends(legends);
 
-        Object.keys(defaultPaint)
-          .forEach(ppId => {
-            maplibreMap.setPaintProperty(layer.id, ppId, defaultPaint[ppId]);
-          })
-      }
-    });
+  }, [maplibreMap, resourcesLoaded, activeView]);
 
-    setLegend(legend);
-
-  }, [maplibreMap, resourcesLoaded, activeLayer,
-      setLayerVisibility, avlLayer
-    ]
-  )
-
-  return !legend ? null : (
-    <div className="p-1 pointer-events-auto bg-gray-100 rounded min-w-fit"
+  return !legends.length ? null : (
+    <div className="p-1 pointer-events-auto bg-gray-100 rounded min-w-fit grid grid-cols-1 gap-1"
       style={ {
         width: "100%",
-        maxWidth: legend.isVertical ? "10rem" : "25rem"
+        maxWidth: "25rem"
       } }
     >
-      <div className="bg-gray-300 border border-current rounded p-1">
-        <div className="font-bold">
-          { legend.name }
-        </div>
-        <div>
-          <SymbologyLegend { ...legend }/>
-        </div>
-      </div>
+      { legends.map((legend, i) => (
+          <div key={ i } className="bg-gray-300 border border-current rounded p-1">
+            <div className="font-bold">
+              { legend.name }
+            </div>
+            <div>
+              <SymbologyLegend { ...legend }/>
+            </div>
+          </div>
+        ))
+      }
     </div>
   );
 }
@@ -194,17 +148,17 @@ class SymbologyLayer extends AvlLayer {
 
     this.startActive = true;
 
-    const [sources, layers] = views.reduce((a, c) => {
-      const sources = get(c, ["metadata", "tiles", "sources"], []);
-      a[0].push(...sources);
-      const layers = get(c, ["metadata", "tiles", "layers"], [])
-        .map(layer => ({ ...layer, layout: { visibility: "none" } }));
-      a[1].push(...layers);
-      return a;
-    }, [[], []]);
-
-    this.sources = getValidSources(sources);
-    this.layers = layers;
+    // const [sources, layers] = views.reduce((a, c) => {
+    //   const sources = get(c, ["metadata", "tiles", "sources"], []);
+    //   a[0].push(...sources);
+    //   const layers = get(c, ["metadata", "tiles", "layers"], [])
+    //     .map(layer => ({ ...layer, layout: { visibility: "none" } }));
+    //   a[1].push(...layers);
+    //   return a;
+    // }, [[], []]);
+    //
+    // this.sources = getValidSources(sources);
+    // this.layers = layers;
   }
   RenderComponent = SymbologyLayerRenderComponent;
   infoBoxes = [

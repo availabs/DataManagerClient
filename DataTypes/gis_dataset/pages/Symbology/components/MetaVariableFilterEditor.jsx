@@ -40,7 +40,7 @@ const MetaVariableFilterEditor = props => {
         views: prev.views.map(view => ({
           ...view,
           layers: view.layers.map(layer => {
-            if (layer.layerId === activeLayerId) {
+            if (layer.uniqueId === activeLayerId) {
               return {
                 ...layer,
                 filters: Object.keys(layer.filters)
@@ -72,7 +72,9 @@ const MetaVariableFilterEditor = props => {
       a.add(get(c, activeFilterVariableId, null))
       return a;
     }, new Set())
-    return [...dataSet].filter(Boolean);
+    return [...dataSet].filter(Boolean).sort((a, b) => {
+      return String(a).localeCompare(String(b));
+    });
   }, [data, activeFilterVariableId]);
 
   const toggle = React.useCallback(v => {
@@ -87,7 +89,7 @@ const MetaVariableFilterEditor = props => {
 
   React.useEffect(() => {
     const vid = activeFilterVariableId;
-    
+
     if (filter.length && allDomainValues.length && filtered.length) {
         const filterMap = data.reduce((a, c) => {
           if (c[vid] && filtered.includes(c[vid])) {

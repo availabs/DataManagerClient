@@ -5,7 +5,7 @@ import { format as d3format } from "d3-format"
 import { ColorBar } from "~/modules/avl-map-2/src"
 
 const Identity = i => i;
-const useFormat = format => {
+const useFormat = (format = ".2s") => {
   return React.useMemo(() => {
     if (typeof format !== "string") return Identity;
     return d3format(format);
