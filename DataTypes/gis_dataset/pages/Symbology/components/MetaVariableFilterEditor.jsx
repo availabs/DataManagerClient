@@ -72,7 +72,9 @@ const MetaVariableFilterEditor = props => {
       a.add(get(c, activeFilterVariableId, null))
       return a;
     }, new Set())
-    return [...dataSet].filter(Boolean);
+    return [...dataSet].filter(Boolean).sort((a, b) => {
+      return String(a).localeCompare(String(b));
+    });
   }, [data, activeFilterVariableId]);
 
   const toggle = React.useCallback(v => {
