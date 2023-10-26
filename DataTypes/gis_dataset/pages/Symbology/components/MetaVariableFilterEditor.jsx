@@ -33,8 +33,6 @@ const MetaVariableFilterEditor = props => {
 
   const filter = get(activeFilter, "filter", []);
 
-console.log("MetaVariableFilterEditor::filter", filter);
-
   const updateVariableFilter = React.useCallback(update => {
     setSymbology(prev => {
       return {

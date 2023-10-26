@@ -27,7 +27,9 @@ const SymbologyButtons = props => {
     symbology,
     savedSymbologies,
     activeViewId,
-    MapActions
+    MapActions,
+    startLoading,
+    stopLoading
   } = props;
 
   const okToSave = React.useMemo(() => {
@@ -50,6 +52,7 @@ const SymbologyButtons = props => {
   const { falcor, pgEnv } = React.useContext(DamaContext);
 
   const saveSymbology = React.useCallback(() => {
+    startLoading();
     const toSave = {
       name: symbology.name,
       id: symbology.id,
@@ -63,8 +66,11 @@ const SymbologyButtons = props => {
     falcor.call(
       ["dama", "views", "metadata", "update"],
       [pgEnv, activeViewId, { symbologies }]
-    ).then(() => {})
-  }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies]);
+    ).then(() => stopLoading())
+  }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies,
+      startLoading, stopLoading
+      ]
+  );
 
   const openEditModal = React.useCallback(e => {
     MapActions.openModal("symbology-layer", "symbology-editor");
@@ -157,6 +163,14 @@ export const getDisplayItem = remove =>
 
 const SymbologyPanel = props => {
 
+console.log("PROPS:", props)
+  const startLayerLoading = React.useCallback(() => {
+    props.MapActions.startLayerLoading("symbology-layer");
+  }, [props.MapActions.startLayerLoading]);
+  const stopLayerLoading = React.useCallback(() => {
+    props.MapActions.stopLayerLoading("symbology-layer");
+  }, [props.MapActions.stopLayerLoading]);
+
   const symbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "symbology"], null);
   }, [props]);
@@ -242,6 +256,8 @@ const SymbologyPanel = props => {
         <SymbologyButtons
           startNewSymbology={ startNewSymbology }
           savedSymbologies={ savedSymbologies }
+          startLoading={ startLayerLoading }
+          stopLoading={ stopLayerLoading }
           symbology={ symbology }
           activeViewId={ activeViewId }
           MapActions={ props.MapActions }/>
