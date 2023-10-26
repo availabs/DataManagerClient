@@ -9,29 +9,17 @@ import { select as d3select, pointers } from "d3-selection"
 import { scalePoint } from "d3-scale"
 
 import {
-  MultiLevelSelect,
-  BooleanSlider,
-  ColorRanges,
-  ColorBar,
-  Input,
-  Button,
   useTheme,
   strictNaN
 } from "~/modules/avl-map-2/src";
+
+import { myrange } from "../utils"
 
 const RangeItem = ({ value }) => {
   const format = d3format(",.1f");
   return (
     <div className="text-center">{ format(value) }</div>
   )
-}
-
-export const myrange = (min, max, step = 1) => {
-  const mult = 1000.0;
-  const m1 = Math.trunc(min * mult);
-  const m2 = Math.trunc(max * mult);
-  const s = Math.trunc(step * mult);
-  return d3range(m1, m2 + s, s).map(v => v / mult);
 }
 
 const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {

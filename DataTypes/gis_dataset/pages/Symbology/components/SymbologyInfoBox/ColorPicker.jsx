@@ -3,11 +3,7 @@ import React from "react"
 import get from "lodash/get"
 
 import {
-  MultiLevelSelect,
-  BooleanSlider,
   ColorRanges,
-  ColorBar,
-  getColorRange,
   useTheme
 } from "~/modules/avl-map-2/src";
 
@@ -23,7 +19,7 @@ const ColorSet = Object.keys(ColorRanges)
 
 const Colors = [...ColorSet];
 
-const Color = ({ setValue, color }) => {
+const ColorRect = ({ setValue, color }) => {
   const select = React.useCallback(e => {
     setValue(color);
   }, [setValue, color]);
@@ -39,14 +35,14 @@ const Color = ({ setValue, color }) => {
 const ColorPicker = props => {
   return (
     <div>
-      Select a color
+      Select a color:
       <div className="grid grid-cols-7 gap-1 p-1 bg-gray-800 rounded"
         style={ {
           gridTemplateRows: "repeat(10, minmax(0, 1fr))"
         } }
       >
         { Colors.map(color => (
-            <Color key={ color } { ...props }
+            <ColorRect key={ color } { ...props }
               color={ color }/>
           ))
         }

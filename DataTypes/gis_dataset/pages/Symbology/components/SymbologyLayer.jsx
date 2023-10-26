@@ -147,18 +147,6 @@ class SymbologyLayer extends AvlLayer {
     this.name = "Symbology Layer";
 
     this.startActive = true;
-
-    // const [sources, layers] = views.reduce((a, c) => {
-    //   const sources = get(c, ["metadata", "tiles", "sources"], []);
-    //   a[0].push(...sources);
-    //   const layers = get(c, ["metadata", "tiles", "layers"], [])
-    //     .map(layer => ({ ...layer, layout: { visibility: "none" } }));
-    //   a[1].push(...layers);
-    //   return a;
-    // }, [[], []]);
-    //
-    // this.sources = getValidSources(sources);
-    // this.layers = layers;
   }
   RenderComponent = SymbologyLayerRenderComponent;
   infoBoxes = [
