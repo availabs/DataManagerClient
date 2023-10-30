@@ -11,7 +11,7 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src";
 
-import useViewVariable from "./useViewVariable"
+import { useViewVariable } from "./utils"
 
 const MetaVariableFilterEditor = props => {
 
@@ -80,7 +80,6 @@ const MetaVariableFilterEditor = props => {
   const toggle = React.useCallback(v => {
     const update = filter.includes(v) ? filter.filter(d => d !== v) : [...filter, v];
     updateVariableFilter({ filter: update });
-
   }, [updateVariableFilter, filter]);
 
   const filtered = React.useMemo(() => {
@@ -90,7 +89,7 @@ const MetaVariableFilterEditor = props => {
   React.useEffect(() => {
     const vid = activeFilterVariableId;
 
-    if (filter.length && allDomainValues.length && filtered.length) {
+    if (filter.length && allDomainValues.length) {
         const filterMap = data.reduce((a, c) => {
           if (c[vid] && filtered.includes(c[vid])) {
             a[c.id] = c[vid];

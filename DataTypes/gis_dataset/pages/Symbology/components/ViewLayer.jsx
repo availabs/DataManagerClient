@@ -2,7 +2,7 @@ import React from "react"
 
 import get from "lodash/get"
 
-import { AvlLayer } from "~/modules/avl-map-2/src"
+import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 
 const ViewLayerRenderComponent = props => {
 
@@ -37,8 +37,6 @@ const ViewLayerRenderComponent = props => {
     setLayerVisibility(symbologyLayer.uniqueId, visibility);
     if (visibility === "none") return;
 
-console.log("RENDERING:", symbologyLayer)
-
     const [layer] = avlLayer.layers;
 
     const defaultPaint = { ...layer.paint };
@@ -55,7 +53,7 @@ console.log("RENDERING:", symbologyLayer)
           variable
         } = get(symbologyLayer, ["paintProperties", ppId], {});
 
-        if (value) {
+        if (hasValue(value)) {
           delete defaultPaint[ppId];
           maplibreMap.setPaintProperty(layer.id, ppId, value);
         }
@@ -67,13 +65,6 @@ console.log("RENDERING:", symbologyLayer)
           delete defaultPaint[ppId];
 
           const { paintExpression, scale } = variable;
-
-          // if (ppId.includes("color")) {
-          //   legend = {
-          //     name: variable.displayName,
-          //     ...scale
-          //   };
-          // }
 
           maplibreMap.setPaintProperty(layer.id, ppId, paintExpression);
         }
