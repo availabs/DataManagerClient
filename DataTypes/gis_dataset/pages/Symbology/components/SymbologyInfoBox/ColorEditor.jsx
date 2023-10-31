@@ -9,38 +9,28 @@ import {
   BooleanSlider,
   ColorRanges,
   ColorBar,
+  Button,
   useTheme
 } from "~/modules/avl-map-2/src";
+
+import TypeSelector from "./TypeSelector"
 
 const ColorEditor = props => {
 
   const {
-    variable,
     scale,
-    updateScale,
-    variableType,
-    MapActions,
-    data
+    updateScale
   } = props
-
-  // const {
-  //   scale
-  // } = variable;
 
   const [reverseColors, setReverseColors] = React.useState(Boolean(scale.reverse));
 
-  const [rangeSize, setRangeSize] = React.useState(0);
-  React.useEffect(() => {
-    if (!rangeSize) {
-      setRangeSize(7);
-    }
-  }, [rangeSize]);
+  const [rangeSize, setRangeSize] = React.useState(get(scale, ["range", "length"], 7));
 
   return (
     <div className="grid grid-cols-1 gap-1">
-      <TypeSelector
-        variableType={ variableType }
-        scaleType={ scale.type }
+
+      <TypeSelector { ...props }
+        scale={ scale }
         updateScale={ updateScale }/>
 
       { scale.type !== "ordinal" ? null :
@@ -67,36 +57,6 @@ const ColorEditor = props => {
 }
 export default ColorEditor;
 
-const LegendTypes = [
-  { value: "quantile", name: "Quantile", variableType: "data-variable" },
-  { value: "threshold", name: "Threshold", variableType: "data-variable" },
-  { value: "ordinal", name: "Ordinal", variableType: "meta-variable" }
-]
-const TypeSelector = ({ scaleType, updateScale, variableType }) => {
-  const onChange = React.useCallback(type => {
-    updateScale({ type, domain: [] });
-  }, [updateScale]);
-  const options = React.useMemo(() => {
-    return LegendTypes.filter(lt => lt.variableType === variableType);
-  }, [variableType]);
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="py-1 text-right">
-        Scale Type:
-      </div>
-      <div>
-        <MultiLevelSelect
-          removable={ false }
-          options={ options }
-          displayAccessor={ t => t.name }
-          valueAccessor={ t => t.value }
-          onChange={ onChange }
-          value={ scaleType }/>
-      </div>
-    </div>
-  )
-}
-
 const VerticvalSlider = ({ isVertical, updateScale }) => {
   const onChange = React.useCallback(v => {
     updateScale({ isVertical: v });
@@ -118,16 +78,19 @@ const VerticvalSlider = ({ isVertical, updateScale }) => {
 const RangeSizes = d3range(3, 13);
 const RangeSizeSelector = ({ rangeSize, onChange }) => {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="py-1 text-right">
-        Number of Colors:
-      </div>
-      <div>
-        <MultiLevelSelect
-          removable={ false }
-          options={ RangeSizes }
-          onChange={ onChange }
-          value={ rangeSize }/>
+    <div className="flex">
+      <div className="w-8"/>
+      <div className="grid grid-cols-2 gap-2 flex-1">
+        <div className="py-1 text-right">
+          Number of Colors:
+        </div>
+        <div>
+          <MultiLevelSelect
+            removable={ false }
+            options={ RangeSizes }
+            onChange={ onChange }
+            value={ rangeSize }/>
+        </div>
       </div>
     </div>
   )
@@ -135,27 +98,30 @@ const RangeSizeSelector = ({ rangeSize, onChange }) => {
 
 const ReverseSlider = ({ reverseColors, onChange }) => {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="py-1 text-right">
-        Reverse Colors:
-      </div>
-      <div>
-        <BooleanSlider
-          value={ reverseColors }
-          onChange={ onChange }/>
+    <div className="flex">
+      <div className="w-8"/>
+      <div className="grid grid-cols-2 gap-2 flex-1">
+        <div className="py-1 text-right">
+          Reverse Colors:
+        </div>
+        <div>
+          <BooleanSlider
+            value={ reverseColors }
+            onChange={ onChange }/>
+        </div>
       </div>
     </div>
   )
 }
 
-const EditorColorBar = ({ colors, reverse, range, updateScale }) => {
+const EditorColorBar = ({ colors, reverse, name, range, updateScale }) => {
   const isActive = React.useMemo(() => {
     return isEqual(colors, range);
   }, [colors, range]);
 
   const onClick = React.useCallback(() => {
-    updateScale({ range: colors, domain: [], reverse });
-  }, [updateScale, colors, reverse]);
+    updateScale({ range: colors, domain: [], reverse, color: name });
+  }, [updateScale, colors, reverse, name]);
 
   return (
     <div onClick={ isActive ? null : onClick }

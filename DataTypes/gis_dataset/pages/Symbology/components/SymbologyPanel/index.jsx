@@ -163,7 +163,6 @@ export const getDisplayItem = remove =>
 
 const SymbologyPanel = props => {
 
-console.log("PROPS:", props)
   const startLayerLoading = React.useCallback(() => {
     props.MapActions.startLayerLoading("symbology-layer");
   }, [props.MapActions.startLayerLoading]);

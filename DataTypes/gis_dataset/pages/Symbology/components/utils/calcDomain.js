@@ -1,6 +1,8 @@
+import get from "lodash/get"
+
 import { strictNaN } from "~/modules/avl-map-2/src"
 
-import ckmeans from "~/pages/DataManager/utils/ckmeans";
+import ckmeans from "~/pages/DataManager/utils/ckmeans"
 
 const ordinalSort = (a, b) => {
   return String(a).localeCompare(String(b));
