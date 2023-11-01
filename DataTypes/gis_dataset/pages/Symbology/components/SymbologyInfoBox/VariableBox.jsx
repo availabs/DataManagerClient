@@ -194,6 +194,9 @@ const VariableBox = props => {
   }, [data, filteredOgcFids]);
 
   const d3scaleDomain = React.useMemo(() => {
+    if ((scale.type === "threshold") && (scale.domain.length)) {
+      return scale.domain;
+    }
     return calcDomain(variable, scale, filteredData);
   }, [variable, scale, filteredData]);
 
@@ -242,7 +245,10 @@ const VariableBox = props => {
       if (!isEqual(paintExpression, variable.paintExpression)) {
         updateVariable({ paintExpression });
       };
-      if (!isEqual(domain, variable.scale?.domain)) {
+      if (variable.scale?.domain &&
+          !variable.scale.domain.length &&
+          !isEqual(domain, variable.scale.domain)
+        ) {
         updateScale({ domain });
       }
     }
@@ -260,12 +266,12 @@ const VariableBox = props => {
       <div>Variable: { variable.variableId }</div>
       <div>
         { !VariableEditor ? null :
-          <VariableEditor { ...rest }
+          <VariableEditor { ...props }
           variable={ variable }
           scale={ scale }
           updateScale={ updateScale }
           variableType={ variable.type }
-          data={ data }/>
+          data={ filteredData }/>
         }
       </div>
     </div>

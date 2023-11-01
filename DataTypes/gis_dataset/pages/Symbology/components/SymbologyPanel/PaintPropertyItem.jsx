@@ -10,6 +10,33 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src"
 
+export const getRangeAndStep = ppId => {
+  if (ppId.includes("opacity")) {
+    return {
+      range: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+      step: 0.1
+    }
+  }
+  if (ppId.includes("width")) {
+    return {
+      range: [1, 2, 3, 4, 5, 6, 7],
+      step: 1
+    }
+  }
+  if (ppId.includes("offset")) {
+    return {
+      range: [1, 2, 3, 4, 5, 6, 7],
+      step: 1
+    }
+  }
+  if (ppId.includes("radius")) {
+    return {
+      range: [5, 10, 15, 20, 25],
+      step: 5
+    }
+  }
+}
+
 const makeNewVarialbe = (variable, ppId) => {
   const newVar = {
     variableId: variable.variableId,
@@ -28,30 +55,15 @@ const makeNewVarialbe = (variable, ppId) => {
   }
   if (ppId.includes("color")) {
     newVar.scale.color = variable.type === "data-variable" ? "BrBG" : "Set3";
-    newVar.scale.domain = [];
+    newVar.scale.reverse = false;
     newVar.scale.range = getColorRange(7, newVar.scale.color);
     newVar.scale.fallbackValue = "rgba(0, 0, 0, 0)";
-    newVar.scale.reverse = false;
+    return newVar;
   }
-  if (ppId.includes("opacity")) {
-    newVar.scale.range = [0.2, 0.4, 0.6, 0.8];
-    newVar.scale.step = 0.2;
-    newVar.scale.fallbackValue = 0;
-  }
-  if (ppId.includes("width")) {
-    newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
-    newVar.scale.step = 1;
-    newVar.scale.fallbackValue = 0;
-  }
-  if (ppId.includes("offset")) {
-    newVar.scale.range = [1, 2, 3, 4, 5, 6, 7];
-    newVar.scale.step = 1;
-    newVar.scale.fallbackValue = 0;
-  }
-  if (ppId.includes("radius")) {
-    newVar.scale.range = [5, 10, 15, 20, 25];
-    newVar.scale.step = 5;
-    newVar.scale.fallbackValue = 0;
+  newVar.scale = {
+    ...newVar.scale,
+    ...getRangeAndStep(ppId),
+    fallbackValue: 0
   }
   return newVar;
 }
