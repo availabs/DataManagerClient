@@ -50,7 +50,7 @@ const makeNewVarialbe = (variable, ppId) => {
       type: variable.type === "data-variable" ? "quantile" : "ordinal",
       domain: [],
       range: [],
-      format: ".2s"
+      format: variable.type === "data-variable" ? ".2s" : null
     }
   }
   if (ppId.includes("color")) {

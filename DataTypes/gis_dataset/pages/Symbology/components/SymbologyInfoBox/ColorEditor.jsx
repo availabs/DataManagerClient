@@ -1,5 +1,9 @@
 import React from "react"
 
+import { CustomPicker } from "react-color"
+import { Hue } from 'react-color/lib/components/common';
+import { Saturation } from 'react-color/lib/components/common';
+
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import { range as d3range } from "d3-array"
@@ -52,10 +56,150 @@ const ColorEditor = props => {
         rangeSize={ rangeSize }
         updateScale={ updateScale }
         range={ scale.range }/>
+
+      <PaletteEditor
+        updateScale={ updateScale }/>
     </div>
   )
 }
 export default ColorEditor;
+
+const PaeletteItem = ({ color, remove }) => {
+  const doRemove = React.useCallback(e => {
+    remove(color);
+  }, [remove, color]);
+  return (
+    <div className="h-8 rounded relative"
+      style={ { backgroundColor: color } }
+    >
+      <div onClick={ doRemove }
+        className={ `
+          absolute inset-1 bg-white rounded opacity-0 hover:opacity-100
+          flex items-center justify-center cursor-pointer
+        ` }
+      >
+        <span className="fa fa-sm fa-trash text-red-500"/>
+      </div>
+    </div>
+  )
+}
+
+const PaletteEditor = ({ updateScale }) => {
+
+  const [palette, setPalette] = React.useState([]);
+
+  const clearPalette = React.useCallback(e => {
+    setPalette([]);
+  }, []);
+
+  const usePalette = React.useCallback(e => {
+    updateScale({ color: "custom", range: palette, domain: [] });
+  }, [updateScale, palette]);
+
+  const [color, setColor] = React.useState("#888888");
+  const doSetColor = React.useCallback(color => {
+    setColor(color.hex);
+  }, []);
+  const addToPalette = React.useCallback(e => {
+    setPalette(prev => prev.includes(color) ? prev : [...prev, color]);
+  }, [color]);
+  const removeFromPalette = React.useCallback(color => {
+    setPalette(prev => prev.filter(c => c !== color));
+  }, []);
+
+  const [isOpen, setIsOpen] = React.useState(false);
+  const toggle = React.useCallback(e => {
+    setIsOpen(o => !o);
+  }, []);
+
+  return (
+    <div>
+      <div className="flex">
+        <div className="mr-1 w-8 flex">
+          <Button onClick={ toggle }
+            className="buttonText"
+          >
+            <span className={ `fas fa-xl ${ isOpen ? "fa-caret-up" : "fa-caret-down" }` }/>
+          </Button>
+        </div>
+        <div className="py-1">Palette Editor:</div>
+      </div>
+      <div className="grid grid-cols-10 gap-1 mb-1">
+        { palette.map((c, i) => (
+            <PaeletteItem key={ i } color={ c }
+              remove={ removeFromPalette }/>
+          ))
+        }
+      </div>
+      <div className={ isOpen ? "block" : "hidden" }>
+        <div className="flex mb-1">
+          <div className="flex-1">
+            <Button onClick={ usePalette }
+              className="buttonSmallPrimary"
+              disabled={ palette.length < 3}
+            >
+              Use Palette
+            </Button>
+          </div>
+          <div className="flex-0">
+            <Button onClick={ clearPalette }
+              className="buttonSmallDanger"
+            >
+              Clear Palette
+            </Button>
+          </div>
+        </div>
+        <ColorPicker
+          color={ color }
+          onChange={ doSetColor }
+          addToPalette={ addToPalette }/>
+      </div>
+    </div>
+  )
+}
+
+const SaturationPointer = props => {
+  const [ref, setRef] = React.useState(null);
+  React.useEffect(() => {
+    if (!ref || !ref.parentNode) return;
+    ref.parentNode.classList.add("pointer-events-none");
+  }, [ref]);
+  return (
+    <div ref={ setRef }
+      style={ { transform: "translate(-50%, -50%)" } }
+      className="w-2 h-2 rounded pointer-events-none border border-white"/>
+  )
+}
+const HuePointer = props => {
+  return (
+    <div style={ { transform: "translate(-50%, -0.125rem)" } }
+      className="w-[5px] h-3 border border-gray-600 bg-gray-600 rounded"/>
+  )
+}
+
+const ColorPicker = CustomPicker(({ addToPalette, ...props }) => {
+  return (
+    <div className="p-1 rounded bg-gray-300">
+      <div className="h-32 flex mb-1">
+        <div className="w-20 h-full flex flex-col mr-1">
+          <div style={ { backgroundColor: props.hex } }
+            className="flex-1 mb-1 rounded"/>
+          <Button className="buttonSmall"
+            onClick={ addToPalette }
+          >
+            Add
+          </Button>
+        </div>
+        <div className="relative w-full h-full cursor-pointer">
+          <Saturation { ...props } pointer={ SaturationPointer }/>
+        </div>
+      </div>
+      <div className="relative w-full h-2 cursor-pointer">
+        <Hue { ...props } pointer={ HuePointer }/>
+      </div>
+    </div>
+  )
+})
 
 const VerticvalSlider = ({ isVertical, updateScale }) => {
   const onChange = React.useCallback(v => {
@@ -153,16 +297,29 @@ const ColorSelector = props => {
       }))
   }, [rangeSize, reverseColors]);
 
+  const [isOpen, setIsOpen] = React.useState(true);
+  const toggle = React.useCallback(e => {
+    setIsOpen(o => !o);
+  }, []);
+
   const theme = useTheme();
 
   return (
-    <div className="grid grid-cols-1 gap-1">
-      <div className="py-1">
-        Available Colors:
+    <div className="grid grid-cols-1 gap-1 border-b-2 border-current pb-1">
+      <div className="flex">
+        <div className="mr-1 w-8 flex">
+          <Button onClick={ toggle }
+            className="buttonText"
+          >
+            <span className={ `fas fa-xl ${ isOpen ? "fa-caret-up" : "fa-caret-down" }` }/>
+          </Button>
+        </div>
+        <div className="py-1">Available Colors:</div>
       </div>
       <div className={ `
           overflow-auto px-2 rounded ${ theme.bgAccent2 }
           scrollbar-sm scrollbar-blue
+          ${ isOpen ? "block" : "hidden" }
         ` }
         style={ { height: "20rem" } }
       >

@@ -10,7 +10,10 @@ export const calcThresholdRange = props => {
   if (!domainLength) return [];
   const { range, color, reverse } = props;
 
-  if (color) {
+  if (color === "custom") {
+    return range;
+  }
+  else if (color) {
     return {
       range: getColorRange(domainLength + 1, color, reverse)
     }
