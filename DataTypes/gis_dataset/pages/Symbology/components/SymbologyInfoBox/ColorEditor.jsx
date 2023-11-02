@@ -1,9 +1,5 @@
 import React from "react"
 
-import { CustomPicker } from "react-color"
-import { Hue } from 'react-color/lib/components/common';
-import { Saturation } from 'react-color/lib/components/common';
-
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import { range as d3range } from "d3-array"
@@ -17,6 +13,7 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src";
 
+import ColorCreator from "./ColorCreator"
 import TypeSelector from "./TypeSelector"
 
 const ColorEditor = props => {
@@ -149,7 +146,7 @@ const PaletteEditor = ({ updateScale }) => {
             </Button>
           </div>
         </div>
-        <ColorPicker
+        <ColorCreator
           color={ color }
           onChange={ doSetColor }
           addToPalette={ addToPalette }/>
@@ -157,49 +154,6 @@ const PaletteEditor = ({ updateScale }) => {
     </div>
   )
 }
-
-const SaturationPointer = props => {
-  const [ref, setRef] = React.useState(null);
-  React.useEffect(() => {
-    if (!ref || !ref.parentNode) return;
-    ref.parentNode.classList.add("pointer-events-none");
-  }, [ref]);
-  return (
-    <div ref={ setRef }
-      style={ { transform: "translate(-50%, -50%)" } }
-      className="w-2 h-2 rounded pointer-events-none border border-white"/>
-  )
-}
-const HuePointer = props => {
-  return (
-    <div style={ { transform: "translate(-50%, -0.125rem)" } }
-      className="w-[5px] h-3 border border-gray-600 bg-gray-600 rounded"/>
-  )
-}
-
-const ColorPicker = CustomPicker(({ addToPalette, ...props }) => {
-  return (
-    <div className="p-1 rounded bg-gray-300">
-      <div className="h-32 flex mb-1">
-        <div className="w-20 h-full flex flex-col mr-1">
-          <div style={ { backgroundColor: props.hex } }
-            className="flex-1 mb-1 rounded"/>
-          <Button className="buttonSmall"
-            onClick={ addToPalette }
-          >
-            Add
-          </Button>
-        </div>
-        <div className="relative w-full h-full cursor-pointer">
-          <Saturation { ...props } pointer={ SaturationPointer }/>
-        </div>
-      </div>
-      <div className="relative w-full h-2 cursor-pointer">
-        <Hue { ...props } pointer={ HuePointer }/>
-      </div>
-    </div>
-  )
-})
 
 const VerticvalSlider = ({ isVertical, updateScale }) => {
   const onChange = React.useCallback(v => {
