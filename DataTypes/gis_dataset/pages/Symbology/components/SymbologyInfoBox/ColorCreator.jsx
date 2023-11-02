@@ -27,7 +27,7 @@ const HuePointer = props => {
   )
 }
 
-const ColorCreator = CustomPicker(({ addToPalette, ...props }) => {
+const ColorCreator = CustomPicker(({ onSelect, buttonLabel = "Add", ...props }) => {
   return (
     <div className="p-1 rounded bg-gray-300">
       <div className="h-32 flex mb-1">
@@ -35,9 +35,9 @@ const ColorCreator = CustomPicker(({ addToPalette, ...props }) => {
           <div style={ { backgroundColor: props.hex } }
             className="flex-1 mb-1 rounded"/>
           <Button className="buttonSmall"
-            onClick={ addToPalette }
+            onClick={ onSelect }
           >
-            Add
+            { buttonLabel } 
           </Button>
         </div>
         <div className="relative w-full h-full cursor-pointer">

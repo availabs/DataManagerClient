@@ -3,6 +3,7 @@ import React from "react"
 import get from "lodash/get"
 
 import {
+  Button,
   MultiLevelSelect,
   useTheme
 } from "~/modules/avl-map-2/src";
@@ -120,10 +121,21 @@ const ValueBox = props => {
     <Picker { ...props } setValue={ setValue } current={ value }/>
   )
 }
-const ExpressionBox = ({ min, max, steps }) => {
+const ExpressionBox = ({ MapActions, ...props }) => {
+
+  const openModal = React.useCallback(e => {
+    MapActions.openModal("symbology-layer", "expression-editor");
+  }, [MapActions.openModal]);
+
+  React.useEffect(() => {
+    openModal();
+  }, [openModal]);
+
   return (
     <div>
-      EXPRESSION BOX: { `${ min } | ${ max } | ${ steps }` }
+      <Button onClick={ openModal }>
+        Open Expression Modal
+      </Button>
     </div>
   )
 }

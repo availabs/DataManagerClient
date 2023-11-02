@@ -149,7 +149,7 @@ const PaletteEditor = ({ updateScale }) => {
         <ColorCreator
           color={ color }
           onChange={ doSetColor }
-          addToPalette={ addToPalette }/>
+          onSelect={ addToPalette }/>
       </div>
     </div>
   )
