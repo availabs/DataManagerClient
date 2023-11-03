@@ -13,6 +13,7 @@ import {
   useTheme
 } from "~/modules/avl-map-2/src";
 
+import ColorCreator from "./ColorCreator"
 import TypeSelector from "./TypeSelector"
 
 const ColorEditor = props => {
@@ -52,10 +53,107 @@ const ColorEditor = props => {
         rangeSize={ rangeSize }
         updateScale={ updateScale }
         range={ scale.range }/>
+
+      <PaletteEditor
+        updateScale={ updateScale }/>
     </div>
   )
 }
 export default ColorEditor;
+
+const PaeletteItem = ({ color, remove }) => {
+  const doRemove = React.useCallback(e => {
+    remove(color);
+  }, [remove, color]);
+  return (
+    <div className="h-8 rounded relative"
+      style={ { backgroundColor: color } }
+    >
+      <div onClick={ doRemove }
+        className={ `
+          absolute inset-1 bg-white rounded opacity-0 hover:opacity-100
+          flex items-center justify-center cursor-pointer
+        ` }
+      >
+        <span className="fa fa-sm fa-trash text-red-500"/>
+      </div>
+    </div>
+  )
+}
+
+const PaletteEditor = ({ updateScale }) => {
+
+  const [palette, setPalette] = React.useState([]);
+
+  const clearPalette = React.useCallback(e => {
+    setPalette([]);
+  }, []);
+
+  const usePalette = React.useCallback(e => {
+    updateScale({ color: "custom", range: palette, domain: [] });
+  }, [updateScale, palette]);
+
+  const [color, setColor] = React.useState("#888888");
+  const doSetColor = React.useCallback(color => {
+    setColor(color.hex);
+  }, []);
+  const addToPalette = React.useCallback(e => {
+    setPalette(prev => prev.includes(color) ? prev : [...prev, color]);
+  }, [color]);
+  const removeFromPalette = React.useCallback(color => {
+    setPalette(prev => prev.filter(c => c !== color));
+  }, []);
+
+  const [isOpen, setIsOpen] = React.useState(false);
+  const toggle = React.useCallback(e => {
+    setIsOpen(o => !o);
+  }, []);
+
+  return (
+    <div>
+      <div className="flex">
+        <div className="mr-1 w-8 flex">
+          <Button onClick={ toggle }
+            className="buttonText"
+          >
+            <span className={ `fas fa-xl ${ isOpen ? "fa-caret-up" : "fa-caret-down" }` }/>
+          </Button>
+        </div>
+        <div className="py-1">Palette Editor:</div>
+      </div>
+      <div className="grid grid-cols-10 gap-1 mb-1">
+        { palette.map((c, i) => (
+            <PaeletteItem key={ i } color={ c }
+              remove={ removeFromPalette }/>
+          ))
+        }
+      </div>
+      <div className={ isOpen ? "block" : "hidden" }>
+        <div className="flex mb-1">
+          <div className="flex-1">
+            <Button onClick={ usePalette }
+              className="buttonSmallPrimary"
+              disabled={ palette.length < 3}
+            >
+              Use Palette
+            </Button>
+          </div>
+          <div className="flex-0">
+            <Button onClick={ clearPalette }
+              className="buttonSmallDanger"
+            >
+              Clear Palette
+            </Button>
+          </div>
+        </div>
+        <ColorCreator
+          color={ color }
+          onChange={ doSetColor }
+          onSelect={ addToPalette }/>
+      </div>
+    </div>
+  )
+}
 
 const VerticvalSlider = ({ isVertical, updateScale }) => {
   const onChange = React.useCallback(v => {
@@ -153,16 +251,29 @@ const ColorSelector = props => {
       }))
   }, [rangeSize, reverseColors]);
 
+  const [isOpen, setIsOpen] = React.useState(true);
+  const toggle = React.useCallback(e => {
+    setIsOpen(o => !o);
+  }, []);
+
   const theme = useTheme();
 
   return (
-    <div className="grid grid-cols-1 gap-1">
-      <div className="py-1">
-        Available Colors:
+    <div className="grid grid-cols-1 gap-1 border-b-2 border-current pb-1">
+      <div className="flex">
+        <div className="mr-1 w-8 flex">
+          <Button onClick={ toggle }
+            className="buttonText"
+          >
+            <span className={ `fas fa-xl ${ isOpen ? "fa-caret-up" : "fa-caret-down" }` }/>
+          </Button>
+        </div>
+        <div className="py-1">Available Colors:</div>
       </div>
       <div className={ `
           overflow-auto px-2 rounded ${ theme.bgAccent2 }
           scrollbar-sm scrollbar-blue
+          ${ isOpen ? "block" : "hidden" }
         ` }
         style={ { height: "20rem" } }
       >

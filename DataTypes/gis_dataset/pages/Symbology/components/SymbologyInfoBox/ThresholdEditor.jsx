@@ -191,10 +191,17 @@ const ThresholdEditor = props => {
     const values = data.map(d => d[vid]).filter(Boolean);
     if (!values.length) return;
     if (ppId.includes("color")) {
-      updateScale({
-        domain: ckmeans(values, 7).slice(1),
-        range: getColorRange(7, color, reverse)
-      })
+      if (color === "custom") {
+        updateScale({
+          domain: ckmeans(values, range.length).slice(1)
+        })
+      }
+      else {
+        updateScale({
+          domain: ckmeans(values, 7).slice(1),
+          range: getColorRange(7, color, reverse)
+        })
+      }
     }
     else {
       const { range, step } = getRangeAndStep(ppId);
@@ -203,7 +210,7 @@ const ThresholdEditor = props => {
         range, step
       })
     }
-  }, [color, reverse, data, variable, ppId]);
+  }, [color, reverse, data, variable, ppId, range]);
 
   const [newDomainItem, setNewDomainItem] = React.useState("");
 
@@ -219,6 +226,10 @@ const ThresholdEditor = props => {
     updateScale({ domain: [...domain].sort((a, b) => a - b) });
   }, [domain, updateScale]);
 
+  const select = React.useCallback(e => {
+    e.target.select();
+  }, []);
+
   return (
     <div className="grid grid-cols-1 gap-1">
       { domain.map((d, i) => (
@@ -231,7 +242,8 @@ const ThresholdEditor = props => {
       }
       <div className="flex">
         <div className="flex-1 mr-1">
-          <Input type="number"
+          <NumberInput
+            onClick={ select }
             className="inputSmall"
             value={ newDomainItem }
             onChange={ setNewDomainItem }/>

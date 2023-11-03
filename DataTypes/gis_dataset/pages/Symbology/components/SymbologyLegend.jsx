@@ -2,10 +2,10 @@ import React from "react"
 
 import { format as d3format } from "d3-format"
 
-import { ColorBar } from "~/modules/avl-map-2/src"
+import { ColorBar, strictNaN } from "~/modules/avl-map-2/src"
 
 const Identity = i => i;
-const useFormat = (format = ".2s") => {
+const useFormat = format => {
   return React.useMemo(() => {
     if (typeof format !== "string") return Identity;
     return d3format(format);

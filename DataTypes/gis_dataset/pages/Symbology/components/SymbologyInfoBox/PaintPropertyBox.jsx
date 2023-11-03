@@ -3,6 +3,7 @@ import React from "react"
 import get from "lodash/get"
 
 import {
+  Button,
   MultiLevelSelect,
   useTheme
 } from "~/modules/avl-map-2/src";
@@ -12,50 +13,50 @@ import ColorPicker from "./ColorPicker"
 
 import { myrange } from "../utils"
 
-const ValueItem = ({ value, setValue }) => {
+const ValueItem = ({ value, setValue, isActive }) => {
   const doSetValue = React.useCallback(e => {
     e.stopPropagation();
     setValue(value);
   }, [setValue, value]);
+  const theme = useTheme();
   return (
-    <div onClick={ doSetValue }
+    <div onClick={ isActive ? null : doSetValue }
       className={ `
-        px-2 py-1 border rounded hover:bg-gray-300
-        cursor-pointer
+        px-1 border rounded hover:bg-gray-300 text-sm flex items-center
+        ${ isActive ? "bg-gray-300 cursor-not-allowed" : "cursor-pointer" }
       ` }
     >
-      { value }
+      <div className="flex-1">{ value }</div>
+      { !isActive ? null :
+        <span className={ `fas fa-check pr-8 ${ theme.textHighlight }` }/>
+      }
     </div>
   )
 }
 
-const ValuePicker = ({ min, max, steps, setValue }) => {
-  const [step, setStep] = React.useState(steps[1]);
+const ValuePicker = ({ min, max, steps, setValue, current }) => {
   const values = React.useMemo(() => {
-    return myrange(min, max, step);
-  }, [min, max, step]);
+    const set = steps.reduce((a, c) => {
+      myrange(min, max, c).forEach(v => {
+        a.add(v);
+      });
+      return a;
+    }, new Set());
+    return [...set].sort((a, b) => a - b)
+  }, [min, max, steps]);
   return (
     <div>
-      <div className="flex items-center">
-        <div className="mr-1">
-          Step Size:
-        </div>
-        <div className="flex-1">
-          <MultiLevelSelect
-            removable={ false }
-            options={ steps }
-            value={ step }
-            onChange={ setStep }/>
-        </div>
-      </div>
       <div className="grid grid-cols-1 gap-1 mt-1">
         <div>Select a value:</div>
-        { values.map(v => (
-            <ValueItem key={ v }
-              value={ v }
-              setValue={ setValue }/>
-          ))
-        }
+        <div className="grid grid-cols-1 gap-[2px] h-80 scrollbar-sm overflow-auto">
+          { values.map(v => (
+              <ValueItem key={ v }
+                value={ v }
+                setValue={ setValue }
+                isActive={ current === v }/>
+            ))
+          }
+        </div>
       </div>
     </div>
   )
@@ -74,12 +75,15 @@ const ValueBox = props => {
     ppId,
     activeViewId,
     setSymbology,
+    paintProperty,
     ...rest
   } = props;
 
   const Picker = React.useMemo(() => {
     return getValuePicker(ppId);
   }, [ppId]);
+
+  const value = get(paintProperty, "value", null);
 
   const setValue = React.useCallback(value => {
     setSymbology(prev => {
@@ -114,13 +118,24 @@ const ValueBox = props => {
   }, [setSymbology, activeViewId, uniqueId, ppId]);
 
   return (
-    <Picker { ...props } setValue={ setValue }/>
+    <Picker { ...props } setValue={ setValue } current={ value }/>
   )
 }
-const ExpressionBox = ({ min, max, steps }) => {
+const ExpressionBox = ({ MapActions, ...props }) => {
+
+  const openModal = React.useCallback(e => {
+    MapActions.openModal("symbology-layer", "expression-editor");
+  }, [MapActions.openModal]);
+
+  React.useEffect(() => {
+    openModal();
+  }, [openModal]);
+
   return (
     <div>
-      EXPRESSION BOX: { `${ min } | ${ max } | ${ steps }` }
+      <Button onClick={ openModal }>
+        Open Expression Modal
+      </Button>
     </div>
   )
 }
