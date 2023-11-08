@@ -7,13 +7,6 @@ import { Button } from "~/modules/avl-components/src"
 
 import { useClickOutside } from "~/pages/DataManager/utils/useClickOutside"
 
-const TestCategories = [
-  ["test-1-1", "test-1-2", "test-1-3", "test-1-4"],
-  ["test-test-2-1", "test-test-2-2", "test-test-2-3"],
-  ["test-test-test-3-1", "test-test-test-3-2"],
-  ["test-4-1"]
-]
-
 const useSourceCategories = ({ source }) => {
 
   const [categories, _setCategories] = React.useState([]);
@@ -56,24 +49,27 @@ const useSourceCategories = ({ source }) => {
   return [categories, setCategories];
 }
 
-const CategoryItem = ({ children }) => {
-  const [hovering, setHovering] = React.useState(false);
-  const mouseEnter = React.useCallback(() => {
-    setHovering(true);
-  }, []);
-  const mouseLeave = React.useCallback(() => {
-    setHovering(false);
-  }, []);
+const CategoryItem = ({ children, remove, indices, editing, className="" }) => {
+  const doRemove = React.useCallback(e => {
+    remove(...indices);
+  }, [remove, indices]);
   return (
     <div className={ `
-        overflow-hidden text-ellipsis whitespace-nowrap
+        overflow-hidden text-ellipsis whitespace-nowrap ${ className }
+        flex-1 flex items-center pr-4 hover:bg-gray-200 mr-2
       ` }
     >
-      { children }
+      <div className="flex-1">
+        { children }
+      </div>
+      { !editing ? null :
+        <button onClick={ doRemove } className="hover:text-red-500 pl-2">
+          <span className="fas fa-remove"/>
+        </button>
+      }
     </div>
   )
 }
-
 const Spanner = () => {
   return (
     <span className="fas fa-caret-right mx-1"/>
@@ -95,6 +91,7 @@ const CategoryList = props => {
     categories,
     parent,
     addNewCategory,
+    removeCategory,
     editingCategories: eCats,
     // stopEditing
   } = props;
@@ -119,18 +116,26 @@ const CategoryList = props => {
   return (
     <div className={ `flex flex-col border-current ${ eCats ? "border-b" : "" }`}>
       <div className={ `flex ${ eCats ? "border-b" : "" }` }>
-        <div className="font-bold">
+        <CategoryItem className="font-bold flex-1"
+          remove={ removeCategory }
+          indices={ [parent, 0] }
+          editing={ editing || eCats }
+        >
           { categories[0] }
-        </div>
+        </CategoryItem>
         { !eCats || editing ? null :
-          <div className="flex-1 flex items-center justify-end">
+          <div className="flex items-center justify-end">
             <Plus onClick={ startEditing }/>
           </div>
         }
       </div>
       <div className="flex ml-4">
         { categories.slice(1).map((cat, i) => (
-            <CategoryItem key={ cat }>
+            <CategoryItem key={ cat }
+              remove={ removeCategory }
+              indices={ [parent, i + 1] }
+              editing={ editing || eCats }
+            >
               <span>{ cat }</span>{ i < num - 2 ? <Spanner /> : null}
             </CategoryItem>
           ))
@@ -175,6 +180,18 @@ const SourceCategories = props => {
     }
   }, [categories, setCategories]);
 
+  const removeCategory = React.useCallback((parent, child = 0) => {
+    if (child === 0) {
+      categories.splice(parent, 1);
+      setCategories(categories);
+    }
+    else {
+      const cats = categories[parent];
+      cats.splice(child, 1);
+      setCategories(categories);
+    }
+  }, [categories, setCategories]);
+
   return (
     <div>
       { categories.map((cats, i) => (
@@ -182,7 +199,8 @@ const SourceCategories = props => {
             categories={ cats }
             parent={ i }
             editingCategories={ editingCategories }
-            addNewCategory={ addNewCategory }/>
+            addNewCategory={ addNewCategory }
+            removeCategory={ removeCategory }/>
         ))
       }
       { !editingCategories ? null :
