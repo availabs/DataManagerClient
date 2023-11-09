@@ -49,7 +49,8 @@ const HoverComp = ({ data, layer }) => {
       "databyId",
       id,
       getAttributes
-    ]).then(d => console.log('got attributes', d));
+    ])
+    //.then(d => console.log('got attributes', d));
   }, [falcor, pgEnv, activeViewId, id, attributes]);
 
   const attrInfo = React.useMemo(() => {

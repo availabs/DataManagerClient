@@ -58,7 +58,7 @@ const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseUrl }) =
           ["Source Name", "Type", "Version", "Last Updated"]
             .map(key => (
               <dt key={key} className="text-sm font-medium text-gray-600">
-                {key}
+                {typeof key === 'object' ? JSON.stringify(key) : key}
               </dt>
             ))
         }
@@ -397,7 +397,7 @@ export default function Version() {
 
   const version = typeof view?.['version'] === 'object' ? null : view?.['version']
 
-  console.log('version', version, view)
+  //console.log('version', dependencies)
 
   return (
     <div className="overflow-hidden flex flex-col md:flex-row">
@@ -411,15 +411,15 @@ export default function Version() {
               <dd className = 'sm:mt-0 sm:col-span-2'>
                 <VersionEditor view={view} baseUrl={baseUrl} />
 
-                {dependencies?.dependencies && dependencies?.dependencies?.length > 0 ?
+{/*                {dependencies?.dependencies && dependencies?.dependencies?.length > 0 ?
                 <RenderDeps
                   viewId={viewId}
                   dependencies={dependencies}
                   srcMeta={srcMeta}
                   viewMeta={viewMeta}
                   baseUrl={baseUrl}
-                /> : ''}
-
+                /> : ''}*/}
+{/*
                 {dependents && dependents.length > 0 ?
                 <RenderDependents
                   viewId={viewId}
@@ -427,7 +427,7 @@ export default function Version() {
                   srcMeta={srcMeta}
                   viewMeta={viewMeta}
                   baseUrl={baseUrl}
-                /> : ''}
+                /> : ''}*/}
               </dd>
               <ViewControls view={view} />
           </div>
