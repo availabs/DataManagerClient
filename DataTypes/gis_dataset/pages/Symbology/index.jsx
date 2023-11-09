@@ -77,18 +77,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
         a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
       }
       return a;
-    }, []).map(sym => ({
-      ...sym,
-      views: sym.views.map(view => ({
-        ...view,
-        layers: view.layers.map(layer => ({
-          ...layer,
-          filters: {
-            ...get(layer, "filters", {})
-          }
-        }))
-      }))
-    }));
+    }, []);
     return symbologies.map(setSymbologyId);
   }, [activeViewId, views]);
 

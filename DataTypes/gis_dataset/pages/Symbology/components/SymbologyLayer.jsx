@@ -139,6 +139,92 @@ const SymbologyEditorModal = props => {
   )
 }
 
+const ExpressionEditorModal = props => {
+
+  const setSymbology = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setSymbology"], null);
+  }, [props.layerProps]);
+
+  const activeViewId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
+  }, [props.layerProps]);
+  const activeLayerId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activeLayerId"], null);
+  }, [props.layerProps]);
+  const activePaintPropertyId = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activePaintPropertyId"], null);
+  }, [props.layerProps]);
+
+  const activePaintProperty = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "activePaintProperty"], null);
+  }, [props.layerProps]);
+
+  const currentExpression = React.useMemo(() => {
+    if (activePaintProperty.paintExpression) {
+      return JSON.stringify(activePaintProperty.paintExpression);
+    }
+    return "";
+  }, [activePaintProperty]);
+
+  const [expression, setExpression] = React.useState(currentExpression);
+
+  const onChange = React.useCallback(e => {
+    setExpression(e.target.value);
+  }, []);
+
+  const saveExpression = React.useCallback(e => {
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => {
+          if (view.viewId === activeViewId) {
+            return {
+              ...view,
+              layers: view.layers.map(layer => {
+                if (layer.uniqueId === activeLayerId) {
+                  return {
+                    ...layer,
+                    paintProperties: {
+                      ...layer.paintProperties,
+                      [activePaintPropertyId]: {
+                        paintExpression: JSON.parse(expression)
+                      }
+                    }
+                  }
+                }
+                return layer;
+              })
+            }
+          }
+          return view;
+        })
+      }
+    });
+  }, [setSymbology, expression, activeViewId, activeLayerId, activePaintProperty]);
+
+  return (
+    <div className="whitespace-pre-wrap relative h-fit"
+      style={ {
+        width: "calc(100vw - 320px)",
+        minHeight: "calc(100vh - 180px)"
+      } }
+    >
+      <Button className="buttonPrimary mb-1"
+        onClick={ saveExpression }
+        disabled={ !expression }
+      >
+        Save Expression
+      </Button>
+      <div className="absolute mt-9 inset-0">
+        <textarea className="block w-full h-full p-1 rounded scrollbar"
+          style={ { resize: "none" } }
+          value={ expression }
+          onChange={ onChange }/>
+      </div>
+    </div>
+  )
+}
+
 class SymbologyLayer extends AvlLayer {
   constructor(views) {
     super();
@@ -147,18 +233,6 @@ class SymbologyLayer extends AvlLayer {
     this.name = "Symbology Layer";
 
     this.startActive = true;
-
-    // const [sources, layers] = views.reduce((a, c) => {
-    //   const sources = get(c, ["metadata", "tiles", "sources"], []);
-    //   a[0].push(...sources);
-    //   const layers = get(c, ["metadata", "tiles", "layers"], [])
-    //     .map(layer => ({ ...layer, layout: { visibility: "none" } }));
-    //   a[1].push(...layers);
-    //   return a;
-    // }, [[], []]);
-    //
-    // this.sources = getValidSources(sources);
-    // this.layers = layers;
   }
   RenderComponent = SymbologyLayerRenderComponent;
   infoBoxes = [
@@ -178,6 +252,11 @@ class SymbologyLayer extends AvlLayer {
     "symbology-editor": {
       Component: SymbologyEditorModal,
       Header: "Symbology Editor (Edit at your own risk!!!)",
+      startPos: [160, 90]
+    },
+    "expression-editor": {
+      Component: ExpressionEditorModal,
+      Header: "Expression Editor",
       startPos: [160, 90]
     }
   }

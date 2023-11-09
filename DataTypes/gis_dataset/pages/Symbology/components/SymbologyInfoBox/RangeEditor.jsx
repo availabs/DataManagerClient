@@ -10,41 +10,18 @@ import { scalePoint } from "d3-scale"
 
 import {
   MultiLevelSelect,
-  BooleanSlider,
-  ColorRanges,
-  ColorBar,
-  Input,
   Button,
   useTheme,
   strictNaN
 } from "~/modules/avl-map-2/src";
 
-const RangeItem = ({ value }) => {
-  const format = d3format(",.1f");
-  return (
-    <div className="text-center">{ format(value) }</div>
-  )
-}
+import { myrange } from "../utils"
 
-export const myrange = (min, max, step = 1) => {
-  const mult = 1000.0;
-  const m1 = Math.trunc(min * mult);
-  const m2 = Math.trunc(max * mult);
-  const s = Math.trunc(step * mult);
-  return d3range(m1, m2 + s, s).map(v => v / mult);
-}
+import TypeSelector from "./TypeSelector"
 
-const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
+const format = d3format(".2r");
 
-  // const { scale } = variable;
-
-  // React.useEffect(() => {
-  //   const { min, max, step, range } = scale;
-  //   const rng = myrange(min, max + step, step);
-  //   if (!isEqual(range, rng)) {
-  //     updateScale({ range: rng })
-  //   }
-  // }, [scale, updateScale]);
+const SimpleControls = ({ scale, updateScale, min, max, ...props }) => {
 
   const [svgRef, setSvgRef] = React.useState(null);
   const [width, setWidth] = React.useState(0);
@@ -98,7 +75,7 @@ const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
       .attr("x", pointScale)
       .attr("dy", "0.25rem")
       .attr("font-size", "0.625rem")
-      .text(d => scale.step >= 1 ? d : scale.step === 0.25 ? d.toFixed(2) : d.toFixed(1));
+      .text(d => format(d));
 
     const bar = svgSelection.select("g.brush-group")
     .selectAll("rect")
@@ -129,7 +106,13 @@ const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
       const x1 = pointScaleRange[i1 - 1] + dx;
       if (x1 > x0) {
         const range = pointScale.domain().slice(i0, i1);
-        updateScale({ range });
+        const scaleRangeLength = scale.range.length;
+        if (scaleRangeLength !== range.length) {
+          updateScale({ range, domain: [] });
+        }
+        else {
+          updateScale({ range });
+        }
       }
     }
 
@@ -156,6 +139,61 @@ const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
 
   }, [width, min, max, scale, updateScale]);
 
+  return (
+    <div>
+      <svg ref={ setSvgRef }
+        style={ { height: "32px" } }
+        className="block w-full bg-white"
+      >
+        <g className="brush-group"/>
+        <g className="text-group pointer-events-none"/>
+      </svg>
+    </div>
+  )
+}
+
+const AdvancedControls = ({ scale }) => {
+  return (
+    <div>
+      Range Values:
+      <div className="flex">
+        { scale.range.map(r => (
+            <div key={ r } className="text-center flex-1">
+              { format(r) }
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  )
+}
+
+const DisplayItem = ({ children, active, hasChildren }) => {
+  const theme = useTheme();
+  return (
+    <div
+      className={ `
+        px-1 text-sm flex items-center text-left min-w-fit max-w-full whitespace-nowrap
+        ${ active ? theme.bgAccent3 : `${ theme.bgAccent2Hover } ${ theme.bgAccent1 }` }
+      ` }
+    >
+      <div className="flex-1">{ children }</div>
+      { !hasChildren ? null :
+        <span className="fa fa-caret-right ml-2"/>
+      }
+    </div>
+  )
+}
+
+const RangeEditor = props => {
+
+  const { updateScale, scale, steps, min, max } = props;
+
+  const [e0, e1] = React.useMemo(() => {
+    const range = get(scale, "range", []);
+    return d3extent(range);
+  }, [scale]);
+
   const setStepSize = React.useCallback(step => {
     step = +step;
     const e1 = d3extent(scale.range);
@@ -167,71 +205,34 @@ const SimpleControls = ({ scale, updateScale, min, max, steps, ...props }) => {
     const range = myrange(r0, r1, step);
     updateScale({
       range,
-      step
+      step,
+      domain: []
     });
-  }, [scale]);
-
-  return (
-    <div>
-      <svg ref={ setSvgRef }
-        style={ { height: "32px" } }
-        className="block w-full bg-white"
-      >
-        <g className="brush-group"/>
-        <g className="text-group pointer-events-none"/>
-      </svg>
-      <div className="flex items-center mt-1">
-        <div>Step Size:</div>
-        <div className="flex-1 ml-1">
-          <MultiLevelSelect removable={ false }
-            options={ steps }
-            value={ scale.step }
-            onChange={ setStepSize }/>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const RangeEditor = props => {
-
-  const {
-    variable,
-    scale,
-    updateScale,
-    variableType,
-    MapActions,
-    min, max,
-    data
-  } = props;
-
-  // const {
-  //   scale
-  // } = variable;
-
-  // const doUpdateScale = React.useCallback((key, value) => {
-  //   if (typeof key === "string") {
-  //     updateScale({ [key]: value });
-  //   }
-  //   else if (typeof key === "object") {
-  //     updateScale({ ...key });
-  //   }
-  // }, [updateScale]);
-
-  const [controls, setControls] = React.useState("simple");
-
-  const [e0, e1] = React.useMemo(() => {
-    const range = get(scale, "range", []);
-    return d3extent(range);
-  }, [scale]);
+  }, [scale, min, max]);
 
   return (
     <div>
       <div className="grid grid-cols-1 gap-1">
-        <TypeSelector
-          variableType={ variableType }
-          scaleType={ scale.type }
-          updateScale={ updateScale }/>
+
+        <TypeSelector { ...props }
+          updateScale={ updateScale }
+          scale={ scale }/>
+
+        <div className="flex items-center">
+          <div>Step Size:</div>
+          <div className="flex-1 ml-1">
+            { steps.includes(scale.step) ?
+              <MultiLevelSelect removable={ false }
+                options={ steps }
+                value={ scale.step }
+                onChange={ setStepSize }
+                DisplayItem={ DisplayItem }/> :
+              <div className="px-2 py-1 pr-8 text-right">
+                { scale.step }
+              </div>
+            }
+          </div>
+        </div>
 
         { strictNaN(e0) ? null :
           <div className="flex">
@@ -246,41 +247,15 @@ const RangeEditor = props => {
           </div>
         }
 
-        <SimpleControls { ...props }
-          updateScale={ updateScale }/>
+        { steps.includes(scale.step) ?
+          <SimpleControls { ...props }
+            updateScale={ updateScale }/> :
+          <AdvancedControls { ...props }
+            updateScale={ updateScale }/>
+        }
 
       </div>
     </div>
   )
 }
 export default RangeEditor;
-
-const LegendTypes = [
-  { value: "quantile", name: "Quantile", variableType: "data-variable" },
-  { value: "threshold", name: "Threshold", variableType: "data-variable" },
-  { value: "ordinal", name: "Ordinal", variableType: "meta-variable" }
-]
-const TypeSelector = ({ scaleType, updateScale, variableType }) => {
-  const onChange = React.useCallback(type => {
-    updateScale({ type, domain: [] });
-  }, [updateScale]);
-  const options = React.useMemo(() => {
-    return LegendTypes.filter(lt => lt.variableType === variableType);
-  }, [variableType]);
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="py-1 text-right">
-        Scale Type:
-      </div>
-      <div>
-        <MultiLevelSelect
-          removable={ false }
-          options={ options }
-          displayAccessor={ t => t.name }
-          valueAccessor={ t => t.value }
-          onChange={ onChange }
-          value={ scaleType }/>
-      </div>
-    </div>
-  )
-}

@@ -3,11 +3,10 @@ import React from "react"
 import get from "lodash/get"
 
 import {
-  MultiLevelSelect,
-  strictNaN
+  MultiLevelSelect
 } from "~/modules/avl-map-2/src";
 
-import { myrange } from "./RangeEditor"
+import { myrange } from "../utils"
 
 const OrdinalRangeEditor = ({ variable, scale, min, max, steps, ...props }) => {
 

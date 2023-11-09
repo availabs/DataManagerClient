@@ -7,7 +7,7 @@ import { DamaContext } from "~/pages/DataManager/store"
 const EmptyObject = {};
 const EmptyArray = [];
 
-const useViewVariable = (viewId, variable, filteredVariableIds = EmptyArray) => {
+export const useViewVariable = (viewId, variable, filteredVariableIds = EmptyArray) => {
 
   const variableId = get(variable, "variableId", variable);
   if (!variableId) return [];
@@ -55,5 +55,3 @@ const useViewVariable = (viewId, variable, filteredVariableIds = EmptyArray) => 
 
   return data;
 }
-
-export default useViewVariable;
