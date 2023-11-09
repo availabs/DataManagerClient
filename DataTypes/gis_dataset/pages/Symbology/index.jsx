@@ -60,6 +60,54 @@ const SymbologyEditor = ({ source, views, ...props }) => {
 
   const [symbology, setSymbology] = React.useState(null);
 
+  React.useEffect(() => {
+    if (!symbology) return;
+    
+    const needsFallbackValue = symbology.views.reduce((a, c) => {
+      return c.layers.reduce((aa, cc) => {
+        if (cc.paintProperties) {
+          return Object.keys(cc.paintProperties)
+            .reduce((aaa, ccc) => {
+              const pp = cc.paintProperties[ccc];
+              if (pp.variable?.scale) {
+                return pp.variable.scale.fallbackValue === undefined;
+              }
+              return aaa;
+            }, aa)
+        }
+      }, a);
+    }, false);
+
+    if (needsFallbackValue) {
+      setSymbology(prev => ({
+        ...prev,
+        views: prev.views.map(view => ({
+          ...view,
+          layers: view.layers.map(layer => ({
+            ...layer,
+            paintProperties: {
+              ...Object.keys(layer.paintProperties)
+                .reduce((a, ppId) => {
+                  a[ppId] = {
+                    ...layer.paintProperties[ppId],
+                    variable: {
+                      ...layer.paintProperties[ppId].variable,
+                      scale: {
+                        ...layer.paintProperties[ppId].variable.scale,
+                        fallbackValue: ppId.includes("color") ? "rgba(0, 0, 0, 0)" : 0
+                      }
+                    }
+                  }
+                  return a;
+                }, {})
+            }
+          }))
+        }))
+      }))
+    }
+
+  }, [symbology]);
+
   const [activeViewId, _setActiveViewId] = React.useState(null);
 
   const [activeLayerId, _setActiveLayerId] = React.useState(null);

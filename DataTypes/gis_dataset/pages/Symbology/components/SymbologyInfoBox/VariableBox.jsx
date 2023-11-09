@@ -240,8 +240,6 @@ const VariableBox = props => {
         fallbackValue
       ];
 
-
-
       if (!isEqual(paintExpression, variable.paintExpression)) {
         updateVariable({ paintExpression });
       };
@@ -255,7 +253,7 @@ const VariableBox = props => {
     else if (variable.paintExpression) {
       updateVariable({ paintExpression: null });
     }
-  }, [variable, scale, filteredData, updateVariable, updateScale, d3scaleDomain]);
+  }, [variable, scale, filteredData, updateVariable, updateScale, d3scaleDomain, ppId]);
 
   const VariableEditor = React.useMemo(() => {
     return getVariableEditor(ppId, scale?.type);
