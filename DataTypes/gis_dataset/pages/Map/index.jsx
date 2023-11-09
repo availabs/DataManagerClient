@@ -266,7 +266,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId,filters, symSources, symLayers])
 
-  //console.log('SYMBOLOGY', tempSymbology)
 
   return (
     <div>
@@ -419,7 +418,7 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }
 
     const newSym = JSON.parse(JSON.stringify(tempSymbology));
 
-console.log("updateLegend:", legend)
+  // console.log("updateLegend:", legend)
 
     paths.forEach(([id, pp, av]) => {
       newSym[id][pp][av].settings = {
