@@ -178,7 +178,8 @@ const GISDatasetRenderComponent = props => {
       type = "threshold",
       data = [],
       color = "BrBG",
-      reverse = false
+      reverse = false,
+      rangeType = null
     } = settings;
 
     const legend = {
@@ -190,7 +191,8 @@ const GISDatasetRenderComponent = props => {
       type,
       data,
       color,
-      reverse
+      reverse,
+      rangeType
     };
 
     if (!domain.length) {
@@ -287,7 +289,7 @@ const GISDatasetRenderComponent = props => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!activeVariable || (activeVariable === "none")) {
-      setLegend(null);
+      //setLegend(null); // TODO ryan cehck about this -- otherwise this will wipe out our custom legend
       setLayerData(null);
       return;
     }
@@ -371,6 +373,12 @@ const GISDatasetRenderComponent = props => {
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
 
   React.useEffect(() => {
+    if(symbology.legend){
+      createLegend(symbology.legend)
+    }
+  }, [symbology.legend])
+
+  React.useEffect(() => {
     if (!legend) return;
     if (!layerData) return;
 
@@ -405,7 +413,7 @@ const GISDatasetRenderComponent = props => {
 
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
-
+  
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
