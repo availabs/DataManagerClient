@@ -179,7 +179,7 @@ const GISDatasetRenderComponent = props => {
       data = [],
       color = "BrBG",
       reverse = false,
-      rangeType = null
+      customLegendScale
     } = settings;
 
     const legend = {
@@ -192,7 +192,7 @@ const GISDatasetRenderComponent = props => {
       data,
       color,
       reverse,
-      rangeType
+      customLegendScale
     };
 
     if (!domain.length) {
@@ -413,7 +413,7 @@ const GISDatasetRenderComponent = props => {
 
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
-  
+
 
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
