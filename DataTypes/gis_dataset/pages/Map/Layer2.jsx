@@ -179,6 +179,8 @@ const GISDatasetRenderComponent = props => {
       data = [],
       color = "BrBG",
       reverse = false,
+      height = 3,
+      direction = 'vertical',
       customLegendScale
     } = settings;
 
@@ -192,6 +194,8 @@ const GISDatasetRenderComponent = props => {
       data,
       color,
       reverse,
+      height,
+      direction,
       customLegendScale
     };
 
