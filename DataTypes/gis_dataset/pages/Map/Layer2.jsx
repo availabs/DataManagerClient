@@ -178,7 +178,8 @@ const GISDatasetRenderComponent = props => {
       type = "threshold",
       data = [],
       color = "BrBG",
-      reverse = false
+      reverse = false,
+      customLegendScale
     } = settings;
 
     const legend = {
@@ -190,7 +191,8 @@ const GISDatasetRenderComponent = props => {
       type,
       data,
       color,
-      reverse
+      reverse,
+      customLegendScale
     };
 
     if (!domain.length) {
@@ -287,7 +289,7 @@ const GISDatasetRenderComponent = props => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!activeVariable || (activeVariable === "none")) {
-      setLegend(null);
+      //setLegend(null); // TODO ryan cehck about this -- otherwise this will wipe out our custom legend
       setLayerData(null);
       return;
     }
@@ -369,6 +371,12 @@ const GISDatasetRenderComponent = props => {
         });
       });
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
+
+  React.useEffect(() => {
+    if(symbology.legend){
+      createLegend(symbology.legend)
+    }
+  }, [symbology.legend])
 
   React.useEffect(() => {
     if (!legend) return;
