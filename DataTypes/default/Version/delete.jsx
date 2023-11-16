@@ -45,7 +45,7 @@ const DeleteButton = ({ text, viewId, sourceId, pgEnv, baseUrl, falcor }) => {
     <button
       className={"bg-red-50 hover:bg-red-400 hover:text-white p-2"}
       onClick={async () => {
-
+        console.log('I am deleteing the view id ', viewId)
         await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/deleteDamaView`, {
           method: "POST",
           body: JSON.stringify({ "view_id": viewId }),
