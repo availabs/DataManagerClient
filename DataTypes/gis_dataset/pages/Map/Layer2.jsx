@@ -407,6 +407,14 @@ const GISDatasetRenderComponent = props => {
     }
   }, [legend, layerData]);
 
+  React.useEffect(() => {
+    if (maplibreMap && symbology && symbology.fitToBounds)
+      maplibreMap.fitBounds(symbology.fitToBounds, {
+        padding: 20,
+      });
+  }, [maplibreMap, symbology]);
+
+
   const [isOpen, setIsOpen] = React.useState(false);
   const close = React.useCallback(e => {
     setIsOpen(false);
