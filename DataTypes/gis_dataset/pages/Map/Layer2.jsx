@@ -414,6 +414,33 @@ const GISDatasetRenderComponent = props => {
       });
   }, [maplibreMap, symbology]);
 
+  React.useEffect(() => {
+    if (maplibreMap && symbology.filter) {
+      const dataFilter = [
+        "match",
+        ["get", "ogc_fid"],
+        symbology.filter,
+        true,
+        false,
+      ];
+
+      symbology.layers.forEach((layer) => {
+        const newLayerFilter = ["all", layer.filter[1], dataFilter];
+        maplibreMap.setFilter(layer.id, newLayerFilter);
+      });
+    }
+
+    if (!symbology.filter && maplibreMap) {
+      symbology.layers.forEach((layer) => {
+        const myLayer = maplibreMap.getLayer(layer.id);
+        if (myLayer) {
+          const newLayerFilter = ["all", layer.filter[1]];
+          maplibreMap.setFilter(layer.id, newLayerFilter);
+        }
+      });
+    }
+  }, [maplibreMap, symbology.filter]);
+
 
   const [isOpen, setIsOpen] = React.useState(false);
   const close = React.useCallback(e => {
