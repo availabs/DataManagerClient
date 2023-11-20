@@ -407,6 +407,8 @@ const GISDatasetRenderComponent = props => {
     }
   }, [legend, layerData]);
 
+
+  //If symbology contains `fitToBounds`, zoom to that location.
   React.useEffect(() => {
     if (maplibreMap && symbology && symbology.fitToBounds)
       maplibreMap.fitBounds(symbology.fitToBounds, {
@@ -414,6 +416,7 @@ const GISDatasetRenderComponent = props => {
       });
   }, [maplibreMap, symbology]);
 
+  //If symbology contains `filter`, filter to matching features
   React.useEffect(() => {
     if (maplibreMap && symbology.filter) {
       const dataFilter = [
@@ -425,17 +428,15 @@ const GISDatasetRenderComponent = props => {
       ];
 
       symbology.layers.forEach((layer) => {
-        const newLayerFilter = ["all", layer.filter[1], dataFilter];
-        maplibreMap.setFilter(layer.id, newLayerFilter);
+        maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
       });
     }
 
     if (!symbology.filter && maplibreMap) {
       symbology.layers.forEach((layer) => {
-        const myLayer = maplibreMap.getLayer(layer.id);
-        if (myLayer) {
-          const newLayerFilter = ["all", layer.filter[1]];
-          maplibreMap.setFilter(layer.id, newLayerFilter);
+        const mapLayer = maplibreMap.getLayer(layer.id);
+        if (mapLayer) {
+          maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
         }
       });
     }
