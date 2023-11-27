@@ -412,7 +412,8 @@ const GISDatasetRenderComponent = props => {
   React.useEffect(() => {
     if (maplibreMap && symbology && symbology.fitToBounds)
       maplibreMap.fitBounds(symbology.fitToBounds, {
-        padding: 20,
+        duration: 400,
+        zoom: 13
       });
   }, [maplibreMap, symbology]);
 
