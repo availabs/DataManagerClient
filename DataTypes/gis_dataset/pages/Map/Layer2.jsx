@@ -433,7 +433,7 @@ const GISDatasetRenderComponent = props => {
     }
 
     if (!symbology.filter && maplibreMap) {
-      symbology.layers.forEach((layer) => {
+      symbology?.layers?.forEach((layer) => {
         const mapLayer = maplibreMap.getLayer(layer.id);
         if (mapLayer) {
           maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
