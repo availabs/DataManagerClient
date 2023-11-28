@@ -19,31 +19,7 @@ import {
 } from "../utils"
 
 import { getRangeAndStep } from "../SymbologyPanel/PaintPropertyItem"
-
-const integerFormat = d3format(",d");
-const floatFormat = d3format(",.2f");
-
-const isInteger = num => num === Math.trunc(num);
-
-const NumberInput = React.forwardRef(({ value, onChange, ...props }, ref) => {
-  const doOnChange = React.useCallback(v => {
-    const temp = v.replace(/[,]/g, "");
-    if (!strictNaN(+temp)) {
-      onChange(temp.trim());
-    }
-  }, [onChange]);
-
-  const valueFormat = React.useMemo(() => {
-    const asNum = +value.replace(",", "");
-    return isInteger(asNum) ? integerFormat : floatFormat;
-  }, [value]);
-
-  return (
-    <Input { ...props } ref={ ref }
-      value={ valueFormat(value) }
-      onChange={ doOnChange }/>
-  )
-})
+import { NumberInput } from "../utils"
 
 const RemoveDomainItemButton = ({ remove }) => {
   const [seconds, setSeconds] = React.useState(0);

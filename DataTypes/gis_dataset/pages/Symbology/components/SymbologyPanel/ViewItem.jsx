@@ -102,13 +102,11 @@ const ViewItem = ({ view, ...props }) => {
               displayAccessor={ v => `Layer ID: ${ v.layerId } (${ v.copy })` }
               valueAccessor={ v => v.uniqueId }/>
           </div>
-          <div>
-            <Button className="py-2 button"
-              onClick={ copyLayer }
-            >
-              <span className="fas fa-plus"/>
-            </Button>
-          </div>
+          <Button className="button"
+            onClick={ copyLayer }
+          >
+            <span className="fas fa-plus"/>
+          </Button>
         </div>
         { !activeLayer ? null :
           <LayerItem key={ activeLayer.uniqueId }

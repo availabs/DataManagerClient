@@ -3,12 +3,16 @@ import React from "react"
 import get from "lodash/get"
 
 import {
+  Button,
+  Input,
   MultiLevelSelect,
-  useTheme
+  useTheme,
+  strictNaN
 } from "~/modules/avl-map-2/src"
 
 import PaintPropertyItem from "./PaintPropertyItem"
 import FilterItem from "./FilterItem"
+import { NumberInput } from "../utils"
 
 const PaintProperties = {
   fill: ["fill-color", "fill-opacity"],
@@ -167,7 +171,10 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
     <div>
       <div className="ml-4">
         <div>Layer Type: { layer.type }</div>
-
+        <ZoomControls
+          layer={ layer }
+          setSymbology={ setSymbology }
+          uniqueId={ uniqueId }/>
         <div className="relative">
           <div className="mb-1">
             <MultiLevelSelect isDropdown
@@ -228,3 +235,117 @@ const LayerItem = ({ layer, setSymbology, variables, ...props }) => {
   )
 }
 export default LayerItem
+
+const ZoomControls = ({ layer, setSymbology, uniqueId }) => {
+
+  const setMinZoom = React.useCallback(zoom => {
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => ({
+          ...view,
+          layers: view.layers.map(layer => {
+            if (layer.uniqueId === uniqueId) {
+              return {
+                ...layer,
+                minZoom: zoom
+              }
+            }
+            return layer;
+          })
+        }))
+      }
+    });
+  }, [setSymbology, uniqueId]);
+
+  const setMaxZoom = React.useCallback(zoom => {
+    setSymbology(prev => {
+      return {
+        ...prev,
+        views: prev.views.map(view => ({
+          ...view,
+          layers: view.layers.map(layer => {
+            if (layer.uniqueId === uniqueId) {
+              return {
+                ...layer,
+                maxZoom: zoom
+              }
+            }
+            return layer;
+          })
+        }))
+      }
+    });
+  }, [setSymbology, uniqueId]);
+
+  const minZoom = React.useMemo(() => {
+
+  }, []);
+
+  const [editing, setEditing] = React.useState(false);
+  const editMinZoom = React.useCallback(e => {
+    setEditing("min-zoom");
+  }, []);
+  const editMaxZoom = React.useCallback(e => {
+    setEditing("max-zoom");
+  }, []);
+
+  const stopEditing = React.useCallback(e => {
+    setEditing(false);
+  }, []);
+
+  return (
+    <div className="grid grid-cols-1 gap-1 mb-1">
+      <ZoomEditor
+        zoom={ layer.minZoom }
+        setZoom={ setMinZoom }
+        type="Min"
+        editing={ editing === "min-zoom" }
+        start={ editMinZoom }
+        stop={ stopEditing }/>
+
+      <ZoomEditor
+        zoom={ layer.maxZoom }
+        setZoom={ setMaxZoom }
+        type="Max"
+        editing={ editing === "max-zoom" }
+        start={ editMaxZoom }
+        stop={ stopEditing }/>
+    </div>
+  )
+}
+
+const ZoomEditor = ({ editing, zoom, type, start, stop, setZoom }) => {
+
+console.log("ZOOM:", zoom);
+
+  return (
+    <div className="grid grid-cols-12">
+      <div className="col-span-4">
+        { type } Zoom:
+      </div>
+      { !editing ?
+        <div className="col-span-8 flex">
+          <div className="flex-1">
+            { strictNaN(zoom) ? "Not set" : zoom }
+          </div>
+          <Button className="buttonPrimarySmall ml-1"
+            onClick={ start }
+          >
+            <span className="fas fa-pen-to-square"/>
+          </Button>
+        </div> :
+        <div className="col-span-8 flex">
+          <NumberInput className="inputSmall"
+            value={ zoom || "" }
+            onChange={ setZoom }/>
+          <Button className="buttonPrimarySmall ml-1"
+            onClick={ stop }
+          >
+            <span className="fas fa-times"/>
+          </Button>
+        </div>
+      }
+    </div>
+  )
+}
