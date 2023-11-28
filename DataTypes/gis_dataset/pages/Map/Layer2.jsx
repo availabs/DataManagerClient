@@ -178,7 +178,10 @@ const GISDatasetRenderComponent = props => {
       type = "threshold",
       data = [],
       color = "BrBG",
-      reverse = false
+      reverse = false,
+      height = 3,
+      direction = 'vertical',
+      customLegendScale
     } = settings;
 
     const legend = {
@@ -190,7 +193,10 @@ const GISDatasetRenderComponent = props => {
       type,
       data,
       color,
-      reverse
+      reverse,
+      height,
+      direction,
+      customLegendScale
     };
 
     if (!domain.length) {
@@ -287,7 +293,7 @@ const GISDatasetRenderComponent = props => {
     if (!maplibreMap) return;
     if (!resourcesLoaded) return;
     if (!activeVariable || (activeVariable === "none")) {
-      setLegend(null);
+      //setLegend(null); // TODO ryan cehck about this -- otherwise this will wipe out our custom legend
       setLayerData(null);
       return;
     }
@@ -371,6 +377,12 @@ const GISDatasetRenderComponent = props => {
   }, [maplibreMap, resourcesLoaded, symbology, activeVariable, createLegend]);
 
   React.useEffect(() => {
+    if(symbology.legend){
+      createLegend(symbology.legend)
+    }
+  }, [symbology.legend])
+
+  React.useEffect(() => {
     if (!legend) return;
     if (!layerData) return;
 
@@ -394,6 +406,43 @@ const GISDatasetRenderComponent = props => {
       maplibreMap.setPaintProperty(layer_id, paintProperty, value);
     }
   }, [legend, layerData]);
+
+
+  //If symbology contains `fitToBounds`, zoom to that location.
+  React.useEffect(() => {
+    if (maplibreMap && symbology && symbology.fitToBounds)
+      maplibreMap.fitBounds(symbology.fitToBounds, {
+        duration: 400,
+        zoom: 13
+      });
+  }, [maplibreMap, symbology]);
+
+  //If symbology contains `filter`, filter to matching features
+  React.useEffect(() => {
+    if (maplibreMap && symbology.filter) {
+      const dataFilter = [
+        "match",
+        ["get", "ogc_fid"],
+        symbology.filter,
+        true,
+        false,
+      ];
+
+      symbology.layers.forEach((layer) => {
+        maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+      });
+    }
+
+    if (!symbology.filter && maplibreMap) {
+      symbology?.layers?.forEach((layer) => {
+        const mapLayer = maplibreMap.getLayer(layer.id);
+        if (mapLayer) {
+          maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
+        }
+      });
+    }
+  }, [maplibreMap, symbology.filter]);
+
 
   const [isOpen, setIsOpen] = React.useState(false);
   const close = React.useCallback(e => {
