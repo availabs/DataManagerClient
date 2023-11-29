@@ -429,15 +429,18 @@ const GISDatasetRenderComponent = props => {
       ];
 
       symbology.layers.forEach((layer) => {
-        maplibreMap.setFilter(layer.id, ["all", layer.filter?.[1], dataFilter]);
+        if(layer.filter){
+          maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+        }
+
       });
     }
 
     if (!symbology.filter && maplibreMap) {
       symbology?.layers?.forEach((layer) => {
         const mapLayer = maplibreMap.getLayer(layer.id);
-        if (mapLayer) {
-          maplibreMap.setFilter(layer.id, ["all", layer.filter?.[1]]);
+        if (mapLayer && layer.filter) {
+          maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
         }
       });
     }
