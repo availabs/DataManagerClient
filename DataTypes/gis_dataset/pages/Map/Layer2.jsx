@@ -279,6 +279,11 @@ const GISDatasetRenderComponent = props => {
           if (!maplibreMap.getLayer(l.id)) {
             maplibreMap.addLayer(l);
           }
+          else{
+            if (l.layout && l.layout.visibility !== undefined){
+              maplibreMap.setLayoutProperty(l.id, 'visibility', l.layout.visibility);
+            }
+          }
         })
       }
       // console.log('loadMapData done')
@@ -297,7 +302,6 @@ const GISDatasetRenderComponent = props => {
       setLayerData(null);
       return;
     }
-
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
         (
