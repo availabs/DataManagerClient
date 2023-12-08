@@ -428,11 +428,17 @@ const GISDatasetRenderComponent = props => {
         false,
       ];
 
-      symbology.layers.forEach((layer) => {
-        if(layer.filter){
-          maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+      symbology?.layers?.forEach((layer) => {
+        const mapLayer = maplibreMap.getLayer(layer.id);
+        if (mapLayer) {
+          if(!layer.filter){
+            maplibreMap.setFilter(layer.id, dataFilter);
+          }
+          else{
+            //Append new filter to existing ones
+            maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+          }
         }
-
       });
     }
 
