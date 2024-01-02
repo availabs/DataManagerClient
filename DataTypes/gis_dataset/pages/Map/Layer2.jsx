@@ -417,7 +417,7 @@ const GISDatasetRenderComponent = props => {
     if (maplibreMap && symbology && symbology.fitToBounds)
       maplibreMap.fitBounds(symbology.fitToBounds, {
         duration: 400,
-        zoom: 13
+        zoom: symbology.fitZoom || 13
       });
   }, [maplibreMap, symbology]);
 
