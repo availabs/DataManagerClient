@@ -253,7 +253,7 @@ const GISDatasetRenderComponent = props => {
       if (Array.isArray(images)) {
         await Promise.all(
             images
-              .filter(img => !maplibreMap.hasImage(img.id))
+              .filter(img => !maplibreMap.hasImage(img.id) && img.url)
               .map(img => new Promise((resolve, reject) => {
 
                 maplibreMap.loadImage(img.url, function (error, res) {
