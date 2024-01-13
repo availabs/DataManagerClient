@@ -253,12 +253,14 @@ const GISDatasetRenderComponent = props => {
       if (Array.isArray(images)) {
         await Promise.all(
             images
-              .filter(img => !maplibreMap.hasImage(img.id))
+              .filter(img => !maplibreMap.hasImage(img.id) && img.url)
               .map(img => new Promise((resolve, reject) => {
 
                 maplibreMap.loadImage(img.url, function (error, res) {
                     if (error) throw error;
-                    maplibreMap.addImage(img.id, res)
+                    if(!maplibreMap.hasImage(img.id)){
+                      maplibreMap.addImage(img.id, res);
+                    }
                     resolve();
                 })
             }))
@@ -866,6 +868,7 @@ class GISDatasetLayer extends AvlLayer {
   onHover = {
     layers: this.layers?.map((d) => d.id),
     callback: (layerId, features, lngLat) => {
+
       let feature = features[0];
 
       let data = [feature.id, layerId, (features[0] || {}).properties];

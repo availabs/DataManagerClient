@@ -34,7 +34,7 @@ export const Header = (
         <div className='px-2 flex text-lg'>
           <div className=' font-medium text-gray-800'> Data Manager</div>
           <div className='fal fa-angle-down px-3 mt-[6px] '/>
-          <div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>
+          {/*<div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>*/}
         </div>}
         className={`text-gray-800 group`} openType='click'
       >

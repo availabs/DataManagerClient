@@ -3,7 +3,7 @@ import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import GISDatasetLayer from './Layer2'
 import Symbology from './symbology/index'
 // import { AvlMap } from "~/modules/avl-maplibre/src"
@@ -188,8 +188,10 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
 }
 
 const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true }) => {
+  const [searchParams] = useSearchParams();
+  const urlVariable = searchParams.get("variable")
 
-  const { /*sourceId,*/ viewId } = useParams()
+  const { viewId } = useParams();
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
@@ -202,10 +204,15 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   // console.log("\n\n\n\n\n");
   // console.log("what is the content of the filters data: ", filters);
   // console.log("\n\n\n\n\n");
+  const coalescedViewId = urlVariable && !viewId ? urlVariable : viewId; //TODO ryan this  could ahve some breaking changes elsewhere
+
   const activeView = React.useMemo(() => {
-    let currentView = (views || []).filter(d => d.view_id === +viewId)
-    return get(currentView,'[0]', views[0])
-  },[views,viewId])
+    let currentView = (views || []).filter(
+      (d) => d.view_id === +coalescedViewId
+    );
+    return get(currentView, "[0]", views[0]);
+  }, [views, coalescedViewId]);
+
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => {
@@ -240,7 +247,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   //console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
-      //console.log('layer update', tempSymbology)
       const sources = symSources || get(mapData,'sources',[]);
       const layers =  symLayers || get(mapData,'layers',[]);
       if(sources.length === 0 || layers.length === 0 ) {
