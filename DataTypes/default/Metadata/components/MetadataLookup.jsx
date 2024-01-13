@@ -4,6 +4,8 @@ import {RenderTextArea, RenderTextBox} from "./Edit.jsx";
 import {value} from "lodash/seq.js";
 import {editMetadata} from "../utils/editMetadata.js";
 import {DamaContext} from "../../../../store/index.js";
+import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
+import 'react-json-view-lite/dist/index.css';
 
 export const ManageMetaLookup = ({
                                      metadata, setMetadata,
@@ -36,10 +38,8 @@ export const ManageMetaLookup = ({
                     <Button themeOptions={{size: 'xs', color: 'transparent'}}
                             onClick={e => setIsEditing(!isEditing)}> Edit </Button>
                 </div>
-                <div className={'h-20 overflow-auto  border border-4 border-dotted p-1'}>
-                    {
-                        startValue
-                    }
+                <div className={'border border-4 border-dotted p-1'}>
+                    <JsonView data={JSON.parse(startValue)} shouldExpandNode={allExpanded} style={defaultStyles} />
                 </div>
             </div>
     )
