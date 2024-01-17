@@ -22,6 +22,8 @@ import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
 
+const PIN_OUTLINE_LAYER_SUFFIX = '_pin_outline'
+
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 //import { DAMA_HOST } from "~/config"
 
@@ -187,7 +189,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   )
 }
 
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false }) => {
   const [searchParams] = useSearchParams();
   const urlVariable = searchParams.get("variable")
 
@@ -255,6 +257,28 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
       let attributes = (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
       attributes = Array.isArray(attributes) ? attributes : []
+
+      if(displayPinnedGeomBorder){
+        if (!layers.find((layer) => layer.id.includes(PIN_OUTLINE_LAYER_SUFFIX))) {
+          const layerId = layers?.[0]?.id;
+          const pinnedGeomLayer = {
+            id: layerId + PIN_OUTLINE_LAYER_SUFFIX,
+            type: "line",
+            paint: {
+              "line-color": "black",
+              "line-width": 3,
+              "line-opacity": 0,
+            },
+            "line-color": "black",
+            "line-opacity": 0,
+            "line-width": 3,
+            source: layers?.[0]?.source,
+            "source-layer": layerId,
+          };
+          layers.push(pinnedGeomLayer);
+        }
+      }
+
       return {
             name: source.name,
             pgEnv,
@@ -270,7 +294,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
-  },[source, views, mapData, activeViewId,filters, symSources, symLayers])
+  },[source, views, mapData, activeViewId,filters, symSources, symLayers, displayPinnedGeomBorder])
 
 
   return (

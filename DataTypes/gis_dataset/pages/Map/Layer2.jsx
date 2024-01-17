@@ -31,6 +31,8 @@ import {
 
 import { DamaContext } from "~/pages/DataManager/store";
 
+const PIN_OUTLINE_LAYER_SUFFIX = 'pin_outline'
+
 const HoverComp = ({ data, layer }) => {
   const { attributes, activeViewId, filters } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
@@ -148,7 +150,8 @@ const GISDatasetRenderComponent = props => {
   const {
     layerProps,
     resourcesLoaded,
-    maplibreMap
+    maplibreMap,
+    activeLayers
   } = props;
 
   const {
@@ -159,6 +162,7 @@ const GISDatasetRenderComponent = props => {
     sourceId,
     layers
   } = layerProps;
+  const activePins = activeLayers[0].state.pinnedHoverCompIds;
 
   const activeVar = get(filters, ["activeVar", "value"], "");
 
@@ -241,6 +245,36 @@ const GISDatasetRenderComponent = props => {
       ).then(res => console.log("SAVE RESPONSE:", res))
     }
   }, [falcor, pgEnv, sourceId, legend, symbology, activeVar, layers]);
+
+  React.useEffect(() => {
+    const pinnedIds = activePins?.map(pin => pin.ogc_fid);
+    const pinnedGeomLineLayer = layers.find(layer => layer.id.includes(PIN_OUTLINE_LAYER_SUFFIX));
+
+    if(pinnedGeomLineLayer){
+      const lineLayerId = pinnedGeomLineLayer.id;
+      if(pinnedIds.length === 0){
+        pinnedIds.push(-666666666)
+      }
+      const dataFilter = [
+        "match",
+        ["get", "ogc_fid"],
+        pinnedIds,
+        true,
+        false,
+      ];
+      const mapLayer = maplibreMap.getLayer(lineLayerId);
+      if (mapLayer) {
+        maplibreMap.setFilter(lineLayerId, dataFilter);
+        if(pinnedIds?.length){
+          maplibreMap.setPaintProperty(lineLayerId, 'line-opacity', 1);
+        }
+        else{
+          maplibreMap.setPaintProperty(lineLayerId, 'line-opacity', 0);
+        }
+      }
+    }
+  }, [maplibreMap, symbology, activePins])
+
 
   React.useEffect(() => {
     async function loadMapData () {
@@ -346,7 +380,7 @@ const GISDatasetRenderComponent = props => {
             if(maplibreMap.getLayer(layer_id)?.id) {
               if(['visibility'].includes(paintProperty)) {
                 maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
-              } else {
+              } else if (!layer_id.includes(PIN_OUTLINE_LAYER_SUFFIX)) {
                 maplibreMap.setPaintProperty(layer_id, paintProperty, value);
               }
             }
