@@ -1,5 +1,14 @@
 import get from "lodash/get";
 
+export const isJson = (str)  => {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
 export const fnumIndex = (d, fractions = 2, currency = false) => {
     if (d >= 1000000000000) {
       return `${currency ? '$' : ``} ${(d / 1000000000000).toFixed(fractions)} T`;
