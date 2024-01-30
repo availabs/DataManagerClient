@@ -20,6 +20,9 @@ export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
         <option value="Sum">
             sum
         </option>
+        <option value="Count">
+            count
+        </option>
         <option value="List">
             list
         </option>
