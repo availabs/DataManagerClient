@@ -126,11 +126,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                                     />
                                 </div> :
                                     <div className='pr-8'>
-                                        {
-                                            get(col, ['desc', 'root']) ?
-                                                <Lexical value={get(col, 'desc')} /> :
-                                                ( get(col, 'desc') || 'No Description')
-                                        }
+                                        <Lexical value={get(col, 'desc')} />
                                     </div>
                                 }
 
