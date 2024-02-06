@@ -6,18 +6,16 @@ import get from 'lodash/get'
 // import { useParams } from 'react-router-dom'
 import { damaDataTypes } from '../DataTypes'
 
-import SourcesLayout from './layout'
+import CollectionsLayout from './layout'
 
 import {CollectionAttributes} from './attributes'
     
 import { DamaContext } from "../store";
 
-const SourceCreate = ({baseUrl}) => {
-// prettier canary
-  //const {falcor, falcorCache} = useFalcor()
-  const [ source, setSource ] = useState( 
+const CollectionCreate = ({baseUrl}) => {
+  const [ collection, setCollection ] = useState( 
     Object.keys(CollectionAttributes)
-      .filter(d => !['source_id', 'metadata','statistics'].includes(d))
+      .filter(d => !['collection_id', 'metadata','statistics'].includes(d))
       .reduce((out,current) => {
         out[current] = ''
         return out
@@ -56,18 +54,9 @@ const SourceCreate = ({baseUrl}) => {
       setDataTypes(filteredDataTypes);
     })();
   }, [pgEnv]);
-
-  const CreateComp = useMemo(() => get(dataTypes, `[${source.type}].sourceCreate.component`, () => <div />)
-    ,[dataTypes, source.type])
   
-  // console.log('new source', CreateComp)
+  const REQUIRED_FIELDS = ['name'];
 
-  if (dataTypes === null) {
-    return <div>Requesting data types statuses</div>;
-  }
-
-  // console.log('new source', CreateComp)
-  
   return (
     <div>
       {/*<div className='fixed right-0 top-[170px] w-64 '>
@@ -75,70 +64,42 @@ const SourceCreate = ({baseUrl}) => {
             {JSON.stringify(source,null,3)}
           </pre>
       </div>*/}
-      <SourcesLayout>
+      <CollectionsLayout>
         
-      <div className='p-4 font-medium'> Create New Source </div>
+      <div className='p-4 font-medium'> Create New Collection </div>
       
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {Object.keys(CollectionAttributes)
-            .filter(d => !['source_id','metadata','description', 'type','statistics', 'category', 'update_interval', 'categories', 'display_name'].includes(d))
+            .filter(d => !['collection_id',  "metadata",  "categories",  "source_dependencies",  "user_id",  "_created_timestamp",  "_modified_timestamp",
+          ].includes(d))
             .map((attr,i) => {
               // let val = typeof source[attr] === 'object' ? JSON.stringify(source[attr]) : source[attr]
               return (
                 <div key={i} className='flex justify-between group'>
                   <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
+                    <dt className="text-sm font-medium text-gray-500 py-5 capitalize">
+                      {attr} {REQUIRED_FIELDS.includes(attr) && <span style={{color:'red', verticalAlign:'super'}}>*</span>}
+                    </dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                     
                         <div className='pt-3 pr-8'>
-                          <Input 
+                          <Input
                             className='w-full p-2 flex-1 px-2 shadow bg-grey-50 focus:bg-blue-100  border-gray-300 ' 
-                            value={get(source, attr, '')} 
+                            value={get(collection, attr, '')} 
                             onChange={e => {
                               //console.log('hello', e, attr, {[attr]: e, ...source})
-                              setSource({ ...source, [attr]: e,})
+                              setCollection({ ...collection, [attr]: e,})
                             }}/>
                         </div> 
-                       
-                      
                     </dd>
                   </div>
-
-                 
                 </div>
               )
             })
           }
-          <div  className='flex justify-between group'>
-            <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500 py-5">Data Type</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-               
-                  <div className='pt-3 pr-8'>
-                    <select 
-                      className='w-full bg-white p-3 flex-1 shadow bg-grey-50 focus:bg-blue-100  border-gray-300' 
-                      value={get(source, 'type', '')} 
-                      onChange={e => {
-                        //console.log('hello', e, attr, {[attr]: e, ...source})
-                        setSource({ ...source, type: e.target.value,})
-                      }}>
-                        <option value="" disabled >Select your option</option>
-                        {Object.keys(dataTypes || [])
-                          .filter(k => dataTypes[k].sourceCreate)
-                          .map(k => <option key={k} value={k} className='p-2'>{k}</option>)
-                        }
-                    </select>
-                  </div> 
-                 
-                
-              </dd>
-            </div>
-          </div>
         </dl>
-        <CreateComp source={source} />
       </div>
-  </SourcesLayout>
+  </CollectionsLayout>
 </div>
   )
 }
@@ -147,4 +108,4 @@ const SourceCreate = ({baseUrl}) => {
 
 
 
-export default SourceCreate;
+export default CollectionCreate;

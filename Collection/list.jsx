@@ -80,14 +80,23 @@ const CollectionsList = () => {
   return (
 
     <CollectionsLayout baseUrl={baseUrl}>
-      <div className="py-4">
-        <div>
+      <div className="flex py-4 justify-between	">
+        <div className="flex flex-1 mr-8">
           <input
             className="w-full text-lg p-2 border border-gray-300 "
-            placeholder="Search collections"
+            placeholder="Search existing collections..."
             value={layerSearch}
             onChange={(e) => setLayerSearch(e.target.value)}
           />
+        </div>
+        <div className="flex w-36">
+          <Link 
+            className="flex items-center p-3 text-center bg-green-300 border border-green-200 shadow hover:bg-green-500 hover:text-white"
+            to={`${baseUrl}/create/collection`}
+          >
+            Create new collection
+            <i className="ml-1 fad fa-plus fa-2x" />
+            </Link>
         </div>
       </div>
       {
