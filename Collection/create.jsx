@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-
-import { /*useFalcor,*//*TopNav,*/ Input /*withAuth, Input, Button*/ } from '~/modules/avl-components/src'
+import { DAMA_HOST } from "~/config";
+import { /*useFalcor,*//*TopNav,*/ Input, Button /*withAuth, Input*/ } from '~/modules/avl-components/src'
 
 import get from 'lodash/get'
-// import { useParams } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import { damaDataTypes } from '../DataTypes'
 
 import CollectionsLayout from './layout'
@@ -12,10 +12,11 @@ import {CollectionAttributes} from './attributes'
     
 import { DamaContext } from "../store";
 
-const CollectionCreate = ({baseUrl}) => {
+const CollectionCreate = () => {
+  const navigate = useNavigate()
   const [ collection, setCollection ] = useState( 
     Object.keys(CollectionAttributes)
-      .filter(d => !['collection_id', 'metadata','statistics'].includes(d))
+      .filter(d => !['collection_id', 'categories','metadata','source_dependencies', 'user_id', "_created_timestamp",  "_modified_timestamp"].includes(d))
       .reduce((out,current) => {
         out[current] = ''
         return out
@@ -56,6 +57,22 @@ const CollectionCreate = ({baseUrl}) => {
   }, [pgEnv]);
   
   const REQUIRED_FIELDS = ['name'];
+
+  const publishCollection = async () => {
+    const res = await fetch(
+      `${DAMA_HOST}/dama-admin/${pgEnv}/collection/publish`,
+      {
+        method: "POST",
+        body: JSON.stringify(collection),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const newCollection = await res.json();
+    navigate(`/collection/${newCollection.collection_id}`);
+  };
 
   return (
     <div>
@@ -98,6 +115,15 @@ const CollectionCreate = ({baseUrl}) => {
             })
           }
         </dl>
+        <div>
+          <Button 
+            onClick={() => {
+              publishCollection();
+            }}
+          >
+            Publish
+          </Button>
+        </div>
       </div>
   </CollectionsLayout>
 </div>

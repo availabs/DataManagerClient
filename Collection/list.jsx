@@ -8,7 +8,6 @@ import { CollectionAttributes, SymbologyAttributes, getAttributes } from "./attr
 
 const CollectionThumb = ({ collection }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
-  console.log("collection thumb, collection::", collection)
   useEffect(() => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "collections", "byId", collection.collection_id, "symbologies", "length"];
@@ -60,7 +59,7 @@ const CollectionsList = () => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "collections", "length"];
       const resp = await falcor.get(lengthPath);
-      console.log(resp)
+
       await falcor.get([
         "dama", pgEnv, "collections", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
@@ -72,7 +71,6 @@ const CollectionsList = () => {
   }, [falcor, pgEnv]);
 
   const collections = useMemo(() => {
-    console.log("ryan checking falcorCache::", falcorCache)
     return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);

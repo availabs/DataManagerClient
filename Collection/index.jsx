@@ -50,7 +50,6 @@ const Collection = ({}) => {
         ]
       );
       //console.timeEnd("fetch data");
-      console.log(data)
       return data;
     }
 
