@@ -56,11 +56,23 @@ const Collection = ({}) => {
     fetchData();
   }, [collectionId, falcor, pgEnv]);
 
+  const symbologyIds = useMemo(() => {
+    return  Object.keys(get(falcorCache, ["dama", pgEnv, "symbologies", "byId"], {}));
+  }, [falcorCache, collectionId, pgEnv]);
+
+  useEffect(() => {
+    async function fetchSymbologyData() {
+      const symbologyPath = ["dama", pgEnv, "symbologies", "byId", symbologyIds, "attributes", Object.values(SymbologyAttributes)];
+      await falcor.get(symbologyPath);
+    };
+
+    fetchSymbologyData();
+  }, [symbologyIds, collectionId, pgEnv])
+
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, collectionId, pgEnv]);
-
 
   useEffect(() => {
     if(activeViewId && activeViewId !== viewId) {

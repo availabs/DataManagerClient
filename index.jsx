@@ -299,9 +299,10 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: CollectionViewComp
-    }, {
-      name: "View Collection",
-      path: `${baseUrl}/collection/:collectionId/:page/:viewId`,
+    }, 
+    {
+      name: "View Symbology",
+      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId`,
       exact: true,
       authLevel,
       mainNav: false,
@@ -309,9 +310,10 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: CollectionViewComp
-    }, {
-      name: "View Collection",
-      path: `${baseUrl}/collection/:collectionId/:page/:viewId/:vPage`,
+    }, 
+    {
+      name: "View Symbology",
+      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId/:sPage`,
       exact: true,
       authLevel,
       mainNav: false,

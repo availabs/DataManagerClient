@@ -3,7 +3,7 @@ import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { CollectionAttributes } from '~/pages/DataManager/Collection/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
-// import Versions from './Version/list'
+import Symbologies from './Symbology/list'
 // import { VersionEditor, VersionDownload } from './Version/version'
 
 import SourceCategories from "./SourceCategories"
@@ -68,7 +68,7 @@ const Edit = ({startValue, attr, collectionId, type='text',cancel=()=>{}}) => {
 
 
 
-const OverviewPage = ({collection, views, activeViewId}) => {
+const OverviewPage = ({collection, symbologies, activeViewId}) => {
   const [editing, setEditing] = React.useState(null);
 
   const stopEditing = React.useCallback(e => {
@@ -79,8 +79,6 @@ const OverviewPage = ({collection, views, activeViewId}) => {
   // console.log("OverviewEdit::editing:", editing)
 
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
-
-  const symbologies = []; //TODO make data api call
 
   return (
     <div>
@@ -199,29 +197,7 @@ const OverviewPage = ({collection, views, activeViewId}) => {
           <div className="py-2">
           Symbologies:
           </div>
-
-          <dl className="sm:divide-y sm:divide-gray-200 ">
-            {symbologies.map((symb,i) => {
-                return (
-                  <div key={attr} className='flex justify-between group'>
-                    <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-      
-
-                          <div className='py-5 px-2'>{symb.name}</div>
-                        
-                      </dd>
-                    </div>
-                    {user.authLevel > 5 ?
-                    <div className='hidden group-hover:block text-blue-500 cursor-pointer' onClick={e => editing === attr ? setEditing(null): setEditing(attr)}>
-                      <i className="fad fa-pencil absolute -ml-12 mt-3 p-2.5 rounded hover:bg-blue-500 hover:text-white "/>
-                    </div> : ''}
-                  </div>
-                )
-              })
-            }
-          </dl>
+          <Symbologies collection={collection} symbologies={symbologies} />
         </div>
     </div>
   )
