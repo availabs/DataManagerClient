@@ -6,6 +6,7 @@ import {editMetadata} from "../utils/editMetadata.js";
 import {DamaContext} from "../../../../store/index.js";
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
+import {isJson} from "../../../../utils/macros.jsx";
 
 export const ManageMetaLookup = ({
                                      metadata, setMetadata,
@@ -39,7 +40,7 @@ export const ManageMetaLookup = ({
                             onClick={e => setIsEditing(!isEditing)}> Edit </Button>
                 </div>
                 <div className={'border border-4 border-dotted p-1'}>
-                    <JsonView data={JSON.parse(startValue)} shouldExpandNode={allExpanded} style={defaultStyles} />
+                    <JsonView data={isJson(startValue) ? JSON.parse(startValue) : {}} shouldExpandNode={allExpanded} style={defaultStyles} />
                 </div>
             </div>
     )

@@ -63,7 +63,7 @@ export const Edit = ({
                          cancel = () => {
                          }
                      }) => {
-    const [value, setValue] = useState('')
+    const [value, setValue] = useState(startValue)
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
     const Lexical = dmsDataTypes.lexical.EditComp;
 
