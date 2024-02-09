@@ -1,4 +1,5 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
+import { Link } from "react-router-dom";
 import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { CollectionAttributes } from '~/pages/DataManager/Collection/attributes'
@@ -193,11 +194,23 @@ const OverviewPage = ({collection, symbologies, activeViewId}) => {
             <Versions collection={collection} views={views} />
           </div>
         </div> */}
-        <div className="text-xl text-gray-700 font-medium  px-4 py-5 mr-5 sm:p-0">
-          <div className="py-2">
-          Symbologies:
+        <div className="grid gap-4 grid-cols-6 items-center  px-4 py-5 mr-5 sm:p-0">
+          <div className="col-span-1 text-xl text-gray-700 font-medium">
+            Symbologies:
           </div>
-          <Symbologies collection={collection} symbologies={symbologies} />
+          <div className="col-end-7">
+            <Link 
+              className="flex items-center p-1 text-center bg-green-300 border border-green-200 shadow hover:bg-green-500 hover:text-white"
+              to={`${baseUrl}/create/collection`}
+            >
+              Create new symbology
+              <i className="ml-1 fad fa-plus fa-2x" />
+            </Link>
+          </div>
+          <div className="col-span-6">
+            <Symbologies collection={collection} symbologies={symbologies} />
+          </div>
+
         </div>
     </div>
   )

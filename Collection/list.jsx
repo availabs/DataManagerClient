@@ -94,7 +94,7 @@ const CollectionsList = () => {
           >
             Create new collection
             <i className="ml-1 fad fa-plus fa-2x" />
-            </Link>
+          </Link>
         </div>
       </div>
       {

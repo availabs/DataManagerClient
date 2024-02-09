@@ -19,7 +19,6 @@ console.log(symbologyId)
   }
 
   return (
-    <div className="">
       <Table
         data={symbologies}
         columns={[
@@ -41,8 +40,6 @@ console.log(symbologyId)
       },
     ]}
       />
-
-    </div>
   );
 };
 
