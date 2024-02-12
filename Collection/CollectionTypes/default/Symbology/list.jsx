@@ -24,7 +24,7 @@ console.log(symbologyId)
         columns={[
       {
         Header: "Symbology Id",
-        accessor: c => <Link to={`${baseUrl}/collection/${collectionId}/symbologies/${c["symbology_id"]}`}> {c["symbology_id"]} </Link>,
+        accessor: c => <Link to={`${baseUrl}/collection/${collectionId}/symbology/${c["symbology_id"]}`}> {c["symbology_id"]} </Link>,
       },
       {
         Header: "User",

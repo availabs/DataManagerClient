@@ -5,13 +5,18 @@ import Versions from "./Version/list";
 import AddVersion from "./Version/add";
 import Uploads from "./Uploads";
 import Admin from "./Admin"
-
+import SymbologyEditor from "./Symbology"
 
 const Pages = {
   overview: {
     name: "Overview",
     path: "",
     component: Overview
+  },
+  symbology: {
+    name: "Symbology",
+    path: "/symbology",
+    component: SymbologyEditor,
   },
   versions: {
     name: "Versions",

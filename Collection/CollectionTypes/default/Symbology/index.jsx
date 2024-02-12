@@ -19,6 +19,10 @@ import SymbologyPanel from "./components/SymbologyPanel"
 
 import ViewLayer from "./components/ViewLayer"
 
+import { CollectionAttributes, SymbologyAttributes, getAttributes } from "~/pages/DataManager/Collection/attributes";
+import { SourceAttributes } from '~/pages/DataManager/Source/attributes'
+import { ViewAttributes } from '~/pages/DataManager/Source/attributes'
+
 const PMTilesProtocol = {
   type: "pmtiles",
   protocolInit: maplibre => {
@@ -56,8 +60,11 @@ const setSymbologyId = symbology => {
   return symbology;
 }
 
-const SymbologyEditor = ({ source, views, ...props }) => {
-  console.log("Real symbology editor props::",{ source, views, ...props })
+const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
+  console.log("custom symbology editor, props::",{ symbologies: savedSymbologies, ...props })
+
+  const [source, setSource] = React.useState(null);
+  const [views, setViews] = React.useState(null);
   const [symbology, setSymbology] = React.useState(null);
 
   React.useEffect(() => {
@@ -117,17 +124,17 @@ const SymbologyEditor = ({ source, views, ...props }) => {
 
   const [activeFilterVariableId, setActiveFilterVariableId] = React.useState(null);
 
-  const { falcor, pgEnv } = React.useContext(DamaContext);
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const savedSymbologies = React.useMemo(() => {
-    const symbologies = views.reduce((a, c) => {
-      if (c.metadata?.symbologies?.length) {
-        a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
-      }
-      return a;
-    }, []);
-    return symbologies.map(setSymbologyId);
-  }, [activeViewId, views]);
+  // const savedSymbologies = React.useMemo(() => {
+  //   const symbologies = views.reduce((a, c) => {
+  //     if (c.metadata?.symbologies?.length) {
+  //       a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
+  //     }
+  //     return a;
+  //   }, []);
+  //   return symbologies.map(setSymbologyId);
+  // }, [activeViewId, views]);
 
   const reset = React.useCallback(() => {
     _setActiveViewId(null);
@@ -232,7 +239,43 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     }
   }, [symbology, activeLayer, activeFilterVariableId]);
 
+  React.useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      let data = await falcor.get(
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex",
+          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+          "attributes", Object.values(ViewAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id,
+          "attributes", Object.values(SourceAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "meta"
+        ]
+      );
+      //console.timeEnd("fetch data");
+      //console.log(data)
+      return data;
+    }
+
+    if(source && source.source_id){
+      fetchData();
+    }
+
+  }, [source, falcor, pgEnv]);
+
+  React.useEffect(() => {
+    setViews(Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", source?.source_id, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"])))
+  }, [falcorCache, source, pgEnv])
+
   const startNewSymbology = React.useCallback(() => {
+    console.log("CALLED startNewSymbology. checking views::", views)
     reset();
     const newSym = {
       name: "",
@@ -270,7 +313,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [symbologyViewMap, setSymbologyViewMap] = React.useState({});
 
   React.useEffect(() => {
-    const viewsMap = views.reduce((a, c) => {
+    const viewsMap = views?.reduce((a, c) => {
       a[c.view_id] = c;
       return a;
     }, {});
@@ -306,88 +349,10 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     }, {});
   }, [symbology]);
 
-// CREATE LEGENDS
-  // React.useEffect(() => {
-  //   if (!symbology) return;
-  //   if (!activeView) return;
-  //
-  //   const legendIds = activeView.layers.reduce((aa, cc) => {
-  //     return Object.keys(cc.paintProperties)
-  //       .filter(ppId => ppId.includes("color"))
-  //       .reduce((aaa, ccc) => {
-  //         const hasVar = Boolean(cc.paintProperties[ccc]?.variable);
-  //         const inLgnd = hasVar && Boolean(cc.paintProperties[ccc].variable.includeInLegend);
-  //         if (hasVar && inLgnd) {
-  //           const vid = cc.paintProperties[ccc].variable.variableId;
-  //           const id = `${ ccc }|${ vid }`;
-  //           if (!aaa.includes(id)) {
-  //             aaa.push(id);
-  //           }
-  //         }
-  //         return aaa;
-  //       }, aa);
-  //   }, []);
-  //
-  //   const [neededLegendId] = legendIds.filter(lid => {
-  //     return !activeView.legends.filter(l => l.id === lid).length;
-  //   });
-  //
-  //   if (neededLegendId) {
-  //     const [ppId, variableId] = neededLegendId.split("|");
-  //     setSymbology(prev => {
-  //       return {
-  //         ...prev,
-  //         views: prev.views.map(view => {
-  //           if (view === activeView) {
-  //             return {
-  //               ...view,
-  //               legends: [
-  //                 ...view.legends,
-  //                 { id: neededLegendId,
-  //                   name: variableId,
-  //                   color: "BrBG",
-  //                   range: getColorRange(7, "BrBG"),
-  //                   defaultValue: "rgba(0, 0, 0, 0)",
-  //                   type: "quantile",
-  //                   domain: [],
-  //                   reverse: false
-  //                 }
-  //               ]
-  //             }
-  //           }
-  //           return view;
-  //         })
-  //       }
-  //     });
-  //   }
-  //
-  //   const [unneededLegendId] = activeView.legends
-  //     .filter(l => !legendIds.includes(l.id))
-  //     .map(l => l.id);
-  //
-  //   if (unneededLegendId) {
-  //     setSymbology(prev => {
-  //       return {
-  //         ...prev,
-  //         views: prev.views.map(view => {
-  //           if (view === activeView) {
-  //             return {
-  //               ...view,
-  //               legends: view.legends.filter(l => l.id !== unneededLegendId)
-  //             }
-  //           }
-  //           return view;
-  //         })
-  //       }
-  //     });
-  //   }
-  //
-  // }, [setSymbology, symbology, activeView]);
-
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+        source, setSource, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
@@ -409,6 +374,8 @@ const SymbologyEditor = ({ source, views, ...props }) => {
       ]
   );
 
+  console.log("ryan checkingt upstream SOURCE, in symbology::", source);
+  console.log("ryan checkingt upstream VIEWS, in symbology::", views)
   return (
     <div className="w-full h-[800px]">
       <AvlMap2
