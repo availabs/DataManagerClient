@@ -62,6 +62,8 @@ const setSymbologyId = symbology => {
 
 const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
   console.log("custom symbology editor, props::",{ symbologies: savedSymbologies, ...props })
+  
+  const { collection } = props;
 
   const [source, setSource] = React.useState(null);
   const [views, setViews] = React.useState(null);
@@ -116,7 +118,6 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
   }, [symbology]);
 
   const [activeViewId, _setActiveViewId] = React.useState(null);
-
   const [activeLayerId, _setActiveLayerId] = React.useState(null);
 
   const [activePaintPropertyId, setActivePaintPropertyId] = React.useState(null);
@@ -297,7 +298,7 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
           }))
       }))
     };
-    newSym.id = getSymbologyId(newSym);
+
     setSymbology(newSym);
   }, [views, reset]);
 
@@ -352,7 +353,7 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSource, setSymbology, startNewSymbology, symbology, savedSymbologies,
+        source, setSource, collection, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
@@ -364,7 +365,7 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
         return a;
       }, {})
     }
-  }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+  }, [source, collection,  setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,

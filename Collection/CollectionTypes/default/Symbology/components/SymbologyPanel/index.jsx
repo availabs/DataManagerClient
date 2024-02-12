@@ -32,7 +32,8 @@ const SymbologyButtons = props => {
     stopLoading,
     source,
     setSource,
-    sources
+    sources,
+    collection
   } = props;
 
   const [displaySources, setDisplaySources] = React.useState(false);
@@ -62,17 +63,15 @@ const SymbologyButtons = props => {
     startLoading();
     const toSave = {
       name: symbology.name,
-      id: symbology.id,
+      collection_id: collection.collection_id,
+      symbology_id: symbology.symbology_id,
       views: symbology.views
         .filter(view => view.viewId == activeViewId)
     };
-    const symbologies = [
-      ...savedSymbologies.filter(s => s.id !== toSave.id),
-      toSave
-    ];
+    console.log("about to save symbology::", toSave);
     falcor.call(
-      ["dama", "views", "metadata", "update"],
-      [pgEnv, activeViewId, { symbologies }]
+      ["dama", "symbology", "symbology", "update"],
+      [pgEnv, toSave]
     ).then(() => stopLoading())
   }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies,
       startLoading, stopLoading
@@ -219,6 +218,9 @@ const SymbologyPanel = props => {
     props.MapActions.stopLayerLoading("symbology-layer");
   }, [props.MapActions.stopLayerLoading]);
 
+  const collection = React.useMemo(() => {
+    return get(props, ["layerProps","symbology-layer","collection"], null);
+  }, [props]);
   const symbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "symbology"], null);
   }, [props]);
@@ -325,6 +327,7 @@ const SymbologyPanel = props => {
       }
       <div className="mb-1 pb-1 border-b border-current">
         <SymbologyButtons
+          collection={collection}
           source={source}
           sources={sources}
           setSource={setSource}
