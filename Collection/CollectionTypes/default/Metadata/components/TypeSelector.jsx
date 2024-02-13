@@ -1,12 +1,12 @@
 import React from "react";
-import {DamaContext} from "../../../../store/index.js";
+import {DamaContext} from "../../../../../store/index.js";
 import {editMetadata} from "../utils/editMetadata.js";
 
-export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
+export const TypeSelector = ({sourceId, metadata, setMetadata, col, value}) => {
     const {pgEnv, falcor} = React.useContext(DamaContext);
 
     const onChange = React.useCallback(async e => {
-        await editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {defaultFn: e.target.value}});
+        await editMetadata({sourceId, pgEnv, falcor, metadata, setMetadata, col, value: {type: e.target.value}});
     }, [col, metadata]);
 
     return (<select
@@ -17,14 +17,20 @@ export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
         <option value={null}>
             none
         </option>
-        <option value="Sum">
-            sum
+        <option value="integer">
+            integer
         </option>
-        <option value="Count">
-            count
+        <option value="number">
+            number
         </option>
-        <option value="List">
-            list
+        <option value="string">
+            string
+        </option>
+        <option value="boolean">
+            boolean
+        </option>
+        <option value="object">
+            object
         </option>
     </select>)
 }

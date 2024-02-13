@@ -6,8 +6,14 @@ import SourceView from "./Source";
 import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
-import TasksComponent from "./Tasks"
-import TaskPageComponent from "./Tasks/TaskPage"
+import CollectionList from "./Collection/list";
+import CollectionView from "./Collection";
+import CollectionCreate from "./Collection/create";
+import CollectionDelete from "./Collection/delete";
+
+import TasksComponent from "./Tasks";
+import TaskPageComponent from "./Tasks/TaskPage";
+
 
 import { registerDataType } from './DataTypes'
 
@@ -62,15 +68,9 @@ const DamaRoutes = DAMA_ARGS => {
   // register custom dataTypes for project
   Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
 
-  const HeaderComp = () => {
-    return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl}}>
-        <Head  />
-      </DamaContext.Provider>
-    )
-  }
-  //const Header = () => <HeaderComp />
-
+  /**
+   * SOURCES
+   */
   const SourceListComp = () => {
     const { falcor, falcorCache } = useFalcor();
     const user = useAuth();
@@ -113,7 +113,55 @@ const DamaRoutes = DAMA_ARGS => {
     );
   }
 
+  /**
+   * COLLECTIONS
+   */
+  const CollectionListComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+    return (
+      <DamaContext.Provider
+        value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}
+      >
+        <CollectionList />
+      </DamaContext.Provider>
+    );
+  }
+
+  const CollectionViewComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+    return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
+        <CollectionView />
+      </DamaContext.Provider>
+    );
+  }
+
+  const CollectionCreateComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+    return (
+    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
+      <CollectionCreate />
+    </DamaContext.Provider>
+  );
+  }
+
+  const CollectionDeleteComp = () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+      return (
+      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
+        <CollectionDelete />
+      </DamaContext.Provider>
+    );
+  }
+
   return [
+    /**
+     * SOURCES
+     */
     // Source List
     {
       name: "Data Sources",
@@ -214,6 +262,112 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: SourceDeleteComp
+    },
+    /**
+     * COLLECTIONS
+     */
+    // Collection List
+    {
+      name: "Data Collections",
+      path: `${baseUrl}/collections`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionListComp
+    },
+    {
+      name: "Data Collections",
+      path: `${baseUrl}/collections/cat/:cat1`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionListComp
+    },
+    {
+      name: "Data Collections",
+      path: `${baseUrl}/collections/cat/:cat1/:cat2`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionListComp
+    },
+    // -- Collection View
+    {
+      name: "View Collection",
+      path: `${baseUrl}/collection/:collectionId`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionViewComp
+    },
+    {
+      name: "View Collection",
+      path: `${baseUrl}/collection/:collectionId/:page`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionViewComp
+    },
+    {
+      name: "View Symbology",
+      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionViewComp
+    },
+    {
+      name: "View Symbology",
+      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId/:sPage`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionViewComp
+    },
+    // Collection Create
+    {
+      name: "Create Collection",
+      path: `${baseUrl}/create/collection`,
+      exact: true,
+      authLevel: false,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionCreateComp
+    },
+    // Collection Delete
+    {
+      name: "Delete Collection",
+      path: `${baseUrl}/delete/collection/:collectionId`,
+      exact: true,
+      authLevel: true,
+      mainNav: false,
+      title: Header,
+      sideNav,
+      topNav,
+      component: CollectionDeleteComp
     },
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,

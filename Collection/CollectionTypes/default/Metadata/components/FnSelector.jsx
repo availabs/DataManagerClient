@@ -1,5 +1,5 @@
 import React from "react";
-import {DamaContext} from "../../../../store/index.js";
+import {DamaContext} from "../../../../../store/index.js";
 import {editMetadata} from "../utils/editMetadata.js";
 
 export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
@@ -19,9 +19,6 @@ export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
         </option>
         <option value="Sum">
             sum
-        </option>
-        <option value="Count">
-            count
         </option>
         <option value="List">
             list

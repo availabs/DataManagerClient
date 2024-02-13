@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {editMetadata} from "../utils/editMetadata.js";
 import {Button} from "~/modules/avl-components/src";
-import {DamaContext} from "../../../../store/index.js";
+import {DamaContext} from "../../../../../store/index.js";
 import {dmsDataTypes} from "~/modules/dms/src"
 
 export const RenderTextArea = ({value, setValue, save, cancel}) => {
@@ -63,7 +63,7 @@ export const Edit = ({
                          cancel = () => {
                          }
                      }) => {
-    const [value, setValue] = useState(startValue)
+    const [value, setValue] = useState('')
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
     const Lexical = dmsDataTypes.lexical.EditComp;
 

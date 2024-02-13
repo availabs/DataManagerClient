@@ -10,7 +10,7 @@ import { Link, useParams } from 'react-router-dom'
 import get from 'lodash/get'
 
 
-const SourcesLayout = ({children }) => {
+const CollectionsLayout = ({children }) => {
   const { baseUrl } = useContext(DamaContext)
 
   return (
@@ -85,7 +85,7 @@ export const DataManagerHeader = () => {
 }
 
 
-export default SourcesLayout
+export default CollectionsLayout
 
 const Breadcrumbs =  () => {
   const { sourceId, page, cat1, cat2} = useParams()
@@ -131,7 +131,7 @@ const Breadcrumbs =  () => {
       <ol className="max-w-screen-xl w-full mx-auto px-4 flex space-x-4 sm:px-6 lg:px-8">
         <li className="flex">
           <div className="flex items-center">
-            <Link to={`${baseUrl || '/'}`} className={"hover:text-[#bbd4cb] text-[#679d89]"}>
+            <Link to={`${baseUrl || '/collections'}`} className={"hover:text-[#bbd4cb] text-[#679d89]"}>
               <i className="fad fa-database flex-shrink-0 h-5 w-5" aria-hidden="true" />
               <span className="sr-only">Data Sources</span>
             </Link>

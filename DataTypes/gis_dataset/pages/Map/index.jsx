@@ -3,7 +3,7 @@ import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import GISDatasetLayer from './Layer2'
 import Symbology from './symbology/index'
 // import { AvlMap } from "~/modules/avl-maplibre/src"
@@ -21,6 +21,8 @@ import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
 import { scaleThreshold, scaleOrdinal } from "d3-scale"
 const ColorRange = getColorRange(7, "Reds")
 const OrdinalColorRange = getColorRange(12, "Set3")
+
+const PIN_OUTLINE_LAYER_SUFFIX = '_pin_outline'
 
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 //import { DAMA_HOST } from "~/config"
@@ -187,9 +189,11 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   )
 }
 
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false }) => {
+  const [searchParams] = useSearchParams();
+  const urlVariable = searchParams.get("variable")
 
-  const { /*sourceId,*/ viewId } = useParams()
+  const { viewId } = useParams();
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
@@ -202,10 +206,15 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   // console.log("\n\n\n\n\n");
   // console.log("what is the content of the filters data: ", filters);
   // console.log("\n\n\n\n\n");
+  const coalescedViewId = urlVariable && !viewId ? urlVariable : viewId; //TODO ryan this  could ahve some breaking changes elsewhere
+
   const activeView = React.useMemo(() => {
-    let currentView = (views || []).filter(d => d.view_id === +viewId)
-    return get(currentView,'[0]', views[0])
-  },[views,viewId])
+    let currentView = (views || []).filter(
+      (d) => d.view_id === +coalescedViewId
+    );
+    return get(currentView, "[0]", views[0]);
+  }, [views, coalescedViewId]);
+
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
     out.sources.forEach(s => {
@@ -240,7 +249,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   //console.log("Symbology:", tempSymbology)
 
   const layer = React.useMemo(() => {
-      //console.log('layer update', tempSymbology)
       const sources = symSources || get(mapData,'sources',[]);
       const layers =  symLayers || get(mapData,'layers',[]);
       if(sources.length === 0 || layers.length === 0 ) {
@@ -249,6 +257,28 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
       //console.log('testing',  get(source, ['metadata', 'columns'], get(source, 'metadata', [])))
       let attributes = (get(source, ['metadata', 'columns'], get(source, 'metadata', [])) || [])
       attributes = Array.isArray(attributes) ? attributes : []
+
+      if(displayPinnedGeomBorder){
+        if (!layers.find((layer) => layer.id.includes(PIN_OUTLINE_LAYER_SUFFIX))) {
+          const layerId = layers?.[0]?.id;
+          const pinnedGeomLayer = {
+            id: layerId + PIN_OUTLINE_LAYER_SUFFIX,
+            type: "line",
+            paint: {
+              "line-color": "black",
+              "line-width": 3,
+              "line-opacity": 0,
+            },
+            "line-color": "black",
+            "line-opacity": 0,
+            "line-width": 3,
+            source: layers?.[0]?.source,
+            "source-layer": layerId,
+          };
+          layers.push(pinnedGeomLayer);
+        }
+      }
+
       return {
             name: source.name,
             pgEnv,
@@ -264,7 +294,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
-  },[source, views, mapData, activeViewId,filters, symSources, symLayers])
+  },[source, views, mapData, activeViewId,filters, symSources, symLayers, displayPinnedGeomBorder])
 
 
   return (

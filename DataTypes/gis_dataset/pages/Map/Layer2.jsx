@@ -31,6 +31,8 @@ import {
 
 import { DamaContext } from "~/pages/DataManager/store";
 
+const PIN_OUTLINE_LAYER_SUFFIX = 'pin_outline'
+
 const HoverComp = ({ data, layer }) => {
   const { attributes, activeViewId, filters } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
@@ -148,7 +150,8 @@ const GISDatasetRenderComponent = props => {
   const {
     layerProps,
     resourcesLoaded,
-    maplibreMap
+    maplibreMap,
+    activeLayers
   } = props;
 
   const {
@@ -159,6 +162,7 @@ const GISDatasetRenderComponent = props => {
     sourceId,
     layers
   } = layerProps;
+  const activePins = activeLayers[0].state.pinnedHoverCompIds;
 
   const activeVar = get(filters, ["activeVar", "value"], "");
 
@@ -243,6 +247,36 @@ const GISDatasetRenderComponent = props => {
   }, [falcor, pgEnv, sourceId, legend, symbology, activeVar, layers]);
 
   React.useEffect(() => {
+    const pinnedIds = activePins?.map(pin => pin.ogc_fid);
+    const pinnedGeomLineLayer = layers.find(layer => layer.id.includes(PIN_OUTLINE_LAYER_SUFFIX));
+
+    if(pinnedGeomLineLayer){
+      const lineLayerId = pinnedGeomLineLayer.id;
+      if(pinnedIds.length === 0){
+        pinnedIds.push(-666666666)
+      }
+      const dataFilter = [
+        "match",
+        ["get", "ogc_fid"],
+        pinnedIds,
+        true,
+        false,
+      ];
+      const mapLayer = maplibreMap.getLayer(lineLayerId);
+      if (mapLayer) {
+        maplibreMap.setFilter(lineLayerId, dataFilter);
+        if(pinnedIds?.length){
+          maplibreMap.setPaintProperty(lineLayerId, 'line-opacity', 1);
+        }
+        else{
+          maplibreMap.setPaintProperty(lineLayerId, 'line-opacity', 0);
+        }
+      }
+    }
+  }, [maplibreMap, symbology, activePins])
+
+
+  React.useEffect(() => {
     async function loadMapData () {
       if (!maplibreMap) return;
       const sources = get(symbology, "sources", []);
@@ -253,12 +287,14 @@ const GISDatasetRenderComponent = props => {
       if (Array.isArray(images)) {
         await Promise.all(
             images
-              .filter(img => !maplibreMap.hasImage(img.id))
+              .filter(img => !maplibreMap.hasImage(img.id) && img.url)
               .map(img => new Promise((resolve, reject) => {
 
                 maplibreMap.loadImage(img.url, function (error, res) {
                     if (error) throw error;
-                    maplibreMap.addImage(img.id, res)
+                    if(!maplibreMap.hasImage(img.id)){
+                      maplibreMap.addImage(img.id, res);
+                    }
                     resolve();
                 })
             }))
@@ -279,6 +315,11 @@ const GISDatasetRenderComponent = props => {
           if (!maplibreMap.getLayer(l.id)) {
             maplibreMap.addLayer(l);
           }
+          else{
+            if (l.layout && l.layout.visibility !== undefined){
+              maplibreMap.setLayoutProperty(l.id, 'visibility', l.layout.visibility);
+            }
+          }
         })
       }
       // console.log('loadMapData done')
@@ -297,7 +338,6 @@ const GISDatasetRenderComponent = props => {
       setLayerData(null);
       return;
     }
-
     (Object.keys(symbology || {}) || [])
       .forEach((layer_id) => {
         (
@@ -340,7 +380,7 @@ const GISDatasetRenderComponent = props => {
             if(maplibreMap.getLayer(layer_id)?.id) {
               if(['visibility'].includes(paintProperty)) {
                 maplibreMap.setLayoutProperty(layer_id, paintProperty, value);
-              } else {
+              } else if (!layer_id.includes(PIN_OUTLINE_LAYER_SUFFIX)) {
                 maplibreMap.setPaintProperty(layer_id, paintProperty, value);
               }
             }
@@ -413,7 +453,7 @@ const GISDatasetRenderComponent = props => {
     if (maplibreMap && symbology && symbology.fitToBounds)
       maplibreMap.fitBounds(symbology.fitToBounds, {
         duration: 400,
-        zoom: 13
+        zoom: symbology.fitZoom || 13
       });
   }, [maplibreMap, symbology]);
 
@@ -428,15 +468,24 @@ const GISDatasetRenderComponent = props => {
         false,
       ];
 
-      symbology.layers.forEach((layer) => {
-        maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+      symbology?.layers?.forEach((layer) => {
+        const mapLayer = maplibreMap.getLayer(layer.id);
+        if (mapLayer) {
+          if(!layer.filter){
+            maplibreMap.setFilter(layer.id, dataFilter);
+          }
+          else{
+            //Append new filter to existing ones
+            maplibreMap.setFilter(layer.id, ["all", layer.filter[1], dataFilter]);
+          }
+        }
       });
     }
 
     if (!symbology.filter && maplibreMap) {
       symbology?.layers?.forEach((layer) => {
         const mapLayer = maplibreMap.getLayer(layer.id);
-        if (mapLayer) {
+        if (mapLayer && layer.filter) {
           maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
         }
       });
@@ -853,6 +902,7 @@ class GISDatasetLayer extends AvlLayer {
   onHover = {
     layers: this.layers?.map((d) => d.id),
     callback: (layerId, features, lngLat) => {
+
       let feature = features[0];
 
       let data = [feature.id, layerId, (features[0] || {}).properties];
