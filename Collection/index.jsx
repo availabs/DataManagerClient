@@ -70,9 +70,18 @@ const Collection = ({}) => {
   }, [symbologyIds, collectionId, pgEnv])
 
   const symbologies = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byId", symbologyIds], {}))
+      .map(v => {
+        const newVal = {...v};
+        console.log(v)
+        Object.keys(v).forEach(key => {
+          newVal[key] = v[key].value || v[key];
+        })
+        return newVal;
+      });
   }, [falcorCache, collectionId, pgEnv]);
+
+  console.log({symbologies})
 
   useEffect(() => {
     if(activeSymbologyId && activeSymbologyId !== symbologyId) {

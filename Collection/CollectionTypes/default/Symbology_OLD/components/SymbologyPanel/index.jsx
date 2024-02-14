@@ -11,6 +11,7 @@ import {
 } from "~/modules/avl-map-2/src"
 
 import SymbologyItem from "./SymbologyItem"
+import { SourceAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 
 const NameRegex = /^\w+/;
 
@@ -21,7 +22,6 @@ const paintPropertyHasValue = paintProperty => {
 }
 
 const SymbologyButtons = props => {
-
   const {
     startNewSymbology,
     symbology,
@@ -29,8 +29,16 @@ const SymbologyButtons = props => {
     activeViewId,
     MapActions,
     startLoading,
-    stopLoading
+    stopLoading,
+    source,
+    setSource,
+    sources,
+    collection
   } = props;
+
+  const [displaySources, setDisplaySources] = React.useState(false);
+  const [displayConfirmation, setDisplayConfirmation] = React.useState(false);
+
 
   const okToSave = React.useMemo(() => {
     if (!symbology) return false;
@@ -55,17 +63,15 @@ const SymbologyButtons = props => {
     startLoading();
     const toSave = {
       name: symbology.name,
-      id: symbology.id,
+      collection_id: collection.collection_id,
+      symbology_id: symbology.symbology_id,
       views: symbology.views
         .filter(view => view.viewId == activeViewId)
     };
-    const symbologies = [
-      ...savedSymbologies.filter(s => s.id !== toSave.id),
-      toSave
-    ];
+
     falcor.call(
-      ["dama", "views", "metadata", "update"],
-      [pgEnv, activeViewId, { symbologies }]
+      ["dama", "symbology", "symbology", "update"],
+      [pgEnv, toSave]
     ).then(() => stopLoading())
   }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies,
       startLoading, stopLoading
@@ -76,38 +82,75 @@ const SymbologyButtons = props => {
     MapActions.openModal("symbology-layer", "symbology-editor");
   }, [MapActions.openModal]);
 
-  return (
-    !symbology ? (
-      <Button className="buttonBlock"
-        onClick={ startNewSymbology }
+
+  const customNewSymbology = (val) => {
+    console.log("ryan custom new symb", val);
+  }
+
+  return !symbology ? (
+    <>
+      <Button
+        className="buttonBlock"
+        onClick={() => {
+          setDisplaySources(true);
+        }}
       >
         Start New Symbology
       </Button>
-    ) : (
-      <div className="flex">
-        <div className="flex-1 mr-1">
-          <Button className="buttonBlock"
-            onClick={ saveSymbology }
-            disabled={ !okToSave }
+      {displaySources ? (
+        <div className="mb-1 pb-1 border-b border-current">
+          <MultiLevelSelect
+            isDropdown
+            displayAccessor={(s) => s.name}
+            options={sources}
+            value={symbology}
+            onChange={(val) => {
+              setDisplaySources(false);
+              setSource(val);
+              setDisplayConfirmation(true);
+            }}
           >
-            Save Symbology
-          </Button>
+            <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
+              Choose a source
+            </div>
+          </MultiLevelSelect>
         </div>
-        <div className="mr-1">
-          <Button className="buttonDanger"
-            onClick={ startNewSymbology }
-          >
-            New
-          </Button>
-        </div>
-        <Button className="buttonPrimary"
-          onClick={ openEditModal }
+      ) : (
+        <></>
+      )}
+      {displayConfirmation && (
+        <div
+          className="px-2 py-1 rounded bg-white hover:outline hover:outline-1"
+          onClick={() => {
+            setDisplayConfirmation(false);
+            startNewSymbology();
+          }}
         >
-          <span className="fas fa-pen-to-square"/>
+          Confirm selection
+        </div>
+      )}
+    </>
+  ) : (
+    <div className="flex">
+      <div className="flex-1 mr-1">
+        <Button
+          className="buttonBlock"
+          onClick={saveSymbology}
+          disabled={!okToSave}
+        >
+          Save Symbology
         </Button>
       </div>
-    )
-  )
+      <div className="mr-1">
+        <Button className="buttonDanger" onClick={startNewSymbology}>
+          New
+        </Button>
+      </div>
+      <Button className="buttonPrimary" onClick={openEditModal}>
+        <span className="fas fa-pen-to-square" />
+      </Button>
+    </div>
+  );
 }
 
 export const getDisplayItem = remove =>
@@ -170,6 +213,9 @@ const SymbologyPanel = props => {
     props.MapActions.stopLayerLoading("symbology-layer");
   }, [props.MapActions.stopLayerLoading]);
 
+  const collection = React.useMemo(() => {
+    return get(props, ["layerProps","symbology-layer","collection"], null);
+  }, [props]);
   const symbology = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "symbology"], null);
   }, [props]);
@@ -189,6 +235,9 @@ const SymbologyPanel = props => {
 
   const source = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "source"], null);
+  }, [props]);
+  const setSource = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setSource"], null);
   }, [props]);
 
   const columns = React.useMemo(() => {
@@ -217,7 +266,7 @@ const SymbologyPanel = props => {
     return [...dataVariables, ...metaVariables];
   }, [dataVariables, metaVariables]);
 
-  const { falcor, pgEnv } = React.useContext(DamaContext);
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
   const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
 
@@ -234,6 +283,26 @@ const SymbologyPanel = props => {
     return getDisplayItem(removeSavedSymbology);
   }, [removeSavedSymbology]);
 
+  React.useEffect(() => {
+    async function fetchData() {
+      const lengthPath = ["dama", pgEnv, "sources", "length"];
+      const resp = await falcor.get(lengthPath);
+      // console.log(resp)
+      await falcor.get([
+        "dama", pgEnv, "sources", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(SourceAttributes)
+      ]);
+    }
+
+    fetchData();
+  }, [falcor, pgEnv]);
+
+  const sources = React.useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
+
   return (
     <div className="absolute inset-0 overflow-visible scrollbar-sm p-1">
       { !savedSymbologies.length ? null :
@@ -243,7 +312,10 @@ const SymbologyPanel = props => {
             displayAccessor={ s => s.name }
             options={ savedSymbologies }
             value={ symbology }
-            onChange={ loadSavedSymbology }
+            onChange={ (e) => {
+              console.log("loading existing symbology",e); loadSavedSymbology(e)
+            
+            } }
           >
             <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
               Load and Edit a Symbology
@@ -253,6 +325,10 @@ const SymbologyPanel = props => {
       }
       <div className="mb-1 pb-1 border-b border-current">
         <SymbologyButtons
+          collection={collection}
+          source={source}
+          sources={sources}
+          setSource={setSource}
           startNewSymbology={ startNewSymbology }
           savedSymbologies={ savedSymbologies }
           startLoading={ startLayerLoading }
