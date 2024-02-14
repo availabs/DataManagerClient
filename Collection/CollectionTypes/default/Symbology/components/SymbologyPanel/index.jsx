@@ -68,7 +68,7 @@ const SymbologyButtons = props => {
       views: symbology.views
         .filter(view => view.viewId == activeViewId)
     };
-    console.log("about to save symbology::", toSave);
+
     falcor.call(
       ["dama", "symbology", "symbology", "update"],
       [pgEnv, toSave]
@@ -105,11 +105,6 @@ const SymbologyButtons = props => {
             options={sources}
             value={symbology}
             onChange={(val) => {
-              console.log("setting source to::", val);
-              console.log(
-                "ryan checking, OLD startNewSymbology",
-                startNewSymbology
-              );
               setDisplaySources(false);
               setSource(val);
               setDisplayConfirmation(true);
@@ -317,7 +312,10 @@ const SymbologyPanel = props => {
             displayAccessor={ s => s.name }
             options={ savedSymbologies }
             value={ symbology }
-            onChange={ loadSavedSymbology }
+            onChange={ (e) => {
+              console.log("loading existing symbology",e); loadSavedSymbology(e)
+            
+            } }
           >
             <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
               Load and Edit a Symbology

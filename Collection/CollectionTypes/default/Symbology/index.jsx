@@ -61,61 +61,62 @@ const setSymbologyId = symbology => {
 }
 
 const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
-  console.log("custom symbology editor, props::",{ symbologies: savedSymbologies, ...props })
-  
   const { collection } = props;
 
   const [source, setSource] = React.useState(null);
   const [views, setViews] = React.useState(null);
   const [symbology, setSymbology] = React.useState(null);
 
-  React.useEffect(() => {
-    if (!symbology) return;
-    
-    const needsFallbackValue = symbology.views.reduce((a, c) => {
-      return c.layers.reduce((aa, cc) => {
-        if (cc.paintProperties) {
-          return Object.keys(cc.paintProperties)
-            .reduce((aaa, ccc) => {
-              const pp = cc.paintProperties[ccc];
-              if (pp.variable?.scale) {
-                return pp.variable.scale.fallbackValue === undefined;
-              }
-              return aaa;
-            }, aa)
-        }
-      }, a);
-    }, false);
+  // React.useEffect(() => {
+  //   if (!symbology) return;
+  //   console.log("index use effect",symbology)
 
-    if (needsFallbackValue) {
-      setSymbology(prev => ({
-        ...prev,
-        views: prev.views.map(view => ({
-          ...view,
-          layers: view.layers.map(layer => ({
-            ...layer,
-            paintProperties: {
-              ...Object.keys(layer.paintProperties)
-                .reduce((a, ppId) => {
-                  a[ppId] = {
-                    ...layer.paintProperties[ppId],
-                    variable: {
-                      ...layer.paintProperties[ppId].variable,
-                      scale: {
-                        ...layer.paintProperties[ppId].variable.scale,
-                        fallbackValue: ppId.includes("color") ? "rgba(0, 0, 0, 0)" : 0
-                      }
-                    }
-                  }
-                  return a;
-                }, {})
-            }
-          }))
-        }))
-      }))
-    }
 
-  }, [symbology]);
+
+  //   const needsFallbackValue = symbology.layers.reduce((aa, cc) => {
+
+  //       if (cc.paintProperties) {
+  //         return Object.keys(cc.paintProperties)
+  //           .reduce((aaa, ccc) => {
+  //             const pp = cc.paintProperties[ccc];
+  //             if (pp.variable?.scale) {
+  //               return pp.variable.scale.fallbackValue === undefined;
+  //             }
+  //             return aaa;
+  //           }, aa)
+  //       }
+
+  //   }, false);
+
+  //   if (needsFallbackValue) {
+  //     setSymbology(prev => ({
+  //       ...prev,
+  //       views: prev.views.map(view => ({
+  //         ...view,
+  //         layers: view.layers.map(layer => ({
+  //           ...layer,
+  //           paintProperties: {
+  //             ...Object.keys(layer.paintProperties)
+  //               .reduce((a, ppId) => {
+  //                 a[ppId] = {
+  //                   ...layer.paintProperties[ppId],
+  //                   variable: {
+  //                     ...layer.paintProperties[ppId].variable,
+  //                     scale: {
+  //                       ...layer.paintProperties[ppId].variable.scale,
+  //                       fallbackValue: ppId.includes("color") ? "rgba(0, 0, 0, 0)" : 0
+  //                     }
+  //                   }
+  //                 }
+  //                 return a;
+  //               }, {})
+  //           }
+  //         }))
+  //       }))
+  //     }))
+  //   }
+
+  // }, [symbology]);
 
   const [activeViewId, _setActiveViewId] = React.useState(null);
   const [activeLayerId, _setActiveLayerId] = React.useState(null);
@@ -304,6 +305,10 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
 
   const loadSavedSymbology = React.useCallback(sym => {
     reset();
+    console.log("ryan checking loading symbology::", sym)
+    console.log(sym.symbology[0])
+    setViews(sym.symbology[0].views);
+    setSource(sym.symbology[0].sources[0])
     setSymbology(sym);
   }, [reset]);
 
@@ -375,8 +380,6 @@ const SymbologyEditor = ({symbologies: savedSymbologies, ...props }) => {
       ]
   );
 
-  console.log("ryan checkingt upstream SOURCE, in symbology::", source);
-  console.log("ryan checkingt upstream VIEWS, in symbology::", views)
   return (
     <div className="w-full h-[800px]">
       <AvlMap2
