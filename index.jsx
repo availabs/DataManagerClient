@@ -11,10 +11,33 @@ import CollectionView from "./Collection";
 import CollectionCreate from "./Collection/create";
 import CollectionDelete from "./Collection/delete";
 
+import TasksComponent from "./Tasks";
+import TaskPageComponent from "./Tasks/TaskPage";
+
 
 import { registerDataType } from './DataTypes'
 
 import { DamaContext } from "./store"
+
+const DAMA_Wrapper = (Component, DAMA_ARGS) => {
+
+  const {
+    baseUrl = "/datasources",
+    defaultPgEnv = "pan",
+    useFalcor,
+    useAuth
+  } = DAMA_ARGS;
+
+  return () => {
+    const { falcor, falcorCache } = useFalcor();
+    const user = useAuth();
+    return (
+      <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user } }>
+        <Component />
+      </DamaContext.Provider>
+    )
+  }
+}
 
 const DamaRoutes = DAMA_ARGS => {
 
@@ -43,7 +66,7 @@ const DamaRoutes = DAMA_ARGS => {
   } = navSettings
 
   // register custom dataTypes for project
-  Object.keys(dataTypes).forEach(type => registerDataType(type,dataTypes[type]))
+  Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
 
   /**
    * SOURCES
@@ -299,7 +322,7 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: CollectionViewComp
-    }, 
+    },
     {
       name: "View Symbology",
       path: `${baseUrl}/collection/:collectionId/:page/:symbologyId`,
@@ -310,7 +333,7 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: CollectionViewComp
-    }, 
+    },
     {
       name: "View Symbology",
       path: `${baseUrl}/collection/:collectionId/:page/:symbologyId/:sPage`,
@@ -345,6 +368,24 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: CollectionDeleteComp
+    },
+    { name: "Tasks",
+      path: `${ baseUrl }/tasks`,
+      exact: true,
+      auth: true,
+      mainNav: false,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(TasksComponent, DAMA_ARGS)
+    },
+    { name: "Task",
+      path: `${ baseUrl }/task/:etl_context_id`,
+      exact: true,
+      auth: true,
+      mainNav: false,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
     }
   ];
 };
