@@ -29,9 +29,7 @@ const Collection = ({}) => {
   }, [page, pages]);
 
   useEffect(() => {
-    //RYAN TODO this GET call is what we need to change/add to the backend. 
     async function fetchData() {
-      //console.time("fetch data");
       const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
 
@@ -49,7 +47,6 @@ const Collection = ({}) => {
           "dama", pgEnv, "collections", "byId", collectionId, "meta"
         ]
       );
-      //console.timeEnd("fetch data");
       return data;
     }
 
@@ -73,15 +70,12 @@ const Collection = ({}) => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byId", symbologyIds], {}))
       .map(v => {
         const newVal = {...v};
-        console.log(v)
         Object.keys(v).forEach(key => {
           newVal[key] = v[key].value || v[key];
         })
         return newVal;
       });
   }, [falcorCache, collectionId, pgEnv]);
-
-  console.log({symbologies})
 
   useEffect(() => {
     if(activeSymbologyId && activeSymbologyId !== symbologyId) {

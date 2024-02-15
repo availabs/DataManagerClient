@@ -315,11 +315,7 @@ const ZoomControls = ({ layer, setSymbology, uniqueId }) => {
   )
 }
 
-const ZoomEditor = ({ editing, zoom, type, start, stop, setZoom }) => {
-
-console.log("ZOOM:", zoom);
-
-  return (
+const ZoomEditor = ({ editing, zoom, type, start, stop, setZoom }) => {  return (
     <div className="grid grid-cols-12">
       <div className="col-span-4">
         { type } Zoom:
