@@ -149,7 +149,17 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const savedSymbologies = React.useMemo(() => {
     const symbologies = props.symbologies.reduce((a, c) => {
       if (c?.symbology?.length) {
-        a.push(...JSON.parse(JSON.stringify(c.symbology)));
+        a.push(
+          ...JSON.parse(
+            JSON.stringify(
+              c.symbology.map((symb) => ({
+                ...symb,
+                symbology_id: c.symbology_id,
+                collection_id: collectionId,
+              }))
+            )
+          )
+        );
       }
       return a;
     }, []);

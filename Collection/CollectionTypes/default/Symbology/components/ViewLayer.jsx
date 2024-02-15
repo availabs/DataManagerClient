@@ -105,13 +105,13 @@ class ViewLayer extends AvlLayer {
 
     this.viewId = view.view_id;
     console.log("inside viewLayer, view::", view)
-    this.sources = view.sources
+    this.sources = view.tiles.sources
       .map(s =>
         ({ ...s,
           id: layer.uniqueId
         })
       );
-    this.layers = view.layers
+    this.layers = view.tiles.layers
       .map(l =>
         ({ ...l,
           id: layer.uniqueId,

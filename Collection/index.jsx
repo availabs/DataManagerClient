@@ -63,7 +63,10 @@ const Collection = ({}) => {
       await falcor.get(symbologyPath);
     };
 
-    fetchSymbologyData();
+    if(symbologyIds?.length){
+      fetchSymbologyData();
+    }
+
   }, [symbologyIds, collectionId, pgEnv])
 
   const symbologies = useMemo(() => {

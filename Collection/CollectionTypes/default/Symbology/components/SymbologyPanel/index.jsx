@@ -56,15 +56,19 @@ const SymbologyButtons = props => {
     const toSave = {
       name: symbology.name,
       id: symbology.id,
+      symbology_id: symbology.symbology_id,
+      collection_id: symbology.collection_id,
+      view_id: symbology.view_id,
+      tiles: symbology.tiles,
       views: symbology.views
-        .filter(view => view.viewId == activeViewId)
+        .filter(view => view.viewId == activeViewId) //ryan todo do I still want to filter this?
     };
     const symbologies = [
       ...savedSymbologies.filter(s => s.id !== toSave.id),
       toSave
     ];
     falcor.call(
-      ["dama", "views", "metadata", "update"],
+      ["dama", "symbology", "symbology", "update"],
       [pgEnv, activeViewId, { symbologies }]
     ).then(() => stopLoading())
   }, [falcor, pgEnv, activeViewId, symbology, savedSymbologies,
