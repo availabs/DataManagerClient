@@ -15,9 +15,9 @@ import { NoMatch } from "../utils/404";
 
 
 const Collection = ({}) => {
-  const { collectionId, page, viewId } = useParams()
+  const { collectionId, page, symbologyId } = useParams()
   const [ pages, setPages] = useState( CollectionPages || [])
-  const [ activeViewId, setActiveViewId ] = useState(viewId)
+  const [ activeSymbologyId, setActiveSymbologyId ] = useState(symbologyId)
   const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
 
   const userAuthLevel = user.authLevel;
@@ -29,9 +29,7 @@ const Collection = ({}) => {
   }, [page, pages]);
 
   useEffect(() => {
-    //RYAN TODO this GET call is what we need to change/add to the backend. 
     async function fetchData() {
-      //console.time("fetch data");
       const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
 
@@ -49,7 +47,6 @@ const Collection = ({}) => {
           "dama", pgEnv, "collections", "byId", collectionId, "meta"
         ]
       );
-      //console.timeEnd("fetch data");
       return data;
     }
 
@@ -66,32 +63,38 @@ const Collection = ({}) => {
       await falcor.get(symbologyPath);
     };
 
-    fetchSymbologyData();
+    if(symbologyIds?.length){
+      fetchSymbologyData();
+    }
+
   }, [symbologyIds, collectionId, pgEnv])
 
   const symbologies = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byId", symbologyIds], {}))
+      .map(v => {
+        const newVal = {...v};
+        Object.keys(v).forEach(key => {
+          newVal[key] = v[key].value || v[key];
+        })
+        return newVal;
+      });
   }, [falcorCache, collectionId, pgEnv]);
 
   useEffect(() => {
-    if(activeViewId && activeViewId !== viewId) {
+    if(activeSymbologyId && activeSymbologyId !== symbologyId) {
       // if active view is set and we get new param
       // update active view id
-      setActiveViewId(viewId)
+      setActiveSymbologyId(symbologyId)
     }
 
-    if(!activeViewId && symbologies.length > 0) {
-        let authViews = symbologies.filter(v => v?.metadata?.authoritative).length > 0 ?
-            symbologies.filter(v => v?.metadata?.authoritative) :
-            symbologies
+    if(!activeSymbologyId && symbologies.length > 0) {
+      let authViews = symbologies.filter(v => v?.metadata?.authoritative).length > 0 ?
+          symbologies.filter(v => v?.metadata?.authoritative) :
+          symbologies;
 
-
-        setActiveViewId(authViews.sort((a,b) => a._created_timestamp - b._created_timestamp)[0].view_id)
-
+      setActiveSymbologyId(authViews.sort((a,b) => a._created_timestamp - b._created_timestamp)[0].symbology_id)
     }
-
-  },[symbologies, viewId]);
+  },[symbologies, symbologyId]);
 
   const collection = useMemo(() => {
     let attributes = getAttributes(get(falcorCache, ["dama", pgEnv, "collections", "byId", collectionId], { "attributes": {} })["attributes"]);
@@ -123,8 +126,8 @@ const Collection = ({}) => {
     searchParams.forEach((value, key) => {
       params.push(`${ key }=${ value }`);
     })
-    return `${baseUrl}/collection/${collectionId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
-  }, [baseUrl, collectionId, activeViewId, searchParams])
+    return `${baseUrl}/collection/${collectionId}${d.path}${activeSymbologyId && d.path ? '/'+activeSymbologyId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
+  }, [baseUrl, collectionId, activeSymbologyId, searchParams])
  
   if(collectionAuthLevel > userAuthLevel) {
     return  <NoMatch />
@@ -160,7 +163,7 @@ const Collection = ({}) => {
               symbologies={symbologies}
               user={user}
               baseUrl={baseUrl}
-              activeViewId={activeViewId}
+              activeSymbologyId={activeSymbologyId}
             />
           </div>
         </CollectionsLayout>

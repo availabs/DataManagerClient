@@ -1,5 +1,5 @@
 import React from "react"
-
+import { useParams} from "react-router-dom";
 import get from "lodash/get"
 
 import { DamaContext } from "~/pages/DataManager/store"
@@ -57,8 +57,37 @@ const setSymbologyId = symbology => {
 }
 
 const SymbologyEditor = ({ source, views, ...props }) => {
-  console.log("Real symbology editor props::",{ source, views, ...props })
   const [symbology, setSymbology] = React.useState(null);
+  const { collectionId, symbologyId } = useParams();
+  const { falcor, pgEnv, falcorCache } = React.useContext(DamaContext);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
+      const resp = await falcor.get(lengthPath);
+
+      let data = await falcor.get(
+        [
+          "dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex",
+          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+          "attributes", Object.values(SymbologyAttributes)
+        ],
+        [
+          "dama", pgEnv, "collections", "byId", collectionId,
+          "attributes", Object.values(CollectionAttributes)
+        ],
+        [
+          "dama", pgEnv, "collections", "byId", collectionId, "meta"
+        ]
+      );
+      return data;
+    }
+
+    if(!props.symbologies){
+      fetchData();
+    }
+
+  }, [collectionId, falcor, pgEnv]);
 
   React.useEffect(() => {
     if (!symbology) return;
@@ -115,20 +144,28 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [activePaintPropertyId, setActivePaintPropertyId] = React.useState(null);
   const [paintPropertyActions, setPaintPropertyActions] = React.useState({});
 
-  const [activeFilterVariableId, setActiveFilterVariableId] = React.useState(null);
-
-  const { falcor, pgEnv } = React.useContext(DamaContext);
+  const [activeFilterVariableId, setActiveFilterVariableId] = React.useState(null)
 
   const savedSymbologies = React.useMemo(() => {
-    const symbologies = views.reduce((a, c) => {
-      if (c.metadata?.symbologies?.length) {
-        a.push(...JSON.parse(JSON.stringify(c.metadata.symbologies)));
+    const symbologies = props.symbologies.reduce((a, c) => {
+      if (c?.symbology?.length) {
+        a.push(
+          ...JSON.parse(
+            JSON.stringify(
+              c.symbology.map((symb) => ({
+                ...symb,
+                symbology_id: c.symbology_id,
+                collection_id: collectionId,
+              }))
+            )
+          )
+        );
       }
       return a;
     }, []);
     return symbologies.map(setSymbologyId);
-  }, [activeViewId, views]);
-
+  }, [activeViewId, props.symbologies, views]);;
+  
   const reset = React.useCallback(() => {
     _setActiveViewId(null);
     _setActiveLayerId(null);
@@ -270,8 +307,9 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [symbologyViewMap, setSymbologyViewMap] = React.useState({});
 
   React.useEffect(() => {
-    const viewsMap = views.reduce((a, c) => {
-      a[c.view_id] = c;
+    const viewsMap = props.symbologies.reduce((a, c) => {
+      const viewId = c.symbology[0].view_id
+      a[viewId] = c.symbology[0];
       return a;
     }, {});
     setSymbologyViewMap(prev => {
@@ -282,6 +320,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
               aa[cc.uniqueId] = prev[cc.uniqueId];
             }
             else {
+              console.log("viewsMap[c.viewId]::",viewsMap[c.viewId])
               aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
             }
             return aa;
