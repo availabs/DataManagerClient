@@ -372,7 +372,7 @@ const DamaRoutes = DAMA_ARGS => {
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,
       exact: true,
-      auth: true,
+      auth: false,
       mainNav: false,
       sideNav,
       topNav,

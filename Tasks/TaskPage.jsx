@@ -3,15 +3,16 @@ import React from "react"
 import { useParams } from "react-router-dom"
 
 import get from "lodash/get";
-import moment from "moment"
+//import moment from "moment"
 
 import { DamaContext } from "~/pages/DataManager/store";
 
 import DataFetchTable from "./components/DataFetchTable";
 
 const DateCell = ({ value, ...props }) => {
+  // moment(value).format("YYYY-MM-DD HH:mm:ss A")
   return (
-    <div>{ moment(value).format("YYYY-MM-DD HH:mm:ss A") }</div>
+    <div>{ value.toString() }</div>
   )
 }
 
