@@ -18,6 +18,7 @@ import SymbologyLayer from "./components/SymbologyLayer"
 import SymbologyPanel from "./components/SymbologyPanel"
 
 import ViewLayer from "./components/ViewLayer"
+import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 
 const PMTilesProtocol = {
   type: "pmtiles",
@@ -56,13 +57,68 @@ const setSymbologyId = symbology => {
   return symbology;
 }
 
-const SymbologyEditor = ({ source, views, ...props }) => {
+const SymbologyEditor = ({ ...props }) => {
   const [symbology, setSymbology] = React.useState(null);
   const { collectionId, symbologyId } = useParams();
   const { falcor, pgEnv, falcorCache } = React.useContext(DamaContext);
 
+  const [source, setSource] = React.useState(null);
+  // const [views, setViews] = React.useState(null);
+
+  //Fetch views associated with a source
+  //We need to do this when the user selects a source (to make a new symbology)
   React.useEffect(() => {
-    async function fetchData() {
+    async function fetchViewsForSourceData() {
+      const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      await falcor.get(
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex",
+          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+          "attributes", Object.values(ViewAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id,
+          "attributes", Object.values(SourceAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "meta"
+        ]
+      );
+    }
+
+    if(source && source.source_id){
+      fetchViewsForSourceData();
+    }
+
+  }, [source, falcor, pgEnv]);
+
+  const views = React.useMemo(() => {
+    return source && source.source_id
+      ? Object.values(
+          get(
+            falcorCache,
+            [
+              "dama",
+              pgEnv,
+              "sources",
+              "byId",
+              source.source_id,
+              "views",
+              "byIndex",
+            ],
+            {}
+          )
+        ).map((v) =>
+          getAttributes(
+            get(falcorCache, v.value, { attributes: {} })["attributes"]
+          )
+        )
+      : null;
+  }, [falcorCache, source, pgEnv]);
+
+  React.useEffect(() => {
+    async function fetchSymbologiesForCollectionData() {
       const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
 
@@ -84,9 +140,8 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     }
 
     if(!props.symbologies){
-      fetchData();
+      fetchSymbologiesForCollectionData();
     }
-
   }, [collectionId, falcor, pgEnv]);
 
   React.useEffect(() => {
@@ -320,8 +375,10 @@ const SymbologyEditor = ({ source, views, ...props }) => {
               aa[cc.uniqueId] = prev[cc.uniqueId];
             }
             else {
-              console.log("viewsMap[c.viewId]::",viewsMap[c.viewId])
-              aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
+              //RYAN TODO this conditional seems fishy...
+              if(viewsMap[c.viewId]){
+                aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
+              }
             }
             return aa;
           }, a);
@@ -426,7 +483,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+        source, setSource, views, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
@@ -438,7 +495,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
         return a;
       }, {})
     }
-  }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+  }, [source, setSource, views, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
