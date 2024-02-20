@@ -25,6 +25,8 @@ export const SymbologyLayerRenderComponent = props => {
     layer: avlLayer
   } = props;
 
+  //console.log('render symbology layer', avlLayer)
+
   const activeView = get(props, ["layerProps", "activeView"], null);
 
   const [legends, setLegends] = React.useState([]);
@@ -228,6 +230,7 @@ const ExpressionEditorModal = props => {
 class SymbologyLayer extends AvlLayer {
   constructor(views) {
     super();
+    console.log('views', views)
 
     this.id = "symbology-layer";
     this.name = "Symbology Layer";

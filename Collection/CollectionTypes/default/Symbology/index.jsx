@@ -19,6 +19,10 @@ import SymbologyPanel from "./components/SymbologyPanel"
 
 import ViewLayer from "./components/ViewLayer"
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
+import { DAMA_HOST } from "~/config"
+
+const $HOST = `${ DAMA_HOST }/tiles`
+
 
 const PMTilesProtocol = {
   type: "pmtiles",
@@ -28,7 +32,11 @@ const PMTilesProtocol = {
     return protocol;
   },
   sourceInit: (protocol, source, maplibreMap) => {
-    const p = new PMTiles(source.url);
+    //source.url = 
+    const newsourceUrl = source.url.replace("$HOST", $HOST)
+    console.log('sourceInit', newsourceUrl)
+
+    const p = new PMTiles(newsourceUrl);
     protocol.add(p);
   }
 }
@@ -360,8 +368,10 @@ const SymbologyEditor = ({ ...props }) => {
   const loadSavedSymbology = React.useCallback(sym => {
     reset();
 
+    console.log('symbology', sym)
     const sourceId = parseInt(sym.tiles.layers[0].id.split("_")[0].substring(1));
     const existingSource = sources.find(sourceElement => sourceElement.source_id === sourceId);
+    console.log('existingSource', existingSource)
     setSource(existingSource);
 
     setSymbology(sym);
@@ -515,6 +525,8 @@ const SymbologyEditor = ({ ...props }) => {
         symbologyLayersMap
       ]
   );
+
+  console.log('render', layers)
 
   return (
     <div className="w-full h-[800px]">
