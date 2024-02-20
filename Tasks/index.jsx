@@ -3,7 +3,7 @@ import React from "react"
 import { Link, useNavigate } from "react-router-dom"
 
 import get from "lodash/get";
-import moment from "moment"
+//import moment from "moment"
 
 import { DamaContext } from "~/pages/DataManager/store";
 
@@ -26,7 +26,7 @@ const LinkCell = ({ value }) => {
 
 const DateCell = ({ value }) => {
   return (
-    <div>{ moment(value).format("YYYY-MM-DD HH:mm:ss A") }</div>
+    <div>{ value.toString() }</div>
   )
 }
 
