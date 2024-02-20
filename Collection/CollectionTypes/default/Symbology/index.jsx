@@ -328,10 +328,12 @@ const SymbologyEditor = ({ ...props }) => {
     reset();
     const newSym = {
       name: "",
+      collection_id: collectionId,
       views: views.map((view, i) => ({
         viewId: view.view_id,
         version: view.version || `View ID ${ view.view_id }`,
         legends: [],
+        tiles: view.metadata.tiles,
         layers: get(view, ["metadata", "tiles", "layers"], [])
           .map(layer => ({
             uniqueId: `${ layer.id }-${ Date.now() }-${ performance.now() }`,
@@ -350,10 +352,20 @@ const SymbologyEditor = ({ ...props }) => {
     setSymbology(newSym);
   }, [views, reset]);
 
+  const sources = React.useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
+
   const loadSavedSymbology = React.useCallback(sym => {
     reset();
+
+    const sourceId = parseInt(sym.tiles.layers[0].id.split("_")[0].substring(1));
+    const existingSource = sources.find(sourceElement => sourceElement.source_id === sourceId);
+    setSource(existingSource);
+
     setSymbology(sym);
-  }, [reset]);
+  }, [reset, sources]);
 
   const symbologyLayer = React.useMemo(() => {
     return new SymbologyLayer(views);
@@ -362,28 +374,27 @@ const SymbologyEditor = ({ ...props }) => {
   const [symbologyViewMap, setSymbologyViewMap] = React.useState({});
 
   React.useEffect(() => {
-    const viewsMap = props.symbologies.reduce((a, c) => {
-      const viewId = c.symbology[0].view_id
-      a[viewId] = c.symbology[0];
+    const viewsMap = views?.reduce((a, c) => {
+      a[c.view_id] = {...c, tiles: c.metadata.tiles};
       return a;
     }, {});
-    setSymbologyViewMap(prev => {
-      return get(symbology, "views", [])
-        .reduce((a, c) => {
-          return c.layers.reduce((aa, cc) => {
-            if (cc.uniqueId in prev) {
-              aa[cc.uniqueId] = prev[cc.uniqueId];
-            }
-            else {
-              //RYAN TODO this conditional seems fishy...
-              if(viewsMap[c.viewId]){
+
+    if(viewsMap && Object.keys(viewsMap).length){
+      setSymbologyViewMap(prev => {
+        return get(symbology, "views", [])
+          .reduce((a, c) => {
+            return c.layers.reduce((aa, cc) => {
+              if (cc.uniqueId in prev) {
+                aa[cc.uniqueId] = prev[cc.uniqueId];
+              }
+              else {
                 aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
               }
-            }
-            return aa;
-          }, a);
-        }, {});
-    })
+              return aa;
+            }, a);
+          }, {});
+      })
+    }
   }, [symbology, views]);
 
   const layers = React.useMemo(() => {

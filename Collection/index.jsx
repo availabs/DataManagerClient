@@ -70,14 +70,16 @@ const Collection = ({}) => {
   }, [symbologyIds, collectionId, pgEnv])
 
   const symbologies = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byId", symbologyIds], {}))
-      .map(v => {
-        const newVal = {...v};
-        Object.keys(v).forEach(key => {
-          newVal[key] = v[key].value || v[key];
-        })
+    const cacheSymbologies = (get(falcorCache, ["dama", pgEnv, "symbologies", "byId"], {}))
+    return Object.values(cacheSymbologies)
+      .map((v) => {
+        const newVal = { ...v.attributes };
+        Object.keys(v.attributes).forEach((key) => {
+          newVal[key] = v.attributes[key]?.value || v.attributes[key];
+        });
         return newVal;
-      });
+      })
+      .filter((symb) => symb.collection_id === parseInt(collectionId));
   }, [falcorCache, collectionId, pgEnv]);
 
   useEffect(() => {

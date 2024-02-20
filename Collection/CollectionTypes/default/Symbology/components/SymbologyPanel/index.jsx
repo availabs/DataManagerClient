@@ -35,7 +35,6 @@ const SymbologyButtons = props => {
     sources,
     views
   } = props;
-console.log({views})
   const [displaySources, setDisplaySources] = React.useState(false);
   const [displayConfirmation, setDisplayConfirmation] = React.useState(false);
 
@@ -65,10 +64,10 @@ console.log({views})
       id: symbology.id,
       symbology_id: symbology.symbology_id,
       collection_id: symbology.collection_id,
-      view_id: symbology.view_id,
-      tiles: symbology.tiles,
-      views: symbology.views
-        .filter(view => view.viewId == activeViewId) //ryan todo do I still want to filter this?
+      view_id: symbology.view_id || activeViewId,
+      tiles: symbology.tiles || symbology.views.find((view) => view.viewId == activeViewId)
+        .tiles, // ryan todo fishy conditional maybe
+      views: symbology.views.filter((view) => view.viewId == activeViewId), //ryan todo do I still want to filter this?
     };
     const symbologies = [
       ...savedSymbologies.filter(s => s.id !== toSave.id),
