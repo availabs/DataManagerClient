@@ -1,6 +1,5 @@
 import Overview from "./Overview";
 import Versions from "./Version/list";
-import Admin from "./Admin"
 import SymbologyEditor from "./Symbology"
 import MapEditor from "./MapEditor"
 
@@ -27,12 +26,6 @@ const Pages = {
     path: "/versions",
     hidden: "true",
     component: Versions
-  },
-  admin: {
-    name: "Admin",
-    path: "/admin",
-    authLevel: 10,
-    component: Admin
   }
 };
 
