@@ -6,7 +6,7 @@ import get from "lodash/get";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { Pages as CollectionPages, damaCollectionTypes } from "./CollectionTypes";
 
-import CollectionsLayout from "./layout";
+import CollectionsLayout from "../Source/layout";
 
 import { CollectionAttributes, SymbologyAttributes, getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
@@ -27,6 +27,17 @@ const Collection = ({}) => {
       ? get(pages, `[${page}].component`, pages["overview"].component)
       : pages["overview"].component;
   }, [page, pages]);
+
+  const fullWidth = useMemo(() => {
+    return page ? get(pages, `[${page}].fullWidth`, false) : false
+  }, [page, pages]);
+
+  const hideBreadcrumbs = useMemo(() => {
+    return page ? get(pages, `[${page}].hideBreadcrumbs`, false) : false
+  }, [page, pages]);
+
+
+  console.log('hideBreadcrumbs', hideBreadcrumbs, pages[page] || pages['overview'])
 
   useEffect(() => {
     async function fetchData() {
@@ -111,7 +122,7 @@ const Collection = ({}) => {
       }, {});
 
       let allPages = { ...CollectionPages, ...typePages };
-      console.log({allPages})
+      //console.log({allPages})
       setPages(allPages);
     } else {
       setPages(CollectionPages);
@@ -136,40 +147,40 @@ const Collection = ({}) => {
   } 
 
   return (
-      <div className="max-w-6xl mx-auto">
-        <CollectionsLayout baseUrl={baseUrl}>
-          <TopNav
-            menuItems={Object.values(pages)
-              .filter(d => {
-                const authLevel = d?.authLevel || -1
-                const userAuth = user.authLevel || -1
-                return !d.hidden && (authLevel <= userAuth)
-              })
-              .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
-              .map(d => {
-                return {
-                  name:d.name,
-                  path: makeUrl(d)
-                }
+      <CollectionsLayout 
+        baseUrl={baseUrl} 
+        fullWidth={fullWidth} 
+        hideBreadcrumbs={hideBreadcrumbs}
+      >
+        <TopNav
+          menuItems={Object.values(pages)
+            .filter(d => {
+              const authLevel = d?.authLevel || -1
+              const userAuth = user.authLevel || -1
+              return !d.hidden && (authLevel <= userAuth)
+            })
+            .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
+            .map(d => {
+              return {
+                name:d.name,
+                path: makeUrl(d)
+              }
 
-              })}
-            themeOptions={{ size: "inline" }}
+            })}
+          themeOptions={{ size: "inline" }}
+        />
+        <div className='w-full flex-1 bg-white shadow'>
+          <Page
+            searchParams={ searchParams }
+            setSearchParams={ setSearchParams }
+            collection={collection}
+            symbologies={symbologies}
+            user={user}
+            baseUrl={baseUrl}
+            activeSymbologyId={activeSymbologyId}
           />
-          <div className='w-full p-4 bg-white shadow mb-4'>
-            <Page
-              searchParams={ searchParams }
-              setSearchParams={ setSearchParams }
-              collection={collection}
-            //   source={source}
-            //   views={views}
-              symbologies={symbologies}
-              user={user}
-              baseUrl={baseUrl}
-              activeSymbologyId={activeSymbologyId}
-            />
-          </div>
-        </CollectionsLayout>
-      </div>
+        </div>
+      </CollectionsLayout>
     )
 };
 

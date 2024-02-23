@@ -6,6 +6,7 @@ import AddVersion from "./Version/add";
 import Uploads from "./Uploads";
 import Admin from "./Admin"
 import SymbologyEditor from "./Symbology"
+import MapEditor from "./MapEditor"
 
 const Pages = {
   overview: {
@@ -17,6 +18,13 @@ const Pages = {
     name: "Symbology",
     path: "/symbology",
     component: SymbologyEditor,
+  },
+  mapeditor: {
+    name: "Map Editor",
+    path: "/mapeditor",
+    fullWidth: true,
+    hideBreadcrumbs: true,
+    component: MapEditor,
   },
   versions: {
     name: "Versions",

@@ -117,7 +117,7 @@ const Source = ({}) => {
   } 
 
   return (
-      <div className="max-w-6xl mx-auto">
+     
         <SourcesLayout baseUrl={baseUrl}>
           {/*<div className='flex w-full p-2 border-b items-center'>
             <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
@@ -151,7 +151,7 @@ const Source = ({}) => {
               })}
             themeOptions={{ size: "inline" }}
           />
-          <div className='w-full p-4 bg-white shadow mb-4'>
+          <div className='w-full flex-1 bg-white shadow'>
             <Page
               searchParams={ searchParams }
               setSearchParams={ setSearchParams }
@@ -163,7 +163,7 @@ const Source = ({}) => {
             />
           </div>
         </SourcesLayout>
-      </div>
+      
     )
 };
 

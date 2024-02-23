@@ -6,7 +6,7 @@ import get from 'lodash/get'
 import { useNavigate } from "react-router-dom";
 import { damaDataTypes } from '../DataTypes'
 
-import CollectionsLayout from './layout'
+import CollectionsLayout from '../Source/layout'
 
 import {CollectionAttributes} from './attributes'
     

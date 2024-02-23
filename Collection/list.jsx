@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import get from "lodash/get";
-import CollectionsLayout from "./layout";
+import CollectionsLayout from "../Source/layout";
 import { useParams } from "react-router-dom";
 import { DamaContext } from "~/pages/DataManager/store";
 import { CollectionAttributes, SymbologyAttributes, getAttributes } from "./attributes";

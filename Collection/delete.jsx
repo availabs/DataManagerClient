@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import get from "lodash/get";
 
 import { DamaContext } from "../store";
-import SourcesLayout from "./layout";
+import SourcesLayout from "../Source/layout";
 
 import { DAMA_HOST } from "~/config";
 

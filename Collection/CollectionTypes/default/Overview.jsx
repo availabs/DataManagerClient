@@ -82,7 +82,7 @@ const OverviewPage = ({collection, symbologies, activeViewId}) => {
   const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
 
   return (
-    <div>
+    <div className='p-4'>
       <div className=" flex flex-col md:flex-row">
         <div className='flex-1'>
           <div className='flex justify-between group'>
