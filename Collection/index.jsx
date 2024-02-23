@@ -37,8 +37,7 @@ const Collection = ({}) => {
   }, [page, pages]);
 
 
-  console.log('hideBreadcrumbs', hideBreadcrumbs, pages[page] || pages['overview'])
-
+  
   useEffect(() => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
@@ -120,9 +119,7 @@ const Collection = ({}) => {
         }
         return a;
       }, {});
-
       let allPages = { ...CollectionPages, ...typePages };
-      //console.log({allPages})
       setPages(allPages);
     } else {
       setPages(CollectionPages);

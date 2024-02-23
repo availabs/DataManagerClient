@@ -30,7 +30,7 @@ export const Header = (
   <div className='pt-[2px]'>
     <div className='h-full'>
       <Dropdown control={
-        <div className='px-2 flex text-lg'>
+        <div key={'asdasd'} className='px-2 flex text-lg'>
           <div className=' font-medium text-gray-800'> Data Manager</div>
           <div className='fal fa-angle-down px-3 mt-[6px] '/>
           {/*<div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>*/}
@@ -38,7 +38,7 @@ export const Header = (
         className={`text-gray-800 group`} openType='click'
       >
         <div key={'as'} className='p-1 bg-blue-500 text-base'>
-          <div className='py-1 '>
+          <div key={'k'} className='py-1 '>
               {Item(`/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
           </div>
         </div>

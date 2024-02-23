@@ -1,6 +1,10 @@
 import { decompressSync } from "fflate";
 import v2 from "./v2";
+import { Protocol } from './adapters'
 export * from "./adapters";
+
+
+
 
 export interface BufferPosition {
   buf: Uint8Array;
@@ -949,5 +953,19 @@ export class PMTiles {
         throw e;
       }
     }
+  }
+}
+
+
+export const PMTilesProtocol = {
+  type: "pmtiles",
+  protocolInit: maplibre => {
+    const protocol = new Protocol();
+    maplibre.addProtocol("pmtiles", protocol.tile);
+    return protocol;
+  },
+  sourceInit: (protocol, source, maplibreMap) => {
+    const p = new PMTiles(source.url);
+    protocol.add(p);
   }
 }

@@ -1,39 +1,53 @@
-import React from "react"
+import React, { useState, useEffect, createContext } from "react"
 import { useSearchParams, Link } from "react-router-dom";
 import get from "lodash/get"
 
-import { AvlMap as AvlMap2, ThemeProvider } from "~/modules/avl-map-2/src"
-import { Protocol, PMTiles } from '~/pages/DataManager/utils/pmtiles/index.ts'
+import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
+import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
 
-import { useFalcor } from "~/modules/avl-components/src";
+import LayerManager from './components/LayerManager'
+import LayerEditor from './components/LayerEditor'
+
+export const SymbologyContext = createContext(undefined);
 
 
-
-// import { SymbologyLayerConstructor } from "./SymbologyLayer"
-
-const PMTilesProtocol = {
-  type: "pmtiles",
-  protocolInit: maplibre => {
-    const protocol = new Protocol();
-    maplibre.addProtocol("pmtiles", protocol.tile);
-    return protocol;
-  },
-  sourceInit: (protocol, source, maplibreMap) => {
-    const p = new PMTiles(source.url);
-    protocol.add(p);
+const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
+  
+  
+  // --------------------------------------------------
+  // Symbology Object
+  // Single Source of truth for everything in this view
+  // once loaded this is mutable here 
+  // and can then be discarded or saved to db
+  // ---------------------------------------------------
+  const blankSymbology = {
+    name: 'New Map',
+    collection_id: collection.collection_id,
+    description: '',
+    sources: [],
+    layers: []
   }
-}
 
-
-
-const MapEditor = props => {
+  const [symbology,setSymbology] = useState(
+    symbologies.find(s => s.symbology_id === activeSymbologyId) ||
+    blankSymbology
+  )
   
-  
-	const layers = []
+  // update on active symbology id
+  useEffect(() => {
+    setSymbology(
+      symbologies.find(s => s.symbology_id === activeSymbologyId) ||
+      blankSymbology
+    )
+  },[symbologies,activeSymbologyId])
 
+  // --------------------------------------------------
+
+  const layers = []
+	
 	return (
-    <div className="w-full h-full flex items-center justify-center">
-      
+    <SymbologyContext.Provider value={{symbology,setSymbology}}>
+      <div className="w-full h-full relative">
         <AvlMap2
           layers={ layers }
           mapOptions={ {
@@ -48,8 +62,14 @@ const MapEditor = props => {
           leftSidebar={ false }
           rightSidebar={ false }
         />
-      
-    </div>
+        <div className={'z-30 absolute inset-0 flex pointer-events-none'}>
+          <LayerManager />
+          <div className='flex-1'/>
+          <LayerEditor />
+        </div>
+        
+      </div>
+    </SymbologyContext.Provider>
 	)
 }
 
