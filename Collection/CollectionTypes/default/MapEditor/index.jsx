@@ -29,24 +29,28 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
   }
 
   const [symbology,setSymbology] = useState(
-    symbologies.find(s => s.symbology_id === activeSymbologyId) ||
+    symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
     blankSymbology
   )
-  
+
   // update on active symbology id
   useEffect(() => {
+    let test = 
+    console.log('update active symbology', activeSymbologyId, symbologies, symbologies.find(s => +s.symbology_id === +activeSymbologyId))
     setSymbology(
-      symbologies.find(s => s.symbology_id === activeSymbologyId) ||
+      symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
       blankSymbology
     )
   },[symbologies,activeSymbologyId])
 
   // --------------------------------------------------
+  const [activeLayer, setActiveLayer] = useState(null)
+
 
   const layers = []
 	
 	return (
-    <SymbologyContext.Provider value={{symbology,setSymbology}}>
+    <SymbologyContext.Provider value={{symbology,setSymbology, activeLayer, setActiveLayer}}>
       <div className="w-full h-full relative">
         <AvlMap2
           layers={ layers }
@@ -54,10 +58,24 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
             center: [-76, 43.3],
             zoom: 6,
             protocols: [PMTilesProtocol],
-            styles: [{
-              name: "new-style",
-              style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
-            }]
+            styles: [
+              {
+                name: "dataviz",
+                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
+                name: "streets",
+                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
+                name: "toner",
+                style: "https://api.maptiler.com/maps/toner-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
+                name: "new-style",
+                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+              }
+            ]
           } }
           leftSidebar={ false }
           rightSidebar={ false }
