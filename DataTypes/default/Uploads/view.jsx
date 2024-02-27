@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { get } from "lodash";
+import { get } from "lodash/get";
 import { DamaContext } from "~/pages/DataManager/store";
 
 export default function Upload({ ctxId }) {

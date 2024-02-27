@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { get } from "lodash";
+import { get } from "lodash/get";
 import {  } from "~/modules/avl-components/src";
 // import { withAuth } from "~/modules/avl-components/src";
 
