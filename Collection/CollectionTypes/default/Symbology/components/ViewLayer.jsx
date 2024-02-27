@@ -104,7 +104,6 @@ class ViewLayer extends AvlLayer {
     this.startActive = true;
 
     this.viewId = view.view_id;
-    console.log("inside viewLayer, view::", view)
     this.sources = view.tiles.sources
       .map(s =>
         ({ ...s,

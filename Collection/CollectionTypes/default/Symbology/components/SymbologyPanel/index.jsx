@@ -11,6 +11,7 @@ import {
 } from "~/modules/avl-map-2/src"
 
 import SymbologyItem from "./SymbologyItem"
+import { SourceAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 
 const NameRegex = /^\w+/;
 
@@ -21,7 +22,6 @@ const paintPropertyHasValue = paintProperty => {
 }
 
 const SymbologyButtons = props => {
-
   const {
     startNewSymbology,
     symbology,
@@ -29,8 +29,14 @@ const SymbologyButtons = props => {
     activeViewId,
     MapActions,
     startLoading,
-    stopLoading
+    stopLoading,
+    source,
+    setSource,
+    sources,
+    views
   } = props;
+  const [displaySources, setDisplaySources] = React.useState(false);
+  const [displayConfirmation, setDisplayConfirmation] = React.useState(false);
 
   const okToSave = React.useMemo(() => {
     if (!symbology) return false;
@@ -58,10 +64,10 @@ const SymbologyButtons = props => {
       id: symbology.id,
       symbology_id: symbology.symbology_id,
       collection_id: symbology.collection_id,
-      view_id: symbology.view_id,
-      tiles: symbology.tiles,
-      views: symbology.views
-        .filter(view => view.viewId == activeViewId) //ryan todo do I still want to filter this?
+      view_id: symbology.view_id || activeViewId,
+      tiles: symbology.tiles || symbology.views.find((view) => view.viewId == activeViewId)
+        .tiles, // ryan todo fishy conditional maybe
+      views: symbology.views.filter((view) => view.viewId == activeViewId), //ryan todo do I still want to filter this?
     };
     const symbologies = [
       ...savedSymbologies.filter(s => s.id !== toSave.id),
@@ -80,13 +86,49 @@ const SymbologyButtons = props => {
     MapActions.openModal("symbology-layer", "symbology-editor");
   }, [MapActions.openModal]);
 
+  const enableNewSymbologyButton = displayConfirmation && views && views.length;
+
   return (
     !symbology ? (
-      <Button className="buttonBlock"
-        onClick={ startNewSymbology }
-      >
-        Start New Symbology
-      </Button>
+      <>
+        <Button className="buttonBlock"
+          onClick={ () => setDisplaySources(true) }
+        >
+          Start New Symbology
+        </Button>
+        {displaySources ? (
+          <div className="mb-1 pb-1 border-b border-current">
+            <MultiLevelSelect
+              isDropdown
+              displayAccessor={(s) => s.name}
+              options={sources}
+              value={symbology}
+              onChange={(val) => {
+                setDisplaySources(false);
+                setSource(val);
+                setDisplayConfirmation(true);
+              }}
+            >
+              <div className="px-2 py-1 rounded bg-white hover:outline hover:outline-1">
+                Choose a source
+              </div>
+            </MultiLevelSelect>
+          </div>
+        ) : (
+          <></>
+        )}
+        {enableNewSymbologyButton && (
+          <div
+            className="px-2 py-1 rounded bg-white hover:outline hover:outline-1"
+            onClick={() => {
+              setDisplayConfirmation(false);
+              startNewSymbology();
+            }}
+          >
+            Confirm selection
+          </div>
+        )}
+      </>
     ) : (
       <div className="flex">
         <div className="flex-1 mr-1">
@@ -194,6 +236,13 @@ const SymbologyPanel = props => {
   const source = React.useMemo(() => {
     return get(props, ["layerProps", "symbology-layer", "source"], null);
   }, [props]);
+  const setSource = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "setSource"], null);
+  }, [props]);
+
+  const views = React.useMemo(() => {
+    return get(props, ["layerProps", "symbology-layer", "views"], null);
+  }, [props]);
 
   const columns = React.useMemo(() => {
     const cols = get(source, ["metadata", "columns"], get(source, "metadata", []));
@@ -221,10 +270,11 @@ const SymbologyPanel = props => {
     return [...dataVariables, ...metaVariables];
   }, [dataVariables, metaVariables]);
 
-  const { falcor, pgEnv } = React.useContext(DamaContext);
+  const { falcor, pgEnv, falcorCache } = React.useContext(DamaContext);
 
   const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
 
+  //RYAN TODO FIX THE DELETE ENDPOINTS
   const removeSavedSymbology = React.useCallback(sym => {
     const [{ viewId }] = sym.views;
     const symbologies = savedSymbologies.filter(s => s.id !== sym.id);
@@ -237,6 +287,26 @@ const SymbologyPanel = props => {
   const DisplayItem = React.useMemo(() => {
     return getDisplayItem(removeSavedSymbology);
   }, [removeSavedSymbology]);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      const lengthPath = ["dama", pgEnv, "sources", "length"];
+      const resp = await falcor.get(lengthPath);
+      // console.log(resp)
+      await falcor.get([
+        "dama", pgEnv, "sources", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(SourceAttributes)
+      ]);
+    }
+
+    fetchData();
+  }, [falcor, pgEnv]);
+
+  const sources = React.useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
 
   return (
     <div className="absolute inset-0 overflow-visible scrollbar-sm p-1">
@@ -257,6 +327,9 @@ const SymbologyPanel = props => {
       }
       <div className="mb-1 pb-1 border-b border-current">
         <SymbologyButtons
+          sources={sources}
+          setSource={setSource}
+          views={views}
           startNewSymbology={ startNewSymbology }
           savedSymbologies={ savedSymbologies }
           startLoading={ startLayerLoading }

@@ -18,6 +18,11 @@ import SymbologyLayer from "./components/SymbologyLayer"
 import SymbologyPanel from "./components/SymbologyPanel"
 
 import ViewLayer from "./components/ViewLayer"
+import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
+import { DAMA_HOST } from "~/config"
+
+const $HOST = `${ DAMA_HOST }/tiles`
+
 
 const PMTilesProtocol = {
   type: "pmtiles",
@@ -27,7 +32,11 @@ const PMTilesProtocol = {
     return protocol;
   },
   sourceInit: (protocol, source, maplibreMap) => {
-    const p = new PMTiles(source.url);
+    //source.url = 
+    const newsourceUrl = source.url.replace("$HOST", $HOST)
+    console.log('sourceInit', newsourceUrl)
+
+    const p = new PMTiles(newsourceUrl);
     protocol.add(p);
   }
 }
@@ -56,13 +65,68 @@ const setSymbologyId = symbology => {
   return symbology;
 }
 
-const SymbologyEditor = ({ source, views, ...props }) => {
+const SymbologyEditor = ({ ...props }) => {
   const [symbology, setSymbology] = React.useState(null);
   const { collectionId, symbologyId } = useParams();
   const { falcor, pgEnv, falcorCache } = React.useContext(DamaContext);
 
+  const [source, setSource] = React.useState(null);
+  // const [views, setViews] = React.useState(null);
+
+  //Fetch views associated with a source
+  //We need to do this when the user selects a source (to make a new symbology)
   React.useEffect(() => {
-    async function fetchData() {
+    async function fetchViewsForSourceData() {
+      const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      await falcor.get(
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex",
+          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+          "attributes", Object.values(ViewAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id,
+          "attributes", Object.values(SourceAttributes)
+        ],
+        [
+          "dama", pgEnv, "sources", "byId", source.source_id, "meta"
+        ]
+      );
+    }
+
+    if(source && source.source_id){
+      fetchViewsForSourceData();
+    }
+
+  }, [source, falcor, pgEnv]);
+
+  const views = React.useMemo(() => {
+    return source && source.source_id
+      ? Object.values(
+          get(
+            falcorCache,
+            [
+              "dama",
+              pgEnv,
+              "sources",
+              "byId",
+              source.source_id,
+              "views",
+              "byIndex",
+            ],
+            {}
+          )
+        ).map((v) =>
+          getAttributes(
+            get(falcorCache, v.value, { attributes: {} })["attributes"]
+          )
+        )
+      : null;
+  }, [falcorCache, source, pgEnv]);
+
+  React.useEffect(() => {
+    async function fetchSymbologiesForCollectionData() {
       const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
 
@@ -84,9 +148,8 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     }
 
     if(!props.symbologies){
-      fetchData();
+      fetchSymbologiesForCollectionData();
     }
-
   }, [collectionId, falcor, pgEnv]);
 
   React.useEffect(() => {
@@ -273,10 +336,12 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     reset();
     const newSym = {
       name: "",
+      collection_id: collectionId,
       views: views.map((view, i) => ({
         viewId: view.view_id,
         version: view.version || `View ID ${ view.view_id }`,
         legends: [],
+        tiles: view.metadata.tiles,
         layers: get(view, ["metadata", "tiles", "layers"], [])
           .map(layer => ({
             uniqueId: `${ layer.id }-${ Date.now() }-${ performance.now() }`,
@@ -295,10 +360,22 @@ const SymbologyEditor = ({ source, views, ...props }) => {
     setSymbology(newSym);
   }, [views, reset]);
 
+  const sources = React.useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
+
   const loadSavedSymbology = React.useCallback(sym => {
     reset();
+
+    console.log('symbology', sym)
+    const sourceId = parseInt(sym.tiles.layers[0].id.split("_")[0].substring(1));
+    const existingSource = sources.find(sourceElement => sourceElement.source_id === sourceId);
+    console.log('existingSource', existingSource)
+    setSource(existingSource);
+
     setSymbology(sym);
-  }, [reset]);
+  }, [reset, sources]);
 
   const symbologyLayer = React.useMemo(() => {
     return new SymbologyLayer(views);
@@ -307,26 +384,27 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const [symbologyViewMap, setSymbologyViewMap] = React.useState({});
 
   React.useEffect(() => {
-    const viewsMap = props.symbologies.reduce((a, c) => {
-      const viewId = c.symbology[0].view_id
-      a[viewId] = c.symbology[0];
+    const viewsMap = views?.reduce((a, c) => {
+      a[c.view_id] = {...c, tiles: c.metadata.tiles};
       return a;
     }, {});
-    setSymbologyViewMap(prev => {
-      return get(symbology, "views", [])
-        .reduce((a, c) => {
-          return c.layers.reduce((aa, cc) => {
-            if (cc.uniqueId in prev) {
-              aa[cc.uniqueId] = prev[cc.uniqueId];
-            }
-            else {
-              console.log("viewsMap[c.viewId]::",viewsMap[c.viewId])
-              aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
-            }
-            return aa;
-          }, a);
-        }, {});
-    })
+
+    if(viewsMap && Object.keys(viewsMap).length){
+      setSymbologyViewMap(prev => {
+        return get(symbology, "views", [])
+          .reduce((a, c) => {
+            return c.layers.reduce((aa, cc) => {
+              if (cc.uniqueId in prev) {
+                aa[cc.uniqueId] = prev[cc.uniqueId];
+              }
+              else {
+                aa[cc.uniqueId] = new ViewLayer(cc, viewsMap[c.viewId]);
+              }
+              return aa;
+            }, a);
+          }, {});
+      })
+    }
   }, [symbology, views]);
 
   const layers = React.useMemo(() => {
@@ -426,7 +504,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
   const layerProps = React.useMemo(() => {
     return {
       "symbology-layer": {
-        source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+        source, setSource, views, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
@@ -438,7 +516,7 @@ const SymbologyEditor = ({ source, views, ...props }) => {
         return a;
       }, {})
     }
-  }, [source, setSymbology, startNewSymbology, symbology, savedSymbologies,
+  }, [source, setSource, views, setSymbology, startNewSymbology, symbology, savedSymbologies,
         activeViewId, setActiveViewId, activeView, loadSavedSymbology,
         activeLayerId, setActiveLayerId, activeLayer,
         activePaintPropertyId, setActivePaintPropertyId, activePaintProperty,
@@ -447,6 +525,8 @@ const SymbologyEditor = ({ source, views, ...props }) => {
         symbologyLayersMap
       ]
   );
+
+  console.log('render', layers)
 
   return (
     <div className="w-full h-[800px]">

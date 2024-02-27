@@ -10,18 +10,17 @@ import { Link, useParams } from 'react-router-dom'
 import get from 'lodash/get'
 
 
-const SourcesLayout = ({children }) => {
+const SourcesLayout = ({children, fullWidth, hideBreadcrumbs }) => {
   const { baseUrl } = useContext(DamaContext)
+ 
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className=''>
-        <Breadcrumbs />
-      </div>
-      <div className='flex'>
-        <div className='flex-1 '>
-          {children}
-        </div>
+    <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full flex flex-col`}>
+      {hideBreadcrumbs ? '' :  <div className=''>
+        <Breadcrumbs fullWidth={fullWidth} />
+      </div> }
+      <div className='flex-1 flex flex-col'>
+        {children}
       </div>
     </div>
   )
@@ -31,7 +30,7 @@ export const Header = (
   <div className='pt-[2px]'>
     <div className='h-full'>
       <Dropdown control={
-        <div className='px-2 flex text-lg'>
+        <div key={'asdasd'} className='px-2 flex text-lg'>
           <div className=' font-medium text-gray-800'> Data Manager</div>
           <div className='fal fa-angle-down px-3 mt-[6px] '/>
           {/*<div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>*/}
@@ -39,8 +38,8 @@ export const Header = (
         className={`text-gray-800 group`} openType='click'
       >
         <div key={'as'} className='p-1 bg-blue-500 text-base'>
-          <div className='py-1 '>
-              {Item(`/cenrep/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
+          <div key={'k'} className='py-1 '>
+              {Item(`/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Add New Datasource')}
           </div>
         </div>
       </Dropdown>
@@ -87,7 +86,7 @@ export const DataManagerHeader = () => {
 
 export default SourcesLayout
 
-const Breadcrumbs =  () => {
+const Breadcrumbs =  ({fullWidth}) => {
   const { sourceId, page, cat1, cat2} = useParams()
   const { pgEnv, baseUrl, falcor , falcorCache } = React.useContext(DamaContext)
 
@@ -128,7 +127,7 @@ const Breadcrumbs =  () => {
 
   return (
     <nav className="border-b border-gray-200 flex " aria-label="Breadcrumb">
-      <ol className="max-w-screen-xl w-full mx-auto px-4 flex space-x-4 sm:px-6 lg:px-8">
+      <ol className={`${fullWidth ? `w-full` : `max-w-screen-xl w-full mx-auto`}  px-4 flex space-x-4 sm:px-6 lg:px-8`}>
         <li className="flex">
           <div className="flex items-center">
             <Link to={`${baseUrl || '/'}`} className={"hover:text-[#bbd4cb] text-[#679d89]"}>
