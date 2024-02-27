@@ -11,7 +11,7 @@ import { AvlMap, ThemeProvider} from "~/modules/avl-map-2/src"
 import mapTheme from './map-theme'
 
 import { DamaContext } from "~/pages/DataManager/store"
-import config from "~/config.json"
+//import config from "~/config.json"
 import { DAMA_HOST } from "~/config"
 import ckmeans from "../../../../utils/ckmeans";
 import {Protocol, PMTiles} from '../../../../utils/pmtiles/index.ts'
