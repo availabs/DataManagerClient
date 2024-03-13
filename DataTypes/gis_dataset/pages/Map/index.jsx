@@ -483,8 +483,7 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }
         <ThemeProvider theme={mapTheme} >
 
           <AvlMap
-            accessToken={ config.MAPBOX_TOKEN }
-            mapOptions={ {
+            mapOptions={{
               protocols: [PMTilesProtocol],
               zoom: 7.3, //8.32/40.594/-74.093
               navigationControl: false,
@@ -494,7 +493,7 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }
                 { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
                 { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
               ]
-            } }
+            }}
             layers={ layerData }
             layerProps={ layerProps }
             leftSidebar={ false }
@@ -570,10 +569,13 @@ const Edit = ({startValue, attr, viewId, parentData, cancel=()=>{}}) => {
   },[value])
 
   const save = async (attr, value) => {
-    //console.log('click save 222', attr, value, parentData)
+    console.log('click save 222', attr, value, parentData)
     let update = JSON.parse(value)
     //console.log('update', value)
         let val = parentData || {tiles:{}}
+        if(!val.tiles) {
+          val.tiles = {}
+        }
     //console.log('parentData', val )
         val.tiles[attr] = update
         // console.log('out value', update)
