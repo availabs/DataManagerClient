@@ -169,7 +169,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceListComp
@@ -180,7 +180,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceListComp
@@ -191,7 +191,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceListComp
@@ -203,7 +203,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceViewComp
@@ -214,7 +214,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceViewComp
@@ -224,7 +224,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceViewComp
@@ -234,7 +234,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceViewComp
@@ -246,7 +246,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel: false,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceCreateComp
@@ -258,7 +258,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel: true,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: SourceDeleteComp
@@ -273,7 +273,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionListComp
@@ -284,7 +284,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionListComp
@@ -295,7 +295,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionListComp
@@ -307,7 +307,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionViewComp
@@ -318,7 +318,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionViewComp
@@ -329,7 +329,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionViewComp
@@ -340,7 +340,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionViewComp
@@ -352,7 +352,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel: false,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionCreateComp
@@ -364,7 +364,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       authLevel: true,
       mainNav: false,
-      title: Header,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: CollectionDeleteComp
@@ -374,6 +374,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       auth: false,
       mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: DAMA_Wrapper(TasksComponent, DAMA_ARGS)
@@ -383,6 +384,7 @@ const DamaRoutes = DAMA_ARGS => {
       exact: true,
       auth: true,
       mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
       component: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
