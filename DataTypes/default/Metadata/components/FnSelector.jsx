@@ -10,7 +10,7 @@ export const FnSelector = ({sourceId, metadata, setMetadata, col, value}) => {
     }, [col, metadata]);
 
     return (<select
-        className="pl-3 pr-4 py-2.5 h-fit border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
+        className="appearance-auto pl-3 pr-4 py-2.5 h-fit border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
         value={value}
         onChange={onChange}
     >
