@@ -66,8 +66,8 @@ const SymbologyButtons = props => {
       collection_id: symbology.collection_id,
       view_id: symbology.view_id || activeViewId,
       tiles: symbology.tiles || symbology.views.find((view) => view.viewId == activeViewId)
-        .tiles, // ryan todo fishy conditional maybe
-      views: symbology.views.filter((view) => view.viewId == activeViewId), //ryan todo do I still want to filter this?
+        .tiles,
+      views: symbology.views.filter((view) => view.viewId == activeViewId),
     };
     const symbologies = [
       ...savedSymbologies.filter(s => s.id !== toSave.id),
@@ -274,7 +274,7 @@ const SymbologyPanel = props => {
 
   const activeViewId = get(props, ["layerProps", "symbology-layer", "activeViewId"], null);
 
-  //RYAN TODO FIX THE DELETE ENDPOINTS
+  //TODO DELETE ENDPOINTS still reference "old" sybologies
   const removeSavedSymbology = React.useCallback(sym => {
     const [{ viewId }] = sym.views;
     const symbologies = savedSymbologies.filter(s => s.id !== sym.id);
