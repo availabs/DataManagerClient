@@ -40,7 +40,7 @@ export const ManageMetaLookup = ({
     return (
         isEditing ?
             <RenderTextBox value={value} setValue={setValue} save={save} cancel={() => setIsEditing(false)}/> :
-            <div className={'text-xs font-thin flex flex-row'}>
+            <div className={'text-xs font-thin flex flex-row mt-1'}>
                 <div className={'border p-1 h-30 max-h-[300px] overflow-auto scrollbar-sm'}>
                     <JsonView data={isJson(startValue) ? JSON.parse(startValue) : {}} shouldExpandNode={allExpanded}
                               style={defaultStyles}/>
