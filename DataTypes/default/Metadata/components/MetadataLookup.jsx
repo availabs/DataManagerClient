@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Button} from "~/modules/avl-components/src";
 import {RenderTextArea, RenderTextBox} from "./Edit.jsx";
 import {value} from "lodash/seq.js";
@@ -20,6 +20,10 @@ export const ManageMetaLookup = ({
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(startValue);
 
+    useEffect(() => {
+        setValue(startValue)
+    }, [startValue]);
+
     const save = (value) => {
         editMetadata({
             sourceId,
@@ -28,6 +32,8 @@ export const ManageMetaLookup = ({
             metadata, setMetadata,
             col, value: {'meta_lookup': value}
         });
+
+        setIsEditing(false);
         setEditing(null);
     }
 
