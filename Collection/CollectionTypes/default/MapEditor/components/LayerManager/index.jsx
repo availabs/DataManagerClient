@@ -1,13 +1,33 @@
-import React, { useContext , useMemo } from 'react'
+import React, { useContext , useMemo, useCallback } from 'react'
 import {SymbologyContext} from '../../'
 import SourceSelector from './SourceSelector'
 import { DndList } from '~/modules/avl-components/src'
+import { Fill, Line, Circle, Eye} from '../icons'
+
+
+const typeIcons = {
+  'fill': Fill,
+  'circle': Circle,
+  'line': Line
+}
 
 function LayerRow ({index, layer}) {
-  return <div className='w-full bg-white p-2 py-0.5 flex border-white border hover:border-pink-500 group items-center'>
-    <div className='text-sm text-slate-600 font-medium'>{layer.name}</div>
-    <div className='flex-1'/>
-    <div><i className='text-sm fa fa-eye text-slate-300 hover:text-slate-500 text-white group-hover:text-slate-300 cursor-pointer'/></div>
+  const { symbology, setSymbology  } = React.useContext(SymbologyContext);
+  const { activeLayer } = symbology;
+  const toggleSymbology = () => {
+    setSymbology(draft => {
+        console.log('setSymbology', activeLayer, layer.id, activeLayer === layer.id)
+        draft.activeLayer = activeLayer === layer.id ? '' : layer.id
+    })
+  }
+  const Icon = typeIcons[layer.type] || <span />
+
+  return <div className={`w-full ${activeLayer == layer.id ? 'bg-pink-100' : 'bg-white'} p-2 py-0.5 flex border-white border hover:border-pink-500 group items-center`}>
+    <div className='px-1'><Icon className='fill-slate-400' /></div>
+    <div onClick={toggleSymbology} className='text-sm text-slate-600 font-medium'>{layer.name} </div>
+    <div onClick={toggleSymbology} className='flex-1 h-4'/>
+    <div className='text-sm px-2'>{layer.order}</div>
+    <div><Eye className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/></div>
   </div>
 }
 
@@ -38,7 +58,7 @@ function LayerManager (props) {
 
   return (
     <div className='p-4'>
-      <div className='bg-white w-[300px] rounded-lg drop-shadow-lg pointer-events-auto '>
+      <div className='bg-white w-[280px] rounded-lg drop-shadow-lg pointer-events-auto '>
         {/* ------Header ----------- */}
         <div className='flex justify-between items-center border-b'>
           <div className='font-bold text-slate-700 pt-2 pl-4'>Layer Manager</div>
@@ -48,7 +68,7 @@ function LayerManager (props) {
         <div className='min-h-20 relative'>
           <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
           {Object.values(layers)
-            .sort((a,b) => a.order - b.order)
+            .sort((b,a) => a.order - b.order)
             .map((layer,i) => <LayerRow key={layer.id} layer={layer}/>)}
           </DndList>
         </div>

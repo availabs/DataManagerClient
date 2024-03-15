@@ -68,96 +68,7 @@ const DamaRoutes = DAMA_ARGS => {
   // register custom dataTypes for project
   Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
 
-  /**
-   * SOURCES
-   */
-  const SourceListComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-      <DamaContext.Provider
-        value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}
-      >
-        <List />
-      </DamaContext.Provider>
-    );
-  }
-
-  const SourceViewComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-        <View />
-      </DamaContext.Provider>
-    );
-  }
-
-  const SourceCreateComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-      <Create />
-    </DamaContext.Provider>
-  );
-  }
-
-  const SourceDeleteComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-      return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-        <Del />
-      </DamaContext.Provider>
-    );
-  }
-
-  /**
-   * COLLECTIONS
-   */
-  const CollectionListComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-      <DamaContext.Provider
-        value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}
-      >
-        <CollectionList />
-      </DamaContext.Provider>
-    );
-  }
-
-  const CollectionViewComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-        <CollectionView />
-      </DamaContext.Provider>
-    );
-  }
-
-  const CollectionCreateComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-    return (
-    <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-      <CollectionCreate />
-    </DamaContext.Provider>
-  );
-  }
-
-  const CollectionDeleteComp = () => {
-    const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
-      return (
-      <DamaContext.Provider value={{pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user}}>
-        <CollectionDelete />
-      </DamaContext.Provider>
-    );
-  }
-
+  
   return [
     /**
      * SOURCES
@@ -172,7 +83,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceListComp
+      component: DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -183,7 +94,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceListComp
+      component:  DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -194,7 +105,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceListComp
+      component:  DAMA_Wrapper(List, DAMA_ARGS)
     },
     // -- Source View
     {
@@ -206,7 +117,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceViewComp
+      component:  DAMA_Wrapper(View, DAMA_ARGS)
     },
     {
       name: "View Source",
@@ -217,7 +128,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceViewComp
+      component:  DAMA_Wrapper(View, DAMA_ARGS)
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId`,
@@ -227,7 +138,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceViewComp
+      component:  DAMA_Wrapper(View, DAMA_ARGS)
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
@@ -237,7 +148,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceViewComp
+      component:  DAMA_Wrapper(View, DAMA_ARGS)
     },
     // Source Create
     {
@@ -249,7 +160,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceCreateComp
+      component:  DAMA_Wrapper(Create, DAMA_ARGS)
     },
     // Source Delete
     {
@@ -261,7 +172,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: SourceDeleteComp
+      component:  DAMA_Wrapper(Del, DAMA_ARGS)
     },
     /**
      * COLLECTIONS
@@ -276,7 +187,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionListComp
+      component:  DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     {
       name: "Data Collections",
@@ -287,7 +198,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionListComp
+      component: DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     {
       name: "Data Collections",
@@ -298,7 +209,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionListComp
+      component: DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     // -- Collection View
     {
@@ -310,7 +221,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionViewComp
+      component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Collection",
@@ -321,7 +232,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionViewComp
+      component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Symbology",
@@ -332,7 +243,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionViewComp
+      component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Symbology",
@@ -343,7 +254,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionViewComp
+      component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     // Collection Create
     {
@@ -355,7 +266,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionCreateComp
+      component: DAMA_Wrapper(CollectionCreate, DAMA_ARGS)
     },
     // Collection Delete
     {
@@ -367,7 +278,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      component: CollectionDeleteComp
+      component: DAMA_Wrapper(CollectionDelete, DAMA_ARGS)
     },
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,

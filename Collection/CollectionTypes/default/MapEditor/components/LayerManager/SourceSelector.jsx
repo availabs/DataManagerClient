@@ -2,6 +2,7 @@ import React, { useEffect, useContext , useMemo } from 'react'
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../../../../store";
 import get from 'lodash/get'
+import { getLayer } from './utils'
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../Source/attributes"
 
@@ -51,7 +52,9 @@ function SourceSelector (props) {
         "attributes", Object.values(ViewAttributes)
       ]);
     }
-    fetchData();
+    if(state.sourceId) {
+      fetchData();
+    }
   }, [state.sourceId, falcor, pgEnv]);
 
   const views = useMemo(() => {
@@ -68,13 +71,15 @@ function SourceSelector (props) {
     const view = views.filter(d => d.view_id === +state.viewId)?.[0] || {}
 
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
+    const viewLayer = view?.metadata?.tiles?.layers?.[0]
     const newLayer = {
       id: layerId,
       name: `${source.display_name || source.name} ${view.version || view.view_id}`,
       source_id: state.sourceId,
       view_id: state.viewId,
       sources: view?.metadata?.tiles?.sources || [],
-      layers: view?.metadata?.tiles?.layers || [],
+      type: viewLayer.type,
+      layers: getLayer(layerId, viewLayer),
       order: Object.keys(symbology?.layers)?.length || 0
     }
     setSymbology({...symbology, layers: {...symbology.layers, [layerId]: newLayer}})
@@ -89,7 +94,7 @@ function SourceSelector (props) {
           onClick={() => setState({...state, add: !state.add})}
         />
       </div>
-      {state.add && <div className='absolute z-20 -left-[275px] px-2 top-[25px] border w-[300px] bg-white'>
+      {state.add && <div className='absolute z-20 -left-[255px] px-2 top-[25px] border w-[280px] bg-white'>
         <div className='w-full p-1 text-sm font-bold text-blue-500'>select source:</div>
         <select 
           onChange={(e) => setState({...state, sourceId: e.target.value})}

@@ -1,24 +1,41 @@
-import React from "react"
+import React, { useEffect, useRef } from "react"
 import get from "lodash/get"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
+const usePrevious = (value) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
 
-const ViewLayerRender = props => {
 
-  const {
+const ViewLayerRender = ({
     maplibreMap,
-    layer: avlLayer,
+    layer,
     layerProps,
     resourcesLoaded,
     setLayerVisibility,
     allLayerProps
-  } = props;
+}) => {
 
-  const {
-    symbologyLayer
-  } = layerProps;
+  const prevLayerProps = usePrevious(layerProps);
+  
+  // - On layer Prop change
+  useEffect(() => {
+    // 
+    if(layerProps?.order < (prevLayerProps?.order || -1)) {
+      let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
 
-  const activeView = get(allLayerProps, ["symbology-layer", "activeView"], null);
+      layerProps.layers.forEach(l => {
+        // console.log('hola', l.id, beneathLayer.id, `${beneathLayer.id}${['fill','line'].includes(beneathLayer.type) ? '_case' : ''}`)
 
+        maplibreMap.moveLayer(l.id, beneathLayer.id) 
+      })
+    }
+
+
+  }, [layerProps])
   // const visibility = React.useMemo(() => {
   //   if (!maplibreMap) return "none";
   //   if (!resourcesLoaded) return "none";
@@ -104,19 +121,20 @@ class ViewLayer extends AvlLayer {
     this.viewId = layer.view_id;
 
     this.sources = layer.sources
-      .map(s =>
-        ({ ...s,
-          id: layer.id
-        })
-      );
     this.layers = layer.layers
-      .map(l =>
-        ({ ...l,
-          id: layer.id,
-          source: layer.id,
-          //layout: { visibility: "none" }
-        })
-      );
+    
+      // .map(s =>
+      //   ({ ...s,
+      //     id: layer.id
+      //   })
+      // );
+      // .map(l =>
+      //   ({ ...l,
+      //     id: layer.id,
+      //     source: layer.id,
+      //     //layout: { visibility: "none" }
+      //   })
+      // );
   }
   RenderComponent = ViewLayerRender;
 }

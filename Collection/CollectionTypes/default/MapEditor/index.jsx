@@ -26,8 +26,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     name: 'New Map',
     collection_id: collection.collection_id,
     description: '',
-    layers: {},
-    mapLayers: [] // for layers in map, not saved to db
+    layers: {}
   }
 
   const [symbology,setSymbology] = useImmer(
@@ -48,48 +47,82 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
 
   // --------------------------------------------------
   
-  React.useEffect( () => {
-    console.log('symbology effect')
-    const updateLayers = async () => {
-      if(mounted.current) {
-          console.log('run updateLayers')
+  let savelayers = []
+  const mapLayers = React.useMemo(() => {
+   
+      let currentLayerIds = savelayers.map(d => d.id).filter(d => d)
+            
 
-          setSymbology(prevSymbology => {
-
-              let currentLayerIds = prevSymbology.mapLayers.map(d => d.id).filter(d => d)
-              
-
-              let newLayers = Object.values(symbology.layers)
-                  .filter(d => d)
-                  .filter(d => !currentLayerIds.includes(d.id))
-                  .map(l => {
-                    return new SymbologyViewLayer(l)
-                  })
-              //console.log('new layers', newLayers, Object.values(symbology.layers))
-              if(newLayers.length) {
-                console.log('adding new layers', newLayers)
-                prevSymbology.mapLayers =  [
-                    // keep existing layers & filter
-                    ...prevSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id)), 
-                    // add new layers
-                    ...newLayers
-                ]
-              }
-          })
-      }
-    }
-
-    updateLayers()
+      let newLayers = Object.values(symbology.layers)
+        .filter(d => d)
+        .filter(d => !currentLayerIds.includes(d.id))
+        .map(l => {
+          return new SymbologyViewLayer(l)
+        })
+            //console.log('new layers', newLayers, Object.values(symbology.layers))
+            
+              console.log('adding new layers', newLayers)
+        savelayers = [
+            // keep existing layers & filter
+            ...savelayers.filter(d => Object.keys(symbology.layers).includes(d.id)), 
+            // add new layers
+            ...newLayers
+        ]
+        return savelayers
+    
     }, [symbology.layers])
 
+  const layerProps = React.useMemo(() => {
+      return symbology.layers
+    }, [symbology.layers]
+  );
 
-  const layers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
+  console.log('maplayers', mapLayers)
+
+
+
+  // React.useEffect(() => {
+  //   console.log('symbology layers effect')
+  //   const updateLayers = async () => {
+  //     if(mounted.current) {
+  //         setSymbology(draftSymbology => {
+
+  //           let currentLayerIds = draftSymbology.mapLayers.map(d => d.id).filter(d => d)
+              
+
+  //           let newLayers = Object.values(symbology.layers)
+  //                 .filter(d => d)
+  //                 .filter(d => !currentLayerIds.includes(d.id))
+  //                 .map(l => {
+  //                   return new SymbologyViewLayer(l)
+  //                 })
+  //             //console.log('new layers', newLayers, Object.values(symbology.layers))
+  //             if(newLayers.length) {
+  //               console.log('adding new layers', newLayers)
+  //               draftSymbology.mapLayers =  [
+  //                   // keep existing layers & filter
+  //                   ...draftSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id)), 
+  //                   // add new layers
+  //                   ...newLayers
+  //               ]
+  //             }
+  //         })
+  //     }
+  //   }
+
+  //   updateLayers()
+  //   }, [symbology.layers])
+
+  
+
+  // const layers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
 	
 	return (
     <SymbologyContext.Provider value={{symbology,setSymbology}}>
       <div className="w-full h-full relative" ref={mounted}>
         <AvlMap2
-          layers={ layers }
+          layers={ mapLayers }
+          layerProps = {layerProps}
           mapOptions={ {
             center: [-76, 43.3],
             zoom: 6,

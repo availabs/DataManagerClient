@@ -30,16 +30,16 @@ export const Header = ({baseUrl=''}) => {
  
   return (
     <div className='pt-[2px]'>
-      <div className='h-full'>
+      <div className='h-full z-50'>
         <Dropdown control={
           <div key={'asdasd'} className='px-2 flex text-lg'>
             <div className=' font-medium text-gray-800'> Data Manager</div>
             <div className='fal fa-angle-down px-3 mt-[6px] '/>
             {/*<div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>*/}
           </div>}
-          className={`text-gray-800 group`} openType='click'
+          className={`text-gray-800 group z-50`} openType='click'
         >
-          <div key={'as'} className='p-1 bg-blue-500 text-base'>
+          <div key={'as'} className='p-1 bg-blue-500 text-base z-50'>
             <div key={'k'} className='py-1 '>
                 {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
             </div>
