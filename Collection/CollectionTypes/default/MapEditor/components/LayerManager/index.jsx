@@ -2,7 +2,7 @@ import React, { useContext , useMemo, useCallback } from 'react'
 import {SymbologyContext} from '../../'
 import SourceSelector from './SourceSelector'
 import { DndList } from '~/modules/avl-components/src'
-import { Fill, Line, Circle, Eye} from '../icons'
+import { Fill, Line, Circle, Eye, MenuDots} from '../icons'
 
 
 const typeIcons = {
@@ -26,8 +26,8 @@ function LayerRow ({index, layer}) {
     <div className='px-1'><Icon className='fill-slate-400' /></div>
     <div onClick={toggleSymbology} className='text-sm text-slate-600 font-medium'>{layer.name} </div>
     <div onClick={toggleSymbology} className='flex-1 h-4'/>
-    <div className='text-sm px-2'>{layer.order}</div>
-    <div><Eye className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/></div>
+    <div className='text-sm px-2'><MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/></div>
+    <div><Eye className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/></div>
   </div>
 }
 
