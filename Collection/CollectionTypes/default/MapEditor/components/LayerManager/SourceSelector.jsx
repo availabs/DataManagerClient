@@ -3,6 +3,8 @@ import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../../../../store";
 import get from 'lodash/get'
 import { getLayer } from './utils'
+import { Plus, Close } from '../icons'
+
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../Source/attributes"
 
@@ -72,14 +74,23 @@ function SourceSelector (props) {
 
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
+    
+    //--------------------------------------------
+    // Format for adding a layer
+    // -------------------------------------------
     const newLayer = {
+      // generated unique Id 
       id: layerId,
+      // meta data
       name: `${source.display_name || source.name} ${view.version || view.view_id}`,
       source_id: state.sourceId,
       view_id: state.viewId,
-      sources: view?.metadata?.tiles?.sources || [],
       type: viewLayer.type,
+      // mapbox sources and layers
+      sources: view?.metadata?.tiles?.sources || [],
       layers: getLayer(layerId, viewLayer),
+      // state data about the layer on the map
+      visible: true,
       order: Object.keys(symbology?.layers)?.length || 0
     }
     setSymbology({...symbology, layers: {...symbology.layers, [layerId]: newLayer}})
@@ -88,20 +99,24 @@ function SourceSelector (props) {
 
   return (
     <div className='relative'>
-      <div className='px-1'>
-        <i 
+      <div className='p-2.5 rounded hover:bg-slate-100 m-1' onClick={() => setState({...state, add: !state.add})}>
+        {state.add ? 
+          <Close className='fill-slate-500' /> :
+          <Plus className='fill-slate-500' />
+        }
+        {/*<i 
           className={`${state.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
-          onClick={() => setState({...state, add: !state.add})}
-        />
+          
+        />*/}
       </div>
-      {state.add && <div className='absolute z-20 -left-[255px] px-2 top-[25px] border w-[280px] bg-white'>
+      {state.add && <div className='absolute z-20 -left-[240px] p-2 top-[40px] border w-[280px] bg-white'>
         <div className='w-full p-1 text-sm font-bold text-blue-500'>select source:</div>
         <select 
           onChange={(e) => setState({...state, sourceId: e.target.value})}
           className='p-2 w-full bg-blue-50'>
           <option value={null}>---select source---</option>
           {sources.map((source) => (
-            <option className='p-1 hover:bg-blue-100' value={source.source_id}>
+            <option key={source.source_id} className='p-1 hover:bg-blue-100' value={source.source_id}>
               {source.display_name || source.name}
             </option>)
           )}
@@ -114,7 +129,7 @@ function SourceSelector (props) {
               className='p-2 w-full bg-blue-50'>
               <option value={null}>---select view---</option>
               {views.map((view) => (
-                <option className='p-1 hover:bg-blue-100' value={view.view_id}>
+                <option key={view.view_id} className='p-1 hover:bg-blue-100' value={view.view_id}>
                   {view.version || view.view_id}
                 </option>)
               )}

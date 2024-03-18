@@ -26,7 +26,8 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     name: 'New Map',
     collection_id: collection.collection_id,
     description: '',
-    layers: {}
+    layers: {},
+    mapLayers: []
   }
 
   const [symbology,setSymbology] = useImmer(
@@ -47,75 +48,71 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
 
   // --------------------------------------------------
   
-  let savelayers = []
-  const mapLayers = React.useMemo(() => {
+  // let savelayers = []
+  // const mapLayers = React.useMemo(() => {
    
-      let currentLayerIds = savelayers.map(d => d.id).filter(d => d)
+  //     let currentLayerIds = savelayers.map(d => d.id).filter(d => d)
             
 
-      let newLayers = Object.values(symbology.layers)
-        .filter(d => d)
-        .filter(d => !currentLayerIds.includes(d.id))
-        .map(l => {
-          return new SymbologyViewLayer(l)
-        })
-            //console.log('new layers', newLayers, Object.values(symbology.layers))
-            
-              console.log('adding new layers', newLayers)
-        savelayers = [
-            // keep existing layers & filter
-            ...savelayers.filter(d => Object.keys(symbology.layers).includes(d.id)), 
-            // add new layers
-            ...newLayers
-        ]
-        return savelayers
+  //     let newLayers = Object.values(symbology.layers)
+  //       .filter(d => d)
+  //       .filter(d => !currentLayerIds.includes(d.id))
+  //       .map(l => {
+  //         return new SymbologyViewLayer(l)
+  //       })
+  //           //console.log('new layers', newLayers, Object.values(symbology.layers))
+      
+  //     let oldLayers = savelayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+
+  //       console.log('adding new layers', newLayers, oldLayers)
+  //       savelayers = [
+  //           // keep existing layers & filter
+  //           ...oldLayers, 
+  //           // add new layers
+  //           ...newLayers
+  //       ]
+  //       return savelayers
     
-    }, [symbology.layers])
-
-  const layerProps = React.useMemo(() => {
-      return symbology.layers
-    }, [symbology.layers]
-  );
-
-  console.log('maplayers', mapLayers)
-
-
-
-  // React.useEffect(() => {
-  //   console.log('symbology layers effect')
-  //   const updateLayers = async () => {
-  //     if(mounted.current) {
-  //         setSymbology(draftSymbology => {
-
-  //           let currentLayerIds = draftSymbology.mapLayers.map(d => d.id).filter(d => d)
-              
-
-  //           let newLayers = Object.values(symbology.layers)
-  //                 .filter(d => d)
-  //                 .filter(d => !currentLayerIds.includes(d.id))
-  //                 .map(l => {
-  //                   return new SymbologyViewLayer(l)
-  //                 })
-  //             //console.log('new layers', newLayers, Object.values(symbology.layers))
-  //             if(newLayers.length) {
-  //               console.log('adding new layers', newLayers)
-  //               draftSymbology.mapLayers =  [
-  //                   // keep existing layers & filter
-  //                   ...draftSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id)), 
-  //                   // add new layers
-  //                   ...newLayers
-  //               ]
-  //             }
-  //         })
-  //     }
-  //   }
-
-  //   updateLayers()
   //   }, [symbology.layers])
 
-  
+  // console.log('maplayers', mapLayers)
 
-  // const layers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
+
+
+  React.useEffect(() => {
+    // console.log('symbology layers effect')
+    const updateLayers = async () => {
+      if(mounted.current) {
+          setSymbology(draftSymbology => {
+
+            let currentLayerIds = draftSymbology.mapLayers.map(d => d.id).filter(d => d)
+      
+            let newLayers = Object.values(symbology.layers)
+              .filter(d => d)
+              .filter(d => !currentLayerIds.includes(d.id))
+              .map(l => {
+                return new SymbologyViewLayer(l)
+              })
+            let oldLayers = draftSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+            
+            // console.log('update layers old:', oldLayers, 'new:', newLayers)
+            draftSymbology.mapLayers =  [
+                // keep existing layers & filter
+                ...oldLayers, 
+                // add new layers
+                ...newLayers
+            ]
+            
+          })
+      }
+    }
+    updateLayers()
+  }, [symbology.layers])
+  const mapLayers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
+
+  const layerProps = useMemo(() =>  symbology.layers, [symbology.layers]);
+
+  
 	
 	return (
     <SymbologyContext.Provider value={{symbology,setSymbology}}>

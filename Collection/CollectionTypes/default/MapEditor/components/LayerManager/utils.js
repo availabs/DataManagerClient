@@ -18,7 +18,7 @@ export const defaultColors = [
 	'rgb(242, 218, 58)',
 	'rgb(173, 122, 103)',
 	'rgb(130, 100, 100)',
-	'rgb(51, 51, 51)',
+	// 'rgb(51, 51, 51)',
 	'rgb(128, 128, 128)',
 	'rgb(204, 204, 204)',
 ]
@@ -106,7 +106,7 @@ export const getLayer = (layer_id, viewLayer) => {
 	let gotLayer = layerByType[viewLayer?.type] ? 
 		layerByType[viewLayer?.type](layer_id, viewLayer) :
 		[viewLayer]
-	console.log('gotlayer', gotLayer)
+	// console.log('gotlayer', gotLayer)
 	return gotLayer
 }
 
