@@ -105,7 +105,11 @@ const SourcesList = () => {
             return output;
           })
           .filter(source => {
-            let searchTerm = (source.name + " " + get(source, "categories[0]", []).join(" "));
+            let searchTerm = (source.name + " " + (source?.categories || [])
+              .reduce((out,cat) => {
+                out += cat.join(' ')
+                return out
+              },'')) //get(source, "categories[0]", []).join(" "));
             return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase());
           })
           .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} />)

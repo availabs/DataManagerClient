@@ -32,7 +32,7 @@ const SymbologyControls = ({layer, onChange=()=>{}}) => {
   
   
   useEffect(() => {
-  	console.log('symbology control change', symbology)
+  	//console.log('symbology control change', symbology)
   	onChange(symbology)
   },[symbology, onChange])
 

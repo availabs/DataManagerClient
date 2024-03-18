@@ -1,4 +1,5 @@
-import React, { useState, useEffect, createContext } from "react"
+import React, { useState, useEffect, useMemo, createContext, useRef } from "react"
+import { useImmer } from 'use-immer';
 import { useSearchParams, Link } from "react-router-dom";
 import get from "lodash/get"
 
@@ -8,12 +9,13 @@ import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
 import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
 
+import SymbologyViewLayer from './components/SymbologyViewLayer'
+
 export const SymbologyContext = createContext(undefined);
 
 
 const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
-  
-  
+  const mounted = useRef(false);
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
@@ -24,36 +26,100 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     name: 'New Map',
     collection_id: collection.collection_id,
     description: '',
-    sources: [],
-    layers: []
+    layers: {},
+    mapLayers: []
   }
 
-  const [symbology,setSymbology] = useState(
+  const [symbology,setSymbology] = useImmer(
     symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
     blankSymbology
   )
 
   // update on active symbology id
-  useEffect(() => {
-    let test = 
-    console.log('update active symbology', activeSymbologyId, symbologies, symbologies.find(s => +s.symbology_id === +activeSymbologyId))
-    setSymbology(
-      symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
-      blankSymbology
-    )
-  },[symbologies,activeSymbologyId])
+  // useEffect(() => {
+  //   let test = 
+  //   console.log('update active symbology', activeSymbologyId, symbologies, symbologies.find(s => +s.symbology_id === +activeSymbologyId))
+    
+  //   setSymbology(
+  //     symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
+  //     blankSymbology
+  //   )
+  // },[symbologies,activeSymbologyId])
 
   // --------------------------------------------------
-  const [activeLayer, setActiveLayer] = useState(null)
+  
+  // let savelayers = []
+  // const mapLayers = React.useMemo(() => {
+   
+  //     let currentLayerIds = savelayers.map(d => d.id).filter(d => d)
+            
+
+  //     let newLayers = Object.values(symbology.layers)
+  //       .filter(d => d)
+  //       .filter(d => !currentLayerIds.includes(d.id))
+  //       .map(l => {
+  //         return new SymbologyViewLayer(l)
+  //       })
+  //           //console.log('new layers', newLayers, Object.values(symbology.layers))
+      
+  //     let oldLayers = savelayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+
+  //       console.log('adding new layers', newLayers, oldLayers)
+  //       savelayers = [
+  //           // keep existing layers & filter
+  //           ...oldLayers, 
+  //           // add new layers
+  //           ...newLayers
+  //       ]
+  //       return savelayers
+    
+  //   }, [symbology.layers])
+
+  // console.log('maplayers', mapLayers)
 
 
-  const layers = []
+
+  React.useEffect(() => {
+    // console.log('symbology layers effect')
+    const updateLayers = async () => {
+      if(mounted.current) {
+          setSymbology(draftSymbology => {
+
+            let currentLayerIds = draftSymbology.mapLayers.map(d => d.id).filter(d => d)
+      
+            let newLayers = Object.values(symbology.layers)
+              .filter(d => d)
+              .filter(d => !currentLayerIds.includes(d.id))
+              .map(l => {
+                return new SymbologyViewLayer(l)
+              })
+            let oldLayers = draftSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+            
+            // console.log('update layers old:', oldLayers, 'new:', newLayers)
+            draftSymbology.mapLayers =  [
+                // keep existing layers & filter
+                ...oldLayers, 
+                // add new layers
+                ...newLayers
+            ]
+            
+          })
+      }
+    }
+    updateLayers()
+  }, [symbology.layers])
+  const mapLayers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
+
+  const layerProps = useMemo(() =>  symbology.layers, [symbology.layers]);
+
+  
 	
 	return (
-    <SymbologyContext.Provider value={{symbology,setSymbology, activeLayer, setActiveLayer}}>
-      <div className="w-full h-full relative">
+    <SymbologyContext.Provider value={{symbology,setSymbology}}>
+      <div className="w-full h-full relative" ref={mounted}>
         <AvlMap2
-          layers={ layers }
+          layers={ mapLayers }
+          layerProps = {layerProps}
           mapOptions={ {
             center: [-76, 43.3],
             zoom: 6,

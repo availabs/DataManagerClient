@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Button} from "~/modules/avl-components/src";
 import {RenderTextArea, RenderTextBox} from "./Edit.jsx";
 import {value} from "lodash/seq.js";
@@ -20,6 +20,10 @@ export const ManageMetaLookup = ({
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(startValue);
 
+    useEffect(() => {
+        setValue(startValue)
+    }, [startValue]);
+
     const save = (value) => {
         editMetadata({
             sourceId,
@@ -28,19 +32,22 @@ export const ManageMetaLookup = ({
             metadata, setMetadata,
             col, value: {'meta_lookup': value}
         });
+
+        setIsEditing(false);
         setEditing(null);
     }
 
     return (
         isEditing ?
             <RenderTextBox value={value} setValue={setValue} save={save} cancel={() => setIsEditing(false)}/> :
-            <div className={'text-xs font-thin flex flex-col'}>
-                <div className={'self-end my-1'}>
+            <div className={'text-xs font-thin flex flex-row mt-1'}>
+                <div className={'border p-1 h-30 max-h-[300px] overflow-auto scrollbar-sm'}>
+                    <JsonView data={isJson(startValue) ? JSON.parse(startValue) : {}} shouldExpandNode={allExpanded}
+                              style={defaultStyles}/>
+                </div>
+                <div className={'-ml-10 mt-2 z-10'}>
                     <Button themeOptions={{size: 'xs', color: 'transparent'}}
                             onClick={e => setIsEditing(!isEditing)}> Edit </Button>
-                </div>
-                <div className={'border border-4 border-dotted p-1'}>
-                    <JsonView data={isJson(startValue) ? JSON.parse(startValue) : {}} shouldExpandNode={allExpanded} style={defaultStyles} />
                 </div>
             </div>
     )
