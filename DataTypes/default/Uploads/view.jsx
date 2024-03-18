@@ -28,7 +28,7 @@ export default function Upload({ ctxId }) {
       {ctx && ctx?.events && ctx?.events?.length ? (
         <>
           <div className="py-4 sm:py-2 mt-2 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 border-b-2">
-            {["Id", "Event Type", "Timestamp"].map((key) => (
+            {["Id", "Event Type", "Data", "Timestamp"].map((key) => (
               <dt key={key} className="text-sm font-medium text-gray-600">
                 {key}
               </dt>
@@ -42,20 +42,25 @@ export default function Upload({ ctxId }) {
               >
                 <dd
                   key={`${i}_1`}
-                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
+                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle break-words"
                 >
                   {d?.event_id}
                 </dd>
                 <dd
                   key={`${i}_2`}
-                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
+                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle break-words"
                 >
                   {d?.type?.split(":").pop()}
                 </dd>
-
                 <dd
-                  key={`${i}_3`}
-                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
+                    key={`${i}_3`}
+                    className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle break-words"
+                >
+                  {JSON.stringify(d?.payload?.data)}
+                </dd>
+                <dd
+                  key={`${i}_4`}
+                  className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle break-words"
                 >
                   {d._created_timestamp}
                 </dd>
