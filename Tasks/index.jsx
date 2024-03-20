@@ -36,6 +36,10 @@ const COLUMNS = [
     Header: "ETL Context ID",
     // Cell: LinkCell
   },
+  {
+    accessor: "source_id",
+    Header: "Source ID",
+  },
   { accessor: "created_at",
     Header: "Created At",
     Cell: DateCell
@@ -63,7 +67,7 @@ const TasksComponent = props => {
   const fetchData = React.useCallback(indices => {
     return falcor.get([
       "dama", pgEnv, "latest", "events", indices,
-      ["etl_status", "etl_context_id", "created_at", "terminated_at"]
+      ["etl_status", "etl_context_id", "created_at", "terminated_at", "source_id"]
     ]);
   }, [falcor, pgEnv]);
 

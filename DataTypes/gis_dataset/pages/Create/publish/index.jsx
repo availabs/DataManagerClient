@@ -66,6 +66,7 @@ export default function PublishButton({ state, dispatch }) {
             name: damaSourceName,
             type: sourceType || 'gis_dataset'
           },
+          parent_context_id: etlContextId,
           user_id: userId,
           tableDescriptor,
           gisUploadId,
