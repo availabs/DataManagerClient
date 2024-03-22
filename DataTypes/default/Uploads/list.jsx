@@ -42,20 +42,20 @@ const ListUploads = ({ uploads = [], sourceId = null }) => {
                   key={`${i}_2`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d?.etl_status}
+                  {typeof d?.etl_status === 'string' ? d?.etl_status : ""}
                 </dd>
 
                 <dd
                   key={`${i}_3`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d?.initial_event_id}
+                  {typeof d?.initial_event_id === 'number' ? d?.initial_event_id : ""}
                 </dd>
                 <dd
                   key={`${i}_4`}
                   className="mt-1 text-sm text-gray-900 sm:mt-0 align-middle"
                 >
-                  {d?.latest_event_id}
+                  {typeof d?.latest_event_id === 'number' ? d?.latest_event_id : ""}
                 </dd>
                 <dd
                   key={`${i}_5`}
