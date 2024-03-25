@@ -9,10 +9,10 @@ import { Plus, Close } from '../icons'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../Source/attributes"
 
 function SourceSelector (props) {
-  const { symbology, setSymbology  } = React.useContext(SymbologyContext);
+  const { state, setState  } = React.useContext(SymbologyContext);
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
 
-  const [state, setState] = React.useState({
+  const [source, setSource] = React.useState({
     active: false,
     sourceId: null,
     viewId: null
@@ -45,7 +45,7 @@ function SourceSelector (props) {
   useEffect(() => {
     async function fetchData() {
       //console.time("fetch data");
-      const {sourceId} = state
+      const {sourceId} = source
       const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
       const resp = await falcor.get(lengthPath);
       return await falcor.get([
@@ -54,23 +54,24 @@ function SourceSelector (props) {
         "attributes", Object.values(ViewAttributes)
       ]);
     }
-    if(state.sourceId) {
+    if(source.sourceId) {
       fetchData();
     }
-  }, [state.sourceId, falcor, pgEnv]);
+  }, [source.sourceId, falcor, pgEnv]);
 
   const views = useMemo(() => {
-    setState({...state, viewId: null})
-    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", state.sourceId, "views", "byIndex"], {}))
+    setSource({...source, viewId: null})
+    // cobsole.log('get views')
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", source.sourceId, "views", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, state.sourceId, pgEnv]);
+  }, [falcorCache, source.sourceId, pgEnv]);
 
 
-  const layers = useMemo(() => symbology?.layers || symbology?.symbology || [], [symbology])
+  const layers = useMemo(() => state.symbology?.layers || [], [state.symbology])
 
   const addLayer = () => {
-    const source = sources.filter(d => d.source_id === +state.sourceId)?.[0] || {}
-    const view = views.filter(d => d.view_id === +state.viewId)?.[0] || {}
+    const newSource = sources.filter(d => d.source_id === +source.sourceId)?.[0] || {}
+    const view = views.filter(d => d.view_id === +source.viewId)?.[0] || {}
 
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
@@ -82,38 +83,41 @@ function SourceSelector (props) {
       // generated unique Id 
       id: layerId,
       // meta data
-      name: `${source.display_name || source.name} ${view.version || view.view_id}`,
-      source_id: state.sourceId,
-      view_id: state.viewId,
+      name: `${newSource.display_name || newSource.name} ${view.version || view.view_id}`,
+      isDynamic: true,
+      source_id: newSource.sourceId,
+      view_id: source.viewId,
       type: viewLayer.type,
       // mapbox sources and layers
       sources: view?.metadata?.tiles?.sources || [],
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
       visible: true,
-      order: Object.keys(symbology?.layers)?.length || 0
+      order: Object.keys(state.symbology?.layers)?.length || 0
     }
-    setSymbology({...symbology, layers: {...symbology.layers, [layerId]: newLayer}})
-    setState({ add: false, sourceId: null, viewId: null})
+    setState(draft => {
+      draft.symbology.layers[layerId] =  newLayer
+    })
+    setSource({ add: false, sourceId: null, viewId: null})
   }
 
   return (
     <div className='relative'>
-      <div className='p-2.5 rounded hover:bg-slate-100 m-1' onClick={() => setState({...state, add: !state.add})}>
-        {state.add ? 
+      <div className='p-1 rounded hover:bg-slate-100 m-1' onClick={() => setSource({...source, add: !source.add})}>
+        {source.add ? 
           <Close className='fill-slate-500' /> :
           <Plus className='fill-slate-500' />
         }
         {/*<i 
-          className={`${state.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
+          className={`${source.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
           
         />*/}
       </div>
-      {state.add && <div className='absolute z-20 -left-[240px] p-2 top-[40px] border w-[280px] bg-white'>
+      {source.add && <div className='absolute z-20 -left-[240px] p-2 top-[40px] border w-[280px] bg-white'>
         <div className='w-full p-1 text-sm font-bold text-blue-500'>select source:</div>
         <select 
-          onChange={(e) => setState({...state, sourceId: e.target.value})}
-          className='p-2 w-full bg-blue-50'>
+          onChange={(e) => setSource({...source, sourceId: e.target.value})}
+          className='p-2 w-full bg-slate-100'>
           <option value={null}>---select source---</option>
           {sources.map((source) => (
             <option key={source.source_id} className='p-1 hover:bg-blue-100' value={source.source_id}>
@@ -121,12 +125,12 @@ function SourceSelector (props) {
             </option>)
           )}
         </select>
-        {state.sourceId && 
+        {source.sourceId && 
           <>
             <div className='w-full p-1 text-sm font-bold text-blue-500'>select view:</div>
             <select 
-              onChange={(e) => setState({...state, viewId: e.target.value})}
-              className='p-2 w-full bg-blue-50'>
+              onChange={(e) => setSource({...source, viewId: e.target.value})}
+              className='p-2 w-full bg-slate-100'>
               <option value={null}>---select view---</option>
               {views.map((view) => (
                 <option key={view.view_id} className='p-1 hover:bg-blue-100' value={view.view_id}>
@@ -136,8 +140,8 @@ function SourceSelector (props) {
             </select>
             <div className='w-full flex justify-end p-2'>
               <div 
-                onClick={() => state.viewId ? addLayer() : null}
-                className={`${ state.viewId ? 
+                onClick={() => source.viewId ? addLayer() : null}
+                className={`${ source.viewId ? 
                   'inline-flex w-32 justify-center rounded-lg cursor-pointer text-sm font-semibold py-1 px-1 bg-blue-600 text-white hover:bg-blue-500 shadow-lg border border-b-4 border-blue-800 hover:border-blue-700 active:border-b-2 active:mb-[2px] active:shadow-none':
                   'inline-flex w-32 justify-center rounded-lg cursor-not-allowed text-sm font-semibold py-1 px-1 bg-slate-300 text-white shadow border border-slate-400 border-b-4'
                 }`}

@@ -2,125 +2,147 @@ import React, { useState, useEffect, useMemo, createContext, useRef } from "reac
 import { useImmer } from 'use-immer';
 import { useSearchParams, Link } from "react-router-dom";
 import get from "lodash/get"
+import isEqual from "lodash/isEqual"
+import throttle from "lodash.throttle"
 
+import {PMTilesProtocol} from '../../../../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
-import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
+// import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
+
+import { DamaContext } from "../../../../store"
 
 import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 
+
 export const SymbologyContext = createContext(undefined);
 
 
 const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
+  
   const mounted = useRef(false);
+  const {falcor, pgEnv} = React.useContext(DamaContext)
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
   // once loaded this is mutable here 
-  // and can then be discarded or saved to db
+  // and is written to db on change
   // ---------------------------------------------------
-  const blankSymbology = {
-    name: 'New Map',
-    collection_id: collection.collection_id,
-    description: '',
-    layers: {},
-    mapLayers: []
-  }
-
-  const [symbology,setSymbology] = useImmer(
+  const [state,setState] = useImmer(
     symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
-    blankSymbology
+    {
+      name: '',
+      collection_id: collection.collection_id,
+      description: '',
+      // symbology: {
+      //   layers: {},
+      // }
+    }
   )
 
-  // update on active symbology id
-  // useEffect(() => {
-  //   let test = 
-  //   console.log('update active symbology', activeSymbologyId, symbologies, symbologies.find(s => +s.symbology_id === +activeSymbologyId))
-    
-  //   setSymbology(
-  //     symbologies.find(s => +s.symbology_id === +activeSymbologyId) ||
-  //     blankSymbology
-  //   )
-  // },[symbologies,activeSymbologyId])
 
-  // --------------------------------------------------
-  
-  // let savelayers = []
-  // const mapLayers = React.useMemo(() => {
-   
-  //     let currentLayerIds = savelayers.map(d => d.id).filter(d => d)
-            
-
-  //     let newLayers = Object.values(symbology.layers)
-  //       .filter(d => d)
-  //       .filter(d => !currentLayerIds.includes(d.id))
-  //       .map(l => {
-  //         return new SymbologyViewLayer(l)
-  //       })
-  //           //console.log('new layers', newLayers, Object.values(symbology.layers))
+  useEffect(() => {
+    async function updateData() {
+      console.time('update symbology')
+      //console.log('updating symbology to:', state.symbology)
+      let resp = await falcor.set({
+        paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'symbology']],
+        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
+          [+activeSymbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
+        }}}}}
+      })
+      console.timeEnd('update symbology')
       
-  //     let oldLayers = savelayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+      //console.log('resp',resp)
+    }
 
-  //       console.log('adding new layers', newLayers, oldLayers)
-  //       savelayers = [
-  //           // keep existing layers & filter
-  //           ...oldLayers, 
-  //           // add new layers
-  //           ...newLayers
-  //       ]
-  //       return savelayers
+    let currentData = symbologies.find(s => +s.symbology_id === +activeSymbologyId)
     
-  //   }, [symbology.layers])
+    // console.log('check update', 
+    //   Object.values(state?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`), 
+    //   Object.values(currentData?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`),
+    //   state?.symbology?.layers,
+    //   currentData?.symbology?.layers,
+    //   !isEqual(state?.symbology, currentData?.symbology), 
+    //   state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
+    // )
+    
+    if(state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)) {
+      updateData()
+      //throttle(updateData,500)
+    }
+  },[state.symbology])
+  // console.log('render', state, activeSymbologyId, symbologies.find(s => +s.symbology_id === +activeSymbologyId)) 
+  useEffect(() => {
+    // -------------------
+    // on navigate or load set state to symbology with data
+    // TODO: load state.symbology here and dont autoload them in Collection/index
+    // -------------------
+    if(symbologies.find(s => +s.symbology_id === +activeSymbologyId)) {
+      setState(symbologies.find(s => +s.symbology_id === +activeSymbologyId))
+    }
+  },[symbologies.length, activeSymbologyId])
 
-  // console.log('maplayers', mapLayers)
+  //--------------------------
+  // -- Map Layers are the instantation
+  // -- of state.symbology.layers as SymbologyViewLayers
+  // -------------------------
+  const [mapLayers, setMapLayers] = useImmer([])
 
+ 
 
+  useEffect(() => {
+    // -----------------------
+    // Update map layers on map
+    // when state.symbology.layers update
+    // -----------------------
 
-  React.useEffect(() => {
     // console.log('symbology layers effect')
     const updateLayers = async () => {
       if(mounted.current) {
-          setSymbology(draftSymbology => {
+          setMapLayers(draftMapLayers => {
 
-            let currentLayerIds = draftSymbology.mapLayers.map(d => d.id).filter(d => d)
+            let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
       
-            let newLayers = Object.values(symbology.layers)
+            let newLayers = Object.values(state?.symbology?.layers || {})
               .filter(d => d)
               .filter(d => !currentLayerIds.includes(d.id))
+              .sort((a,b) => b.order - a.order)
               .map(l => {
                 return new SymbologyViewLayer(l)
               })
-            let oldLayers = draftSymbology.mapLayers.filter(d => Object.keys(symbology.layers).includes(d.id))
+            let oldLayers = draftMapLayers.filter(d => Object.keys(state?.symbology?.layers || {}).includes(d.id))
             
-            // console.log('update layers old:', oldLayers, 'new:', newLayers)
-            draftSymbology.mapLayers =  [
+            const out = [
                 // keep existing layers & filter
                 ...oldLayers, 
                 // add new layers
                 ...newLayers
-            ]
-            
+            ].sort((a,b) => state.symbology.layers[b.id].order - state.symbology.layers[a.id].order)
+            // console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
+            return out
           })
       }
     }
     updateLayers()
-  }, [symbology.layers])
-  const mapLayers = useMemo(() => symbology.mapLayers, [symbology.mapLayers])
-
-  const layerProps = useMemo(() =>  symbology.layers, [symbology.layers]);
-
+  }, [state?.symbology?.layers])
   
-	
+
+  const layerProps = useMemo(() =>  state?.symbology?.layers || {}, [state?.symbology?.layers]);
+
+  // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
+	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
+
+
 	return (
-    <SymbologyContext.Provider value={{symbology,setSymbology}}>
+    <SymbologyContext.Provider value={{state, setState, collection, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>
         <AvlMap2
           layers={ mapLayers }
           layerProps = {layerProps}
-          mapOptions={ {
+          mapOptions={{
             center: [-76, 43.3],
             zoom: 6,
             protocols: [PMTilesProtocol],
@@ -142,7 +164,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
               }
             ]
-          } }
+          }}
           leftSidebar={ false }
           rightSidebar={ false }
         />
@@ -151,7 +173,6 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           <div className='flex-1'/>
           <LayerEditor />
         </div>
-        
       </div>
     </SymbologyContext.Provider>
 	)
