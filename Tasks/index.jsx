@@ -1,9 +1,9 @@
 import React from "react"
 
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 import get from "lodash/get";
-//import moment from "moment"
+import moment from "moment"
 
 import { DamaContext } from "~/pages/DataManager/store";
 
@@ -19,25 +19,23 @@ const ETL_CONTEXT_ATTRS = [
   "type"
 ];
 
+const StartedAtCell = (d) => {
+  const { value } = d;
+  const now = moment(new Date());
+  const cellMoment = moment(value);
+  const displayTimeThreshold = moment( now.subtract(14, 'days'));
 
-const LinkCell = ({ value }) => {
-  const stopPropagation = React.useCallback(e => {
-    e.stopPropagation();
-  }, []);
-  return (
-    <div onClick={ stopPropagation }>
-      <Link to={ `/task/${ value }` }
-        className="w-full block border-b hover:border-blue-400 hover:text-blue-500"
-      >
-        { value }
-      </Link>
-    </div>
-  )
-}
+  let formattedDate; 
+  if( cellMoment.isAfter(displayTimeThreshold) ){
+    console.log("within time threshold")
+    formattedDate = moment(value).format("DD MMMM hh:mm a");
+  }
+  else{
+    formattedDate = moment(value).format("MMMM Do YYYY");
+  }
 
-const DateCell = ({ value }) => {
   return (
-    <div>{ value.toString() }</div>
+    <div>{ formattedDate }</div>
   )
 }
 
@@ -50,11 +48,11 @@ const COLUMNS = [
   {
     accessor: "type",
     Header: "Type",
-    Cell: (d) => {
+    Cell: ({value}) => {
       //Split off the ":initial"
       //replace hyphens with spaces
       //capitalize
-      const formattedType = d.value.split(":")[0].replace("-"," ");
+      const formattedType = value.split(":")[0].replace("-"," ");
       return <div className="capitalize">{formattedType}</div>;
     }
   },
@@ -62,8 +60,8 @@ const COLUMNS = [
     accessor: "source_name",
     Header: "Source Name",
   },
-  { accessor: "created_at", Header: "Created At", Cell: DateCell },
-  { accessor: "terminated_at", Header: "Terminated At", Cell: DateCell },
+  { accessor: "created_at", Header: "Started", Cell: StartedAtCell },
+  { accessor: "duration", Header: "Duration"},
   { accessor: "etl_status", Header: "ETL Status" },
 ];
 
@@ -122,6 +120,26 @@ const TasksComponent = (props) => {
             ]);
             r.source_name = sourceName;
           }
+
+          if(r.terminated_at){
+            const terminatedAtTime = moment(r.terminated_at);
+            const createdAtTime = moment(r.created_at);
+            const diffTime = terminatedAtTime.diff(createdAtTime, 'seconds');
+
+            if(diffTime < 2 ){
+              const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('milliseconds');
+              r.duration = `${Math.round(duration)} ms`
+            }
+            else if(diffTime < 600) {
+              const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('seconds');
+              r.duration = `${Math.round(duration)} seconds`
+            }
+            else{
+              const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('minutes');
+              r.duration = `${Math.round(duration)} minutes`
+            }
+          }
+
           return r;
         })
         .filter((r) => Boolean(r.etl_context_id));
