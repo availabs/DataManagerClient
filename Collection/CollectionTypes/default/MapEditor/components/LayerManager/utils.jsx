@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react"
 
 export const defaultColors = [
 	'rgb(80, 149, 127)',
@@ -23,7 +24,18 @@ export const defaultColors = [
 	'rgb(204, 204, 204)',
 ]
 
+const rgb2hex=c=> {
+	let out = '#'+c.match(/\d+/g).map(x=>(+x).toString(16).padStart(2,0)).join``
+	return out
+}
 
+const toRGB = (color) => {
+    const { style } = new Option();
+    style.color = color;
+    return style.color;
+}
+
+export const toHex = (color) => rgb2hex(toRGB(color))
 
 function getCircleLayer( layer_id, viewLayer) {
 	const newColor = defaultColors[generateRandom(0, defaultColors.length-1)]
@@ -47,6 +59,16 @@ function getLineLayer( layer_id, viewLayer) {
 	const newColor = defaultColors[generateRandom(0, defaultColors.length-1)]
 	return [
    		{
+	      "id": `${layer_id}_case`,
+	      "type": "line",
+	      "paint": {
+	         "line-color": RGB_Log_Shade(-0.4, newColor),
+	         "line-width": 3, 
+	      },
+	      "source": viewLayer.source,
+	      "source-layer": viewLayer['source-layer']
+	   	},
+   		{
 	      "id": layer_id,
 	      "type": "line",
 	      "paint": {
@@ -55,17 +77,7 @@ function getLineLayer( layer_id, viewLayer) {
 	      },
 	      "source": viewLayer.source,
 	      "source-layer": viewLayer['source-layer']
-	   },
-	   {
-	      "id": `${layer_id}_case`,
-	      "type": "line",
-	      "paint": {
-	         "line-color": RGB_Log_Shade(-0.4, newColor),
-	         "line-width": 3, 
-	      },
-	      "source": viewLayer.source,
-	      "source-layer": viewLayer['source-layer']
-	   }
+	   	}
 	]
 }
 
@@ -73,16 +85,6 @@ function getFillLayer( layer_id, viewLayer) {
 	const newColor = defaultColors[generateRandom(0, defaultColors.length-1)]
 	return [
    		{
-	      "id": layer_id,
-	      "type": "fill",
-	      "paint": {
-	         "fill-color": newColor,
-	         "fill-opacity": 0.75, 
-	      },
-	      "source": viewLayer.source,
-	      "source-layer": viewLayer['source-layer']
-	   },
-	   {
 	      "id": `${layer_id}_case`,
 	      "type": "line",
 	      "paint": {
@@ -91,7 +93,18 @@ function getFillLayer( layer_id, viewLayer) {
 	      },
 	      "source": viewLayer.source,
 	      "source-layer": viewLayer['source-layer']
-	   }
+	    },
+   	    {
+	      "id": layer_id,
+	      "type": "fill",
+	      "paint": {
+	         "fill-color": newColor,
+	         "fill-opacity": 0.75, 
+	      },
+	      "source": viewLayer.source,
+	      "source-layer": viewLayer['source-layer']
+	    }
+	  
 	]
 }
 
@@ -127,3 +140,34 @@ const RGB_Log_Shade=(p,c)=>{
 function generateRandom(min = 0, max = 100) {
 	return Math.floor(  Math.random() * (max - min)) + min;
 }
+
+export const getValidSources = (sources, dama_host) => {
+  return sources.map(src => {
+    let { id, source: { url, type } } = src;
+    if(url.includes('.pmtiles')){
+      url = url
+        .replace("$HOST", dama_host)
+        .replace('https://', 'pmtiles://')
+        .replace('http://', 'pmtiles://')
+
+    } else {
+      url = url.replace("$HOST", dama_host)
+    }
+    
+    return {
+      id,
+      source: {
+        type,
+        url: url
+      }
+    }
+  });
+}
+
+export const usePrevious = (value) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};

@@ -15,9 +15,9 @@ export const SymbologyAttributes = {
   name: "name",
   collection_id: "collection_id",
   description: "description",
-  metadata: "metadata",
+  // metadata: "metadata",
   symbology: "symbology",
-  source_dependencies: "source_dependencies",
+  // source_dependencies: "source_dependencies",
   _created_timestamp: "_created_timestamp",
   _modified_timestamp: "_modified_timestamp",
 };

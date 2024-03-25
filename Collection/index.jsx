@@ -69,11 +69,12 @@ const Collection = ({}) => {
 
   useEffect(() => {
     async function fetchSymbologyData() {
-      const symbologyPath = ["dama", pgEnv, "symbologies", "byId", symbologyIds, "attributes", Object.values(SymbologyAttributes)];
+      // console.log('fetchSymbologyData ids', symbologyIds)
+      const symbologyPath = ["dama", pgEnv, "symbologies", "byId", symbologyIds.filter(d => d && d !== 'undefined') , "attributes", Object.values(SymbologyAttributes)];
       await falcor.get(symbologyPath);
     };
 
-    if(symbologyIds?.length){
+    if(symbologyIds?.filter(d => d && d !== 'undefined')?.length){
       fetchSymbologyData();
     }
 
@@ -81,6 +82,7 @@ const Collection = ({}) => {
 
   const symbologies = useMemo(() => {
     const cacheSymbologies = (get(falcorCache, ["dama", pgEnv, "symbologies", "byId"], {}))
+    // console.log('Collections updating symbologies', cacheSymbologies, falcorCache)
     return Object.values(cacheSymbologies)
       .map((v) => {
         const newVal = { ...v.attributes };
