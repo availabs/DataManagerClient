@@ -17,44 +17,53 @@ const DateCell = ({ value, ...props }) => {
 }
 
 const COLUMNS = [
-  { accessor: "etl_context_id",
-    Header: "ETL Context ID"
+  { accessor: "etl_context_id", Header: "ETL Context ID" },
+  {
+    accessor: "event_id",
+    Header: "Event ID",
   },
-  { accessor: "created_at",
-    Header: "Created At",
-    Cell: DateCell
-  },
-  { accessor: "type",
-    Header: "Type"
-  }
-]
+  { accessor: "created_at", Header: "Created At", Cell: DateCell },
+  { accessor: "type", Header: "Type" },
+];
 
 const TaskPageComponent = props => {
   const { etl_context_id } = useParams();
 
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
 
+  const EVENT_LENGTH_PATH = [
+    "dama",
+    pgEnv,
+    "etlContexts",
+    etl_context_id,
+    "allEvents",
+    "length",
+  ];
+
+  const generateAllEventsPath = (indices) => ([
+    "dama",
+    pgEnv,
+    "etlContexts",
+    etl_context_id,
+    "allEvents",
+    indices,
+    ["event_id","etl_context_id", "created_at", "type"]
+  ])
+
   const fetchLength = React.useCallback(() => {
-    return falcor.get([
-      "dama", pgEnv, "latest", "events", "for", etl_context_id, "length"
-    ]).then(res => {
-      return get(res, ["json", "dama", pgEnv, "latest", "events", "for", etl_context_id, "length"], 0);
-    });
+    return falcor.get(EVENT_LENGTH_PATH);
   }, [falcor, pgEnv, etl_context_id]);
 
   const fetchData = React.useCallback(indices => {
-    return falcor.get([
-      "dama", pgEnv, "latest", "events", "for", etl_context_id, indices,
-      ["etl_context_id", "created_at", "type"]
-    ]);
+    return falcor.get(generateAllEventsPath(indices));
   }, [falcor, pgEnv, etl_context_id]);
 
   const parseData = React.useCallback(indices => {
     return indices.map(i => {
+      const dataPath = generateAllEventsPath(i);
+      dataPath.pop(); //Removes `attr` from path
       return {
-        ...get(falcorCache,
-          ["dama", pgEnv, "latest", "events", "for", etl_context_id, i]
-        )
+        ...get(falcorCache, dataPath),
       };
     }).filter(r => Boolean(r.etl_context_id));
   }, [falcorCache, pgEnv, etl_context_id]);

@@ -15,6 +15,8 @@ const ETL_CONTEXT_ATTRS = [
   "created_at",
   "terminated_at",
   "source_id",
+  "parent_context_id",
+  "type"
 ];
 
 
@@ -41,26 +43,29 @@ const DateCell = ({ value }) => {
 
 
 const COLUMNS = [
-  { accessor: "etl_context_id",
+  {
+    accessor: "etl_context_id",
     Header: "ETL Context ID",
-    // Cell: LinkCell
+  },
+  {
+    accessor: "type",
+    Header: "Type",
+    Cell: (d) => {
+      //Split off the ":initial"
+      //replace hyphens with spaces
+      //capitalize
+      const formattedType = d.value.split(":")[0].replace("-"," ");
+      return <div className="capitalize">{formattedType}</div>;
+    }
   },
   {
     accessor: "source_name",
     Header: "Source Name",
   },
-  { accessor: "created_at",
-    Header: "Created At",
-    Cell: DateCell
-  },
-  { accessor: "terminated_at",
-    Header: "Terminated At",
-    Cell: DateCell
-  },
-  { accessor: "etl_status",
-    Header: "ETL Status"
-  }
-]
+  { accessor: "created_at", Header: "Created At", Cell: DateCell },
+  { accessor: "terminated_at", Header: "Terminated At", Cell: DateCell },
+  { accessor: "etl_status", Header: "ETL Status" },
+];
 
 const TasksComponent = (props) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
