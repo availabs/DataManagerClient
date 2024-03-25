@@ -2,6 +2,7 @@ import React, { useEffect, useContext , useMemo } from 'react'
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../../../../store";
 import get from 'lodash/get'
+import set from 'lodash/set'
 import { getLayer } from './utils'
 import { Plus, Close } from '../icons'
 
@@ -93,10 +94,16 @@ function SourceSelector (props) {
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
       visible: true,
-      order: Object.keys(state.symbology?.layers)?.length || 0
+      order: Object.keys(state?.symbology?.layers || {})?.length || 0
     }
     setState(draft => {
-      draft.symbology.layers[layerId] =  newLayer
+      if(!draft?.symbology){
+        draft.symbology = { }
+      }
+      if(!draft?.symbology?.layers) {
+        draft.symbology.layers = {}
+      }
+      set(draft, `symbology.layers[${layerId}]`,newLayer)
     })
     setSource({ add: false, sourceId: null, viewId: null})
   }

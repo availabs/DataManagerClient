@@ -65,11 +65,14 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     //   Object.values(currentData?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`),
     //   state?.symbology?.layers,
     //   currentData?.symbology?.layers,
-    //   !isEqual(state?.symbology, currentData?.symbology), 
-    //   state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
+    //   symbologies.find(s => +s.symbology_id === +activeSymbologyId),
+    //   activeSymbologyId,      
+    //   symbologies,
+    //   // !isEqual(state?.symbology, currentData?.symbology), 
+    //   // state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
     // )
     
-    if(state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)) {
+    if(state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) {
       updateData()
       //throttle(updateData,500)
     }
@@ -99,7 +102,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     // when state.symbology.layers update
     // -----------------------
 
-    // console.log('symbology layers effect')
+    console.log('symbology layers effect')
     const updateLayers = async () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
