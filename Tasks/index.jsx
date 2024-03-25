@@ -9,6 +9,15 @@ import { DamaContext } from "~/pages/DataManager/store";
 
 import DataFetchTable from "./components/DataFetchTable";
 
+const ETL_CONTEXT_ATTRS = [
+  "etl_status",
+  "etl_context_id",
+  "created_at",
+  "terminated_at",
+  "source_id",
+];
+
+
 const LinkCell = ({ value }) => {
   const stopPropagation = React.useCallback(e => {
     e.stopPropagation();
@@ -36,6 +45,10 @@ const COLUMNS = [
     Header: "ETL Context ID",
     // Cell: LinkCell
   },
+  {
+    accessor: "source_name",
+    Header: "Source Name",
+  },
   { accessor: "created_at",
     Header: "Created At",
     Cell: DateCell
@@ -49,8 +62,8 @@ const COLUMNS = [
   }
 ]
 
-const TasksComponent = props => {
-  const { pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext);
+const TasksComponent = (props) => {
+  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
 
   const fetchLength = React.useCallback(() => {
     return falcor.get([
@@ -60,20 +73,56 @@ const TasksComponent = props => {
     });
   }, [falcor, pgEnv]);
 
-  const fetchData = React.useCallback(indices => {
-    return falcor.get([
-      "dama", pgEnv, "latest", "events", indices,
-      ["etl_status", "etl_context_id", "created_at", "terminated_at"]
-    ]);
-  }, [falcor, pgEnv]);
+  const fetchData = React.useCallback(
+    (indices) => {
+      return falcor
+        .get(["dama", pgEnv, "latest", "events", indices, ETL_CONTEXT_ATTRS])
+        .then((data) => {
+          const sourceIds = Object.values(
+            get(data, ["json", "dama", pgEnv, "latest", "events"])
+          )
+            .map((etlContext) => etlContext.source_id)
+            .filter((sourceId) => !!sourceId);
 
-  const parseData = React.useCallback(indices => {
-    return indices.map(i => {
-      return {
-        ...get(falcorCache, ["dama", pgEnv, "latest", "events", i])
-      };
-    }).filter(r => Boolean(r.etl_context_id));
-  }, [falcorCache, pgEnv]);
+          return falcor.get([
+            "dama",
+            pgEnv,
+            "sources",
+            "byId",
+            sourceIds,
+            "attributes",
+            "name",
+          ]);
+        });
+    },
+    [falcor, pgEnv]
+  );
+
+  const parseData = React.useCallback(
+    (indices) => {
+      return indices
+        .map((i) => ({
+          ...get(falcorCache, ["dama", pgEnv, "latest", "events", i]),
+        }))
+        .map((r) => {
+          if (r.source_id) {
+            const sourceName = get(falcorCache, [
+              "dama",
+              pgEnv,
+              "sources",
+              "byId",
+              r.source_id,
+              "attributes",
+              "name",
+            ]);
+            r.source_name = sourceName;
+          }
+          return r;
+        })
+        .filter((r) => Boolean(r.etl_context_id));
+    },
+    [falcorCache, pgEnv]
+  );
 
   const navigate = useNavigate();
 
