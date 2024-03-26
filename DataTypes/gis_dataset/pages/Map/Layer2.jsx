@@ -32,6 +32,7 @@ import {
 import { DamaContext } from "~/pages/DataManager/store";
 
 const PIN_OUTLINE_LAYER_SUFFIX = 'pin_outline'
+const NO_FILTER_LAYER_SUFFIX = 'static'
 
 const HoverComp = ({ data, layer }) => {
   const { attributes, activeViewId, filters } = layer;
@@ -470,7 +471,8 @@ const GISDatasetRenderComponent = props => {
 
       symbology?.layers?.forEach((layer) => {
         const mapLayer = maplibreMap.getLayer(layer.id);
-        if (mapLayer) {
+        if (mapLayer && !layer.id.includes(NO_FILTER_LAYER_SUFFIX)) {
+          console.log("filtering this layer::", layer.id)
           if(!layer.filter){
             maplibreMap.setFilter(layer.id, dataFilter);
           }
