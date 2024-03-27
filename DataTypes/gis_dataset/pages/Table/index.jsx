@@ -56,7 +56,8 @@ const TablePage = ({
   transform = identityMap,
   filterData = {},
   TableFilter = DefaultTableFilter,
-  showViewSelector = true
+  showViewSelector = true,
+  fullWidth = false,
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
@@ -169,6 +170,16 @@ const TablePage = ({
 
   console.log('sort', sortBy, columns)
 
+  const [tableContainerStyle, tableContainerClassName] = React.useMemo(() => {
+    const fullWidthStyle = {width:"96vw", position:"relative", left:"calc(-50vw + 50%)"};
+    const fullWidthClass = "mt-2 mx-12";
+    const defaultWidthStyle = {};
+    const defaultWidthClass = "max-w-6xl";
+    
+    return fullWidth ? [fullWidthStyle, fullWidthClass] : [defaultWidthStyle, defaultWidthClass];
+  }, [fullWidth])
+
+
   return (
     <div>
       <div className="flex">
@@ -177,7 +188,7 @@ const TablePage = ({
           data={tableData} columns={columns}/>
         { showViewSelector ? <ViewSelector views={views} /> : '' }
       </div>
-      <div className="max-w-6xl">
+      <div className={tableContainerClassName} style={tableContainerStyle}>
         <Table 
           data={data} 
           columns={columns} 
