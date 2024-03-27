@@ -472,7 +472,6 @@ const GISDatasetRenderComponent = props => {
       symbology?.layers?.forEach((layer) => {
         const mapLayer = maplibreMap.getLayer(layer.id);
         if (mapLayer && !layer.id.includes(NO_FILTER_LAYER_SUFFIX)) {
-          console.log("filtering this layer::", layer.id)
           if(!layer.filter){
             maplibreMap.setFilter(layer.id, dataFilter);
           }

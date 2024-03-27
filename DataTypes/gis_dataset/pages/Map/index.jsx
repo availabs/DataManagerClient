@@ -24,6 +24,12 @@ const OrdinalColorRange = getColorRange(12, "Set3")
 
 const PIN_OUTLINE_LAYER_SUFFIX = '_pin_outline'
 
+const DEFAULT_MAP_STYLES = [
+  { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
+  { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
+  { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
+];
+
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'
 //import { DAMA_HOST } from "~/config"
 
@@ -189,7 +195,7 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   )
 }
 
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles }) => {
   const [searchParams] = useSearchParams();
   const urlVariable = searchParams.get("variable")
 
@@ -327,7 +333,8 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           source={ source }
           tempSymbology={ tempSymbology }
           setTempSymbology={ setTempSymbology }
-          filters={filters}/>
+          filters={filters}
+          mapStyles={mapStyles}/>
       </div>
 
       {user.authLevel >= 5 ?
@@ -400,7 +407,7 @@ const PMTilesProtocol = {
   }
 }
 
-const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }) => {
+const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters, mapStyles }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -437,6 +444,11 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }
   }, [mounted, layers]);
 
   const activeVar = get(filters, ["activeVar", "value"], "");
+
+  const styles = React.useMemo(() => {
+    return mapStyles && mapStyles?.length > 0 ? mapStyles : DEFAULT_MAP_STYLES;
+  }, [mapStyles]);
+
 
   const updateLegend = React.useCallback(legend => {
     if (!activeVar || (activeVar === "none")) return;
@@ -488,11 +500,7 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters }
               zoom: 7.3, //8.32/40.594/-74.093
               navigationControl: false,
               center: [-73.8, 40.79],
-              styles: [
-                { name: "Streets", style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"},
-                { name: "Light", style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9" },
-                { name: "Dark", style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9" }
-              ]
+              styles: styles
             }}
             layers={ layerData }
             layerProps={ layerProps }

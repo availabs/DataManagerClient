@@ -27,7 +27,6 @@ const StartedAtCell = (d) => {
 
   let formattedDate; 
   if( cellMoment.isAfter(displayTimeThreshold) ){
-    console.log("within time threshold")
     formattedDate = moment(value).format("DD MMMM hh:mm a");
   }
   else{
