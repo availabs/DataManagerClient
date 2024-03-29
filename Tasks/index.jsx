@@ -9,7 +9,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 
 import DataFetchTable from "./components/DataFetchTable";
 
-const ETL_CONTEXT_ATTRS = [
+export const ETL_CONTEXT_ATTRS = [
   "etl_status",
   "etl_context_id",
   "created_at",

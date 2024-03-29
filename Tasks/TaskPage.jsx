@@ -8,6 +8,8 @@ import get from "lodash/get";
 import { DamaContext } from "~/pages/DataManager/store";
 
 import DataFetchTable from "./components/DataFetchTable";
+import { Breadcrumbs } from "./components/Breadcrumbs";
+
 
 const DateCell = ({ value, ...props }) => {
   // moment(value).format("YYYY-MM-DD HH:mm:ss A")
@@ -70,6 +72,7 @@ const TaskPageComponent = props => {
 
   return (
     <div>
+      <Breadcrumbs />
       <DataFetchTable columns={ COLUMNS }
         fetchLength={ fetchLength }
         fetchData={ fetchData }
