@@ -3,7 +3,7 @@ import { useImmer } from 'use-immer';
 import { useSearchParams, Link } from "react-router-dom";
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
-import throttle from "lodash.throttle"
+//import throttle from "lodash/throttle"
 
 import {PMTilesProtocol} from '../../../../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
