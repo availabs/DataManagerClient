@@ -58,6 +58,7 @@ const TablePage = ({
   TableFilter = DefaultTableFilter,
   showViewSelector = true,
   fullWidth = false,
+  striped = false
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
@@ -189,7 +190,8 @@ const TablePage = ({
         { showViewSelector ? <ViewSelector views={views} /> : '' }
       </div>
       <div className={tableContainerClassName} style={tableContainerStyle}>
-        <Table 
+        <Table
+          striped={striped}
           data={data} 
           columns={columns} 
           sortBy={sortBy}
