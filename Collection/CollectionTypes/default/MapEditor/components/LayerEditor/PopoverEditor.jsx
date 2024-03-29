@@ -12,8 +12,6 @@ import { wrapperTypes } from './ControlWrappers'
 import { SelectControl } from './Controls'
 
 
-
-
 function StyleEditor (props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
@@ -24,7 +22,10 @@ function StyleEditor (props) {
     <div>
       <div className='p-4'>
       <div className='font-bold tracking-wider text-sm text-slate-700'>Popover</div>
-        <SelectControl path={`['hover']`} params={{options: [{value: '', name:'None'}, {value: 'hover', name:'Hover'}]}} />
+        <SelectControl 
+          path={`['hover']`} 
+          params={{options: [{value: '', name:'None'}, {value: 'hover', name:'Hover'}]}} 
+        />
       </div>
     </div>
   )

@@ -1,12 +1,12 @@
 
 const typeConfigs = {
   'fill': [
-    {
-      label: 'type',
+     {
+      label: 'Type',
       type: 'inline',
       controls: [
         {
-          type: 'select',
+          type: 'selectType',
           params: {
             options: [
               {name:'Simple', value: 'simple'},
@@ -14,13 +14,73 @@ const typeConfigs = {
               {name:'Color Range', value: 'colors'}
             ]
           },
-          path: `layers[1]['layer-type']`
+          path: `['layer-type']`,
+          datapath: `layers[1].paint['fill-color']`
+        }
+      ]
+    },
+    {
+      label: 'Color By',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'colors']
+      },
+      controls: [
+        {
+          type: 'selectViewColumn',
+          params: {
+            options: [
+              {name:'Column Select', value: 'simple'},
+              
+            ]
+          },
+          path: `['data-column']`,
+          datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: 'Categories',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories']
+      },
+      controls: [
+        {
+          type: 'categoryControl',
+          params: {
+            options: [
+              {name:'Column Select', value: 'simple'},
+              
+            ]
+          },
+          path: `layers[1].paint['fill-color']`
         }
       ]
     },
     {
       label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories']
+      },
+      controls: [
+        {
+          type: 'categoricalColor',
+          path: `['color-set']`
+        }
+      ],
+    },
+    {
+      label: 'Fill',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['simple']
+      },
       controls: [
         {
           type: 'color',
@@ -71,10 +131,86 @@ const typeConfigs = {
     }
   ],
   'circle': [
-    
+    {
+      label: 'Type',
+      type: 'inline',
+      controls: [
+        {
+          type: 'selectType',
+          params: {
+            options: [
+              {name:'Simple', value: 'simple'},
+              {name:'Categories', value: 'categories'},
+              {name:'Color Range', value: 'colors'}
+            ]
+          },
+          path: `['layer-type']`,
+          datapath: `layers[0].paint['circle-color']`
+        }
+      ]
+    },
+    {
+      label: 'Color By',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'colors']
+      },
+      controls: [
+        {
+          type: 'selectViewColumn',
+          params: {
+            options: [
+              {name:'Column Select', value: 'simple'},
+              
+            ]
+          },
+          path: `['data-column']`,
+          datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: 'Categories',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories']
+      },
+      controls: [
+        {
+          type: 'categoryControl',
+          params: {
+            options: [
+              {name:'Column Select', value: 'simple'},
+              
+            ]
+          },
+          path: `layers[0].paint['circle-color']`
+        }
+      ]
+    },
+    {
+      label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories']
+      },
+      controls: [
+        {
+          type: 'categoricalColor',
+          path: `['color-set']`
+        }
+      ],
+    },
     {
       label: 'Fill',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['simple']
+      },
       controls: [
         {
           type: 'color',
@@ -148,7 +284,7 @@ const typeConfigs = {
       type: 'inline',
       controls: [
         {
-          type: 'select',
+          type: 'selectType',
           params: {
             options: [
               {name:'Simple', value: 'simple'},
@@ -156,7 +292,8 @@ const typeConfigs = {
               {name:'Color Range', value: 'colors'}
             ]
           },
-          path: `['layer-type']`
+          path: `['layer-type']`,
+          datapath: `layers[1].paint['line-color']`
         }
       ]
     },
@@ -176,7 +313,8 @@ const typeConfigs = {
               
             ]
           },
-          path: `['data-column']`
+          path: `['data-column']`,
+          datapath: `['category-data']`
         }
       ]
     },
@@ -198,7 +336,7 @@ const typeConfigs = {
           },
           path: `layers[1].paint['line-color']`
           // vars: {
-            
+
           // }
         }
       ]

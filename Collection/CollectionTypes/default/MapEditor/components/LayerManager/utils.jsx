@@ -24,7 +24,7 @@ export const defaultColors = [
 	'rgb(204, 204, 204)',
 ]
 
-const rgb2hex=c=> {
+export const rgb2hex=c=> {
 	if(!c || typeof c !== 'string'){
 		c =  defaultColors[generateRandom(0, defaultColors.length-1)]
 	}

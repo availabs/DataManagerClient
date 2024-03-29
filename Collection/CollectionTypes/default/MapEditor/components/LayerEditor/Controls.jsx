@@ -5,7 +5,8 @@ import { Menu, Transition } from '@headlessui/react'
 // import get from 'lodash/get'
 import { Plus, Close, MenuDots, CaretDown } from '../icons'
 
-import { toHex, categoricalColors } from '../LayerManager/utils'
+import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
+import {categoryPaint} from './datamaps'
 import get from 'lodash/get'
 import set from 'lodash/set'
 
@@ -126,7 +127,53 @@ export function SelectControl({path, params={}}) {
   )
 }
 
-function SelectViewColumnControl({path, params={}}) {
+export function SelectTypeControl({path, datapath, params={}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  // console.log('select control', params)
+  let { value, column, categorydata, colors } = useMemo(() => {
+    return {
+      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
+      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
+      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
+    }
+  },[state])
+
+  React.useEffect(() => {
+    if( value === 'categories') {
+      let paint = categoryPaint(column,categorydata,colors)
+      setState(draft => {
+        set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
+      })
+    } else if( value === 'simple') {
+      setState(draft => {
+        set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, rgb2hex(null))
+      })
+    } 
+  }, [value, column, categorydata, colors])
+
+  return (
+    <label className='flex w-full'>
+      <div className='flex w-full items-center'>
+        <select
+          className='w-full p-2 bg-transparent'
+          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          onChange={(e) => setState(draft => {
+            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+          })}
+        >
+          {(params?.options || []).map((opt,i) => {
+            return (
+              <option key={i} value={opt.value}>{opt.name}</option>
+            )
+          })}
+        </select>
+      </div>
+    </label>
+  )
+}
+
+function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
@@ -134,6 +181,10 @@ function SelectViewColumnControl({path, params={}}) {
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
   }),[state])
+
+  const column = useMemo(() => {
+    return get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
+  },[state])
 
   useEffect(() => {
     if(sourceId) {
@@ -149,6 +200,35 @@ function SelectViewColumnControl({path, params={}}) {
       ], [])
   }, [sourceId,falcorCache])
 
+
+  useEffect(() => {
+    if(column) {
+      const options = JSON.stringify({
+        groupBy: [column],
+        exclude: {[column]: ['null']},
+        orderBy: ['count(1) desc']
+      })
+      falcor.get([
+        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1) as count']
+      ])      
+    }
+  },[column])
+
+  const categorydata = useMemo(() => {
+    const options = JSON.stringify({
+      groupBy: [column],
+      exclude: {[column]: ['null']},
+      orderBy: ['count(1) desc']
+    })
+    let data = get(falcorCache, [
+         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
+    ], {})
+    setState(draft => {
+      set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, data)
+    })
+
+  }, [column, falcorCache])
+
   // console.log('fun', sourceId, viewId, metadata)
 
   return (
@@ -156,8 +236,9 @@ function SelectViewColumnControl({path, params={}}) {
       <div className='flex w-full items-center'>
         <select
           className='w-full p-2 bg-transparent'
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          value={column}
           onChange={(e) => setState(draft => {
+            console.log('SelectViewColumnControl set column path', path, e.target.value)
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
           })}
         >
@@ -225,88 +306,21 @@ function CategoryControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
-  let { value, column, colors } = useMemo(() => {
+  let { value, column, categorydata, colors } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
     }
   },[state])  
 
-  // console.log('value', value, path)
+  console.log('value', value, categorydata, column)
 
-  const {viewId, sourceId} = useMemo(() => ({
-    viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
-  }),[state])
+  // const categoryPaint = useMemo(() => {
+   
 
-  useEffect(() => {
-    if(sourceId) {
-      falcor.get([
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ]);
-    }
-  },[sourceId])
-
-  const metadata = useMemo(() => {
-    return get(falcorCache, [
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-      ], [])
-  }, [sourceId,falcorCache])
-
-  useEffect(() => {
-    if(sourceId) {
-      falcor.get([
-          "dama", pgEnv, "views", "byId", sourceId, "attributes", "metadata"
-      ]);
-    }
-  },[sourceId])
-
-  useEffect(() => {
-    if(column) {
-      const options = JSON.stringify({
-        groupBy: [column],
-        exclude: {[column]: ['null']},
-        orderBy: ['count(1) desc']
-      })
-      falcor.get([
-        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1) as count']
-      ])      
-    }
-  })
-
-  const categorydata = useMemo(() => {
-    const options = JSON.stringify({
-      groupBy: [column],
-      exclude: {[column]: ['null']},
-      orderBy: ['count(1) desc']
-    })
-    return get(falcorCache, [
-         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
-    ], {})
-  }, [column, falcorCache])
-
-  const categoryPaint = useMemo(() => {
-    let num = 10
-    let start = ['match',
-          ['to-string',['get', column]],
-    ]
-
-    Array(num).keys().forEach((d,i) => {
-      let cat = ''+categorydata?.[i]?.[column]
-      if(cat && cat != '[object Object]'){
-        start.push(''+categorydata?.[i]?.[column])
-        start.push(colors[i])
-      }
-    })
-    
-    start.push('#ccc')
-    setState(draft => {
-      set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, start)
-    })
-    return start
-
-  }, [categorydata, colors ])
+  // }, [categorydata, colors ])
 
   return (
    
@@ -314,7 +328,7 @@ function CategoryControl({path, params={}}) {
         Category Controls
         <div className='p-1'>
           <pre>
-          {JSON.stringify(categoryPaint,null,3)}
+          {JSON.stringify(value,null,3)}
           </pre>
         </div>
         {/*<div className='p-1'>
@@ -334,5 +348,6 @@ export const controlTypes = {
   'range': RangeControl,
   'simple': SimpleControl,
   'select': SelectControl,
+  'selectType': SelectTypeControl,
   'selectViewColumn': SelectViewColumnControl
 }

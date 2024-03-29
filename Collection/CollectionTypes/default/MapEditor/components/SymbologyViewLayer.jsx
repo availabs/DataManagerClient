@@ -62,7 +62,7 @@ const ViewLayerRender = ({
         newSource.source.tiles[0] += `?cols=${layerProps?.['data-column'] }`
         newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
         
-         console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
+        console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
             maplibreMap.removeLayer(l?.id) 
@@ -156,7 +156,7 @@ class ViewLayer extends AvlLayer {
         </div>
       )
     },
-    isPinnable: this.isPinnable || true
+    isPinnable: this.isPinnable || false
   };
   
   RenderComponent = ViewLayerRender;

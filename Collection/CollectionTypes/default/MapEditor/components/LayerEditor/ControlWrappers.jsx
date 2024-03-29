@@ -26,14 +26,16 @@ function PopoverControl ({values,title='',children}) {
             <>
               <Popover.Button className='w-full'>
                <div className='w-full flex items-center group'>
-                <div className='flex items-center group-hover:flex-1'>{(values || []).map((v,i) => {
-                  // console.log('test', v.value)
-                  return <Fragment key={i}>
-                    {v.type === 'color' && <div className='h-4 w-4 border' style={{backgroundColor:toHex(v.value)}}/> }
-                    <div className='px-1 py-1 truncate'><span className='uppercase'>{v.type === 'color' ? toHex(v.value) : v.value}</span>{v.unit ? v.unit : ''} </div>
-                    <div className='px-1 py-1 truncate'>{i < values.length - 1 ? '/' : ''}</div>
-                    </Fragment>
-                })}</div>
+                <div className='flex items-center group-hover:flex-1'>
+                  {(values || []).map((v,i) => {
+                    // console.log('test', v.value)
+                    return <Fragment key={i}>
+                      {v.type === 'color' && <div className='h-4 w-4 border' style={{backgroundColor:toHex(v.value)}}/> }
+                      <div className='px-1 py-1 truncate'><span className='uppercase'>{v.type === 'color' ? toHex(v.value) : v.value}</span>{v.unit ? v.unit : ''} </div>
+                      <div className='px-1 py-1 truncate'>{i < values.length - 1 ? '/' : ''}</div>
+                      </Fragment>
+                  })}
+                </div>
                 <div className='flex items-center '><CaretDown className='fill-slate-400 group-hover:fill-slate-800'/>
               </div>
             </div>
@@ -80,10 +82,9 @@ function SimpleControlWrapper ({controls}) {
   return (
     <StyledControl>
       {controls
-        
         .map((c,i) => {
           const Control = controlTypes[c.type] || controlTypes['simple']
-          return <Control key={i} path={c.path} params={c.params} />
+          return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
       })}
     </StyledControl>
   )
@@ -109,7 +110,7 @@ function PopoverControlWrapper ({label, controls}) {
     >
       {controls.map((c,i) => {
         const Control = controlTypes[c.type] || controlTypes['simple']
-        return <Control key={i} path={c.path} params={c.params}/>
+        return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
       })}
     </PopoverControl>
   )
