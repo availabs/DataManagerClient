@@ -4,7 +4,8 @@ import { Plus, Close, MenuDots } from '../icons'
 import { LayerMenu } from '../LayerManager/LayerPanel'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
-import StyleEditor from './StyleEditor' 
+import StyleEditor from './StyleEditor'
+import PopoeverEditor from './PopoverEditor'
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
@@ -66,7 +67,7 @@ function LayerManager (props) {
           <Tab.Panels>
             <Tab.Panel><StyleEditor /></Tab.Panel>
             <Tab.Panel>Legend</Tab.Panel>
-            <Tab.Panel>Popup</Tab.Panel>
+            <Tab.Panel><PopoeverEditor /></Tab.Panel>
             <Tab.Panel>Filter</Tab.Panel>
           </Tab.Panels>
         </Tab.Group>

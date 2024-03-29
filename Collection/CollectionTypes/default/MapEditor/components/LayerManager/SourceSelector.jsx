@@ -76,7 +76,7 @@ function SourceSelector (props) {
 
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
-    
+    console.log('newSource', newSource)
     //--------------------------------------------
     // Format for adding a layer
     // -------------------------------------------
@@ -85,8 +85,8 @@ function SourceSelector (props) {
       id: layerId,
       // meta data
       name: `${newSource.display_name || newSource.name} ${view.version || view.view_id}`,
-      isDynamic: true,
-      source_id: newSource.sourceId,
+      // isDynamic: true,
+      source_id: newSource.source_id,
       view_id: source.viewId,
       type: viewLayer.type,
       // mapbox sources and layers
@@ -96,6 +96,8 @@ function SourceSelector (props) {
       visible: true,
       order: Object.keys(state?.symbology?.layers || {})?.length || 0
     }
+
+    console.log('newLayer', newLayer)
     setState(draft => {
       if(!draft?.symbology){
         draft.symbology = { }
@@ -120,7 +122,7 @@ function SourceSelector (props) {
           
         />*/}
       </div>
-      {source.add && <div className='absolute z-20 -left-[240px] p-2 top-[40px] border w-[280px] bg-white'>
+      {source.add && <div className='absolute z-20 -left-[244px] p-2 top-[37px] border w-[280px] bg-white'>
         <div className='w-full p-1 text-sm font-bold text-blue-500'>select source:</div>
         <select 
           onChange={(e) => setSource({...source, sourceId: e.target.value})}
