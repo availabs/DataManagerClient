@@ -39,18 +39,19 @@ export const Header = ({baseUrl=''}) => {
           </div>}
           className={`text-gray-800 group z-50`} openType='click'
         >
-          <div key={'as'} className='p-1 bg-blue-500 text-base z-50'>
-            <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
+          <div key={'as'} className='p-1 bg-blue-500 text-base z-40'>
+           <div key={'k'} className='py-1 '>
+                {Item(`${baseUrl}/`, 'fa fa-files flex-shrink-0  pr-1', 'Sources')}
             </div>
             <div key={'k'} className='py-1 '>
                 {Item(`${baseUrl}/collections`, 'fa fa-folders flex-shrink-0  pr-1', 'Collections')}
             </div>
-            <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/`, 'fa fa-files flex-shrink-0  pr-1', 'Sources')}
-            </div>
+            
             <div key={'k'} className='py-1 '>
                 {Item(`${baseUrl}/tasks`, 'fa fa-list flex-shrink-0  pr-1', 'Activity')}
+            </div>
+             <div key={'k'} className='py-1 '>
+                {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
             </div>
           </div>
         </Dropdown>

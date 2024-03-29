@@ -3,7 +3,7 @@ import { useImmer } from 'use-immer';
 import { useSearchParams, Link } from "react-router-dom";
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
-import throttle from "lodash.throttle"
+//import throttle from "lodash/throttle"
 
 import {PMTilesProtocol} from '../../../../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
@@ -46,7 +46,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
   useEffect(() => {
     async function updateData() {
       console.time('update symbology')
-      //console.log('updating symbology to:', state.symbology)
+      // console.log('updating symbology to:', state.symbology)
       let resp = await falcor.set({
         paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'symbology']],
         jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
@@ -102,7 +102,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     // when state.symbology.layers update
     // -----------------------
 
-    console.log('symbology layers effect')
+    // console.log('symbology layers effect')
     const updateLayers = async () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
@@ -171,7 +171,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           leftSidebar={ false }
           rightSidebar={ false }
         />
-        <div className={'z-30 absolute inset-0 flex pointer-events-none'}>
+        <div className={'absolute inset-0 flex pointer-events-none'}>
           <LayerManager />
           <div className='flex-1'/>
           <LayerEditor />

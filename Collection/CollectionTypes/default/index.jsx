@@ -9,11 +9,6 @@ const Pages = {
     path: "",
     component: Overview
   },
-  symbology: {
-    name: "Symbology",
-    path: "/symbology",
-    component: SymbologyEditor,
-  },
   mapeditor: {
     name: "Map Editor",
     path: "/mapeditor",

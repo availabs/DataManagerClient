@@ -901,7 +901,10 @@ const TypeSelector = ({ type, updateLegend }) => {
 
 class GISDatasetLayer extends AvlLayer {
   onHover = {
-    layers: this.layers?.map((d) => d.id),
+    layers: this.layers?.map((d) =>{
+      console.log('on hover map', d.id)
+      return d.id
+    }),
     callback: (layerId, features, lngLat) => {
 
       let feature = features[0];
