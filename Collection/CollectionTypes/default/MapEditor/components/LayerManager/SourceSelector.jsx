@@ -88,7 +88,7 @@ function SourceSelector (props) {
       // isDynamic: true,
       source_id: newSource.source_id,
       view_id: source.viewId,
-      "layer-type": 'simple',
+      //"layer-type": 'simple',
       type: viewLayer.type,
       // mapbox sources and layers
       sources: view?.metadata?.tiles?.sources || [],

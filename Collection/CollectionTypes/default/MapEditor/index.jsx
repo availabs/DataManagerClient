@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, createContext, useRef } from "react"
 import { useImmer } from 'use-immer';
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate, useParams } from "react-router-dom";
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
@@ -23,7 +23,9 @@ export const SymbologyContext = createContext(undefined);
 const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
   
   const mounted = useRef(false);
-  const {falcor, pgEnv} = React.useContext(DamaContext)
+  const {falcor, pgEnv, baseUrl} = React.useContext(DamaContext);
+  const navigate = useNavigate()
+  const { symbologyId } = useParams()
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
@@ -42,6 +44,12 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     }
   )
 
+  useEffect(() => {
+    console.log('load', +activeSymbologyId, symbologyId )
+    if((+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
+      navigate(`${baseUrl}/collection/${collection.collection_id}/mapeditor/${activeSymbologyId}`)
+    }
+  },[activeSymbologyId, symbologyId])
 
   useEffect(() => {
     async function updateData() {
@@ -68,7 +76,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     //   symbologies.find(s => +s.symbology_id === +activeSymbologyId),
     //   activeSymbologyId,      
     //   symbologies,
-    //   // !isEqual(state?.symbology, currentData?.symbology), 
+    //   !isEqual(state?.symbology, currentData?.symbology), 
     //   // state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
     // )
     

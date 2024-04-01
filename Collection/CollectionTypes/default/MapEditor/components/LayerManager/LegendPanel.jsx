@@ -24,7 +24,7 @@ function VisibilityButton ({layer}) {
           draft.symbology.layers[layer.id].layers.forEach((d,i) => {
               let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
               let update = val === 'visible' ? 'none' : 'visible'
-              console.log('update?', update, val)
+              // console.log('update?', update, val)
               // set(draft,`symbology.layers[${layer.id}].layers[${i}].layout` , { "visible": update}) 
               draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
           })
@@ -86,7 +86,7 @@ const typePaint = {
 }
 
 function CategoryLegend({layer}) {
-  console.log('categoryLegend', layer)
+  // console.log('categoryLegend', layer)
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
   const categories = (paintValue || []).filter((d,i) => i > 2 )

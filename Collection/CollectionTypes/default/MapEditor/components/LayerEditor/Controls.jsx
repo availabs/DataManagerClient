@@ -3,6 +3,7 @@ import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Switch } from '@headlessui/react'
 // import get from 'lodash/get'
+import isEqual from 'lodash/isEqual'
 import { Plus, Close, MenuDots, CaretDown } from '../icons'
 
 import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
@@ -130,29 +131,31 @@ export function SelectControl({path, params={}}) {
 export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   // console.log('select control', params)
-  let { value, column, categorydata, colors,numCategories, showOther } = useMemo(() => {
+  let { value, paintValue, column, categorydata, colors,numCategories, showOther } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
+      paintValue :  get(state, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
+
     }
   },[state])
 
   React.useEffect(() => {
     if( value === 'categories') {
-      //console.log('update category paint', column,numCategories, showOther, categoryPaint(column,categorydata,colors,numCategories,showOther))
       let paint = categoryPaint(column,categorydata,colors,numCategories, showOther)
-
-      if(isValidCategoryPaint(paint)) {
-        console.log('update paint', paint)
+      if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
+        console.log('update category paint', column,numCategories, showOther, categoryPaint(column,categorydata,colors,numCategories,showOther))
+      
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
         })
       }
-    } else if( value === 'simple') {
+    } else if( value === 'simple' && typeof paintValue !== 'string') {
+      console.log('switch to simple')
       setState(draft => {
         set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, rgb2hex(null))
       })
@@ -213,10 +216,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       const options = JSON.stringify({
         groupBy: [column],
         exclude: {[column]: ['null']},
-        orderBy: ['count(1) desc']
+        orderBy: {count: 'asc'},
+        orderSqlBy: ['2']
       })
       falcor.get([
-        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1) as count']
+        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1)::int as count']
       ])      
     }
   },[column])
@@ -225,7 +229,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     const options = JSON.stringify({
       groupBy: [column],
       exclude: {[column]: ['null']},
-      orderBy: ['count(1) desc']
+      orderBy: {count: 'asc'},
+      orderSqlBy: ['2']
     })
     let data = get(falcorCache, [
          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
