@@ -88,12 +88,13 @@ function SourceSelector (props) {
       // isDynamic: true,
       source_id: newSource.source_id,
       view_id: source.viewId,
+      "layer-type": 'simple',
       type: viewLayer.type,
       // mapbox sources and layers
       sources: view?.metadata?.tiles?.sources || [],
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
-      visible: true,
+      isVisible: true,
       order: Object.keys(state?.symbology?.layers || {})?.length || 0
     }
 

@@ -53,7 +53,7 @@ function LayerManager (props) {
                     <button
                       className={`
                         ${selected ? 
-                          'text-slate-800 border-b-2 border-blue-500' : 
+                          'text-slate-600 border-b font-medium border-slate-600' : 
                           'text-slate-400'} mx-1 text-sm p-2 cursor-pointer
                       `}
                     >

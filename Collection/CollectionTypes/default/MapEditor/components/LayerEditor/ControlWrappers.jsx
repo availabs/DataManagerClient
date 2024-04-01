@@ -31,7 +31,7 @@ function PopoverControl ({values,title='',children}) {
                     // console.log('test', v.value)
                     return <Fragment key={i}>
                       {v.type === 'color' && <div className='h-4 w-4 border' style={{backgroundColor:toHex(v.value)}}/> }
-                      <div className='px-1 py-1 truncate'><span className='uppercase'>{v.type === 'color' ? toHex(v.value) : v.value}</span>{v.unit ? v.unit : ''} </div>
+                      <div className='px-1 py-1 truncate'><span className=''>{v.type === 'color' ? toHex(v.value) : v.value}</span>{v.unit ? v.unit : ''} </div>
                       <div className='px-1 py-1 truncate'>{i < values.length - 1 ? '/' : ''}</div>
                       </Fragment>
                   })}
@@ -62,7 +62,7 @@ function PopoverControl ({values,title='',children}) {
                             <Close className='fill-slate-700' /> 
                         </div>
                       </div>
-                      <div className="relative p-2 ">
+                      <div className="relative">
                         {children}
                       </div>
                     </div>
@@ -95,7 +95,9 @@ function PopoverControlWrapper ({label, controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const values = useMemo(() => {
     return controls.map(c => {
-      let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${c.path}`, '')
+      const identity = d => d
+      let format = c?.params?.format || identity
+      let value = format(get(state, `symbology.layers[${state.symbology.activeLayer}].${c.path}`, ''))
       return {
         type: c?.type,
         unit: c?.unit,

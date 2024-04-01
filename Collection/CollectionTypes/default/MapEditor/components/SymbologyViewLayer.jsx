@@ -40,17 +40,7 @@ const ViewLayerRender = ({
     // console.log('update layer props', layerProps)
     
 
-    // -------------------------------
-    // Update Layer Visibility Layers
-    // -------------------------------
-    if(layerProps?.visible !== (prevLayerProps?.visible)) {
-      layerProps?.layers?.forEach(l => {
-        if(maplibreMap?.getLayer(l.id)){
-          maplibreMap.setLayoutProperty(l.id, 'visibility', layerProps?.visible ?  'visible' : 'none');
-        }
-      })
-    }
-
+   
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
@@ -81,11 +71,6 @@ const ViewLayerRender = ({
             maplibreMap.addLayer(l, beneathLayer?.id) 
         })
       }
-      // layerProps?.layers?.forEach(l => {
-      //   if(maplibreMap?.getLayer(l.id)){
-      //     maplibreMap.setLayoutProperty(l.id, 'visibility', layerProps?.visible ?  'visible' : 'none');
-      //   }
-      // })
     }
 
     // -------------------------------
@@ -115,6 +100,22 @@ const ViewLayerRender = ({
       }
     })
 
+    // -------------------------------
+    // update layout Properties
+    // -------------------------------
+    layerProps?.layers?.forEach((l,i) => {
+      if(maplibreMap.getLayer(l.id)){
+        Object.keys(l?.layout || {}).forEach(layoutKey => {
+          if(!isEqual(prevLayerProps?.layers?.[i]?.layout?.[layoutKey], l?.layout?.[layoutKey])) {
+            // console.log('update layoutKey', l.id, layoutKey, prevLayerProps?.layers?.[i]?.paint?.[layoutKey], l?.paint?.[layoutKey])
+            maplibreMap.setLayoutProperty(l.id, layoutKey, l.layout[layoutKey])
+          }
+        })
+      }
+    })
+
+
+
 
   }, [layerProps])
 
@@ -137,7 +138,7 @@ class ViewLayer extends AvlLayer {
 
   onHover = {
     layers: this.layers
-      .filter(d => d.id.indexOf('_case') === -1)
+      .filter(d => d?.id?.indexOf('_case') === -1)
       .map((d) => d.id),
     callback: (layerId, features, lngLat) => {
 

@@ -47,6 +47,7 @@ function getCircleLayer( layer_id, viewLayer) {
    		{
 	      "id": layer_id,
 	      "type": "circle",
+	      "layout": {"visibility": "visible"},
 	      "paint": {
 	         "circle-color": newColor,
 	         "circle-radius": 4,
@@ -65,6 +66,7 @@ function getLineLayer( layer_id, viewLayer) {
    		{
 	      "id": `${layer_id}_case`,
 	      "type": "line",
+	      "layout": {"visibility": "visible"},
 	      "paint": {
 	         "line-color": RGB_Log_Shade(-0.4, newColor),
 	         "line-width": 3, 
@@ -75,6 +77,7 @@ function getLineLayer( layer_id, viewLayer) {
    		{
 	      "id": layer_id,
 	      "type": "line",
+	      "layout": {"visibility": "visible"},
 	      "paint": {
 	         "line-color": newColor,
 	         "line-width": 3, 
@@ -91,6 +94,7 @@ function getFillLayer( layer_id, viewLayer) {
    		{
 	      "id": `${layer_id}_case`,
 	      "type": "line",
+	      "layout": {"visibility": "visible"},
 	      "paint": {
 	         "line-color": RGB_Log_Shade(-0.4, newColor),
 	         "line-width": 1, 
@@ -101,6 +105,7 @@ function getFillLayer( layer_id, viewLayer) {
    	    {
 	      "id": layer_id,
 	      "type": "fill",
+	      "layout": {"visibility": "visible"},
 	      "paint": {
 	         "fill-color": newColor,
 	         "fill-opacity": 0.75, 

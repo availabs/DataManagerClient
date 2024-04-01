@@ -3,7 +3,6 @@ import {SymbologyContext} from '../../'
 import { Plus, Close, MenuDots, CaretDown } from '../icons'
 import { Menu, Popover, Transition, Tab, Dialog } from '@headlessui/react'
 import { toHex } from '../LayerManager/utils'
-import { ChromePicker } from 'react-color';
 import get from 'lodash/get'
 import set from 'lodash/set'
 
@@ -41,17 +40,17 @@ function StyleEditor (props) {
           }
         })
         .map((control,i) => {
-        let ControlWrapper = wrapperTypes[control.type] || wrapperTypes['inline']
-        return (
-          <div className='flex ' key={i}>
-            <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{control.label}</div>
-            <div className='flex-1 flex items-center'>
-              <ControlWrapper
-                label={control.label}
-                controls={control.controls}
-              />
+          let ControlWrapper = wrapperTypes[control.type] || wrapperTypes['inline']
+          return (
+            <div className='flex ' key={i}>
+              <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{control.label}</div>
+              <div className='flex-1 flex items-center'>
+                <ControlWrapper
+                  label={control.label}
+                  controls={control.controls}
+                />
+              </div>
             </div>
-          </div>
         )
       })}
 

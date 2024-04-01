@@ -1,12 +1,12 @@
 import React, { useContext , useMemo, useEffect, Fragment }from 'react'
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../../../../store"
-import { Menu, Transition } from '@headlessui/react'
+import { Menu, Transition, Switch } from '@headlessui/react'
 // import get from 'lodash/get'
 import { Plus, Close, MenuDots, CaretDown } from '../icons'
 
 import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
-import {categoryPaint} from './datamaps'
+import {categoryPaint, isValidCategoryPaint} from './datamaps'
 import get from 'lodash/get'
 import set from 'lodash/set'
 
@@ -130,27 +130,34 @@ export function SelectControl({path, params={}}) {
 export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   // console.log('select control', params)
-  let { value, column, categorydata, colors } = useMemo(() => {
+  let { value, column, categorydata, colors,numCategories, showOther } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
+      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
+      numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
     }
   },[state])
 
   React.useEffect(() => {
     if( value === 'categories') {
-      let paint = categoryPaint(column,categorydata,colors)
-      setState(draft => {
-        set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
-      })
+      //console.log('update category paint', column,numCategories, showOther, categoryPaint(column,categorydata,colors,numCategories,showOther))
+      let paint = categoryPaint(column,categorydata,colors,numCategories, showOther)
+
+      if(isValidCategoryPaint(paint)) {
+        console.log('update paint', paint)
+        setState(draft => {
+          set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
+        })
+      }
     } else if( value === 'simple') {
       setState(draft => {
         set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, rgb2hex(null))
       })
     } 
-  }, [value, column, categorydata, colors])
+  }, [value, column, categorydata, colors, numCategories, showOther])
 
   return (
     <label className='flex w-full'>
@@ -264,7 +271,6 @@ function CategoricalColorControl({path, params={}}) {
   // console.log('value', value, path)
 
   return (
-   
       <div className='flex w-full items-center'>
         <ControlMenu 
           button={<div className='flex items-center w-full cursor-pointer flex-1'>
@@ -313,29 +319,99 @@ function CategoryControl({path, params={}}) {
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
     }
-  },[state])  
+  },[state])
 
-  console.log('value', value, categorydata, column)
+  const numCategories = useMemo(() => {
+      //console.log('categorydata', categorydata)
+      return Object.values(categorydata)
+        .reduce((out,cat) => {
+          if(typeof cat[column] !== 'object') {
+            out++
+          }
+          return out
+        },0)
+   }, [categorydata])
 
-  // const categoryPaint = useMemo(() => {
-   
+  const categories = (value || []).filter((d,i) => i > 2 )
+            .map((d,i) => {
+              if(i%2 === 0) {
+                return {color: d, label: value[i+2]}
+              }
+              return null
+            })
+            .filter(d => d)
 
-  // }, [categorydata, colors ])
-
+  const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
   return (
    
       <div className=' w-full items-center'>
-        Category Controls
-        <div className='p-1'>
-          <pre>
-          {JSON.stringify(value,null,3)}
-          </pre>
+        <div className='flex items-center'>
+          <div className='text-sm text-slate-400 px-2'>Showing</div>
+          <div className='border border-transparent hover:border-slate-200 m-1 rounded '>
+            <select
+              className='w-full p-2 bg-transparent text-slate-700 text-sm'
+              value={categories.length}
+              onChange={(e) => setState(draft => {
+                // console.log('SelectViewColumnControl set column path', path, e.target.value)
+                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value)
+              })}
+            >
+              <option key={'def'} value={categories.length}>{categories.length} Categories</option>
+              {([10,20,30,50,100] || [])
+                .filter(d => d < numCategories && d !== categories.length)
+                .map((val,i) => {
+                return (
+                  <option key={i} value={val}>{val} Categories</option>
+                )
+              })}
+            </select>
+          </div>
         </div>
-        {/*<div className='p-1'>
-          
-          {JSON.stringify(categorydata)}
-        </div>*/}
+        <div className='flex items-center'>
+          <div className='text-sm text-slate-400 px-2'>Show Other</div>
+          <div className='flex items-center'>
+            <Switch
+              checked={showOther}
+              onChange={()=>{
+                setState(draft=> {
+                  const update = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc' ? 'rgba(0,0,0,0)' : '#ccc'
+                  // console.log('update', update  )
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,update)
+                  
+                })
+              }}
+              className={`${
+                showOther ? 'bg-blue-500' : 'bg-gray-200'
+              } relative inline-flex h-4 w-8 items-center rounded-full `}
+            >
+              <span className="sr-only">Enable notifications</span>
+              <div
+                className={`${
+                  showOther ? 'translate-x-5' : 'translate-x-0'
+                } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+              />
+            </Switch>
 
+          </div>
+
+        </div>
+        <div className='w-full max-h-[250px] overflow-auto'>
+        {categories.map((d,i) => (
+          <div key={i} className='w-full flex items-center hover:bg-slate-100'>
+            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
+            </div>
+            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
+          </div> 
+        ))}
+        {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
+            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
+            </div>
+            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
+          </div>
+        }
+        </div>
       </div>
     )
 }
