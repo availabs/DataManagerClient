@@ -73,7 +73,7 @@ const COLUMNS = [
   { accessor: "etl_status", Header: "ETL Status" },
 ];
 
-const INITIAL_PAGE_SIZE = 5;
+const INITIAL_PAGE_SIZE = 10;
 
 const TasksComponent = (props) => {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
@@ -89,9 +89,7 @@ const TasksComponent = (props) => {
     const getLength = async () => {
       await falcor.get([
         "dama", pgEnv, "latest", "events", "length"
-      ]).then(res => {
-        get(res, ["json", "dama", pgEnv, "latest", "events", "length"], 0);
-      });
+      ]);
     }
     getLength();
   }, [falcor, pgEnv]);
@@ -189,8 +187,11 @@ const TasksComponent = (props) => {
         pageSize={INITIAL_PAGE_SIZE}
         manualPagination={true}
         numRecords={fetchLength}
-        onPageChange={(newPage) => {setPageIndex(newPage)}}
+        onPageChange={setPageIndex}
+        manualCurrentPage={pageIndex}
         onRowClick={onRowClick}
+        sortBy={"created_at"}
+        sortOrder="desc"
         disableFilters
         disableSortBy
       />
