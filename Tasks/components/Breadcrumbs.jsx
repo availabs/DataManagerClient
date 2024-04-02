@@ -86,7 +86,7 @@ export const Breadcrumbs =  ({fullWidth}) => {
           <div className="flex items-center">
             <Link to={`${baseUrl || '/tasks'}`} className={"hover:text-[#bbd4cb] text-[#679d89]"}>
               <i className="fad fa-database flex-shrink-0 h-5 w-5" aria-hidden="true" />
-              <span className="sr-only">Data Sources</span>
+              <span className="sr-only">Tasks</span>
             </Link>
           </div>
         </li>
