@@ -38,10 +38,15 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
       //'#51bbd6',
       // 100,
   ]
+  // console.log('choroplethdata', choroplethdata)
   if(!Array.isArray(choroplethdata)) {
-    return paint
+    return false
   }
   let domain = methods[method](choroplethdata, num-1)
+
+  if(!Array.isArray(domain) || domain.length  === 0){
+    return false
+  }
 
   domain.forEach((d,i) => {
     paint.push(colors[i]);

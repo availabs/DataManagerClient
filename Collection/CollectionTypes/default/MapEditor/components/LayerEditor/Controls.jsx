@@ -192,7 +192,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
     } else if(value === 'choropleth') {
       let paint = choroplethPaint(column,choroplethdata,colorrange)
       // console.log('test paint', paint)
-      if(!isEqual(paint,paintValue)) {
+      if(paint && !isEqual(paint,paintValue)) {
         //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
       
         setState(draft => {
@@ -300,7 +300,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       const len = get(lenRes, [
         'json', 'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ])
-      console.log('len', len)
+      // console.log('len', len)
       if(len > 0){
         falcor.get([
           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', {from: 0, to: len-1}, column
@@ -343,10 +343,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           onChange={(e) => setState(draft => {
             
             let sourceTiles = get(state, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
-            //console.log('SelectViewColumnControl set column path', path, e.target.value, sourceTiles)
+            // console.log('SelectViewColumnControl set column path', path, e.target.value, sourceTiles)
             
             if(sourceTiles !== 'no source tiles') {
-              // console.log('set source tiles', sourceTiles+`?cols=${e.target.value}`)
+            // console.log('set source tiles', sourceTiles+`?cols=${e.target.value}`)
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
