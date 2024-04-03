@@ -34,7 +34,8 @@ const COLUMNS = [
   { accessor: "created_at", Header: "Created At", Cell: DateCell },
   { accessor: "type", Header: "Type" },
   { accessor: "payload", Header: "Data", Cell: ({value}) => {
-    const displayValue = value?.data || value?.message;
+    const parsedValue = JSON.parse(value);
+    const displayValue = parsedValue?.data || parsedValue?.message;
     return <>{JSON.stringify(displayValue)}</>
   } },
 ];
@@ -67,7 +68,7 @@ const TaskPageComponent = props => {
     etl_context_id,
     "allEvents",
     paramIndices,
-    ["event_id","etl_context_id", "created_at", "type"]
+    ["event_id","etl_context_id", "created_at", "type", "payload"]
   ])
 
   //get length of data
@@ -103,7 +104,7 @@ const TaskPageComponent = props => {
   },  [falcor, pgEnv, indices])
 
   const parsedData = React.useMemo(() => {
-    const mappedData = indices.map(i => {
+    return indices.map(i => {
       const dataPath = generateAllEventsPath(i);
 
       dataPath.pop(); //Removes `attr` from path
@@ -112,14 +113,6 @@ const TaskPageComponent = props => {
       };
     }).filter(r => Boolean(r.etl_context_id));
 
-    return mappedData.map(event => {
-      console.log(event);
-
-      const eventContextId = event.etl_context_id;
-      const etlAttr = getAttributes(get(falcorCache,["dama", pgEnv,'etlContexts','byEtlContextId', eventContextId],{'attributes': {}})['value']) 
-      const eventData = etlAttr.events.find(etlEvent => etlEvent.event_id === event.event_id)
-      return {...event, payload: eventData?.payload, user_id: eventData?.payload?.user_id};
-    });
   }, [falcorCache, pgEnv, etl_context_id, indices])
 
   return (
