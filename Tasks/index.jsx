@@ -16,7 +16,8 @@ export const ETL_CONTEXT_ATTRS = [
   "terminated_at",
   "source_id",
   "parent_context_id",
-  "type"
+  "type",
+  "payload"
 ];
 
 function timeAgo(input) {
