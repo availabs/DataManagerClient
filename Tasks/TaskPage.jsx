@@ -7,11 +7,10 @@ import { range as d3range } from "d3-array"
 import { DamaContext } from "~/pages/DataManager/store";
 
 import { Table } from "~/modules/avl-components/src";
-import { TasksBreadcrumb, getAttributes } from "./components/TasksBreadcrumb";
+import { TasksLayout } from "./components/TasksLayout";
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
-
 
 const DateCell = ({ value, ...props }) => {
   const myDate = new Date(value);
@@ -33,11 +32,15 @@ const COLUMNS = [
   },
   { accessor: "created_at", Header: "Created At", Cell: DateCell },
   { accessor: "type", Header: "Type" },
-  { accessor: "payload", Header: "Data", Cell: ({value}) => {
-    const parsedValue = JSON.parse(value);
-    const displayValue = parsedValue?.data || parsedValue?.message;
-    return <>{JSON.stringify(displayValue)}</>
-  } },
+  {
+    accessor: "payload",
+    Header: "Data",
+    Cell: ({ value }) => {
+      const parsedValue = JSON.parse(value);
+      const displayValue = parsedValue?.data || parsedValue?.message;
+      return <>{JSON.stringify(displayValue)}</>;
+    },
+  },
 ];
 const INITIAL_PAGE_SIZE = 10;
 const TaskPageComponent = props => {
@@ -116,8 +119,7 @@ const TaskPageComponent = props => {
   }, [falcorCache, pgEnv, etl_context_id, indices])
 
   return (
-    <div>
-      <TasksBreadcrumb />
+    <TasksLayout>
       <Table
         data={parsedData}
         columns={COLUMNS}
@@ -130,7 +132,7 @@ const TaskPageComponent = props => {
         disableFilters
         disableSortBy
       />
-    </div>
-  )
+    </TasksLayout>
+  );
 }
 export default TaskPageComponent;

@@ -7,7 +7,7 @@ import get from "lodash/get";
 import moment from "moment"
 
 import { DamaContext } from "~/pages/DataManager/store";
-import { TasksBreadcrumb } from "./components/TasksBreadcrumb";
+import { TasksLayout } from "./components/TasksLayout";
 
 export const ETL_CONTEXT_ATTRS = [
   "etl_status",
@@ -180,8 +180,7 @@ const TasksComponent = (props) => {
   }, [navigate]);
 
   return (
-    <>
-      <TasksBreadcrumb />
+    <TasksLayout>
       <Table
         data={parsedData}
         columns={COLUMNS}
@@ -196,7 +195,7 @@ const TasksComponent = (props) => {
         disableFilters
         disableSortBy
       />
-    </>
+    </TasksLayout>
   );
 }
 export default TasksComponent;
