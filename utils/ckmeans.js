@@ -214,7 +214,9 @@ function fillMatrices(data, matrix, backtrackMatrix) {
  */
 function ckmeans(data, nClusters) {
   if (nClusters > data.length) {
-    throw new Error('Cannot generate more classes than there are data values');
+    console.log('Ckmeans cannot generate more classes than there are data values')
+    return []
+    //throw new Error('Cannot generate more classes than there are data values');
   }
 
   var nValues = data.length;

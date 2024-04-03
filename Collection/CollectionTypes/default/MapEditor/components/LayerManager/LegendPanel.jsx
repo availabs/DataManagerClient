@@ -58,7 +58,7 @@ const typeSymbols = {
       let borderColor = get(layer, `layers[0].paint['circle-stroke-color']`, '#ccc')
       return (
         <div className='pl-0.5 pr-2'>
-          <div className={'w-3 h-3 rounded-full border-2'} style={{backgroundColor:color, borderColor}} />
+          <div className={'w-3 h-3 rounded-full '} style={{backgroundColor:color, borderColor}} />
         </div>
       )
   },

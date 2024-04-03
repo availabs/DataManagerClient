@@ -55,7 +55,7 @@ export function LayerMenu({layer, button, location='left-0'}) {
                           .forEach((l,i) => l.order = i)
                       })
                     }}
-                  >Delete</div>
+                  >Remove</div>
                 )}
               </Menu.Item>
             </div>
