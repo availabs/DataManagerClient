@@ -45,11 +45,12 @@ const ViewLayerRender = ({
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column'])) {
+      console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
        
         let newSource = cloneDeep(layerProps.sources?.[0])
         
-        newSource.source.tiles[0] += `?cols=${layerProps?.['data-column'] }`
+        //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
         
         console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
@@ -63,12 +64,16 @@ const ViewLayerRender = ({
         if(!maplibreMap.getSource(newSource.id)){
           maplibreMap.addSource(newSource.id, newSource.source)
         } else {
-          console.log(maplibreMap.getSource(newSource.id))
+          console.log('cant add',maplibreMap.getSource(newSource.id))
         }
 
         let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            maplibreMap.addLayer(l, beneathLayer?.id) 
+            if(maplibreMap.getLayer(beneathLayer?.id)){
+              maplibreMap.addLayer(l, beneathLayer?.id) 
+            } else {
+              maplibreMap.addLayer(l) 
+            }
         })
       }
     }

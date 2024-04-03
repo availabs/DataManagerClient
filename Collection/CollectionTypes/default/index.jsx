@@ -1,6 +1,6 @@
 import Overview from "./Overview";
 import Versions from "./Version/list";
-import SymbologyEditor from "./Symbology"
+//import SymbologyEditor from "./Symbology"
 import MapEditor from "./MapEditor"
 
 const Pages = {

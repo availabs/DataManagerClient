@@ -11,7 +11,7 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'colors'}
+              {name:'Color Range', value: 'choropleth'}
             ]
           },
           path: `['layer-type']`,
@@ -24,7 +24,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'colors']
+        conditions: ['categories', 'choropleth']
       },
       controls: [
         {
@@ -35,8 +35,7 @@ const typeConfigs = {
               
             ]
           },
-          path: `['data-column']`,
-          datapath: `['category-data']`
+          path: `['data-column']`
         }
       ]
     },
@@ -71,6 +70,37 @@ const typeConfigs = {
         {
           type: 'categoricalColor',
           path: `['color-set']`
+        }
+      ],
+    },
+    {
+      label: 'Scale',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'choroplethControl',
+          params: {
+            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+          },
+          path: `layers[1].paint['fill-color']`
+        }
+      ]
+    },
+    {
+      label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'rangeColor',
+          path: `['color-range']`
         }
       ],
     },
@@ -141,7 +171,7 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'colors'}
+              {name:'Color Range', value: 'choropleth'}
             ]
           },
           path: `['layer-type']`,
@@ -154,7 +184,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'colors']
+        conditions: ['categories', 'choropleth']
       },
       controls: [
         {
@@ -202,6 +232,37 @@ const typeConfigs = {
         {
           type: 'categoricalColor',
           path: `['color-set']`
+        }
+      ],
+    },
+    {
+      label: 'Scale',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'choroplethControl',
+          params: {
+            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+          },
+          path: `layers[1].paint['circle-color']`
+        }
+      ]
+    },
+    {
+      label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'rangeColor',
+          path: `['color-range']`
         }
       ],
     },
@@ -290,7 +351,7 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'colors'}
+              {name:'Color Range', value: 'choropleth'}
             ]
           },
           path: `['layer-type']`,
@@ -303,7 +364,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'colors']
+        conditions: ['categories', 'choropleth']
       },
       controls: [
         {
@@ -354,6 +415,37 @@ const typeConfigs = {
         {
           type: 'categoricalColor',
           path: `['color-set']`
+        }
+      ],
+    },
+    {
+      label: 'Scale',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'choroplethControl',
+          params: {
+            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+          },
+          path: `layers[1].paint['line-color']`
+        }
+      ]
+    },
+    {
+      label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['choropleth']
+      },
+      controls: [
+        {
+          type: 'rangeColor',
+          path: `['color-range']`
         }
       ],
     },

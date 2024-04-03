@@ -1,4 +1,5 @@
 import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
+import ckmeans from '~/pages/DataManager/utils/ckmeans'
 
 export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
   let paint = ['match',
@@ -23,4 +24,43 @@ export function isValidCategoryPaint(paint) {
     }
   }) 
   return valid
+}
+
+let methods = {
+  'ckmeans': ckmeans
+}
+
+export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
+  let paint = [
+      'step',
+      ['get', column],
+     
+      //'#51bbd6',
+      // 100,
+  ]
+  if(!Array.isArray(choroplethdata)) {
+    return paint
+  }
+  let domain = methods[method](choroplethdata, num-1)
+
+  domain.forEach((d,i) => {
+    paint.push(colors[i]);
+    paint.push(+d)
+  })
+
+  paint.push(colors[num-1])
+
+  return paint
+
+  let inerpaint = [
+      'interpolate',
+      ['linear'],
+      [get, 'column'],
+      // 274,
+      // ['to-color', '#f5e5f3'],
+      // 1551,
+      // ['to-color', '#8d00ac']
+  ]
+
+
 }

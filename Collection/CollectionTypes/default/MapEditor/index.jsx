@@ -46,7 +46,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
 
   useEffect(() => {
     console.log('load', +activeSymbologyId, symbologyId )
-    if((+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
+    if(!(symbologyId) && (+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
       navigate(`${baseUrl}/collection/${collection.collection_id}/mapeditor/${activeSymbologyId}`)
     }
   },[activeSymbologyId, symbologyId])

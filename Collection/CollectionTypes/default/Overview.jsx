@@ -4,7 +4,7 @@ import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { CollectionAttributes } from '~/pages/DataManager/Collection/attributes'
 import { DamaContext } from "~/pages/DataManager/store"
-import Symbologies from './Symbology/list'
+//import Symbologies from './Symbology/list'
 // import { VersionEditor, VersionDownload } from './Version/version'
 
 import SourceCategories from "./SourceCategories"
@@ -208,7 +208,7 @@ const OverviewPage = ({collection, symbologies, activeViewId}) => {
             </Link>
           </div>
           <div className="col-span-6">
-            <Symbologies collection={collection} symbologies={symbologies} />
+            {/*<Symbologies collection={collection} symbologies={symbologies} />*/}
           </div>
 
         </div>
