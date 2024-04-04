@@ -50,83 +50,37 @@ const Versions = ({ source, views, meta }) => {
     );
   }
 
-  // const columns = React.useMemo(() => {
-  //   return [
-  //     {
-  //       Header: "Version Id",
-  //       accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
-  //     },
-  //     {
-  //       Header: "User",
-  //       accessor: "user_id"
-  //     },
-  //     // {
-  //     //   Header: "Updated",
-  //     //   accessor: c => formatDate(c["_modified_timestamp"])
-  //     // },
-  //     {
-  //       Header: "Uploaded",
-  //       accessor: c => formatDate(c["_created_timestamp"])
-  //     },
-  //     // {
-  //     //   Header: "Make Authoritative",
-  //     //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
-  //     //   disableFilters: true,
-  //     // },
-  //     {
-  //       Header: " ",
-  //       accessor: c => {
-  //         console.log('downlaod view',c)
-  //         return
-  //           <VersionDownload
-  //             view={c}
-  //           />
-  //       },
-  //       disableFilters: true
-  //     }
-  //   ]
-  // },[source])
-
   return (
-    <div className="">
+    <div>
       <Table
+        onRowClick={(e, row) => {
+          navigate(
+            `${baseUrl}/source/${sourceId}/versions/${row.original.view_id}`
+          );
+        }}
         data={views}
         columns={[
-      {
-        Header: "Version Id",
-        accessor: c => <Link to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]} </Link>,
-      },
-      {
-        Header: "User",
-        accessor: "user_id"
-      },
-      // {
-      //   Header: "Updated",
-      //   accessor: c => formatDate(c["_modified_timestamp"])
-      // },
-      {
-        Header: "Uploaded",
-        accessor: c => formatDate(c["_created_timestamp"])
-      },
-      // {
-      //   Header: "Make Authoritative",
-      //   accessor: c => <MakeAuthoritativeButton viewId={c["view_id"]} meta={c["metadata"]} pgEnv={pgEnv} />,
-      //   disableFilters: true,
-      // },
-      {
-        Header: " Download",
-        accessor: c => {
-          return (
-            <VersionDownload
-              view={c}
-            />
-          )
-        },
-        disableFilters: true
-      }
-    ]}
+          {
+            Header: "Version Id",
+            accessor: (c) => c["version"] || c["view_id"],
+          },
+          {
+            Header: "User",
+            accessor: "user_id",
+          },
+          {
+            Header: "Uploaded",
+            accessor: (c) => formatDate(c["_created_timestamp"]),
+          },
+          {
+            Header: " Download",
+            accessor: (c) => {
+              return <VersionDownload view={c} />;
+            },
+            disableFilters: true,
+          },
+        ]}
       />
-
     </div>
   );
 };
