@@ -85,7 +85,9 @@ const Collection = ({}) => {
     // console.log('Collections updating symbologies', cacheSymbologies, falcorCache)
     return Object.values(cacheSymbologies)
       .map((v) => {
-        const newVal = { ...v.attributes };
+        // if symbology is created by call it returns in value
+        let curVal = v.attributes?.value ? v.attributes?.value : v.attributes
+        const newVal = { ...curVal};
         Object.keys(v.attributes).forEach((key) => {
           newVal[key] = v.attributes[key]?.value || v.attributes[key];
         });

@@ -69,16 +69,21 @@ export function CreateSymbologyModal ({ open, setOpen})  {
       name: modalState.name,
       collection_id: collectionId,
       description: 'map',
-      symbology: state.symbology
+      symbology: {
+        layers: {}
+      }
     }
-    // console.log('newSymbology', newSymbology)
+    console.log('newSymbology', newSymbology)
 
     let resp = await falcor.call(
         ["dama", "symbology", "symbology", "create"],
         [pgEnv, newSymbology]
     )
     let symbology_id = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
-    // console.log('created symbology', resp, symbology_id)
+    await falcor.invalidate(["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"])
+    //await falcor.get()
+    // await falcor.invalidate(["dama", pgEnv, "symbologies", "byId"])
+    console.log('created symbology', resp, symbology_id)
     
     if(symbology_id) {
       setOpen(false)

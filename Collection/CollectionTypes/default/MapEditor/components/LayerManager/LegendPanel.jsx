@@ -115,6 +115,48 @@ function CategoryLegend({layer}) {
   )
 }
 
+function StepLegend({layer}) {
+  //console.log('StepLegend', layer)
+  const { state, setState  } = React.useContext(SymbologyContext);
+  const { choroplethdata } = useMemo(() => {
+    return {
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []), 
+    }
+  },[state])
+
+  const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
+  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
+  const max = Math.max(...choroplethdata)
+  // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
+  const categories = [
+    ...(paintValue || []).filter((d,i) => i > 2 )
+    .map((d,i) => {
+    
+      if(i%2 === 1) {
+        //console.log('test 123', d, i)
+        return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
+      }
+      return null
+    })
+    .filter(d => d)
+  ]
+
+  return (
+    <div className='w-full max-h-[250px] overflow-auto'>
+        {categories.map((d,i) => (
+          <div key={i} className='w-full flex items-center hover:bg-pink-50'>
+            <div className='flex items-center h-6 w-10 justify-center  '>
+              {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
+              <Symbol color={d.color} />
+            </div>
+            <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
+          </div> 
+        ))}
+    </div>
+  )
+}
+
+
 function LegendRow ({ index, layer, i }) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
@@ -144,6 +186,7 @@ function LegendRow ({ index, layer, i }) {
         <VisibilityButton layer={layer}/>
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} />}
+      {type === 'choropleth' && <StepLegend layer={layer} />}
     </div>
   )
 }
@@ -152,6 +195,7 @@ function LayerManager (props) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const layers = useMemo(() => state.symbology?.layers ||  {}, [state])
   //console.log('layers', layers)
+  
   const droppedSection = React.useCallback((start, end) => {
     setState(draft => {
     const sections = Object.values(draft.symbology.layers)

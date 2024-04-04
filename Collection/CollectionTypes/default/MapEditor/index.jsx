@@ -23,7 +23,7 @@ export const SymbologyContext = createContext(undefined);
 const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
   
   const mounted = useRef(false);
-  const {falcor, pgEnv, baseUrl} = React.useContext(DamaContext);
+  const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
   const navigate = useNavigate()
   const { symbologyId } = useParams()
   // --------------------------------------------------
@@ -45,16 +45,18 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
   )
 
   useEffect(() => {
-    console.log('load', +activeSymbologyId, symbologyId )
+    // console.log('load', +activeSymbologyId, symbologyId, symbologies)
     if(!(symbologyId) && (+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
       navigate(`${baseUrl}/collection/${collection.collection_id}/mapeditor/${activeSymbologyId}`)
+      let currentData = symbologies.find(s => +s.symbology_id === +activeSymbologyId)
+      setState(currentData)
     }
-  },[activeSymbologyId, symbologyId])
+  },[activeSymbologyId, symbologyId, symbologies, falcorCache])
 
   useEffect(() => {
     async function updateData() {
       console.time('update symbology')
-      // console.log('updating symbology to:', state.symbology)
+      //console.log('updating symbology to:', state.symbology)
       let resp = await falcor.set({
         paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'symbology']],
         jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 

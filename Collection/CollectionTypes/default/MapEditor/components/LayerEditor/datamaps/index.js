@@ -1,5 +1,5 @@
 import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
-import ckmeans from '~/pages/DataManager/utils/ckmeans'
+import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
 
 export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
   let paint = ['match',
@@ -27,10 +27,14 @@ export function isValidCategoryPaint(paint) {
 }
 
 let methods = {
-  'ckmeans': ckmeans
+  'ckmeans': ckmeans,
+  'equalInterval': equalIntervalBreaks, 
+  'jenks': ckmeans,//jenksBreaks, 
+  'pretty': prettyBreaks
 }
 
 export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
+  console.log('paint method', method)
   let paint = [
       'step',
       ['get', column],
@@ -38,12 +42,19 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
       //'#51bbd6',
       // 100,
   ]
+  // console.log('choroplethdata', choroplethdata)
   if(!Array.isArray(choroplethdata)) {
-    return paint
+    return false
   }
-  let domain = methods[method](choroplethdata, num-1)
+  let domain = methods[method](choroplethdata, num)
 
-  domain.forEach((d,i) => {
+  if(!Array.isArray(domain) || domain.length  === 0){
+    return false
+  }
+
+  domain
+   //.filter((d,i) => i < domain.length-1)
+    .forEach((d,i) => {
     paint.push(colors[i]);
     paint.push(+d)
   })
