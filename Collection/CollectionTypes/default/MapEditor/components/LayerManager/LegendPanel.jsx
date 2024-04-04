@@ -116,23 +116,31 @@ function CategoryLegend({layer}) {
 }
 
 function StepLegend({layer}) {
-  console.log('StepLegend', layer)
+  //console.log('StepLegend', layer)
+  const { state, setState  } = React.useContext(SymbologyContext);
+  const { choroplethdata } = useMemo(() => {
+    return {
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []), 
+    }
+  },[state])
+
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-  console.log('StepLegend', layer, paintValue)
+  const max = Math.max(...choroplethdata)
+  // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
   const categories = [
     ...(paintValue || []).filter((d,i) => i > 2 )
     .map((d,i) => {
     
       if(i%2 === 1) {
-          console.log('test 123', d, i)
-        return {color: d, label: paintValue[i+2]}
+        //console.log('test 123', d, i)
+        return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
       }
       return null
     })
     .filter(d => d)
   ]
-  
+
   return (
     <div className='w-full max-h-[250px] overflow-auto'>
         {categories.map((d,i) => (
@@ -187,6 +195,7 @@ function LayerManager (props) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const layers = useMemo(() => state.symbology?.layers ||  {}, [state])
   //console.log('layers', layers)
+  
   const droppedSection = React.useCallback((start, end) => {
     setState(draft => {
     const sections = Object.values(draft.symbology.layers)
