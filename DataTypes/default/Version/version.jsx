@@ -274,33 +274,31 @@ function ViewControls ({view}) {
 
 
   const createDownload = () => {
-    const runPublish = async () => {
+    const runCreate = async () => {
       try {
 
-        const publishData = {
+        const createData = {
           source_id: sourceId,
           view_id: viewId
         };
 
         console.log('creating download')
-        const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/createDownload`,
+        const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
         {
           method: "POST",
-          body: JSON.stringify(publishData),
+          body: JSON.stringify(createData),
           headers: {
             "Content-Type": "application/json",
           },
         });
 
-         const publishFinalEvent = await res.json();
-         console.log('createDownload', publishFinalEvent)
-
+         const createFinalEvent = await res.json();
+         console.log('createDownload', createFinalEvent)
       } catch (err) {
-
         console.error("==>", err);
       }
     }
-    runPublish()
+    runCreate();
   }
   return (
     <div className="w-72 ">

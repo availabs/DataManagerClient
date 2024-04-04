@@ -1,27 +1,12 @@
 import React, {Fragment} from "react";
 import { Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
 import Version, { VersionDownload } from "./version";
 
 import DeleteVersion from "./delete";
-
-// const MakeAuthoritativeButton = ({ viewId, meta, pgEnv }) => {
-//   return (
-//     <button
-//       className={`${get(meta, "authoritative") === "true" ? `cursor-not-allowed bg-blue-100` : `bg-blue-50 hover:bg-blue-400 hover:text-white`} p-2`}
-//       disabled={get(meta, "authoritative") === "true"}
-//       onClick={async () => {
-//         await makeAuthoritative(getDamaApiRoutePrefix(pgEnv), viewId);
-//       }
-//       }>
-
-//       {get(meta, "authoritative") === "true" ? <i className="fad fa-gavel"></i> : <i class="fa-regular fa-gavel"></i>}
-//     </button>
-//   );
-// };
 
 const DeleteButton = ({ viewId, sourceId, meta, navigate }) => {
   const { baseUrl } = React.useContext(DamaContext);
@@ -38,7 +23,6 @@ const DeleteButton = ({ viewId, sourceId, meta, navigate }) => {
 
 const Versions = ({ source, views, meta }) => {
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
-  const navigate = useNavigate();
   const { sourceId, viewId, vPage } = useParams();
 
   if (vPage === "delete") {
@@ -53,11 +37,6 @@ const Versions = ({ source, views, meta }) => {
   return (
     <div>
       <Table
-        onRowClick={(e, row) => {
-          navigate(
-            `${baseUrl}/source/${sourceId}/versions/${row.original.view_id}`
-          );
-        }}
         data={views}
         columns={[
           {
@@ -71,6 +50,10 @@ const Versions = ({ source, views, meta }) => {
           {
             Header: "Uploaded",
             accessor: (c) => formatDate(c["_created_timestamp"]),
+          },
+          {
+            Header: "Details",
+            accessor: (c) => <Link className="text-blue-500" to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> Link to Details Page </Link>
           },
           {
             Header: " Download",
