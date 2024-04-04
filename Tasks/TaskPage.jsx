@@ -36,7 +36,7 @@ const COLUMNS = [
     accessor: "payload",
     Header: "Data",
     Cell: ({ value }) => {
-      const parsedValue = JSON.parse(value);
+      const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
       const displayValue = parsedValue?.data || parsedValue?.message;
       return <>{JSON.stringify(displayValue)}</>;
     },
