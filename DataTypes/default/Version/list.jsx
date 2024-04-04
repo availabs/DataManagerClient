@@ -37,6 +37,9 @@ const Versions = ({ source, views, meta }) => {
   return (
     <div>
       <Table
+        disableFilters
+        disableSortBy
+        sortBy={"_created_timestamp"}
         data={views}
         columns={[
           {
