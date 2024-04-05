@@ -1,12 +1,13 @@
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useContext, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Input, Button } from "~/modules/avl-components/src"
+import { Input, Button, Modal } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/Source/attributes'
 import { DamaContext } from "../../../store";
-import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { DAMA_HOST } from '~/config'
+import { Menu, Transition } from '@headlessui/react'
+
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -112,7 +113,7 @@ const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseUrl }) =
 };
 
 const RenderDependents = ({ dependents = [], viewId, srcMeta, viewMeta }) => {
-  const { baseUrl } = React.useContext(DamaContext);
+  const { baseUrl } = useContext(DamaContext);
   return (
     <div className="w-full p-4 bg-white shadow mb-4">
       <label className={"text-lg"}>Dependents</label>
@@ -177,7 +178,7 @@ const RenderDependents = ({ dependents = [], viewId, srcMeta, viewMeta }) => {
 
 const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
   const [value, setValue] = useState('')
-  const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor} = useContext(DamaContext);
   /*const [loading, setLoading] = useState(false)*/
 
   useEffect(() => {
@@ -220,8 +221,8 @@ const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
 }
 
 export const VersionEditor = ({view,columns=null}) => {
-  const [editing, setEditing] = React.useState(null)
-  const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
+  const [editing, setEditing] = useState(null)
+  const {pgEnv, baseUrl, user} = useContext(DamaContext);
   //console.log(view)
 
   return (
@@ -268,21 +269,52 @@ export const VersionEditor = ({view,columns=null}) => {
   )
 }
 
-function ViewControls ({view}) {
-  const { viewId,sourceId } = useParams();
-  const { pgEnv, baseUrl, user} = React.useContext(DamaContext);
+const OUTPUT_FILE_TYPES = [
+  "CSV",
+  "ESRI Shapefile",
+  "GeoJSON",
+  "GPKG",
+];
+const INITIAL_MODAL_STATE = {
+  open: false,
+  loading: false,
+  fileTypes:[]
+}
 
+function ViewControls ({view}) {
+  const cancelButtonRef = useRef(null);
+  const { viewId,sourceId } = useParams();
+  const { pgEnv, baseUrl, user} = useContext(DamaContext);
+
+  const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
+
+  const setFileTypes = (fileType) => {
+    let newFileTypes;
+    if(modalState.fileTypes.includes(fileType)){
+      newFileTypes = modalState.fileTypes.filter(ft => ft !== fileType)
+    }
+    else{
+      newFileTypes = [...modalState.fileTypes]
+      newFileTypes.push(fileType);
+    }
+
+    setModalState({...modalState, fileTypes: newFileTypes});
+  }
+
+  const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
 
   const createDownload = () => {
     const runCreate = async () => {
       try {
-
         const createData = {
           source_id: sourceId,
-          view_id: viewId
+          view_id: viewId,
+          fileTypes: modalState.fileTypes,
+          user_id: user.id
         };
 
         console.log('creating download')
+        setModalState({...modalState, loading: true});
         const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
         {
           method: "POST",
@@ -293,36 +325,115 @@ function ViewControls ({view}) {
         });
 
          const createFinalEvent = await res.json();
+         setModalState({...modalState, loading: false, open: false});
          console.log('createDownload', createFinalEvent)
       } catch (err) {
         console.error("==>", err);
+        setModalState({...modalState, loading: false, open: false});
       }
     }
     runCreate();
   }
   return (
     <div className="w-72 ">
-        { user.authLevel >= 10 ? (
-          <div className='w-full'>
-            <div> Admin Actions </div>
-            <div className="w-full p-1 flex">
-              <Link
-                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                onClick={createDownload}
-              >
-                Create Download
-              </Link>
-            </div>
+      {user.authLevel >= 10 ? (
+        <div className="w-full">
+          <div> Admin Actions </div>
+          <div className="w-full p-1 flex">
+            <Link
+              className={
+                "w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"
+              }
+              onClick={() => {
+                setModalState({ ...modalState, open: true });
+              }}
+            >
+              Create Download
+            </Link>
+          </div>
 
-            <div className="w-full p-1 flex">
-              <Link
-                  className={"w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
-                  to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}>
-                    Delete View <i className='fad fa-trash' />
-              </Link>
+          <div className="w-full p-1 flex">
+            <Link
+              className={
+                "w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"
+              }
+              to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}
+            >
+              Delete View <i className="fad fa-trash" />
+            </Link>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+      <Modal open={modalState.open} setOpen={setModalOpen} size="xlarge">
+        <div className="flex items-center">
+          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i
+              className="fad fa-layer-group text-blue-600"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+            <div className="text-lg align-center font-semibold leading-6 text-gray-900">
+              Create Data Download
             </div>
           </div>
-      ) : '' }
+        </div>
+        <div className="pl-10">
+          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+            <div className="text-md align-center  leading-6 text-gray-900">
+              File types:
+            </div>
+            {OUTPUT_FILE_TYPES.map((fileType) => (
+              <FileTypeInput
+                key={`${fileType}_checkbox`}
+                typeName={fileType}
+                checked={modalState.fileTypes.includes(fileType)}
+                onChange={setFileTypes}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+          <button
+            type="button"
+            disabled={modalState.loading}
+            className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+            onClick={createDownload}
+          >
+            {modalState.loading
+              ? "Sending request..."
+              : "Start download creation"}
+          </button>
+          <button
+            type="button"
+            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+            onClick={() => setModalOpen(false)}
+            ref={cancelButtonRef}
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+const FileTypeInput = ({typeName, checked, onChange}) => {
+  return (
+    <div className="mt-2 flex items-center">
+      <input
+        id={typeName}
+        name={typeName}
+        type="checkbox"
+        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        checked={checked}
+        onChange={() => onChange(typeName)}  
+      />
+      <label htmlFor={typeName} className="ml-2 text-sm text-gray-900">
+        {typeName}
+      </label>
     </div>
   )
 }
@@ -381,7 +492,7 @@ export function  VersionDownload ({view}) {
 
 export default function Version() {
   const { viewId,sourceId } = useParams();
-  const { pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
+  const { pgEnv, baseUrl, falcor, falcorCache} = useContext(DamaContext);
 
   useEffect(() => {
     getData({ falcor, pgEnv, viewId });
