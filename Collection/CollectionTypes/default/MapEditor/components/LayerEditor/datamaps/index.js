@@ -34,7 +34,7 @@ let methods = {
 }
 
 export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
-  console.log('paint method', method)
+  //console.log('paint method', method)
   let paint = [
       'step',
       ['get', column],
