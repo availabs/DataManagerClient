@@ -168,10 +168,20 @@ const mapColors = {
 		"8": ["#59a1a6", "#81b6a5", "#a8cba4", "#cee0a4", "#e1d685", "#cdb769", "#b9994c", "#a67b30"],
 		"9": ["#59a1a6", "#81b6a5", "#a8cba4", "#cee0a4", "#f5f5a3", "#e1d685", "#cdb769", "#b9994c", "#a67b30"],
 	},
+	"div6":{
+		"2": ["#8b4583", "#4a6147"],
+		"3": ["#8b4583", "#f9f2bf", "#4a6147"],
+		"4": ["#8b4583", "#c29ba1", "#9ea781", "#4a6147"],
+		"5": ["#8b4583", "#c29ba1", "#f9f2bf", "#9ea781", "#4a6147"],
+		"6": ["#8b4583", "#b07e97", "#d4b8ab", "#bcbf95", "#818f6d", "#4a6147"],
+		"7": ["#8b4583", "#b07e97", "#d4b8ab", "#f9f2bf", "#bcbf95", "#818f6d", "#4a6147"],
+		"8": ["#8b4583", "#a77092", "#c29ba1", "#ddc6b0", "#cbcc9f", "#9ea781", "#738363", "#4a6147"],
+		"9": ["#8b4583", "#a77092", "#c29ba1", "#ddc6b0", "#f9f2bf", "#cbcc9f", "#9ea781", "#738363", "#4a6147"],
+	},
 	"schemeGroups": {
 		"sequential": ["seq1", "seq2", "seq3", "seq4", "seq5", "seq6", "seq7", "seq8","seq9","seq10", "seq11","seq12"],
 		"singlehue":[],
-		"diverging": ["div1","div2","div3","div4","div5"]
+		"diverging": ["div1", "div2", "div3", "div4", "div5", "div6"]
 	}
 }
 export default mapColors

@@ -194,9 +194,9 @@ export function SelectTypeControl({path, datapath, params={}}) {
       }
     } else if(value === 'choropleth') {
       let paint = choroplethPaint(column,choroplethdata,colorrange,numbins, method)
-      // console.log('test paint', paint)
+      //console.log('test paint', paint, paintValue)
       if(paint && !isEqual(paint,paintValue)) {
-        console.log('update choropleth paint', column, numbins, method)
+        //console.log('update choropleth paint', column, numbins, method)
       
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
