@@ -325,11 +325,11 @@ function ViewControls ({view}) {
         });
 
          const createFinalEvent = await res.json();
-         setModalState({...modalState, loading: false, open: false});
+         setModalState(INITIAL_MODAL_STATE);
          console.log('createDownload', createFinalEvent)
       } catch (err) {
         console.error("==>", err);
-        setModalState({...modalState, loading: false, open: false});
+        setModalState({...modalState, loading: false, open: true});
       }
     }
     runCreate();
