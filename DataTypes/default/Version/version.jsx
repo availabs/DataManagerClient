@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, useContext, useRef } from "react";
+import { Fragment, useEffect, useState, useContext, useRef, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Input, Button, Modal } from "~/modules/avl-components/src"
 import get from 'lodash/get'
@@ -221,9 +221,8 @@ const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
 }
 
 export const VersionEditor = ({view,columns=null}) => {
-  const [editing, setEditing] = useState(null)
-  const {pgEnv, baseUrl, user} = useContext(DamaContext);
-  //console.log(view)
+  const [editing, setEditing] = useState(null);
+  const { user } = useContext(DamaContext);
 
   return (
     <div className="overflow-hidden">
@@ -278,13 +277,14 @@ const OUTPUT_FILE_TYPES = [
 const INITIAL_MODAL_STATE = {
   open: false,
   loading: false,
-  fileTypes:[]
+  fileTypes:[],
+  columns: []
 }
 
 function ViewControls ({view}) {
   const cancelButtonRef = useRef(null);
   const { viewId,sourceId } = useParams();
-  const { pgEnv, baseUrl, user} = useContext(DamaContext);
+  const { pgEnv, baseUrl, user, falcorCache} = useContext(DamaContext);
 
   const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
 
@@ -300,8 +300,49 @@ function ViewControls ({view}) {
 
     setModalState({...modalState, fileTypes: newFileTypes});
   }
+  const setColumns = (columnName) => {
+    let newColumns;
+    if(modalState.columns.includes(columnName)){
+      newColumns = modalState.columns.filter(colName => colName !== columnName)
+    }
+    else{
+      newColumns = [...modalState.columns];
+      newColumns.push(columnName);
+    }
 
+    setModalState({...modalState, columns: newColumns})
+  }
   const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
+
+  const sourceDataColumns = useMemo(() => {
+    return get(falcorCache, [
+      "dama",
+      pgEnv,
+      "sources",
+      "byId",
+      view.source_id,
+      "attributes",
+      "metadata",
+      "value",
+    ])?.map((column) => column.name);
+  }, [falcorCache, view]);
+
+  //Only used after successful download creation
+  const defaultModalState = useMemo(() => {
+    if (sourceDataColumns) {
+      return { ...INITIAL_MODAL_STATE, columns: sourceDataColumns };
+    } else {
+      return INITIAL_MODAL_STATE;
+    }
+  }, [sourceDataColumns]);
+
+  //Initial modal state should have columns checked
+  //Should only fire once, when we get the source metadata back from API
+  useEffect(() => {
+    if (sourceDataColumns) {
+      setModalState({ ...modalState, columns: sourceDataColumns });
+    }
+  }, [sourceDataColumns]);
 
   const createDownload = () => {
     const runCreate = async () => {
@@ -310,6 +351,7 @@ function ViewControls ({view}) {
           source_id: sourceId,
           view_id: viewId,
           fileTypes: modalState.fileTypes,
+          columns: modalState.columns,
           user_id: user.id
         };
 
@@ -325,7 +367,7 @@ function ViewControls ({view}) {
         });
 
          const createFinalEvent = await res.json();
-         setModalState(INITIAL_MODAL_STATE);
+         setModalState(defaultModalState);
          console.log('createDownload', createFinalEvent)
       } catch (err) {
         console.error("==>", err);
@@ -366,7 +408,7 @@ function ViewControls ({view}) {
       ) : (
         ""
       )}
-      <Modal open={modalState.open} setOpen={setModalOpen} size="xlarge">
+      <Modal open={modalState.open} setOpen={setModalOpen}>
         <div className="flex items-center">
           <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
             <i
@@ -380,17 +422,30 @@ function ViewControls ({view}) {
             </div>
           </div>
         </div>
-        <div className="pl-10">
-          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+        <div className="pl-10 grid grid-cols-2">
+          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
             <div className="text-md align-center  leading-6 text-gray-900">
               File types:
             </div>
             {OUTPUT_FILE_TYPES.map((fileType) => (
-              <FileTypeInput
+              <DownloadModalInput
                 key={`${fileType}_checkbox`}
-                typeName={fileType}
+                inputName={fileType}
                 checked={modalState.fileTypes.includes(fileType)}
                 onChange={setFileTypes}
+              />
+            ))}
+          </div>
+          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+            <div className="text-md align-center  leading-6 text-gray-900">
+              Columns:
+            </div>
+            {sourceDataColumns?.map((columnName) => (
+              <DownloadModalInput
+                key={`${columnName}_checkbox`}
+                inputName={columnName}
+                checked={modalState.columns.includes(columnName)}
+                onChange={setColumns}
               />
             ))}
           </div>
@@ -420,19 +475,19 @@ function ViewControls ({view}) {
   );
 }
 
-const FileTypeInput = ({typeName, checked, onChange}) => {
+const DownloadModalInput = ({inputName, checked, onChange}) => {
   return (
     <div className="mt-2 flex items-center">
       <input
-        id={typeName}
-        name={typeName}
+        id={inputName}
+        name={inputName}
         type="checkbox"
         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
         checked={checked}
-        onChange={() => onChange(typeName)}  
+        onChange={() => onChange(inputName)}  
       />
-      <label htmlFor={typeName} className="ml-2 text-sm text-gray-900">
-        {typeName}
+      <label htmlFor={inputName} className="ml-2 text-sm text-gray-900">
+        {inputName}
       </label>
     </div>
   )
