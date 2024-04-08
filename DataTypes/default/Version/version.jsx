@@ -4,7 +4,7 @@ import { Input, Button, Modal } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { ViewAttributes } from '~/pages/DataManager/Source/attributes'
 import { DamaContext } from "../../../store";
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { DAMA_HOST } from '~/config'
 import { Menu, Transition } from '@headlessui/react'
 
@@ -290,7 +290,10 @@ function ViewControls ({view}) {
 
   const setFileTypes = (fileType) => {
     let newFileTypes;
-    if(modalState.fileTypes.includes(fileType)){
+    if(Array.isArray(fileType)){
+      newFileTypes = fileType;
+    }
+    else if(modalState.fileTypes.includes(fileType)){
       newFileTypes = modalState.fileTypes.filter(ft => ft !== fileType)
     }
     else{
@@ -302,7 +305,10 @@ function ViewControls ({view}) {
   }
   const setColumns = (columnName) => {
     let newColumns;
-    if(modalState.columns.includes(columnName)){
+    if(Array.isArray(columnName)){
+      newColumns = columnName;
+    }
+    else if(modalState.columns.includes(columnName)){
       newColumns = modalState.columns.filter(colName => colName !== columnName)
     }
     else{
@@ -355,7 +361,7 @@ function ViewControls ({view}) {
           user_id: user.id
         };
 
-        console.log('creating download')
+        console.log('creating download', createData)
         setModalState({...modalState, loading: true});
         const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
         {
@@ -423,37 +429,23 @@ function ViewControls ({view}) {
           </div>
         </div>
         <div className="pl-10 grid grid-cols-2">
-          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-            <div className="text-md align-center  leading-6 text-gray-900">
-              File types:
-            </div>
-            {OUTPUT_FILE_TYPES.map((fileType) => (
-              <DownloadModalInput
-                key={`${fileType}_checkbox`}
-                inputName={fileType}
-                checked={modalState.fileTypes.includes(fileType)}
-                onChange={setFileTypes}
-              />
-            ))}
-          </div>
-          <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-            <div className="text-md align-center  leading-6 text-gray-900">
-              Columns:
-            </div>
-            {sourceDataColumns?.map((columnName) => (
-              <DownloadModalInput
-                key={`${columnName}_checkbox`}
-                inputName={columnName}
-                checked={modalState.columns.includes(columnName)}
-                onChange={setColumns}
-              />
-            ))}
-          </div>
+          <DownloadModalCheckboxGroup
+            title={"File Types"}
+            options={OUTPUT_FILE_TYPES}
+            modalState={modalState.fileTypes}
+            onChange={setFileTypes}
+          />
+          <DownloadModalCheckboxGroup
+            title={"Columns"}
+            options={sourceDataColumns}
+            modalState={modalState.columns}
+            onChange={setColumns}
+          />
         </div>
         <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <button
             type="button"
-            disabled={modalState.loading}
+            disabled={modalState.loading || modalState.fileTypes.length === 0 || modalState.columns.length===0}
             className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
             onClick={createDownload}
           >
@@ -475,7 +467,43 @@ function ViewControls ({view}) {
   );
 }
 
-const DownloadModalInput = ({inputName, checked, onChange}) => {
+const DownloadModalCheckboxGroup = ({ options, modalState, onChange, title }) => {
+  return (
+    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+      <div className="flex justify-between items-center w-1/2 text-md leading-6 text-gray-900">
+        <div className="text-center h-fit">{title}:</div>
+        <div>
+          <Button
+            themeOptions={{ size: "sm" }}
+            onClick={() => {
+              if (modalState.length === options.length) {
+                onChange([]);
+              } else {
+                onChange(options);
+              }
+            }}
+          >
+            Toggle All
+          </Button>
+        </div>
+      </div>
+      <div className="flex mt-2 text-sm items-center">
+        One or more must be selected
+        {modalState.length > 0 ? <CheckCircleIcon className="ml-2 text-green-700 h-4 w-4" /> : <XCircleIcon className="ml-2 text-red-700 h-4 w-4"/>}
+      </div>
+      {options?.map((option) => (
+        <DownloadModalCheckbox
+          key={`${option}_checkbox`}
+          inputName={option}
+          checked={modalState.includes(option)}
+          onChange={onChange}
+        />
+      ))}
+    </div>
+  );
+};
+
+const DownloadModalCheckbox = ({inputName, checked, onChange}) => {
   return (
     <div className="mt-2 flex items-center">
       <input
