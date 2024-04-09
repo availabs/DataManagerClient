@@ -278,11 +278,12 @@ const INITIAL_MODAL_STATE = {
   open: false,
   loading: false,
   fileTypes:[],
-  columns: []
+  columns: [],
+  enableGroupedBy: false,
+  groupedByColumn: ""
 }
 
 function ViewControls ({view}) {
-  const cancelButtonRef = useRef(null);
   const { viewId,sourceId } = useParams();
   const { pgEnv, baseUrl, user, falcorCache} = useContext(DamaContext);
 
@@ -319,6 +320,9 @@ function ViewControls ({view}) {
     setModalState({...modalState, columns: newColumns})
   }
   const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
+  const setEnableGroupedBy = (newEnableValue) => setModalState({...modalState, enableGroupedBy: newEnableValue});
+  const setGroupedByColumn = (newGroupColumn) => setModalState({...modalState, groupedByColumn: newGroupColumn})
+
 
   const sourceDataColumns = useMemo(() => {
     return get(falcorCache, [
@@ -358,7 +362,8 @@ function ViewControls ({view}) {
           view_id: viewId,
           fileTypes: modalState.fileTypes,
           columns: modalState.columns,
-          user_id: user.id
+          user_id: user.id,
+          groupedByColumn: modalState.groupedByColumn
         };
 
         console.log('creating download', createData)
@@ -414,7 +419,10 @@ function ViewControls ({view}) {
       ) : (
         ""
       )}
-      <Modal open={modalState.open} setOpen={setModalOpen}>
+      <Modal
+        open={modalState.open}
+        setOpen={setModalOpen}
+      >
         <div className="flex items-center">
           <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
             <i
@@ -428,7 +436,7 @@ function ViewControls ({view}) {
             </div>
           </div>
         </div>
-        <div className="pl-10 grid grid-cols-2">
+        <div className={"pl-10 grid grid-cols-3"}>
           <DownloadModalCheckboxGroup
             title={"File Types"}
             options={OUTPUT_FILE_TYPES}
@@ -441,11 +449,28 @@ function ViewControls ({view}) {
             modalState={modalState.columns}
             onChange={setColumns}
           />
+          <DownloadModalGroupedBy >
+            <DownloadModalGroupByToggle
+              onChange={setEnableGroupedBy}
+              modalState={modalState.enableGroupedBy}
+            />
+            {modalState.enableGroupedBy && (
+              <DownloadModalGroupColumnSelect
+                options={modalState.columns}
+                modalState={modalState.groupedByColumn}
+                onChange={setGroupedByColumn}
+              />
+            )}
+          </DownloadModalGroupedBy>
         </div>
         <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <button
             type="button"
-            disabled={modalState.loading || modalState.fileTypes.length === 0 || modalState.columns.length===0}
+            disabled={
+              modalState.loading ||
+              modalState.fileTypes.length === 0 ||
+              modalState.columns.length === 0
+            }
             className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
             onClick={createDownload}
           >
@@ -457,7 +482,6 @@ function ViewControls ({view}) {
             type="button"
             className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
             onClick={() => setModalOpen(false)}
-            ref={cancelButtonRef}
           >
             Cancel
           </button>
@@ -467,7 +491,86 @@ function ViewControls ({view}) {
   );
 }
 
-const DownloadModalCheckboxGroup = ({ options, modalState, onChange, title }) => {
+const DownloadModalGroupedBy = ({ children }) => {
+  return (
+    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+      <div className="flex justify-between items-center w-1/2 text-md leading-6 text-gray-900">
+        <div className="text-center h-fit">Split data files</div>
+      </div>
+      <div className="flex mt-2 text-sm items-center">
+        Split up data based on a specified column
+      </div>
+      {children}
+    </div>
+  );
+};
+
+const DownloadModalGroupColumnSelect = ({ options, modalState, onChange }) => {
+  return (
+    <div className="mt-2 flex items-center">
+      <div className="flex mt-2 text-sm items-center">
+        Output will have 1 file per distinct value in:
+      </div>
+      <select
+        className="w-full bg-blue-100 rounded mr-2 px-1 flex text-sm"
+        value={modalState}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {options.map((option, i) => (
+          <option key={i} className="ml-2 truncate " value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+const DownloadModalGroupByToggle = ({ onChange, modalState }) => {
+  return (
+    <div className="mt-3 text-center sm:mt-0 sm:text-left">
+      <div className="mt-2 flex items-center">
+        <input
+          id={"enableGroupedBy"}
+          name={"enableGroupedBy"}
+          value={true}
+          type="radio"
+          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          checked={modalState}
+          onChange={() => onChange(true)}
+        />
+        <label
+          htmlFor={"enableGroupedBy"}
+          className="ml-2 text-sm text-gray-900"
+        >
+          Yes
+        </label>
+        <input
+          id={"disableGroupedBy"}
+          name={"disableGroupedBy"}
+          value={true}
+          type="radio"
+          className="h-4 w-4 ml-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          checked={!modalState}
+          onChange={() => onChange(false)}
+        />
+        <label
+          htmlFor={"enableGroupedBy"}
+          className="ml-2 text-sm text-gray-900"
+        >
+          No
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const DownloadModalCheckboxGroup = ({
+  options,
+  modalState,
+  onChange,
+  title,
+}) => {
   return (
     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
       <div className="flex justify-between items-center w-1/2 text-md leading-6 text-gray-900">
@@ -489,7 +592,11 @@ const DownloadModalCheckboxGroup = ({ options, modalState, onChange, title }) =>
       </div>
       <div className="flex mt-2 text-sm items-center">
         One or more must be selected
-        {modalState.length > 0 ? <CheckCircleIcon className="ml-2 text-green-700 h-4 w-4" /> : <XCircleIcon className="ml-2 text-red-700 h-4 w-4"/>}
+        {modalState.length > 0 ? (
+          <CheckCircleIcon className="ml-2 text-green-700 h-4 w-4" />
+        ) : (
+          <XCircleIcon className="ml-2 text-red-700 h-4 w-4" />
+        )}
       </div>
       {options?.map((option) => (
         <DownloadModalCheckbox
@@ -503,7 +610,7 @@ const DownloadModalCheckboxGroup = ({ options, modalState, onChange, title }) =>
   );
 };
 
-const DownloadModalCheckbox = ({inputName, checked, onChange}) => {
+const DownloadModalCheckbox = ({ inputName, checked, onChange }) => {
   return (
     <div className="mt-2 flex items-center">
       <input
@@ -512,14 +619,14 @@ const DownloadModalCheckbox = ({inputName, checked, onChange}) => {
         type="checkbox"
         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
         checked={checked}
-        onChange={() => onChange(inputName)}  
+        onChange={() => onChange(inputName)}
       />
       <label htmlFor={inputName} className="ml-2 text-sm text-gray-900">
         {inputName}
       </label>
     </div>
-  )
-}
+  );
+};
 
 export function  VersionDownload ({view}) {
   if(!view?.metadata?.download) {
