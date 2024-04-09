@@ -19,6 +19,9 @@ import { registerDataType } from './DataTypes'
 
 import { DamaContext } from "./store"
 
+
+import DamaMap from './Collection/CollectionTypes/default/MapEditor/components/dms/MapComponent'
+
 const DAMA_Wrapper = (Component, DAMA_ARGS) => {
 
   const {
@@ -305,3 +308,8 @@ const DamaRoutes = DAMA_ARGS => {
 
 
 export default DamaRoutes;
+
+
+export {
+  DamaMap
+}

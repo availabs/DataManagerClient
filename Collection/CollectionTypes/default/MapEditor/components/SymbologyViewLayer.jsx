@@ -45,7 +45,7 @@ const ViewLayerRender = ({
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column'])) {
-      console.log('data-column update')
+      //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
        
         let newSource = cloneDeep(layerProps.sources?.[0])
@@ -53,7 +53,7 @@ const ViewLayerRender = ({
         //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
         
-        console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
+        //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
             maplibreMap.removeLayer(l?.id) 
@@ -129,17 +129,26 @@ const ViewLayerRender = ({
 
 class ViewLayer extends AvlLayer { 
   // constructor makes onHover not work??
-  // constructor(layer, view) { 
-  //   super();
+  constructor(layer, view) { 
+    super();
 
-  //   this.id = layer.id;
-  //   // this.name = `Layer ${ layer.layerId }`;
-  //   this.startActive = true;
-  //   this.viewId = layer.view_id;
-  //   this.sources = getValidSources(layer.sources, DAMA_HOST)
-  //   this.layers = layer.layers
+    this.id = layer.id;
+    // this.name = `Layer ${ layer.layerId }`;
+    //console.log('sources', layer.layers)
+    //this.startActive = true;
+    //this.viewId = layer.view_id;
+    this.sources = layer.sources.map(s => {
+      let newSource = cloneDeep(s)
+      newSource.id = `${layer.id}_${newSource.id}`
+      return newSource
+    })
+    this.layers = layer.layers.map(l => {
+      let newLayer = cloneDeep(l)
+      newLayer.source = `${layer.id}_${l.source}`
+      return newLayer
+    })
     
-  // }
+  }
 
   onHover = {
     layers: this.layers

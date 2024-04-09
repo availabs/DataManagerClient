@@ -81,7 +81,7 @@ export function CreateSymbologyModal ({ open, setOpen})  {
     )
     let symbology_id = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
     await falcor.invalidate(["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"])
-    //await falcor.get()
+    // await falcor.get()
     // await falcor.invalidate(["dama", pgEnv, "symbologies", "byId"])
     console.log('created symbology', resp, symbology_id)
     

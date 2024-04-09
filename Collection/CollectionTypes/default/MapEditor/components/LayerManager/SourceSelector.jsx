@@ -76,7 +76,7 @@ function SourceSelector (props) {
 
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
-    console.log('newSource', newSource)
+    // console.log('newSource', newSource)
     //--------------------------------------------
     // Format for adding a layer
     // -------------------------------------------
@@ -98,7 +98,7 @@ function SourceSelector (props) {
       order: Object.keys(state?.symbology?.layers || {})?.length || 0
     }
 
-    console.log('newLayer', newLayer)
+    //console.log('newLayer', newLayer)
     setState(draft => {
       if(!draft?.symbology){
         draft.symbology = { }

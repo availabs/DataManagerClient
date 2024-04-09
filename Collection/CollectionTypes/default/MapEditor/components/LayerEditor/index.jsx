@@ -17,10 +17,10 @@ function LayerManager (props) {
     <div className='p-4'>
       <div className='bg-white/95 w-[312px] rounded-lg drop-shadow-lg pointer-events-auto'>
         <div className='flex justify-between items-center border-b'>
-          <div className=' w-full flex text-slate-700 p-2 '>
+          <div className='flex text-slate-700 p-2 '>
             <input 
             type="text"
-            className='block flex-1 border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300    sm:leading-6'
+            className='block w-[220px] border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
             placeholder={'Select / Create New Map'}
             value={state?.symbology?.layers?.[state?.symbology?.activeLayer]?.name}
             onChange={(e) => setState(draft => { 

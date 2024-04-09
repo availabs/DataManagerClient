@@ -47,7 +47,6 @@ function LayerManager () {
       </div>
     </div>
   )
-
 }
 
 
