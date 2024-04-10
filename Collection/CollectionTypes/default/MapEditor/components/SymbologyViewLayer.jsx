@@ -5,6 +5,7 @@ import cloneDeep from "lodash/cloneDeep"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
+import { DamaContext } from "../../../../../store"
 
 const ViewLayerRender = ({
   maplibreMap,
@@ -129,26 +130,26 @@ const ViewLayerRender = ({
 
 class ViewLayer extends AvlLayer { 
   // constructor makes onHover not work??
-  constructor(layer, view) { 
-    super();
+  // constructor(layer, view) { 
+  //   super();
 
-    this.id = layer.id;
-    // this.name = `Layer ${ layer.layerId }`;
-    //console.log('sources', layer.layers)
-    //this.startActive = true;
-    //this.viewId = layer.view_id;
-    this.sources = layer.sources.map(s => {
-      let newSource = cloneDeep(s)
-      newSource.id = `${layer.id}_${newSource.id}`
-      return newSource
-    })
-    this.layers = layer.layers.map(l => {
-      let newLayer = cloneDeep(l)
-      newLayer.source = `${layer.id}_${l.source}`
-      return newLayer
-    })
+  //   this.id = layer.id;
+  //   // this.name = `Layer ${ layer.layerId }`;
+  //   //console.log('sources', layer.layers)
+  //   //this.startActive = true;
+  //   //this.viewId = layer.view_id;
+  //   this.sources = layer.sources.map(s => {
+  //     let newSource = cloneDeep(s)
+  //     newSource.id = `${layer.id}_${newSource.id}`
+  //     return newSource
+  //   })
+  //   this.layers = layer.layers.map(l => {
+  //     let newLayer = cloneDeep(l)
+  //     newLayer.source = `${layer.id}_${l.source}`
+  //     return newLayer
+  //   })
     
-  }
+  // }
 
   onHover = {
     layers: this.layers
@@ -163,6 +164,7 @@ class ViewLayer extends AvlLayer {
 
       return data;
     },
+    //Component: HoverComp,
     Component: ({ data, layer }) => { 
       if(!layer.props.hover) return
       return (

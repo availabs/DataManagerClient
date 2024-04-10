@@ -152,21 +152,30 @@ export function SelectTypeControl({path, datapath, params={}}) {
   },[state])
 
   useEffect(() => {
+    console.log('getmetadat', sourceId)
     if(sourceId) {
       falcor.get([
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ]);
+      ]).then(d => console.log('source metadata sourceId', sourceId, d));
     }
   },[sourceId])
 
   const metadata = useMemo(() => {
-    return get(falcorCache, [
+    //console.log('getmetadata', falcorCache)
+      let out = get(falcorCache, [
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
       ], [])
+      if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+      return out
+
   }, [sourceId,falcorCache])
 
   const options = useMemo(() => {
-    //console.log('metadata',metadata)
+    console.log('metadata',metadata)
     const hasCols = metadata?.length > 0 
     const hasNumber = metadata.reduce((out,curr) => {
       if(['integer', 'number'].includes(curr.type)){
@@ -254,9 +263,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   },[sourceId])
 
   const metadata = useMemo(() => {
-    return get(falcorCache, [
+    let out = get(falcorCache, [
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
       ], [])
+    if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+    return out
   }, [sourceId,falcorCache])
 
 
