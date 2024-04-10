@@ -37,7 +37,7 @@ const Edit = ({value, onChange, size}) => {
 
     useEffect(() => {
         async function updateData() {
-            console.log('update data',state)
+            //console.log('update data',state)
             onChange(state)
         }
 
@@ -55,38 +55,60 @@ const Edit = ({value, onChange, size}) => {
         // console.log('symbology layers effect')
         const updateLayers = async () => {
             if(mounted.current) {
-                setMapLayers(draftMapLayers => {
-
-                    let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-              
-                    let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
-                        return [...out, ...Object.values(curr?.symbology?.layers || {})]
-                    },[]))
-
-                    console.log('allLayers', allLayers)
-                    let newLayers = allLayers
-                      .filter(d => d)
-                      .filter(d => !currentLayerIds.includes(d.id))
-                      .sort((a,b) => b.order - a.order)
-                      .map(l => {
-                        return new SymbologyViewLayer(l)
-                      })
-
-                    let oldLayers = draftMapLayers.filter(d => allLayers.map(d => d.id).includes(d.id))
+                
+                let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
+                    let ids = out.map(d => d.id)
+                    let newValues = Object.keys(curr?.symbology?.layers)
+                        .reduce((layerOut, layerKey) => {
+                            if( !ids.includes(layerKey) ) {
+                                layerOut[layerKey] = curr?.symbology?.layers[layerKey]
+                            }
+                            return layerOut
+                        },{})
+                        
+                    return [...out,  ...Object.values(newValues)]
                     
-                    const out = [
-                        // keep existing layers & filter
-                        ...oldLayers, 
-                        // add new layers
-                        ...newLayers
-                    ].sort((a,b) => b.order - a.order)
-                    console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
-                    return out
-                })
+                },[]))
+                // console.log('allLayers', allLayers.length, mapLayers.length)
+                //if(mapLayers.length === 0) {
+                    setMapLayers(draftMapLayers => {
+
+                        let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
+                  
+                        // let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
+                        //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
+                        // },[]))
+
+                        //console.log('allLayers', allLayers)
+                        let newLayers = allLayers
+                          .filter(d => d)
+                          .filter(d => !currentLayerIds.includes(d.id))
+                          .sort((a,b) => b.order - a.order)
+                          .map(l => {
+                            return new SymbologyViewLayer(l)
+                          })
+
+                        const oldIds = allLayers.map(d => d.id)
+                        //console.log('old ids', oldIds)
+                        let oldLayers = draftMapLayers.filter(d => {
+                            //console.log(d.id)
+                            return oldIds.includes(d.id)
+                        })
+                        
+                        const out = [
+                            // keep existing layers & filter
+                            ...oldLayers, 
+                            // add new layers
+                            ...newLayers
+                        ].sort((a,b) => b.order - a.order)
+                        // console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
+                        return out
+                    })
+                //}
             }
         }
         updateLayers()
-    }, [state?.symbologies])
+    }, [state.symbologies])
 
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
@@ -127,11 +149,12 @@ Edit.settings = {
 }
 
 const View = ({value, size}) => {
+    console.log('Dama Map: View')
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
     const mounted = useRef(false);
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
-    // console.log('cachedData', cachedData, value)
+    console.log('cachedData', cachedData, value)
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || []
@@ -172,7 +195,7 @@ const View = ({value, size}) => {
                         //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
                         // },[]))
 
-                        console.log('allLayers', allLayers)
+                        //console.log('allLayers', allLayers)
                         let newLayers = allLayers
                           .filter(d => d)
                           .filter(d => !currentLayerIds.includes(d.id))
@@ -182,9 +205,9 @@ const View = ({value, size}) => {
                           })
 
                         const oldIds = allLayers.map(d => d.id)
-                        console.log('old ids', oldIds)
+                        //console.log('old ids', oldIds)
                         let oldLayers = draftMapLayers.filter(d => {
-                            console.log(d.id)
+                            //console.log(d.id)
                             return oldIds.includes(d.id)
                         })
                         
@@ -209,15 +232,9 @@ const View = ({value, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
-
-    console.log('layerProps', layerProps)
-
-
-  
-
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
+            <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }

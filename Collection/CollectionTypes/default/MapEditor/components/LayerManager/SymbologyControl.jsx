@@ -250,7 +250,7 @@ function SymbologyControl () {
       <div className='flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
           <input 
             type="text"
-            className='block flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
+            className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
             placeholder={'Select / Create New Map'}
             value={state.name}
             onChange={(e) => setState(draft => {
