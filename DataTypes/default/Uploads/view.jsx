@@ -1,9 +1,15 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { DAMA_HOST } from "~/config";
 import get from "lodash/get";
 import { DamaContext } from "~/pages/DataManager/store";
 
 export default function Upload({ ctxId }) {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
+
+  const damaServerPath = `${DAMA_HOST}/dama-admin/${pgEnv}`
+  const [polling, setPolling ] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState(false);
+  const [progress, setProgress] = useState();
 
   useEffect(() => {
     async function getCtxById() {
@@ -23,8 +29,51 @@ export default function Upload({ ctxId }) {
     ]);
   }, [falcorCache]);
 
+  //check for processing progress
+  //We use this to display a progress bar
+  const OGR_EVENT_TYPE = 'ogr_data';
+  useEffect(() => {
+    if(ctx?.events){
+      // check for presence of `ogr_data`
+      const dataEvents = ctx?.events.filter(event => event.type.includes(OGR_EVENT_TYPE));
+      if(dataEvents.length){
+        //We officially have an etlContext that is eligible for a progress bar
+        const dataEventPayloads = dataEvents.map(event => event.payload.data);
+        if(!dataEventPayloads.includes(100)){
+          const newProgressValue = dataEventPayloads[dataEventPayloads.length -1];
+          setProgress(newProgressValue)
+          setPolling(true);
+        }
+      }
+    }
+  }, [ctx?.events])
+
+  // --- Poll Upload Progress  
+  useEffect(() => {
+    const doPolling = async () => {
+      falcor.invalidate(["dama", pgEnv, "etlContexts", "byEtlContextId", ctxId])
+      await falcor.get(["dama", pgEnv, "etlContexts", "byEtlContextId", ctxId]);
+    }
+    // -- start polling
+    if(polling && !pollingInterval) {
+      let id = setInterval( doPolling, 2000)
+      setPollingInterval(id);
+    } 
+    // -- stop polling
+    else if(pollingInterval && !polling) {
+      clearInterval(pollingInterval)
+      // run polling one last time in case it never finished
+      doPolling()
+      setPolling(false)
+      setPollingInterval(null);
+      setProgress(undefined)
+    }
+  }, [polling, pollingInterval, damaServerPath, progress])  
+
+
   return (
     <div className="w-full p-4 bg-white shadow mb-4">
+      {progress !== undefined && <ProgressBar progress={(progress + "%")}/>}
       {ctx && ctx?.events && ctx?.events?.length ? (
         <>
           <div className="py-4 sm:py-2 mt-2 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 border-b-2">
@@ -71,6 +120,53 @@ export default function Upload({ ctxId }) {
       ) : (
         <div className="text-center">{"No Events found"}</div>
       )}
+    </div>
+  );
+}
+
+//RYAN TODO -- this will display the initial message about "gis dataset already exists"
+//thatis a bug
+const ProgressBar = ({ progress }) => {
+  const Parentdiv = {
+    display: "inline-block",
+    height: "100%",
+    width: "100%",
+    backgroundColor: "whitesmoke",
+    borderRadius: 40,
+    margin: 10,
+  };
+
+  const Childdiv = {
+    display: "inline-block",
+    height: "84%",
+    width: `${progress}`,
+    backgroundColor: "#3b82f680",
+    borderRadius: 40,
+    textAlign: "right",
+  };
+
+  const progresstext = {
+    padding: 10,
+    color: "black",
+    fontWeight: 900,
+  };
+
+  return (
+    <div style={Parentdiv}>
+      <span
+        style={{
+          fontWeight: "bold",
+          paddingLeft: "10px",
+          paddingRight: "10px",
+        }}
+      >
+        {" "}
+        Proccessed:
+      </span>
+
+      <div style={Childdiv}>
+        <span style={progresstext}>{`${progress}`}</span>
+      </div>
     </div>
   );
 }
