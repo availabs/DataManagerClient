@@ -5,6 +5,7 @@ import { AvlMap } from "~/modules/avl-map-2/src"
 import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
 import { useImmer } from 'use-immer';
 import MapManager from './MapManager/MapManager'
+import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
 
 import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
@@ -124,6 +125,7 @@ const Edit = ({value, onChange, size}) => {
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
+                  hideLoading={true}
                   mapOptions={{
                     center: [-76, 43.3],
                     zoom: 6,
@@ -136,7 +138,7 @@ const Edit = ({value, onChange, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     <div className=''><MapManager /></div>
                     <div className='flex-1'/>
-                    <div className=''><div className='bg-white'>Right Sidebar</div></div>
+                    <div className=''><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
@@ -157,7 +159,8 @@ const View = ({value, size}) => {
     console.log('cachedData', cachedData, value)
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
-        symbologies: cachedData.symbologies || []
+        symbologies: cachedData.symbologies || [],
+        view: true
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -167,8 +170,6 @@ const View = ({value, size}) => {
         // Update map layers on map
         // when state.symbology.layers update
         // -----------------------
-
-        // console.log('symbology layers effect')
         const updateLayers = async () => {
             if(mounted.current) {
                 
@@ -185,7 +186,6 @@ const View = ({value, size}) => {
                     return [...out,  ...Object.values(newValues)]
                     
                 },[]))
-                // console.log('allLayers', allLayers.length, mapLayers.length)
                 //if(mapLayers.length === 0) {
                     setMapLayers(draftMapLayers => {
 
@@ -238,6 +238,7 @@ const View = ({value, size}) => {
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
+                  hideLoading={true}
                   mapOptions={{
                     center: [-76, 43.3],
                     zoom: 6,
@@ -250,7 +251,7 @@ const View = ({value, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     <div className=''><MapManager /></div>
                     <div className='flex-1'/>
-                    <div className=''><div className='bg-white'>Right Sidebar</div></div>
+                    <div className=''><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
