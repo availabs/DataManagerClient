@@ -6,7 +6,6 @@ import {
   GisDatasetFileMeta,
 } from "./components";
 
-const progressUpdateIntervalMs = 3000;
 
 export default function UploadGisDataset({ state, dispatch }) {
   const {
@@ -30,7 +29,6 @@ export default function UploadGisDataset({ state, dispatch }) {
       formData.append("etlContextId", etlContextId);
       formData.append("user_id", userId);
       formData.append("fileSizeBytes", file.size);
-      formData.append("progressUpdateIntervalMs", progressUpdateIntervalMs);
       formData.append("file", file);
       
       dispatch({type: 'update', payload: { polling:true, uploadedFile: file}})
@@ -62,9 +60,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       const url = `${damaServerPath}/events/query?etl_context_id=${etlContextId}&event_id=-1`
       const res = await fetch(url);
       const pollingData = await res.json()
-      // console.log('polling data', pollingData)
       dispatch({type: 'update', payload: {fileUploadStatus: pollingData[pollingData.length -1] }})
-      
     }
     // -- start polling
     if(polling && !pollingInterval) {
@@ -73,7 +69,6 @@ export default function UploadGisDataset({ state, dispatch }) {
     } 
     // -- stop polling
     else if( pollingInterval && !polling) {
-      // console.log('end polling')
       clearInterval(pollingInterval)
       // run polling one last time in case it never finished
       doPolling()
@@ -81,12 +76,9 @@ export default function UploadGisDataset({ state, dispatch }) {
     }
   }, [polling, pollingInterval, damaServerPath, etlContextId, dispatch])  
 
-  // const progressUpdateIntervalMs = 3000;
   if (!etlContextId) {
     return "no context Id no upload";
   }
-
-  
 
   if (!uploadedFile) {
     return (
