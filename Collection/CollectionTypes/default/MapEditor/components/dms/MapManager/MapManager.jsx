@@ -2,7 +2,7 @@ import React, { useContext, useMemo, Fragment, useRef} from 'react'
 import { MapContext } from '../MapComponent'
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../../icons'
+import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown, Plus} from '../../icons'
 import get from 'lodash/get'
 // import LegendPanel from './LegendPanel'
 import SymbologySelector from './SymbologySelector'
@@ -88,18 +88,44 @@ const rowTypes = {
 }
 
 function TabPanel ({index, tab}) {
+  const { state, setState } = React.useContext(MapContext);
   return (
-    <div className=''>
+    <div className='w-full'>
       {/* --- Header --- */}
       <div className='flex'>
-        <div className='flex-1'>
-          {index}
+        <div className='flex-1 items-center'>
+         <input 
+            type="text"
+            className='border w-[150px] font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+            value={tab.name}
+            onChange={(e) => setState(draft => { 
+               
+                draft.tabs[index].name = e.target.value                           
+            })}
+          />
+        </div>
+        <div 
+          className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+          onClick={() => setState(draft => {
+            //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
+          })}
+        >
+            <MenuDots className='fill-slate-500 hover:fill-pink-300' />
+        </div>
+        <div 
+          className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+          onClick={() => setState(draft => {
+            //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
+          })}
+        >
+            <i className={`text-lg text-slate-400 hover:text-pink-300 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
         </div>
         <SymbologySelector index={index} />
+
       </div>
       {/* --- Rows --- */}
       {/* --   -- */}
-      <div className='flex flex-col'>
+      <div className='flex flex-col '>
         {(tab?.rows || []).map((row,i) => {
           let RowComp = rowTypes[row.type] || rowTypes['category']
           return (
@@ -116,38 +142,59 @@ function TabPanel ({index, tab}) {
 function MapManager () {
   const { state, setState } = React.useContext(MapContext);
   
+  console.log('MapManager', state)
+
   return(
     <div className='p-4'>
-      <div className='bg-white/95 w-[280px] rounded-lg drop-shadow-lg pointer-events-auto '>
-        {<Tab.Group>
-          <div className='flex justify-between items-center border-b'>
-            <Tab.List>
-              {state.tabs.map(tab => (
+      <div className='bg-white/95 w-[280px] rounded-lg drop-shadow-lg pointer-events-auto flex min-h-[400px] max-h-[calc(100vh_-_111px)] overflow-auto scrollbar-sm '>
+        <Tab.Group>
+          <div className='flex flex-col justify-between items-center border-r'>
+            <Tab.List className='flex w-[40px] flex-1 flex-col '>
+              {state.tabs.map((tab,i) => (
                 <Tab  key={tab.name} as={Fragment}>
                   {({ selected }) => (
-                    <button
+                    <div
                       className={`
                         ${selected ? 
-                          'text-slate-800 border-b-2 border-slate-600' : 
-                          'text-slate-400'} mx-1 text-sm p-2 cursor-pointer
+                          'text-blue-500 border-r-2 border-blue-600' : 
+                          'text-slate-400'} text-sm cursor-pointer
                       `}
                     >
-                      {tab.name}
-                    </button>
+                      <div className='w-full flex items-center'>
+                        <i className={`text-lg hover:text-blue-500 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
+                      </div>
+                      
+                    </div>
                   )}
                 </Tab>
               ))}
             </Tab.List>
+            <div 
+              className='p-1 rounded hover:bg-slate-100 m-1' 
+              onClick={() => setState(draft => {
+                //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
+              })}
+            >
+                <MenuDots className='fill-slate-500' />
+            </div>
+            <div 
+              className='p-1 rounded hover:bg-slate-100 m-1' 
+              onClick={() => setState(draft => {
+                draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
+              })}
+            >
+                <Plus className='fill-slate-500' />
+            </div>
             
           </div>
-          <Tab.Panels>
+          <Tab.Panels className='flex-1 w-[220px] '>
             {state.tabs.map((tab,i) => (
-              <Tab.Panel key={i}>
+              <Tab.Panel key={i} className='w-full'>
                 <TabPanel  tab={tab} index={i} />
               </Tab.Panel>)
             )}
           </Tab.Panels>
-        </Tab.Group>}
+        </Tab.Group>
       </div>
     </div>
   )
