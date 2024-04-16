@@ -14,7 +14,7 @@ export function ProgressBar({ progress }) {
   const Childdiv = {
     display: "inline-block",
     height: "84%",
-    width: `${progress}`,
+    width: `${progress}%`,
     backgroundColor: "#3b82f680",
     borderRadius: 40,
     textAlign: "right",
@@ -40,7 +40,7 @@ export function ProgressBar({ progress }) {
       </span>
 
       <div style={Childdiv}>
-        <span style={progresstext}>{`${progress}`}</span>
+        <span style={progresstext}>{`${progress}%`}</span>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ export function GisDatasetUploadStatusElem({ fileUploadStatus }) {
     const { type, payload } = fileUploadStatus;
 
     if (/GIS_FILE_UPLOAD_PROGRESS$/.test(type)) {
-      fileUploadStatusElem = <ProgressBar progress={payload.progress} />;
+      fileUploadStatusElem = <ProgressBar progress={payload?.data} />;
     } else if (/GIS_FILE_RECEIVED$/.test(type)) {
       fileUploadStatusElem = (
         <td className="py-4 text-center">File Received</td>

@@ -9,6 +9,37 @@ import { Plus, Close } from '../../icons'
 
 import { CollectionAttributes, SymbologyAttributes, getAttributes } from "../../../../.././../../Collection/attributes"
 
+
+let iconList = [
+  'fad fa-wrench',
+  'fad fa-train',
+  'fad fa-subway',
+  'fad fa-traffic-light',
+  'fad fa-traffic-cone',
+  'fad fa-ship',
+  'fad fa-route',
+  'fad fa-road',
+  'fad fa-plane-alt',
+  'fad fa-parking',
+  'fad fa-map-signs',
+  'fad fa-map-pin',
+  'fad fa-map-marker',
+  'fad fa-map-marker-alt',
+  'fad fa-map',
+  'fad fa-location-circle',
+  'fad fa-location-arrow',
+  'fad fa-location',
+  'fad fa-info',
+  'fad fa-info-circle',
+  'fad fa-industry-alt',
+  'fad fa-globe',
+  'fad fa-directions',
+  'fad fa-car',
+  'fad fa-bicycle',
+  'fad fa-layer-group'
+]
+
+
 function SymbologySelector ({index, tab}) {
   const { state, setState, falcor, falcorCache, pgEnv } = React.useContext(MapContext);
   // const { pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext)
@@ -102,7 +133,7 @@ function SymbologySelector ({index, tab}) {
 
   return (
     <div className='relative'>
-      <div className='p-1 rounded hover:bg-slate-100 m-1' onClick={() => setCollection({...collection, add: !collection.add})}>
+      <div className='w-[28px]  h-[28px] justify-center cursor-pointer rounded hover:bg-slate-100 flex items-center m-1' onClick={() => setCollection({...collection, add: !collection.add})}>
         {collection.add ? 
           <Close className='fill-slate-500' /> :
           <Plus className='fill-slate-500' />
@@ -111,7 +142,7 @@ function SymbologySelector ({index, tab}) {
           className={`${collection.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
         />*/}
       </div>
-      {collection.add && <div className='absolute z-20 -left-[244px] p-2 top-[37px] border w-[280px] bg-white'>
+      {collection.add && <div className='absolute z-20 -left-[248px] p-2 top-[37px] border w-[280px] bg-white'>
         <div className='w-full p-1 text-sm font-bold text-blue-500'>select collection:</div>
         <select 
           onChange={(e) => setCollection({...collection, collectionId: e.target.value})}
