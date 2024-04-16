@@ -3,6 +3,11 @@ import { DAMA_HOST } from "~/config";
 import get from "lodash/get";
 import { DamaContext } from "~/pages/DataManager/store";
 
+const GIS_DATASET_EVENT_TYPE = "gis-dataset";
+const GIS_DATASET_SOURCE_TYPE = "gis_dataset";
+const OGR_EVENT_TYPE = `${GIS_DATASET_EVENT_TYPE}:ogr_data`;
+const FINAL_EVENT_TYPE = "final";
+
 export default function Upload({ ctxId }) {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
 
@@ -17,7 +22,6 @@ export default function Upload({ ctxId }) {
     }
     getCtxById();
   }, [falcor, pgEnv, ctxId]);
-
   const ctx = useMemo(() => {
     return get(falcorCache, [
       "dama",
@@ -29,24 +33,57 @@ export default function Upload({ ctxId }) {
     ]);
   }, [falcorCache]);
 
-  //check for processing progress
-  //We use this to display a progress bar
-  const OGR_EVENT_TYPE = 'ogr_data';
   useEffect(() => {
-    if(ctx?.events){
-      // check for presence of `ogr_data`
-      const dataEvents = ctx?.events.filter(event => event.type.includes(OGR_EVENT_TYPE));
-      if(dataEvents.length){
-        //We officially have an etlContext that is eligible for a progress bar
-        const dataEventPayloads = dataEvents.map(event => event.payload.data);
-        if(!dataEventPayloads.includes(100)){
-          const newProgressValue = dataEventPayloads[dataEventPayloads.length -1];
-          setProgress(newProgressValue)
-          setPolling(true);
-        }
+    async function getSource() {
+      if (ctx?.meta?.source_id) {
+        return await falcor.get([
+          "dama",
+          pgEnv,
+          "sources",
+          "byId",
+          ctx?.meta?.source_id,
+          "attributes",
+          "type"
+        ]);
+      } else {
+        return null;
       }
     }
-  }, [ctx?.events])
+    getSource();
+  }, [falcor, pgEnv, ctx?.meta?.source_id]);
+  const source = useMemo(() => {
+    return get(falcorCache, [
+      "dama",
+      pgEnv,
+      "sources",
+      "byId",
+      ctx?.meta?.source_id,
+      "attributes"
+    ]);
+  }, [falcorCache]);
+
+  useEffect(() => {
+    const hasFinalEvent = ctx?.events.some((ctxEvent) =>
+      ctxEvent.type.toLowerCase().includes(FINAL_EVENT_TYPE)
+    );
+    if (
+      ctx?.events &&
+      source.type === GIS_DATASET_SOURCE_TYPE &&
+      !hasFinalEvent
+    ) {
+      //We officially have an etlContext that is eligible for a progress bar
+      const dataEvents = ctx?.events.filter(
+        (event) => event.type === OGR_EVENT_TYPE
+      );
+      const dataEventPayloads = dataEvents.map((event) => event.payload.data);
+      const newProgressValue = dataEventPayloads[dataEventPayloads.length - 1];
+      setProgress(newProgressValue);
+      setPolling(true);
+    } else {
+      setProgress(undefined);
+      setPolling(false);
+    }
+  }, [ctx?.events]);
 
   // --- Poll Upload Progress  
   useEffect(() => {
@@ -56,7 +93,7 @@ export default function Upload({ ctxId }) {
     }
     // -- start polling
     if(polling && !pollingInterval) {
-      let id = setInterval( doPolling, 2000)
+      let id = setInterval( doPolling, 3000)
       setPollingInterval(id);
     } 
     // -- stop polling
@@ -70,10 +107,9 @@ export default function Upload({ ctxId }) {
     }
   }, [polling, pollingInterval, damaServerPath, progress])  
 
-
   return (
     <div className="w-full p-4 bg-white shadow mb-4">
-      {progress !== undefined && <ProgressBar progress={(progress + "%")}/>}
+      {progress !== undefined && <ProgressBar progress={(progress)}/>}
       {ctx && ctx?.events && ctx?.events?.length ? (
         <>
           <div className="py-4 sm:py-2 mt-2 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 border-b-2">
@@ -84,7 +120,7 @@ export default function Upload({ ctxId }) {
             ))}
           </div>
           <dl className="sm:divide-y sm:divide-gray-200 odd:bg-white even:bg-slate-50">
-            {(ctx?.events || []).map((d, i) => (
+            {(ctx?.events?.filter(ctxEvent => ctxEvent.type !== OGR_EVENT_TYPE) || []).map((d, i) => (
               <div
                 key={`${i}_0`}
                 className="py-4 sm:py-5 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 cursor-pointer hover:bg-slate-200"
@@ -133,13 +169,13 @@ const ProgressBar = ({ progress }) => {
     width: "100%",
     backgroundColor: "whitesmoke",
     borderRadius: 40,
-    margin: 10,
+    margin: 0,
   };
 
   const Childdiv = {
     display: "inline-block",
     height: "84%",
-    width: `${progress}`,
+    width: `${progress}%`,
     backgroundColor: "#3b82f680",
     borderRadius: 40,
     textAlign: "right",
@@ -165,7 +201,7 @@ const ProgressBar = ({ progress }) => {
       </span>
 
       <div style={Childdiv}>
-        <span style={progresstext}>{`${progress}`}</span>
+        <span style={progresstext}>{`${progress}%`}</span>
       </div>
     </div>
   );

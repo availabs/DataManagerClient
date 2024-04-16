@@ -14,7 +14,7 @@ export function ProgressBar({ progress }) {
   const Childdiv = {
     display: "inline-block",
     height: "84%",
-    width: `${progress}`,
+    width: `${progress}%`,
     backgroundColor: "#3b82f680",
     borderRadius: 40,
     textAlign: "right",
@@ -40,7 +40,7 @@ export function ProgressBar({ progress }) {
       </span>
 
       <div style={Childdiv}>
-        <span style={progresstext}>{`${progress}`}</span>
+        <span style={progresstext}>{`${progress}%`}</span>
       </div>
     </div>
   );
