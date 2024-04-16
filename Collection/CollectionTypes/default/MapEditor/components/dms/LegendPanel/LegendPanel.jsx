@@ -157,11 +157,11 @@ function StepLegend({layer}) {
 function LegendRow ({ index, layer, i }) {
   const { state, setState  } = React.useContext(MapContext);
   const  activeLayer  = null
-  const toggleSymbology = () => {
-    setState(draft => {
-        draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
-    })
-  }
+  // const toggleSymbology = () => {
+  //   setState(draft => {
+  //       draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
+  //   })
+  // }
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
@@ -169,8 +169,8 @@ function LegendRow ({ index, layer, i }) {
   //console.log('legend row type', type)
 
   return (
-    <div onClick={toggleSymbology} className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
+    <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border border-transparent`}>
+      <div className={`w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div  className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
         {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
