@@ -325,7 +325,7 @@ function ViewControls ({view}) {
 
 
   const sourceDataColumns = useMemo(() => {
-    return get(falcorCache, [
+    let sourceColumns = get(falcorCache, [
       "dama",
       pgEnv,
       "sources",
@@ -334,7 +334,11 @@ function ViewControls ({view}) {
       "attributes",
       "metadata",
       "value",
-    ])?.map((column) => column.name);
+    ],[]);
+    //console.log('source columnns', sourceColumns, view.source_id, falcorCache)
+    sourceColumns = sourceColumns.columns ? sourceColumns.columns : sourceColumns;
+    return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
+    //return []
   }, [falcorCache, view]);
 
   //Only used after successful download creation
