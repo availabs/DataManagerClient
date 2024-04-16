@@ -28,8 +28,11 @@ controls
 Map Component
 
 controls
-	- tab settings
-	- add tab
-	- add category
+	x tab settings
+	x add tab
+	<!-- - add category
 	- category drag and drop
-
+ -->
+ 	- remove symbology
+ 	- remove tab
+ 	- tab icons
