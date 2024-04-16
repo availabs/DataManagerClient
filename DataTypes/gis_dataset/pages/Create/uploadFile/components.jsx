@@ -58,7 +58,7 @@ export function GisDatasetUploadStatusElem({ fileUploadStatus }) {
     const { type, payload } = fileUploadStatus;
 
     if (/GIS_FILE_UPLOAD_PROGRESS$/.test(type)) {
-      fileUploadStatusElem = <ProgressBar progress={payload.progress} />;
+      fileUploadStatusElem = <ProgressBar progress={payload?.data} />;
     } else if (/GIS_FILE_RECEIVED$/.test(type)) {
       fileUploadStatusElem = (
         <td className="py-4 text-center">File Received</td>

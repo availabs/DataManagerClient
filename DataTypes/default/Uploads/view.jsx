@@ -4,9 +4,14 @@ import get from "lodash/get";
 import { DamaContext } from "~/pages/DataManager/store";
 
 const GIS_DATASET_EVENT_TYPE = "gis-dataset";
-const GIS_DATASET_SOURCE_TYPE = "gis_dataset";
 const OGR_EVENT_TYPE = `${GIS_DATASET_EVENT_TYPE}:ogr_data`;
+
+const UPLOAD_EVENT_TYPE = 'upload';
+const GIS_FILE_UPLOAD_PROGRESS_EVENT_TYPE = `${UPLOAD_EVENT_TYPE}:GIS_FILE_UPLOAD_PROGRESS`;
+
 const FINAL_EVENT_TYPE = "final";
+const PROGRESS_EVENTS = [GIS_FILE_UPLOAD_PROGRESS_EVENT_TYPE,OGR_EVENT_TYPE]
+const GIS_DATASET_SOURCE_TYPE = "gis_dataset";
 
 export default function Upload({ ctxId }) {
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
@@ -120,7 +125,7 @@ export default function Upload({ ctxId }) {
             ))}
           </div>
           <dl className="sm:divide-y sm:divide-gray-200 odd:bg-white even:bg-slate-50">
-            {(ctx?.events?.filter(ctxEvent => ctxEvent.type !== OGR_EVENT_TYPE) || []).map((d, i) => (
+            {(ctx?.events?.filter(ctxEvent => !PROGRESS_EVENTS.includes(ctxEvent.type)) || []).map((d, i) => (
               <div
                 key={`${i}_0`}
                 className="py-4 sm:py-5 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 cursor-pointer hover:bg-slate-200"
