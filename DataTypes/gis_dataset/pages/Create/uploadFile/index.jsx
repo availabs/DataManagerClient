@@ -52,7 +52,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       // catch error & reset file so new attempt can be made
       dispatch({
         type: 'update', 
-        payload: {polling: false, uploadErrMsg: err?.payload?.message ?? err?.message, uploadedFile: null}
+        payload: {polling: false, uploadErrMsg: err?.message, uploadedFile: null}
       })
     }
   }
