@@ -39,16 +39,20 @@ export default function UploadGisDataset({ state, dispatch }) {
         { method: "POST", body: formData }
       );
       console.log('sending upload finished ')
-      // update state from request
-      const [{ id }] = await res.json();
-      console.log('response', id)
-      dispatch({type: 'update', payload: {polling:false, gisUploadId: id}})
 
+      // update state from request
+      const resValue = await res.json();
+      if (Array.isArray(resValue)) {
+        const [{ id }] = resValue;
+        dispatch({type: 'update', payload: {polling:false, gisUploadId: id}})
+      } else {
+        throw resValue;
+      }
     } catch (err) {
       // catch error & reset file so new attempt can be made
       dispatch({
         type: 'update', 
-        payload: {polling: false, uploadErrMsg: err.message, uploadedFile: null}
+        payload: {polling: false, uploadErrMsg: err?.message, uploadedFile: null}
       })
     }
   }
