@@ -13,7 +13,17 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
       }
   })
   paint.push(showOther)
-  return paint
+
+  const legend  = (paint || []).filter((d,i) => i > 2 )
+      .map((d,i) => {
+        if(i%2 === 0) {
+          return {color: d, label: paint[i+2]}
+        }
+        return null
+      })
+      .filter(d => d)
+
+  return {paint, legend}
 }
 
 export function isValidCategoryPaint(paint) {
@@ -33,6 +43,8 @@ let methods = {
   'pretty': prettyBreaks
 }
 
+let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
+
 export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
   //console.log('paint method', method)
   let paint = [
@@ -46,11 +58,13 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
   if(!Array.isArray(choroplethdata)) {
     return false
   }
-  let domain = methods[method](choroplethdata, num)
+  let domain = methods[method](choroplethdata, num).map(d => round(d,2))
+  const max = Math.max(...choroplethdata)
 
   if(!Array.isArray(domain) || domain.length  === 0){
     return false
   }
+  console.log('max', max)
 
   domain
    //.filter((d,i) => i < domain.length-1)
@@ -61,17 +75,51 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
 
   paint.push(colors[num-1])
 
-  return paint
 
-  let inerpaint = [
-      'interpolate',
-      ['linear'],
-      [get, 'column'],
-      // 274,
-      // ['to-color', '#f5e5f3'],
-      // 1551,
-      // ['to-color', '#8d00ac']
+
+  const legend = [
+    ...(paint || []).filter((d,i) => i > 2 )
+    .map((d,i) => {
+      
+      if(i % 2 === 1) {
+        console.log('test', fnumIndex(paint[i+4] || max))
+        return {color: paint[i+1], label: `${fnumIndex(paint[i+2])} - ${fnumIndex(paint[i+4] || max)}`}
+      }
+      return null
+    })
+    .filter(d => d)
   ]
+
+  console.log('legend', legend)
+  return { paint, legend }
+
+  
+;
+
+
+  // let inerpaint = [
+  //     'interpolate',
+  //     ['linear'],
+  //     [get, 'column'],
+  //     // 274,
+  //     // ['to-color', '#f5e5f3'],
+  //     // 1551,
+  //     // ['to-color', '#8d00ac']
+  // ]
 
 
 }
+
+const fnumIndex = (d, fractions = 2, currency = false) => {
+    if (d >= 1000000000000) {
+      return `${currency ? '$' : ``} ${(d / 1000000000000).toFixed(fractions)} T`;
+    } else if (d >= 1000000000) {
+      return `${currency ? '$' : ``} ${(d / 1000000000).toFixed(fractions)} B`;
+    } else if (d >= 1000000) {
+      return `${currency ? '$' : ``} ${(d / 1000000).toFixed(fractions)} M`;
+    } else if (d >= 1000) {
+      return `${currency ? '$' : ``} ${(d / 1000).toFixed(fractions)} K`;
+    } else {
+      return typeof d === "object" ? `` : `${currency ? '$' : ``} ${parseInt(d)}`;
+    }
+  }

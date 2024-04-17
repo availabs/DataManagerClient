@@ -165,6 +165,7 @@ const View = ({value, size}) => {
     const [mapLayers, setMapLayers] = useImmer([])
 
 
+    console.log('render map component view', state)
     useEffect(() => {
         // -----------------------
         // Update map layers on map
