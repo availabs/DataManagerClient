@@ -461,10 +461,13 @@ const GISDatasetRenderComponent = props => {
   //If symbology contains `filter`, filter to matching features
   React.useEffect(() => {
     if (maplibreMap && symbology.filter) {
+      const dataIdKey = symbology.filter?.dataKey ?? "ogc_fid";
+      const idsToFilter = symbology.filter?.dataIds ?? symbology.filter;
+      console.log({dataIdKey, idsToFilter})
       const dataFilter = [
         "match",
-        ["get", "ogc_fid"],
-        symbology.filter,
+        ["get", dataIdKey],
+        idsToFilter,
         true,
         false,
       ];
@@ -488,6 +491,9 @@ const GISDatasetRenderComponent = props => {
         const mapLayer = maplibreMap.getLayer(layer.id);
         if (mapLayer && layer.filter) {
           maplibreMap.setFilter(layer.id, ["all", layer.filter[1]]);
+        }
+        else if (mapLayer){
+          maplibreMap.setFilter(layer.id, ["all"]);
         }
       });
     }
