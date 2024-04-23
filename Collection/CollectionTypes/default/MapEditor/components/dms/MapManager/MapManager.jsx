@@ -78,7 +78,7 @@ function SymbologyRow ({index, tabIndex, row, rowIndex}) {
   const { state, setState  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
   const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row.symbologyId])
-  const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology.symbology.layers)[0]}]`, {}),[symbology])
+  const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {}),[symbology])
 
   //const Icon = typeIcons?.[layer?.type] || typeIcons['Line']
   const visible = state?.symbologies?.[symbology.symbology_id]?.isVisible
@@ -228,7 +228,7 @@ function TabPanel ({tabIndex, tab}) {
           <div className="px-1 py-1 flex flex-wrap">
               {iconList.map(icon => {
                 return (
-                  <Menu.Item >
+                  <Menu.Item key={icon}>
                     {({ active }) => (
                       <div 
                         className={`${

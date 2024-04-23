@@ -482,6 +482,24 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Offset',
+      type: 'inline',
+      controls: [
+        {
+          type: 'range',
+          unit: '%',
+          path: `layers[1].paint['line-offset']`,
+          params: {
+            min: "-10",
+            max: "10",
+            step: "0.5",
+            default: "0",
+            units: "px"
+          }
+        },
+      ],
+    },
+    {
       label: 'Casing',
       type: 'popover',
       controls: [
@@ -498,6 +516,18 @@ const typeConfigs = {
             max: "20",
             step: "0.5",
             default: "3",
+            units: "px"
+          }
+        },
+        {
+          type: 'range',
+          unit: 'px',
+          path: `layers[0].paint['line-offset']`,
+          params: {
+            min: "-10",
+            max: "10",
+            step: "0.5",
+            default: "0",
             units: "px"
           }
         },

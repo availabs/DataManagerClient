@@ -202,13 +202,14 @@ export function SelectTypeControl({path, datapath, params={}}) {
         })
       }
     } else if(value === 'choropleth') {
-      let paint = choroplethPaint(column,choroplethdata,colorrange,numbins, method)
+      let { paint, legend } = choroplethPaint(column,choroplethdata,colorrange,numbins, method)
       //console.log('test paint', paint, paintValue)
       if(paint && !isEqual(paint,paintValue)) {
         //console.log('update choropleth paint', column, numbins, method)
       
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
+          set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
         })
       }
     } else if( value === 'simple' && typeof paintValue !== 'string') {
@@ -642,9 +643,9 @@ function ChoroplethControl({path, params={}}) {
   },[state])
 
   const max = Math.max(...choroplethdata)
-  // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
+  //console.log('StepLegend',value, value || [])
   const categories = [
-    ...(value || []).filter((d,i) => i > 2 )
+    ...(Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
     .map((d,i) => {
     
       if(i%2 === 1) {

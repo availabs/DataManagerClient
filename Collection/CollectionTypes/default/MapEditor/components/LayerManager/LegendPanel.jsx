@@ -86,23 +86,30 @@ const typePaint = {
 }
 
 function CategoryLegend({layer}) {
-  // console.log('categoryLegend', layer)
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-  const categories = (paintValue || []).filter((d,i) => i > 2 )
-    .map((d,i) => {
-      if(i%2 === 0) {
-        return {color: d, label: paintValue[i+2]}
-      }
-      return null
-    })
-    .filter(d => d)
 
+  let { legenddata } = useMemo(() => {
+    return {
+      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []) 
+    }
+  },[state])
+
+  if(!legenddata || legenddata.length === 0 ) {
+    legenddata = (paintValue || []).filter((d,i) => i > 2 )
+      .map((d,i) => {
+        if(i%2 === 0) {
+          return {color: d, label: paintValue[i+2]}
+        }
+        return null
+      })
+      .filter(d => d)
+  }
 
   
   return (
     <div className='w-full max-h-[250px] overflow-auto'>
-        {categories.map((d,i) => (
+        {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
               {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
@@ -116,11 +123,12 @@ function CategoryLegend({layer}) {
 }
 
 function StepLegend({layer}) {
-  //console.log('StepLegend', layer)
+  // console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
-  const { choroplethdata } = useMemo(() => {
+  let { choroplethdata, legenddata } = useMemo(() => {
     return {
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []), 
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []),
+      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []) 
     }
   },[state])
 
@@ -128,22 +136,23 @@ function StepLegend({layer}) {
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
   const max = Math.max(...choroplethdata)
   // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
-  const categories = [
-    ...(paintValue || []).filter((d,i) => i > 2 )
-    .map((d,i) => {
-    
-      if(i%2 === 1) {
-        //console.log('test 123', d, i)
-        return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
-      }
-      return null
-    })
-    .filter(d => d)
-  ]
+  if(!legenddata || legenddata.length === 0 ) {
+    legenddata = [
+      ...(paintValue || []).filter((d,i) => i > 2 )
+      .map((d,i) => {
+      
+        if(i % 2 === 1) {
+          return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
+        }
+        return null
+      })
+      .filter(d => d)
+    ]
+  }
 
   return (
     <div className='w-full max-h-[250px] overflow-auto'>
-        {categories.map((d,i) => (
+        {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
               {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
