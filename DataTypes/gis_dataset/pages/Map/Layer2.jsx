@@ -450,7 +450,7 @@ const GISDatasetRenderComponent = props => {
 
   //Listens for changes to `symbology` and repaints if needed
   React.useEffect(() => {
-    symbology.layers.forEach((layer) => {
+    symbology?.layers?.forEach((layer) => {
       const mapLayer = maplibreMap.getLayer(layer.id);
       if (mapLayer) {
         if (layer.paint) {
