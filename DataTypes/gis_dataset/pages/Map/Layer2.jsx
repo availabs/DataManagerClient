@@ -448,6 +448,27 @@ const GISDatasetRenderComponent = props => {
     }
   }, [legend, layerData]);
 
+  //Listens for changes to `symbology` and repaints if needed
+  React.useEffect(() => {
+    symbology.layers.forEach((layer) => {
+      const mapLayer = maplibreMap.getLayer(layer.id);
+      if (mapLayer) {
+        if (layer.paint) {
+          Object.keys(layer.paint).forEach((paintKey) => {
+            const oldProp = maplibreMap.getPaintProperty(layer.id, paintKey);
+            if (!isEqual(oldProp, layer.paint[paintKey])) {
+              maplibreMap.setPaintProperty(
+                layer.id,
+                paintKey,
+                layer.paint[paintKey]
+              );
+            }
+          });
+        }
+      }
+    });
+  }, [symbology]);
+
 
   //If symbology contains `fitToBounds`, zoom to that location.
   React.useEffect(() => {
@@ -463,7 +484,6 @@ const GISDatasetRenderComponent = props => {
     if (maplibreMap && symbology.filter) {
       const dataIdKey = symbology.filter?.dataKey ?? "ogc_fid";
       const idsToFilter = symbology.filter?.dataIds ?? symbology.filter;
-      console.log({dataIdKey, idsToFilter})
       const dataFilter = [
         "match",
         ["get", dataIdKey],
