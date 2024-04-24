@@ -155,6 +155,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
         <AvlMap2
           layers={ mapLayers }
           layerProps = {layerProps}
+          hideLoading={true}
           mapOptions={{
             center: [-76, 43.3],
             zoom: 6,

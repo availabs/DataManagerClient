@@ -6,6 +6,8 @@ import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
 import StyleEditor from './StyleEditor'
 import PopoeverEditor from './PopoverEditor'
+import LegendEditor from './LegendEditor'
+
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
@@ -66,7 +68,7 @@ function LayerManager (props) {
           </div>
           <Tab.Panels>
             <Tab.Panel><StyleEditor /></Tab.Panel>
-            <Tab.Panel>Legend</Tab.Panel>
+            <Tab.Panel><LegendEditor /></Tab.Panel>
             <Tab.Panel><PopoeverEditor /></Tab.Panel>
             <Tab.Panel>Filter</Tab.Panel>
           </Tab.Panels>

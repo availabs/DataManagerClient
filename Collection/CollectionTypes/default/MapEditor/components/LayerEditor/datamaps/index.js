@@ -27,7 +27,10 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
 }
 
 export function isValidCategoryPaint(paint) {
-  let valid = typeof paint === 'object'
+  let valid = typeof paint === 'object' && Array.isArray(paint)
+  if(!valid) {
+    return valid
+  }
   paint.forEach(cat => {
     if(!cat || cat === 'undefined') {
       valid = false

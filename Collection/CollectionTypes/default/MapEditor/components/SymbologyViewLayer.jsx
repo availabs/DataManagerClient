@@ -164,16 +164,16 @@ class ViewLayer extends AvlLayer {
 
       return data;
     },
-    //Component: HoverComp,
-    Component: ({ data, layer }) => { 
-      if(!layer.props.hover) return
-      return (
-        <div className='p-2 bg-white'>
-          <pre>{JSON.stringify(data,null,3)}</pre>
-        </div>
-      )
-    },
-    isPinnable: this.isPinnable || false
+    Component: HoverComp,
+    // Component: ({ data, layer }) => { 
+    //   if(!layer.props.hover) return
+    //   return (
+    //     <div className='p-2 bg-white'>
+    //       <pre>{JSON.stringify(data,null,3)}</pre>
+    //     </div>
+    //   )
+    // },
+    isPinnable: this.isPinnable || true
   };
   
   RenderComponent = ViewLayerRender;
@@ -185,48 +185,69 @@ export default ViewLayer;
 
 
 const HoverComp = ({ data, layer }) => {
-  const { attributes, activeViewId, filters } = layer;
+   if(!layer.props.hover) return
+  const { source_id, view_id } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
+  // console.log(source_id, view_id, id)
+
+  useEffect(() => {
+    if(source_id) {
+      falcor.get([
+          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
+      ]);
+    }
+  },[source_id])
+
+  const attributes = React.useMemo(() => {
+    let out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+      ], [])
+    if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+        ], [])
+      }
+    return out
+  }, [source_id,falcorCache])
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
     attributes : attributes.map(d => d.name)).filter(d => !['wkb_geometry'].includes(d))
 
-  
   React.useEffect(() => {
     falcor.get([
       "dama",
       pgEnv,
       "viewsbyId",
-      activeViewId,
+      view_id,
       "databyId",
       id,
       getAttributes
     ])
     //.then(d => console.log('got attributes', d));
-  }, [falcor, pgEnv, activeViewId, id, attributes]);
+  }, [falcor, pgEnv, view_id, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", activeViewId, "databyId", id],
+      ["dama", pgEnv, "viewsbyId", view_id, "databyId", id],
       {}
     );
-  }, [id, falcorCache, activeViewId, pgEnv]);
+  }, [id, falcorCache, view_id, pgEnv]);
 
   
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
-        {layer.source.display_name}
+        {layer?.name || ''}
       </div>
       {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => (
           <div className="flex border-b pt-1" key={i}>
-            <div className="flex-1 font-medium text-sm pl-1">{k}</div>
-            <div className="flex-1 text-right font-thin pl-4 pr-1">
+            <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{k}</div>
+            <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
               {attrInfo?.[k]}
             </div>
           </div>

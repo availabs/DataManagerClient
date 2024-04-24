@@ -87,14 +87,11 @@ const typePaint = {
 
 function CategoryLegend({layer}) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
+  let  legenddata = layer?.['legend-data'] || []
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
 
-  let { legenddata } = useMemo(() => {
-    return {
-      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []) 
-    }
-  },[state])
-
+  
+  
   if(!legenddata || legenddata.length === 0 ) {
     legenddata = (paintValue || []).filter((d,i) => i > 2 )
       .map((d,i) => {
@@ -231,7 +228,7 @@ function LayerManager (props) {
   return (
     <>     
       {/* ------Layer Pane ----------- */}
-      <div className='min-h-20 relative'>
+      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] overflow-auto'>
         <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)

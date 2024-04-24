@@ -335,10 +335,10 @@ function ViewControls ({view}) {
       "metadata",
       "value",
     ],[]);
-    //console.log('source columnns', sourceColumns, view.source_id, falcorCache)
+    // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
     sourceColumns = sourceColumns.columns ? sourceColumns.columns : sourceColumns;
     return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
-    //return []
+    // return []
   }, [falcorCache, view]);
 
   //Only used after successful download creation
