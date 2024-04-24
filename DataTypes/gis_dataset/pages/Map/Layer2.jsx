@@ -421,7 +421,7 @@ const GISDatasetRenderComponent = props => {
     if(symbology.legend){
       createLegend(symbology.legend)
     }
-  }, [symbology.legend])
+  }, [symbology?.legend])
 
   React.useEffect(() => {
     if (!legend) return;
