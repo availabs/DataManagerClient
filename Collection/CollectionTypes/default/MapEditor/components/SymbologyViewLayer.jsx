@@ -185,7 +185,7 @@ export default ViewLayer;
 
 
 const HoverComp = ({ data, layer }) => {
-   if(!layer.props.hover) return
+  if(!layer.props.hover) return
   const { source_id, view_id } = layer;
   const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
