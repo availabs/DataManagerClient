@@ -55,7 +55,7 @@ const SourcesList = () => {
   const { cat1, cat2, ...rest } = useParams();
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
-
+  const sourceDataCat = 'Source Data'
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
 
   useEffect(() => {
@@ -109,7 +109,10 @@ const SourcesList = () => {
       </div>
       <div className={'flex flex-row'}>
         <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
-          {(categories || []).map(cat => (
+          {(categories || [])
+              .filter(cat => cat !== sourceDataCat)
+              .sort((a,b) => a.localeCompare(b))
+              .map(cat => (
               <Link
                   key={cat}
                   className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md`}
@@ -124,7 +127,7 @@ const SourcesList = () => {
           {
             sources
                 .filter(source => {
-                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes('Source Data')))
+                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
                 })
                 .filter(source => {
                   let output = true;
