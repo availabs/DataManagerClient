@@ -83,7 +83,7 @@ const SourcesList = () => {
   const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
   return (
 
-    <SourcesLayout baseUrl={baseUrl}>
+    <SourcesLayout baseUrl={baseUrl} isListAll={isListAll}>
       <div className="py-4 flex flex-rows items-center">
         <input
             className="w-full text-lg p-2 border border-gray-300 "
