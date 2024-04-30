@@ -56,7 +56,7 @@ const CategoryItem = ({ children, remove, indices, editing, className="" }) => {
   return (
     <div className={ `
         overflow-hidden text-ellipsis whitespace-nowrap ${ className }
-        flex-1 flex items-center pr-4 hover:bg-gray-200 mr-2
+        flex-1 flex items-center py-1 pl-2 pr-4 bg-blue-200 text-blue-600 font-light hover:bg-blue-50 mr-2 rounded-md my-1
       ` }
     >
       <div className="flex-1">

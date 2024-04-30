@@ -66,6 +66,7 @@ const Versions = ({ source, views, meta }) => {
             disableFilters: true,
           },
         ]}
+        striped={true}
       />
     </div>
   );

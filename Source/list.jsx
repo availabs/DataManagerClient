@@ -62,7 +62,7 @@ const SourcesList = () => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "sources", "length"];
       const resp = await falcor.get(lengthPath);
-      // console.log(resp)
+
       await falcor.get([
         "dama", pgEnv, "sources", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
@@ -126,10 +126,11 @@ const SourcesList = () => {
               .map(cat => (
               <Link
                   key={cat}
-                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md`}
+                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md flex items-center`}
                   to={`${baseUrl}${isListAll ? `/listall` : ``}/cat/${cat}`}
               >
-                <i className={'fa fa-category'} /> {cat} ({categoriesCount[cat]})
+                <i className={'fa fa-category'} /> {cat}
+                <div className={'bg-blue-200 text-blue-600 text-xs w-5 h-5 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>{categoriesCount[cat]}</div>
               </Link>
           ))
           }
@@ -162,9 +163,7 @@ const SourcesList = () => {
                   return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase());
                 })
                 .sort((a,b) => {
-                  console.log('a,b', a,b)
                   const m = sort === 'asc' ? 1 : -1;
-
                   return m * a.name?.localeCompare(b.name)
                 })
                 .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} />)
