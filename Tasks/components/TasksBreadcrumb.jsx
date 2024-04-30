@@ -78,7 +78,7 @@ export const TasksBreadcrumb =  ({fullWidth}) => {
       )["value"]
     );
 
-    let contextName = get(
+    let contextSourceName = get(
       falcorCache,
       [
         "dama",
@@ -94,11 +94,13 @@ export const TasksBreadcrumb =  ({fullWidth}) => {
     const initialEvent = attr?.events?.find((event) =>
       event.type.toLowerCase().includes("initial")
     );
+    contextSourceName = typeof contextSourceName === 'string' ? contextSourceName : "";
+
     if (initialEvent && initialEvent.type) {
-      contextName += " " + initialEvent.type.split(":")[0];
+      contextSourceName += " " + initialEvent.type.split(":")[0];
     }
 
-    const pageArray = [{ name: contextName }];
+    const pageArray = [{ name: contextSourceName }];
     return pageArray;
   }, [falcorCache, etl_context_id, pgEnv, baseUrl]);
 
