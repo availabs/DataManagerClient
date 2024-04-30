@@ -78,7 +78,12 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
-  const categories = [...new Set(sources.reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
+  const categories = [...new Set(
+      sources
+          .filter(source => {
+            return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+          })
+          .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
 
   const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
   return (
