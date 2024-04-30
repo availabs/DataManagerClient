@@ -48,7 +48,6 @@ const StartedAtCell = (d) => {
   )
 }
 
-
 const COLUMNS = [
   {
     accessor: "etl_context_id",
@@ -68,6 +67,9 @@ const COLUMNS = [
   {
     accessor: "source_name",
     Header: "Source Name",
+    Cell: ({value}) => {
+      return typeof value === 'string' ? value : "";
+    }
   },
   { accessor: "created_at", Header: "Started", Cell: StartedAtCell },
   { accessor: "duration", Header: "Duration"},
