@@ -136,7 +136,7 @@ const SourceCreate = ({baseUrl}) => {
             </div>
           </div>
         </dl>
-        <CreateComp source={source} />
+        <CreateComp source={source} baseUrl={baseUrl}/>
       </div>
   </SourcesLayout>
 </div>

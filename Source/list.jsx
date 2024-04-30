@@ -26,14 +26,14 @@ const SourceThumb = ({ source }) => {
 
 
   return (
-    <div className="w-full p-4 bg-white my-1 hover:bg-blue-50 block border shadow flex justify-between">
+    <div className="w-full p-4 bg-white hover:bg-blue-50 block border shadow flex">
       <div>
         <Link to={`${baseUrl}/source/${source.source_id}`} className="text-xl font-medium w-full block">
           <span>{source.name}</span>
         </Link>
         <div>
           {(get(source, "categories", []) || [])
-            .map(cat => cat.map((s, i) => (
+            .map(cat => (typeof cat === 'string' ? [cat] : cat).map((s, i) => (
               <Link key={i} to={`${baseUrl}/cat/${i > 0 ? cat[i - 1] + "/" : ""}${s}`}
                     className="text-xs p-1 px-2 bg-blue-200 text-blue-600 mr-2">{s}</Link>
             )))
@@ -52,9 +52,11 @@ const SourceThumb = ({ source }) => {
 
 const SourcesList = () => {
   const [layerSearch, setLayerSearch] = useState("");
-  const { cat1, cat2 } = useParams();
-
+  const { cat1, cat2, ...rest } = useParams();
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
+  const [sort, setSort] = useState('asc');
+
+  const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
 
   useEffect(() => {
     async function fetchData() {
@@ -76,44 +78,85 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
+  const categories = [...new Set(sources.reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
+
+  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
   return (
 
     <SourcesLayout baseUrl={baseUrl}>
-      <div className="py-4">
-        <div>
-          <input
+      <div className="py-4 flex flex-rows items-center">
+        <input
             className="w-full text-lg p-2 border border-gray-300 "
             placeholder="Search datasources"
             value={layerSearch}
             onChange={(e) => setLayerSearch(e.target.value)}
-          />
+        />
+
+        <button
+            className={actionButtonClassName}
+            title={'Toggle Sort'}
+            onClick={() => setSort(sort === 'asc' ? 'desc' : 'asc')}
+        >
+          <i className={`fa-solid ${sort === 'asc' ? `fa-arrow-down-z-a` : `fa-arrow-down-a-z`} text-xl text-blue-400`}/>
+        </button>
+
+        <Link
+            to={isListAll ? `${baseUrl}` : `${baseUrl}/listall`}
+            className={actionButtonClassName} title={isListAll ? 'View Key Sources' : 'View All Sources'}>
+          <i className={`fa-solid ${isListAll ? `fa-filter-list` : `fa-list-ul`} text-xl text-blue-400`}/>
+        </Link>
+
+      </div>
+      <div className={'flex flex-row'}>
+        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+          {(categories || []).map(cat => (
+              <Link
+                  key={cat}
+                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md`}
+                  to={`${baseUrl}${isListAll ? `/listall` : ``}/cat/${cat}`}
+              >
+                <i className={'fa fa-category'} /> {cat}
+              </Link>
+          ))
+          }
+        </div>
+        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+          {
+            sources
+                .filter(source => {
+                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes('Source Data')))
+                })
+                .filter(source => {
+                  let output = true;
+                  if (cat1) {
+                    output = false;
+                    (get(source, "categories", []) || [])
+                        .forEach(site => {
+                          if (site[0] === cat1 && (!cat2 || site[1] === cat2)) {
+                            output = true;
+                          }
+                        });
+                  }
+                  return output;
+                })
+                .filter(source => {
+                  let searchTerm = (source.name + " " + (source?.categories || [])
+                      .reduce((out,cat) => {
+                        out += Array.isArray(cat) ? cat.join(' ') : typeof cat === 'string' ? cat : '';
+                        return out
+                      },'')) //get(source, "categories[0]", []).join(" "));
+                  return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase());
+                })
+                .sort((a,b) => {
+                  console.log('a,b', a,b)
+                  const m = sort === 'asc' ? 1 : -1;
+
+                  return m * a.name?.localeCompare(b.name)
+                })
+                .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} />)
+          }
         </div>
       </div>
-      {
-        sources
-          .filter(source => {
-            let output = true;
-            if (cat1) {
-              output = false;
-              (get(source, "categories", []) || [])
-                .forEach(site => {
-                  if (site[0] === cat1 && (!cat2 || site[1] === cat2)) {
-                    output = true;
-                  }
-                });
-            }
-            return output;
-          })
-          .filter(source => {
-            let searchTerm = (source.name + " " + (source?.categories || [])
-              .reduce((out,cat) => {
-                out += cat.join(' ')
-                return out
-              },'')) //get(source, "categories[0]", []).join(" "));
-            return !layerSearch.length > 2 || searchTerm.toLowerCase().includes(layerSearch.toLowerCase());
-          })
-          .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} />)
-      }
     </SourcesLayout>
 
   );
