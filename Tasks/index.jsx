@@ -17,7 +17,8 @@ export const ETL_CONTEXT_ATTRS = [
   "source_id",
   "parent_context_id",
   "type",
-  "payload"
+  "payload",
+  "duration"
 ];
 
 function timeAgo(input) {
@@ -48,6 +49,37 @@ const StartedAtCell = (d) => {
   )
 }
 
+const DurationCell = (d) => {
+  const { value } = d;
+  let formattedDuration = '';
+  //under two seconds, show in MS
+  if(parseInt(value) < 2000 ){
+    // const duration = moment(value).as('milliseconds');
+    // r.duration = `${Math.round(duration)} ms`
+    formattedDuration = `${value} ms`
+  }
+  //under 10 minutes, show in seconds
+  else if(parseInt(value) < 600000) {
+    // const duration = moment(value).as('seconds');
+    // r.duration = `${Math.round(duration)} seconds`
+    formattedDuration = `${Math.floor(value/1000)} seconds`
+  }
+  //under 1 hour, show in minutes
+  else if(parseInt(value) < 3600000){
+    formattedDuration = `${Math.floor(value/1000/60)} minutes`
+  }
+  //show in hours
+  else {
+    // const duration = moment(value).as('minutes');
+    // r.duration = `${Math.round(duration)} minutes`
+    formattedDuration = `${Math.floor(value/1000/60/60)} hours`
+  }
+
+  return (
+    <div>{ formattedDuration }</div>
+  )
+}
+
 const COLUMNS = [
   {
     accessor: "etl_context_id",
@@ -72,7 +104,7 @@ const COLUMNS = [
     }
   },
   { accessor: "created_at", Header: "Started", Cell: StartedAtCell },
-  { accessor: "duration", Header: "Duration"},
+  { accessor: "duration", Header: "Duration", Cell: DurationCell},
   { accessor: "etl_status", Header: "ETL Status" },
 ];
 
@@ -146,26 +178,6 @@ const TasksComponent = (props) => {
           ]);
           r.source_name = sourceName;
         }
-
-        if(r.terminated_at){
-          const terminatedAtTime = moment(r.terminated_at);
-          const createdAtTime = moment(r.created_at);
-          const diffTime = terminatedAtTime.diff(createdAtTime, 'seconds');
-
-          if(diffTime < 2 ){
-            const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('milliseconds');
-            r.duration = `${Math.round(duration)} ms`
-          }
-          else if(diffTime < 600) {
-            const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('seconds');
-            r.duration = `${Math.round(duration)} seconds`
-          }
-          else{
-            const duration = moment.duration(terminatedAtTime.diff(createdAtTime)).as('minutes');
-            r.duration = `${Math.round(duration)} minutes`
-          }
-        }
-
         return r;
       })
       .filter((r) => Boolean(r.etl_context_id));
