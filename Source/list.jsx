@@ -85,6 +85,12 @@ const SourcesList = () => {
           })
           .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
 
+  const categoriesCount = categories.reduce((acc, cat) => {
+    acc[cat] = sources.filter(source => {
+      return source.categories?.find(category => category.includes(cat))
+    })?.length
+    return acc;
+  }, {})
   const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
   return (
 
@@ -123,7 +129,7 @@ const SourcesList = () => {
                   className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md`}
                   to={`${baseUrl}${isListAll ? `/listall` : ``}/cat/${cat}`}
               >
-                <i className={'fa fa-category'} /> {cat}
+                <i className={'fa fa-category'} /> {cat} ({categoriesCount[cat]})
               </Link>
           ))
           }
