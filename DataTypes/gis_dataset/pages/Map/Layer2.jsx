@@ -85,6 +85,50 @@ const HoverComp = ({ data, layer }) => {
   );
 };
 
+const LegendCmp = ({ domain, range, title }) => {
+  const getDomainRanges = (domain) => {
+    const ranges = [];
+    if (!(domain && domain.length)) return range;
+    ranges.push(`0 - ${new Intl.NumberFormat().format(domain[0])}`);
+    for (let i = 0; i < domain.length - 1; i++) {
+      ranges.push(`${new Intl.NumberFormat().format(domain[i])} - ${new Intl.NumberFormat().format(domain[i + 1])}`);
+    }
+    return ranges;
+  };
+  const newRanges = getDomainRanges(domain);
+
+  const smallLen = React.useMemo(() => {
+    return Math.min(domain.length, range.length);
+  }, [domain.length, range.length]);
+
+  return (
+    <>
+      <div className="shadow-lg box-content min-h-32 min-w-48 w-fit p-1 border-2 bg-slate-50 bg-opacity-55">
+        <div className="flex mb-1"><div className="flex-1 font-medium">{title}</div></div>
+        {Array.from({ length: smallLen }).map((_, i) =>
+          <>
+            <div className="flex m-2">
+              <div className="flex-none w-16">
+                <div className="h-8 w-[2px] rounded dark:ring-1 dark:ring-inset dark:ring-white/10 sm:w-full" style={{
+                  backgroundColor: range[i],
+                  transition: "background-color 0.5s"
+                }} />
+              </div>
+              <div className="flex-initial ml-6 w-32">
+                {
+                  <div className="h-6 w-2 ml-1 p-[2px] sm:w-full text-left">
+                    {newRanges[i]}</div>
+                }
+              </div>
+            </div>
+          </>
+        )
+        }
+      </div>
+    </>
+  )
+}
+
 export const LegendContainer = ({ name, title, toggle, isOpen, children }) => {
   const theme = useTheme();
   return (
@@ -536,12 +580,13 @@ const GISDatasetRenderComponent = props => {
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
 { /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
-          <LegendContainer { ...legend }
+          <LegendCmp {...legend} />
+          {/* <LegendContainer { ...legend }
             toggle={ toggle }
             isOpen={ isOpen }
           >
             <Legend { ...legend }/>
-          </LegendContainer>
+          </LegendContainer> */}
        
       </div>
 
