@@ -226,7 +226,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
             <Metadata source={source}/>
 
             <div className='py-5 pr-2'>
-                <div className='text-gray-500 py-8 px-5'>Versions</div>
+                <div className='p-2 mx-4 text-blue-600 hover:bg-blue-50 rounded-md'>Versions</div>
                 <div className='px-5'>
                     <Versions source={source} views={views}/>
                 </div>
