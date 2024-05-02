@@ -111,7 +111,7 @@ const COLUMNS = [
 const INITIAL_PAGE_SIZE = 10;
 
 const TasksComponent = (props) => {
-  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
+  const { pgEnv, falcor, falcorCache, baseUrl } = React.useContext(DamaContext);
 
   const [pageIndex, setPageIndex] = React.useState(0);
 
@@ -186,10 +186,10 @@ const TasksComponent = (props) => {
   const navigate = useNavigate();
   const onRowClick = React.useCallback((e, row) => {
     if (e.ctrlKey) {
-      window.open(`/task/${ row.values.etl_context_id }`, "_blank");
+      window.open(`${baseUrl}/task/${ row.values.etl_context_id }`, "_blank");
     }
     else {
-      navigate(`/task/${ row.values.etl_context_id }`);
+      navigate(`${baseUrl}/task/${ row.values.etl_context_id }`);
     }
   }, [navigate]);
 
