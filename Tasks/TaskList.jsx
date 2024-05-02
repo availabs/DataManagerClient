@@ -109,7 +109,6 @@ const COLUMNS = [
 const INITIAL_PAGE_SIZE = 10;
 
 const TaskList = (props) => {
-  console.log("Task List Props", props)
   const { sourceId } = props;
   const { pgEnv, falcor, falcorCache, baseUrl } = React.useContext(DamaContext);
 
@@ -141,7 +140,6 @@ const TaskList = (props) => {
   //get length of data
   React.useEffect(() => {
     const getLength = async () => {
-      console.log("getting length", dataLengthPath)
       await falcor.get(dataLengthPath);
     }
     getLength();
@@ -157,8 +155,8 @@ const TaskList = (props) => {
       await falcor
       .get(dataFetchPath)
       .then((data) => {
+        //Removes indicies and attribute list
         const dataPath = dataFetchPath.slice(0, dataFetchPath.length-2);
-        console.log("dataPath",dataPath)
         const sourceIds = Object.values(
           get(data, ["json", ...dataPath])
         )
@@ -213,7 +211,7 @@ const TaskList = (props) => {
       navigate(`${baseUrl}/task/${ row.values.etl_context_id }`);
     }
   }, [navigate]);
-console.log("parsedData",parsedData)
+
   return (
       <Table
         data={parsedData}

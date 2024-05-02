@@ -99,26 +99,23 @@ const AdminPage = ({source, views, activeViewId, }) => {
                 <tbody>
                   {currentKeys.map((key, i) => {
                     return (
-                      <>
-                        <tr key={i} className='border-b-2 '>
-                          <td className='p-2'>{key}</td>
-                          <td className="text-center">
-                            <input
-                              type='checkbox'
-                              checked={access[key]['view']}
-                              onChange={(e) => updateAccess(key, 'view', e)}  
-                            />
-                          </td>
-                          <td className="text-center">
-                            <input
-                              type='checkbox'
-                              checked={access[key]['download']}
-                              onChange={(e) => updateAccess(key, 'download', e)}
-                            />
-                          </td>
-                        </tr>
-                        
-                      </>
+                      <tr key={i} className='border-b-2 '>
+                        <td className='p-2'>{key}</td>
+                        <td className="text-center">
+                          <input
+                            type='checkbox'
+                            checked={access[key]['view']}
+                            onChange={(e) => updateAccess(key, 'view', e)}  
+                          />
+                        </td>
+                        <td className="text-center">
+                          <input
+                            type='checkbox'
+                            checked={access[key]['download']}
+                            onChange={(e) => updateAccess(key, 'download', e)}
+                          />
+                        </td>
+                      </tr>
                     )
                   })}
                   
