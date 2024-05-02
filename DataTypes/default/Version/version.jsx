@@ -240,7 +240,7 @@ export const VersionEditor = ({view,columns=null, flexDir='col'}) => {
               //val = attr === '_created_timestamp' ? new Date(val).toLocaleString("en-US",{ dateStyle: "short" }) : val
               //console.log('val', val, typeof val)
               return (
-                <div key={i} className='w-1/2 flex justify-between group hover:bg-blue-50 rounded-lg'>
+                <div key={i} className='flex justify-between group hover:bg-blue-50 rounded-lg'>
                   <div  className="flex">
                     <dt className="text-sm font-medium text-gray-500 py-5 px-1 capitalize">{attrNameMap[attr] || attr}</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -253,7 +253,9 @@ export const VersionEditor = ({view,columns=null, flexDir='col'}) => {
                             cancel={() => setEditing(null)}
                           />
                         </div> :
-                        <div className='py-5 px-2 font-semibold'>{val || 'N/A'}</div>
+                        <div className='py-5 px-2 font-semibold'>{
+                            attr === 'source_url' ? <Link to={val || '#'}>{val || 'N/A'}</Link> : val || 'N/A'
+                        }</div>
                       }
                     </dd>
                   </div>

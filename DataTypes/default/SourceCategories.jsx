@@ -204,7 +204,7 @@ const SourceCategories = props => {
         ))
       }
       { !editingCategories ? null :
-        <div className="grid grid-cols-1 gap-1 mt-1">
+        <div className="grid grid-cols-1 gap-1">
           <CategoryAdder
             addNewCategory={ addNewCategory }/>
           <Button onClick={ stopAll }

@@ -3,6 +3,11 @@ import get from 'lodash/get';
 import { DamaContext } from "~/pages/DataManager/store";
 import {dmsDataTypes} from "~/modules/dms/src"
 
+const getRank = col =>
+    (col.display_name ? 1 : 0) + (col.description ? 1 : 0) ;
+const sortFn = (a, b) => {
+  return getRank(b) - getRank(a);
+}
 const MetadataTable = ({ source, ...props }) => {
 
   const { pgEnv, falcor, user } = React.useContext(DamaContext);
@@ -17,7 +22,7 @@ const MetadataTable = ({ source, ...props }) => {
     const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
 
     if (Array.isArray(md)) {
-      setMetadata(md.map(d => ({
+      setMetadata(md.sort(sortFn).map(d => ({
           display: "",
           ...d
         }))
@@ -26,7 +31,7 @@ const MetadataTable = ({ source, ...props }) => {
     else if (md && "columns" in md) {
       const columns = get(md, "columns", []);
       if (Array.isArray(columns)) {
-        setMetadata(columns.map(d => ({
+        setMetadata(columns.sort(sortFn).map(d => ({
             display: "",
             ...d
           }))
