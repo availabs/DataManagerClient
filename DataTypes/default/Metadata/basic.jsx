@@ -63,7 +63,7 @@ const MetadataTable = ({ source, ...props }) => {
       .filter((col, i) => i < pageSize)
       .map(col => ({
     column: (
-        <div className='pt-3 pr-8 font-bold'>
+        <div className='pr-8 font-bold'>
           {get(col, 'display_name', get(col, 'name')) || 'No Name'}
           <span className={'italic pl-1 pt-3 pr-8 font-light'}>({get(col, 'type')})</span>
         </div>),
