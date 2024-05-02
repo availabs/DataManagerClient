@@ -5,8 +5,8 @@ import {SourceAttributes} from '~/pages/DataManager/Source/attributes'
 import {DamaContext} from "~/pages/DataManager/store"
 import Versions from './Version/list'
 import {VersionEditor, VersionDownload} from './Version/version'
-
 import SourceCategories from "./SourceCategories"
+import Metadata from './Metadata/basic.jsx'
 
 const Edit = ({
                   startValue, attr, sourceId, type = 'text', cancel = () => {
@@ -102,11 +102,12 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     const attrNameMap = {
         'update_interval': 'update interval'
     }
+    const numCols = get(source, ["metadata", "columns"], get(source, "metadata", []))?.length;
 
     return (
         <div className='p-4'>
             <div className="flex flex-col md:flex-row">
-                <div className='flex flex-col w-[70%]'>
+                <div className='flex flex-col w-full md:w-[70%]'>
                     <div className='flex justify-between group'>
                         <div className="flex-1">
                             <dd className="mt-1 text-2xl text-blue-600 font-medium overflow-hidden sm:mt-0 sm:col-span-3">
@@ -151,7 +152,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                     </div>
                 </div>
 
-                <div className={'w-[30%]'}>
+                <div className={'w-full md:w-[30%]'}>
                     <div className={'mt-2 flex flex-col px-6 text-sm text-gray-600'}>
                         Created
                         <span className={'text-l font-medium text-blue-600 '}>{createdTimeStamp}</span>
@@ -183,7 +184,8 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                                 .map((attr, i) => {
                                     let val = typeof source[attr] === 'object' ? JSON.stringify(source[attr]) : source[attr]
                                     return (
-                                        <div key={attr} className='w-1/2 flex justify-between group hover:bg-blue-50 rounded-lg'>
+                                        <div key={attr}
+                                             className='w-1/2 flex justify-between group hover:bg-blue-50 rounded-lg'>
                                             <div className="w-full flex flex-col space-between items-left">
                                                 <div
                                                     className="text-sm font-medium text-gray-500 px-1 capitalize">{attrNameMap[attr] || attr}</div>
@@ -212,6 +214,16 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                     </div>
                 </div>
             </div>
+
+            <div className={'flex items-center p-2 mx-4 text-blue-600 hover:bg-blue-50 rounded-md'}
+            >
+                Columns
+                <span className={'bg-blue-200 text-blue-600 text-xs p-1 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>
+                    {numCols}
+                </span>
+            </div>
+
+            <Metadata source={source}/>
 
             <div className='py-5 pr-2'>
                 <div className='text-gray-500 py-8 px-5'>Versions</div>
