@@ -220,14 +220,18 @@ const Edit = ({startValue, attr, viewId, cancel=()=>{}}) => {
   )
 }
 
-export const VersionEditor = ({view,columns=null}) => {
+export const VersionEditor = ({view,columns=null, flexDir='col'}) => {
   const [editing, setEditing] = useState(null);
   const { user } = useContext(DamaContext);
+
+  const attrNameMap = {
+    'source_url': 'source url'
+  }
 
   return (
     <div className="overflow-hidden">
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-        <dl className="sm:divide-y sm:divide-gray-200">
+        <dl className={`flex flex-${flexDir}`}>
           {Object.keys(ViewAttributes)
             .filter(d => !columns || columns.includes(d))
             .filter(d => !['view_id','source_id','description', 'statistics', 'category', 'table_schema', 'table_name', 'data_table', 'tiles_url', 'last_updated', 'view_dependencies', 'start_date', 'end_date', 'download_url', 'user_id', 'etl_context_id'].includes(d))
@@ -236,9 +240,9 @@ export const VersionEditor = ({view,columns=null}) => {
               //val = attr === '_created_timestamp' ? new Date(val).toLocaleString("en-US",{ dateStyle: "short" }) : val
               //console.log('val', val, typeof val)
               return (
-                <div key={i} className='flex justify-between group'>
-                  <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
+                <div key={i} className='flex justify-between group hover:bg-blue-50 rounded-lg'>
+                  <div  className="flex">
+                    <dt className="text-sm font-medium text-gray-500 py-5 px-1 capitalize">{attrNameMap[attr] || attr}</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                       {editing === attr ?
                         <div className='pt-3 pr-8'>
@@ -249,7 +253,9 @@ export const VersionEditor = ({view,columns=null}) => {
                             cancel={() => setEditing(null)}
                           />
                         </div> :
-                        <div className='py-5 px-2'>{val}</div>
+                        <div className='py-5 px-2 font-semibold'>{
+                            attr === 'source_url' ? <Link to={val || '#'}>{val || 'N/A'}</Link> : val || 'N/A'
+                        }</div>
                       }
                     </dd>
                   </div>

@@ -6,6 +6,7 @@ import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../../../../store"
+import { CMSContext } from '~/modules/dms/src'
 
 const ViewLayerRender = ({
   maplibreMap,
@@ -185,9 +186,12 @@ export default ViewLayer;
 
 
 const HoverComp = ({ data, layer }) => {
-   if(!layer.props.hover) return
+  if(!layer.props.hover) return
   const { source_id, view_id } = layer;
-  const { pgEnv, falcor, falcorCache } = React.useContext(DamaContext);
+  const dctx = React.useContext(DamaContext);
+  const cctx = React.useContext(CMSContext);
+  const ctx = dctx?.falcor ? dctx : cctx;
+  const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 

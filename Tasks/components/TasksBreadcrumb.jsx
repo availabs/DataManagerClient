@@ -3,7 +3,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { DamaContext } from '../../store'
 
-import { ETL_CONTEXT_ATTRS } from '../index'
+import { ETL_CONTEXT_ATTRS } from '../TaskList'
 import { Link, useParams } from 'react-router-dom'
 import get from 'lodash/get'
 
@@ -19,65 +19,90 @@ export const getAttributes = (data) => {
 }
 
 export const TasksBreadcrumb =  ({fullWidth}) => {
-  const { etl_context_id, page, cat1, cat2} = useParams()
+  const { etl_context_id} = useParams()
   const { pgEnv, baseUrl, falcor , falcorCache } = React.useContext(DamaContext)
 
   useEffect(() => {
     async function fetchData() {
-      return etl_context_id
-        ? await falcor
-            .get([
-              "dama",
-              pgEnv,
-              "etlContexts",
-              "byEtlContextId",
-              etl_context_id,
-              "attributes",
-              ETL_CONTEXT_ATTRS,
-            ])
-            .then((data) => {             
-              const etlAttr = getAttributes(get(falcorCache,["dama", pgEnv,'etlContexts','byEtlContextId', etl_context_id],{'attributes': {}})['value']) 
-
-              return falcor.get([
+      return await falcor
+        .get([
+          "dama",
+          pgEnv,
+          "etlContexts",
+          "byEtlContextId",
+          etl_context_id,
+          "attributes",
+          ETL_CONTEXT_ATTRS,
+        ])
+        .then((data) => {
+          const etlAttr = getAttributes(
+            get(
+              data,
+              [
+                "json",
                 "dama",
                 pgEnv,
-                "sources",
-                "byId",
-                [etlAttr?.meta?.source_id],
-                "attributes",
-                "name",
-              ]);
-            })
-        : Promise.resolve({});
+                "etlContexts",
+                "byEtlContextId",
+                etl_context_id,
+              ],
+              { attributes: {} }
+            )
+          );
+
+          if (Object.keys(etlAttr).length) {
+            falcor.get([
+              "dama",
+              pgEnv,
+              "sources",
+              "byId",
+              [etlAttr?.meta?.source_id],
+              "attributes",
+              "name",
+            ]);
+          }
+        });
     }
-    fetchData();
+
+    if (etl_context_id) {
+      fetchData();
+    }
   }, [falcor, etl_context_id, pgEnv]);
 
   const pages = useMemo(() => {
-    const attr = getAttributes(get(falcorCache,["dama", pgEnv,'etlContexts','byEtlContextId', etl_context_id],{'attributes': {}})['value']) 
-    const etlContexts = get(falcorCache, ["dama", pgEnv, "latest", "events"]);
+    const attr = getAttributes(
+      get(
+        falcorCache,
+        ["dama", pgEnv, "etlContexts", "byEtlContextId", etl_context_id],
+        { attributes: {} }
+      )["value"]
+    );
 
-    let contextName = get(falcorCache, [
-      "dama",
-      pgEnv,
-      "sources",
-      "byId",
-      [attr?.meta?.source_id],
-      "attributes",
-      "name",
-    ], "");
+    let contextSourceName = get(
+      falcorCache,
+      [
+        "dama",
+        pgEnv,
+        "sources",
+        "byId",
+        [attr?.meta?.source_id],
+        "attributes",
+        "name",
+      ],
+      ""
+    );
+    const initialEvent = attr?.events?.find((event) =>
+      event.type.toLowerCase().includes("initial")
+    );
+    contextSourceName = typeof contextSourceName === 'string' ? contextSourceName : "";
 
-    if(etlContexts){
-      const currentEtlContext = Object.values(etlContexts).find(etlContext => etlContext.etl_context_id === parseInt(etl_context_id));
-      if(currentEtlContext?.type){
-        contextName += " " + currentEtlContext.type.split(":")[0];
-      }
+    if (initialEvent && initialEvent.type) {
+      contextSourceName += " " + initialEvent.type.split(":")[0];
     }
 
-    const pageArray = [];
-    pageArray.push({name:contextName})
-    return pageArray
-  },[falcorCache,etl_context_id,pgEnv, cat1, cat2, baseUrl])
+    const pageArray = [{ name: contextSourceName }];
+    return pageArray;
+  }, [falcorCache, etl_context_id, pgEnv, baseUrl]);
 
   return (
     <nav className="border-b border-gray-200 flex " aria-label="Breadcrumb">
@@ -102,7 +127,7 @@ export const TasksBreadcrumb =  ({fullWidth}) => {
               >
                 <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
               </svg>
-            <Link to={`${baseUrl || '/tasks'}`} className={"ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"}>
+            <Link to={`${baseUrl}/tasks`} className={"ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"}>
               All Tasks
             </Link>
           </div>

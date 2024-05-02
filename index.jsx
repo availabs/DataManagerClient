@@ -76,7 +76,7 @@ const DamaRoutes = DAMA_ARGS => {
     /**
      * SOURCES
      */
-    // Source List
+    // Source List (Filtered)
     {
       name: "Data Sources",
       path: `${baseUrl}/`,
@@ -102,6 +102,40 @@ const DamaRoutes = DAMA_ARGS => {
     {
       name: "Data Sources",
       path: `${baseUrl}/cat/:cat1/:cat2`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(List, DAMA_ARGS)
+    },
+      // Source List (Full)
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/listall`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(List, DAMA_ARGS)
+    },
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/listall/cat/:cat1`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(List, DAMA_ARGS)
+    },
+    {
+      name: "Data Sources",
+      path: `${baseUrl}/listall/cat/:cat1/:cat2`,
       exact: true,
       authLevel,
       mainNav: false,
@@ -286,7 +320,7 @@ const DamaRoutes = DAMA_ARGS => {
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,
       exact: true,
-      auth: false,
+      authLevel,
       mainNav: false,
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
@@ -296,7 +330,7 @@ const DamaRoutes = DAMA_ARGS => {
     { name: "Task",
       path: `${ baseUrl }/task/:etl_context_id`,
       exact: true,
-      auth: true,
+      authLevel,
       mainNav: false,
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
