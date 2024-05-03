@@ -15,7 +15,7 @@ export const ETL_CONTEXT_ATTRS = [
   "source_id",
   "parent_context_id",
   "type",
-  "duration",
+  //"duration",
   "payload"
 ];
 
@@ -73,6 +73,9 @@ const DurationCell = (d) => {
     formattedDuration = `${Math.floor(value/1000/60/60)} hours`
   }
 
+  if(isNaN(formattedDuration)){
+    formattedDuration = "";
+  }
   return (
     <div>{ formattedDuration }</div>
   )
