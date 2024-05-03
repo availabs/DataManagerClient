@@ -190,15 +190,15 @@ function LegendRow ({ index, layer, i }) {
 
 function LegendPanel (props) {
   const { state, setState  } = React.useContext(MapContext);
-  const layers = useMemo(() => {
+  const layersBySymbology = useMemo(() => {
     return Object.values(state?.symbologies || {})
       .filter(symb => symb.isVisible)
-      .reduce((allLayers, symb) => {
-          console.log('symbology', symb)
-          return {...allLayers, ...symb.symbology.layers }
-      },{})
-  }, [state])
-  // console.log('legend layers', layers)
+      .map((symb) => {
+        return { name: symb.name, symbology_id: symb.symbology_id, layers: { ...symb.symbology.layers } };
+      });
+  }, [state]);
+  
+  // console.log('legend layersBySymbology', layersBySymbology)
   
   // const droppedSection = React.useCallback((start, end) => {
   //   setState(draft => {
@@ -224,13 +224,21 @@ function LegendPanel (props) {
   // }, [])
 
   return (
-    <>     
+    <>
       {/* ------Layer Pane ----------- */}
       <div className='p-4'>
         <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)] overflow-auto pointer-events-auto scrollbar-sm'>
-          {Object.values(layers)
-            .sort((a,b) => b.order - a.order)
-            .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
+          {layersBySymbology.map((symb) => (
+            <div
+              key={symb.symbology_id}
+              className="m-2 p-2 rounded"
+            >
+              <div className="font-normal">{symb.name}</div>
+              {Object.values(symb.layers)
+                .sort((a,b) => b.order - a.order)
+                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
+            </div>
+          ))}
         </div>
       </div>
     </>
