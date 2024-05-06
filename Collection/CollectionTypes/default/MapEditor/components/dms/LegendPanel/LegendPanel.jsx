@@ -155,32 +155,36 @@ function StepLegend({layer}) {
 
 
 function LegendRow ({ index, layer, i }) {
-  const { state, setState  } = React.useContext(MapContext);
+  const navigate = useNavigate();
   const  activeLayer  = null
-  // const toggleSymbology = () => {
-  //   setState(draft => {
-  //       draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
-  //   })
-  // }
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
   const type = layer['layer-type']
-  //console.log('legend row type', type)
+
+  //TODO -- how to get `baseUrl` when you don't have damaContext??
+  const sourceUrl = `/datasources/source/${layer.source_id}`
 
   return (
-    <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border border-transparent`}>
-      <div className={`w-full  p-2 py-1 flex items-center`}>
+    <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
+      <div className={`group/title w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div  className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
-        {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
-        {/*<div className='text-sm pt-1 px-0.5 flex items-center'>
-          <LayerMenu 
-            layer={layer}
-            button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-          />
-        </div>*/}
-        {/*<VisibilityButton layer={layer}/>*/}
+        <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
+          {layer.name}
+          <div 
+            className="cursor-pointer text-white group-hover/title:text-black group/icon "
+            onClick={(e) => {
+              if (e.ctrlKey) {
+                window.open(sourceUrl, "_blank");
+              }
+              else {
+                navigate(sourceUrl);
+              }
+            }}
+          >
+            <span style={{fontFamily:"FontAwesome"}}className="mx-2 fa fa-square-info group-hover/icon:text-pink-800"/>
+          </div>
+        </div>
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} />}
       {type === 'choropleth' && <StepLegend layer={layer} />}
