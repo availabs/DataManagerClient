@@ -25,8 +25,7 @@ const CollectionCreate = () => {
 
   const [dataTypes, setDataTypes] = useState(null);
 
-  const {pgEnv} = React.useContext(DamaContext)
-
+  const {pgEnv, baseUrl} = React.useContext(DamaContext)
   useEffect(() => {
     (async () => {
       const filteredDataTypeKeys = (
@@ -71,7 +70,7 @@ const CollectionCreate = () => {
     );
 
     const newCollection = await res.json();
-    navigate(`/collection/${newCollection.collection_id}`);
+    navigate(`${baseUrl}/collection/${newCollection.collection_id}`);
   };
 
   return (
