@@ -1,23 +1,11 @@
-import React, { useContext , useMemo, Fragment}from 'react'
+import React, { useContext, useMemo }from 'react'
 import {SymbologyContext} from '../../'
-import { Plus, Close, MenuDots, CaretDown } from '../icons'
-import { Menu, Popover, Transition, Tab, Dialog } from '@headlessui/react'
-import { toHex } from '../LayerManager/utils'
-import get from 'lodash/get'
-import set from 'lodash/set'
+import { SelectControl, ColumnSelectControl } from './Controls'
 
-import { LayerMenu } from '../LayerManager/LayerPanel'
-import typeConfigs from './typeConfigs'
-import { wrapperTypes } from './ControlWrappers'
-import { SelectControl } from './Controls'
-
-
-function StyleEditor (props) {
-  const { state, setState } = React.useContext(SymbologyContext);
+function PopoverEditor (props) {
+  const { state, setState } = useContext(SymbologyContext);
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
-  const config = useMemo(() => typeConfigs[activeLayer.type] || []
-    ,[activeLayer.type])
-  
+
   return activeLayer && (
     <div>
       <div className='p-4'>
@@ -26,9 +14,15 @@ function StyleEditor (props) {
           path={`['hover']`} 
           params={{options: [{value: '', name:'None'}, {value: 'hover', name:'Hover'}]}} 
         />
+        {activeLayer.hover && 
+          <ColumnSelectControl 
+            path={`['hover-columns']`} 
+            params={{}} 
+          />
+        }
       </div>
     </div>
   )
 } 
 
-export default StyleEditor
+export default PopoverEditor
