@@ -162,6 +162,10 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
             protocols: [PMTilesProtocol],
             styles: [
               {
+                name: "dataviz-light",
+                style: "https://api.maptiler.com/maps/93fb4718-3184-43c3-9348-a4449deaeb53/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
                 name: "dataviz",
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
               },

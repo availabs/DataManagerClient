@@ -94,8 +94,6 @@ function CategoryLegend({layer}) {
       return null
     })
     .filter(d => d)
-
-
   
   return (
     <div className='w-full max-h-[250px] overflow-auto'>

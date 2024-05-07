@@ -54,7 +54,7 @@ function getCircleLayer( layer_id, viewLayer) {
 	         "circle-stroke-color": RGB_Log_Shade(-0.4, newColor),
 	         "circle-stroke-width": 1 
 	      },
-	      "source": viewLayer.source,
+	      "source": `${viewLayer.source}_${layer_id}`,
 	      "source-layer": viewLayer['source-layer']
 	   }
 	]
@@ -71,7 +71,7 @@ function getLineLayer( layer_id, viewLayer) {
 	         "line-color": RGB_Log_Shade(-0.4, newColor),
 	         "line-width": 3, 
 	      },
-	      "source": viewLayer.source,
+	      "source": `${viewLayer.source}_${layer_id}`,
 	      "source-layer": viewLayer['source-layer']
 	   	},
    		{
@@ -82,7 +82,7 @@ function getLineLayer( layer_id, viewLayer) {
 	         "line-color": newColor,
 	         "line-width": 3, 
 	      },
-	      "source": viewLayer.source,
+	      "source": `${viewLayer.source}_${layer_id}`,
 	      "source-layer": viewLayer['source-layer']
 	   	}
 	]
@@ -99,7 +99,7 @@ function getFillLayer( layer_id, viewLayer) {
 	         "line-color": RGB_Log_Shade(-0.4, newColor),
 	         "line-width": 1, 
 	      },
-	      "source": viewLayer.source,
+	      "source": `${viewLayer.source}_${layer_id}`,
 	      "source-layer": viewLayer['source-layer']
 	    },
    	    {
@@ -110,7 +110,7 @@ function getFillLayer( layer_id, viewLayer) {
 	         "fill-color": newColor,
 	         "fill-opacity": 0.75, 
 	      },
-	      "source": viewLayer.source,
+	      "source": `${viewLayer.source}_${layer_id}`,
 	      "source-layer": viewLayer['source-layer']
 	    }
 	  

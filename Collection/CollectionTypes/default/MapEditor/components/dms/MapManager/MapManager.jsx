@@ -180,7 +180,7 @@ function TabPanel ({tabIndex, tab}) {
         <div className='flex-1 items-center'>
          <input 
             type="text"
-            className='border w-[140px] font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+            className='border flex-1 font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
             value={tab.name}
             onChange={(e) => setState(draft => { 
                
@@ -188,74 +188,77 @@ function TabPanel ({tabIndex, tab}) {
             })}
           />
         </div>
-        <SymbologyMenu 
-          button={
-            <div 
-              className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
-            >
-              <MenuDots className='fill-slate-500 hover:fill-pink-300' />
-            </div>
-          }
-        >
-          <div className="px-1 py-1 ">
-              <Menu.Item >
-                {({ active }) => (
-                  <div 
-                    className={`${
-                      active ? 'bg-pink-50 ' : ''
-                    } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
-                    onClick={() => {
-                      setState(draft => {
-                        console.log('remove tab', state, tabIndex)
-                        draft.tabs.splice(tabIndex,1)
-                      })
-                    }}
-                  >Remove</div>
-                )}
-              </Menu.Item>
-            </div>
-        </SymbologyMenu>
-        <SymbologyMenu 
-          button={
-            <div 
-              className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
-            >
-                <i className={`text-lg text-slate-400 hover:text-pink-300 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
-            </div>
-          }
-          width={'w-[190px]'}
-        >
-          <div className="px-1 py-1 flex flex-wrap">
-              {iconList.map(icon => {
-                return (
-                  <Menu.Item key={icon}>
-                    {({ active }) => (
-                      <div 
-                        className={`${
-                          active ? 'bg-pink-50 ' : ''
-                        } rounded-md p-1 text-lg`}
-                        onClick={() => {
-                          setState(draft => {
-                            draft.tabs[tabIndex].icon = icon
-                            //console.log('remove tab', state, tabIndex)
-                            //draft.tabs.splice(tabIndex,1)
-                          })
-                        }}
-                      >
-                        <div className={` cursor-pointer w-[28px] h-[28px] justify-center rounded hover:bg-slate-100 flex items-center ${icon}`} />
-                        
-                      </div>
-                    )}
-                  </Menu.Item>
-                )
-              })}
-            </div>
-        </SymbologyMenu>
-
-
         
-        <SymbologySelector index={tabIndex} />
+        {state.isEdit && (<>
+          <SymbologyMenu 
+            button={
+              <div 
+                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+              >
+                <MenuDots className='fill-slate-500 hover:fill-pink-300' />
+              </div>
+            }
+          >
+            <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div 
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          console.log('remove tab', state, tabIndex)
+                          draft.tabs.splice(tabIndex,1)
+                        })
+                      }}
+                    >Remove</div>
+                  )}
+                </Menu.Item>
+              </div>
+          </SymbologyMenu>
+          <SymbologyMenu 
+            button={
+              <div 
+                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+              >
+                  <i className={`text-lg text-slate-400 hover:text-pink-300 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
+              </div>
+            }
+            width={'w-[190px]'}
+          >
+            <div className="px-1 py-1 flex flex-wrap">
+                {iconList.map(icon => {
+                  return (
+                    <Menu.Item key={icon}>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } rounded-md p-1 text-lg`}
+                          onClick={() => {
+                            setState(draft => {
+                              draft.tabs[tabIndex].icon = icon
+                              //console.log('remove tab', state, tabIndex)
+                              //draft.tabs.splice(tabIndex,1)
+                            })
+                          }}
+                        >
+                          <div className={` cursor-pointer w-[28px] h-[28px] justify-center rounded hover:bg-slate-100 flex items-center ${icon}`} />
+                          
+                        </div>
+                      )}
+                    </Menu.Item>
+                  )
+                })}
+              </div>
+          </SymbologyMenu>
 
+
+          
+          <SymbologySelector index={tabIndex} />
+        </>
+        )}
       </div>
       {/* --- Rows --- */}
       {/* --   -- */}
@@ -303,24 +306,29 @@ function MapManager () {
                 </Tab>
               ))}
             </Tab.List>
-            <div 
-              className='p-1 rounded hover:bg-slate-100 m-1' 
-              onClick={() => setState(draft => {
-                //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
-              })}
-            >
-                <MenuDots className='fill-slate-500' />
-            </div>
-            <div 
-              className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
-              onClick={() => setState(draft => {
-                draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
-              })}
-            >
+            {
+              state.isEdit && (
+              <>
+              <div 
+                  className='p-1 rounded hover:bg-slate-100 m-1' 
+                  onClick={() => setState(draft => {
+                    //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
+                  })}
+                >
+                  <MenuDots className='fill-slate-500' />
+              </div>
+              <div 
+                className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
+                onClick={() => setState(draft => {
+                  draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
+                })}
+              >
                 <Plus className='fill-slate-500' />
-            </div>
-            
+              </div>
+              </>
+          )}  
           </div>
+
           <Tab.Panels className='flex-1 w-[220px] '>
             {state.tabs.map((tab,i) => (
               <Tab.Panel key={i} className='w-full'>
