@@ -9,11 +9,12 @@ function PopoverEditor (props) {
   return activeLayer && (
     <div>
       <div className='p-4'>
-      <div className='font-bold tracking-wider text-sm text-slate-700'>Popover</div>
+        <div className='font-bold tracking-wider text-sm text-slate-700'>Popover</div>
         <SelectControl 
           path={`['hover']`} 
           params={{options: [{value: '', name:'None'}, {value: 'hover', name:'Hover'}]}} 
         />
+        <div className='font-bold tracking-wider text-sm text-slate-700'>Attributes:</div>
         {activeLayer.hover && 
           <ColumnSelectControl 
             path={`['hover-columns']`} 
