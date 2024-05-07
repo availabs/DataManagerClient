@@ -784,7 +784,11 @@ export function ColumnSelectControl({path, params={}}) {
   }, [sourceId, falcorCache]); 
   
   const attributeNames = useMemo(() => attributes.filter(d => !['wkb_geometry'].includes(d)).map((attr) => attr.name), [attributes]);
-  const hoverColumnNames = selectedColumns ? getDiffColumns(attributeNames, selectedColumns) : attributeNames;
+  const hoverColumnNames = (
+    selectedColumns
+      ? getDiffColumns(attributeNames, selectedColumns)
+      : attributeNames
+  ).filter((d) => !["wkb_geometry"].includes(d));
 
   return (
     <div className='flex ml-3 flex-wrap'>
