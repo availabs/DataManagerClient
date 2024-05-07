@@ -5,7 +5,7 @@ import { LayerMenu } from '../LayerManager/LayerPanel'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
 import StyleEditor from './StyleEditor'
-import PopoeverEditor from './PopoverEditor'
+import PopoverEditor from './PopoverEditor'
 import LegendEditor from './LegendEditor'
 
 
@@ -14,7 +14,6 @@ function LayerManager (props) {
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
 
   const tabs = ['Style', 'Legend','Popup','Filter']
-
   return activeLayer && (
     <div className='p-4'>
       <div className='bg-white/95 w-[312px] rounded-lg drop-shadow-lg pointer-events-auto'>
@@ -69,7 +68,7 @@ function LayerManager (props) {
           <Tab.Panels>
             <Tab.Panel><StyleEditor /></Tab.Panel>
             <Tab.Panel><LegendEditor /></Tab.Panel>
-            <Tab.Panel><PopoeverEditor /></Tab.Panel>
+            <Tab.Panel><PopoverEditor /></Tab.Panel>
             <Tab.Panel>Filter</Tab.Panel>
           </Tab.Panels>
         </Tab.Group>

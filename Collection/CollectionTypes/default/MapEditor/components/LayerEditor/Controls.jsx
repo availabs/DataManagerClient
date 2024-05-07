@@ -748,6 +748,94 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
+const getDiffColumns = (baseArray, subArray) => {
+  return baseArray.filter(baseItem => !subArray.includes(baseItem))
+}
+
+export function ColumnSelectControl({path, params={}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const selectedColumns = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+    params.default || params?.options?.[0]?.value
+  );
+
+  const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+      ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]); 
+  
+  const attributeNames = useMemo(() => attributes.filter(d => !['wkb_geometry'].includes(d)).map((attr) => attr.name), [attributes]);
+  const hoverColumnNames = (
+    selectedColumns
+      ? getDiffColumns(attributeNames, selectedColumns)
+      : attributeNames
+  ).filter((d) => !["wkb_geometry"].includes(d));
+
+  return (
+    <div className='flex ml-3 flex-wrap'>
+      <div className='flex w-full flex-wrap'>
+        <div className='w-full'>Included columns:</div>
+        <div className='flex w-full flex-col'>
+          {
+            selectedColumns.map((selectedCol, i) => {
+              return (
+                <div 
+                  className='flex ml-2 px-4 justify-between w-full items-center'
+                  key={i}
+                >
+                  {selectedCol}
+                  <span 
+                    className='fa fa-x cursor-pointer'                   
+                    onClick={() => setState(draft => {
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, selectedColumns.filter(col => col !== selectedCol));
+                    })}
+                  />
+                </div>
+              )
+            })
+          }
+        </div>
+      </div>
+      <div className='flex w-full flex-wrap'>
+        <div className='flex w-full items-center'>
+          <div className='w-full'>Add column:</div>
+          <select
+            className='w-full p-2 bg-transparent border rounded border-blue-100'
+            value={''}
+            onChange={(e) => setState(draft => {
+              if(e.target.value !== ""){
+                set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, selectedColumns ? [...selectedColumns ,e.target.value] : [e.target.value])
+              }
+            })}
+          >
+            <option key={-1} value={""}></option>
+            {(hoverColumnNames || []).map((opt,i) => <option key={i} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 export const controlTypes = {
   'color': ColorControl,
@@ -755,6 +843,7 @@ export const controlTypes = {
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
   'choroplethControl':ChoroplethControl, 
+  'columnSelectControl': ColumnSelectControl,
   'range': RangeControl,
   'simple': SimpleControl,
   'select': SelectControl,
