@@ -795,7 +795,7 @@ export function ColumnSelectControl({path, params={}}) {
             selectedColumns.map((selectedCol, i) => {
               return (
                 <div 
-                  className='flex ml-2 px-4 justify-between w-full'
+                  className='flex ml-2 px-4 justify-between w-full items-center'
                   key={i}
                 >
                   {selectedCol}
@@ -815,7 +815,7 @@ export function ColumnSelectControl({path, params={}}) {
         <div className='flex w-full items-center'>
           <div className='w-full'>Add column:</div>
           <select
-            className='w-full p-2 bg-transparent'
+            className='w-full p-2 bg-transparent border rounded border-blue-100'
             value={''}
             onChange={(e) => setState(draft => {
               if(e.target.value !== ""){

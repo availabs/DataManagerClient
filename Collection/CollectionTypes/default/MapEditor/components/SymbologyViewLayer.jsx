@@ -196,7 +196,7 @@ const HoverComp = ({ data, layer }) => {
   // console.log(source_id, view_id, id)
 
   const hoverColumns = React.useMemo(() => {
-    return layer['hover-columns'];
+    return layer.props['hover-columns'];
   }, [layer]);
 
   useEffect(() => {
@@ -205,7 +205,7 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
-  },[source_id])
+  }, [source_id, hoverColumns]);
 
   const attributes = React.useMemo(() => {
     if (!hoverColumns) {
