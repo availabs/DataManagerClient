@@ -2,8 +2,7 @@ import React, { useEffect, /*useMemo,*/ useState } from 'react';
 import { Button } from "~/modules/avl-components/src"
 import { DamaContext } from "~/pages/DataManager/store"
 import { useParams, Link } from "react-router-dom";
-
-import Uploads from '../Uploads'
+import TaskList from "~/pages/DataManager/Tasks/TaskList"
 
 const AdminPage = ({source, views, activeViewId, }) => {
   const currentKeys = ['Guest User', 'Public User', 'Agency User'];
@@ -100,26 +99,23 @@ const AdminPage = ({source, views, activeViewId, }) => {
                 <tbody>
                   {currentKeys.map((key, i) => {
                     return (
-                      <>
-                        <tr key={i} className='border-b-2 '>
-                          <td className='p-2'>{key}</td>
-                          <td className="text-center">
-                            <input
-                              type='checkbox'
-                              checked={access[key]['view']}
-                              onChange={(e) => updateAccess(key, 'view', e)}  
-                            />
-                          </td>
-                          <td className="text-center">
-                            <input
-                              type='checkbox'
-                              checked={access[key]['download']}
-                              onChange={(e) => updateAccess(key, 'download', e)}
-                            />
-                          </td>
-                        </tr>
-                        
-                      </>
+                      <tr key={i} className='border-b-2 '>
+                        <td className='p-2'>{key}</td>
+                        <td className="text-center">
+                          <input
+                            type='checkbox'
+                            checked={access[key]['view']}
+                            onChange={(e) => updateAccess(key, 'view', e)}  
+                          />
+                        </td>
+                        <td className="text-center">
+                          <input
+                            type='checkbox'
+                            checked={access[key]['download']}
+                            onChange={(e) => updateAccess(key, 'download', e)}
+                          />
+                        </td>
+                      </tr>
                     )
                   })}
                   
@@ -166,7 +162,7 @@ const AdminPage = ({source, views, activeViewId, }) => {
 
       </div>
       <div className='py-10 px-2'>
-        <Uploads sourceId={sourceId} />  
+        <TaskList sourceId={sourceId}/>
       </div>
     </div>
   )

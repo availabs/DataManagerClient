@@ -3,7 +3,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { DamaContext } from '../../store'
 
-import { ETL_CONTEXT_ATTRS } from '../index'
+import { ETL_CONTEXT_ATTRS } from '../TaskList'
 import { Link, useParams } from 'react-router-dom'
 import get from 'lodash/get'
 
@@ -127,7 +127,7 @@ export const TasksBreadcrumb =  ({fullWidth}) => {
               >
                 <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
               </svg>
-            <Link to={`${baseUrl || '/tasks'}`} className={"ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"}>
+            <Link to={`${baseUrl}/tasks`} className={"ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"}>
               All Tasks
             </Link>
           </div>
