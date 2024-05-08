@@ -5,13 +5,15 @@ import { Menu, Transition, Switch } from '@headlessui/react'
 // import get from 'lodash/get'
 import isEqual from 'lodash/isEqual'
 import { Plus, Close, MenuDots, CaretDown } from '../icons'
-
+import { DndList } from '~/modules/avl-components/src'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
 import get from 'lodash/get'
 import set from 'lodash/set'
-
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -226,7 +228,7 @@ export function SelectControl({path, params={}}) {
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
         <select
-          className='w-full p-2 bg-transparent'
+          className='w-full py-2 bg-transparent'
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
@@ -752,14 +754,83 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-export function ColumnSelectControl({path, params={}}) {
+const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path, dnd}) => {
+  const WrapperComponent = useMemo(() => {
+    return dnd
+      ? ({ children }) => (
+          <DndList
+            onDrop={(start, end) => {
+              const sections = [...selectedColumns];
+
+              const [item] = sections.splice(start, 1);
+              sections.splice(end, 0, item);
+
+              setState((draft) => {
+                set(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                  sections
+                );
+              });
+            }}
+          >
+            {children}
+          </DndList>
+        )
+      : ({ children }) => (
+          <div className="flex w-full flex-wrap">{children}</div>
+        );
+  }, [dnd, state, path, selectedColumns, dnd ]);
+  
+  return (
+    <WrapperComponent>
+      {selectedColumns?.map((selectedCol, i) => {
+        return (
+          <div
+            key={i}
+            className="group/title w-full text-sm grid grid-cols-9  "
+          >
+            <div className="truncate border-t border-r border-slate-200 p-1 col-span-4">
+              {selectedCol}{" "}
+            </div>
+            <div className="truncate border-t border-slate-200 p-1 col-span-4 text-gray-300 cursor-default">
+              {sampleData
+                .map((row) => row[selectedCol])
+                .filter(onlyUnique)
+                .join(", ")}
+            </div>
+            <div
+              className="border-t border-slate-200 cursor-pointer text-white group-hover/title:text-black group/icon col-span-1 p-1"
+              onClick={() =>
+                setState((draft) => {
+                  set(
+                    draft,
+                    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                    selectedColumns.filter((col) => col !== selectedCol)
+                  );
+                })
+              }
+            >
+              <div
+                style={{ fontFamily: "FontAwesome" }}
+                className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
+              />
+            </div>
+          </div>
+        );
+      })}
+    </WrapperComponent>
+  );
+};
+
+export function ColumnSelectControl({path, params={"dnd": false}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const selectedColumns = get(
     state,
     `symbology.layers[${state.symbology.activeLayer}].${path}`,
     params.default || params?.options?.[0]?.value
   );
-
+  const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
   const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
 
@@ -790,50 +861,70 @@ export function ColumnSelectControl({path, params={}}) {
       : attributeNames
   ).filter((d) => !["wkb_geometry"].includes(d));
 
+  React.useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      viewId,
+      "databyIndex",
+      {"from":0, "to": 2},
+      attributeNames
+    ])
+  }, [falcor, pgEnv, viewId, attributeNames]);
+
+  const sampleData = useMemo(() => {
+    return Object.values(get(falcorCache, [
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      viewId,
+      "databyIndex",
+    ], [])).map(v => get(falcorCache,[...v.value],''));
+  },[pgEnv, falcorCache]);
+
   return (
-    <div className='flex ml-3 flex-wrap'>
-      <div className='flex w-full flex-wrap'>
-        <div className='w-full'>Included columns:</div>
-        <div className='flex w-full flex-col'>
-          {
-            selectedColumns.map((selectedCol, i) => {
-              return (
-                <div 
-                  className='flex ml-2 px-4 justify-between w-full items-center'
-                  key={i}
-                >
-                  {selectedCol}
-                  <span 
-                    className='fa fa-x cursor-pointer'                   
-                    onClick={() => setState(draft => {
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, selectedColumns.filter(col => col !== selectedCol));
-                    })}
-                  />
-                </div>
-              )
-            })
-          }
-        </div>
-      </div>
-      <div className='flex w-full flex-wrap'>
+    <div className='flex w-full flex-wrap'>
+      <ExistingColumnList
+        selectedColumns={selectedColumns}
+        sampleData={sampleData}
+        state={state}
+        setState={setState}
+        path={path}
+        dnd={params.dnd}
+      />
+
+      <label className='flex w-full'>
         <div className='flex w-full items-center'>
-          <div className='w-full'>Add column:</div>
+          Add:
           <select
-            className='w-full p-2 bg-transparent border rounded border-blue-100'
+            className='w-full p-2 bg-transparent'
             value={''}
-            onChange={(e) => setState(draft => {
-              if(e.target.value !== ""){
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, selectedColumns ? [...selectedColumns ,e.target.value] : [e.target.value])
-              }
-            })}
+            onChange={(e) =>
+              setState((draft) => {
+                if (e.target.value !== "") {
+                  set(
+                    draft,
+                    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                    selectedColumns
+                      ? [...selectedColumns, e.target.value]
+                      : [e.target.value]
+                  );
+                }
+              })
+            }
           >
             <option key={-1} value={""}></option>
-            {(hoverColumnNames || []).map((opt,i) => <option key={i} value={opt}>{opt}</option>)}
+            {(hoverColumnNames || []).map((opt, i) => (
+              <option key={i} value={opt}>
+                {opt}
+              </option>
+            ))}
           </select>
         </div>
-      </div>
+      </label>
     </div>
-  )
+  );
 }
 
 
