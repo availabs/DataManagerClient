@@ -1,29 +1,49 @@
-import React, { useContext, useMemo }from 'react'
-import {SymbologyContext} from '../../'
-import { SelectControl, ColumnSelectControl } from './Controls'
+import React, { useContext, useMemo } from "react";
+import { SymbologyContext } from "../../";
+import { ColumnSelectControl, SelectControl } from "./Controls";
+import { StyledControl } from "./ControlWrappers";
 
-function PopoverEditor (props) {
+function PopoverEditor(props) {
   const { state, setState } = useContext(SymbologyContext);
-  const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
+  const activeLayer = useMemo(
+    () => state.symbology?.layers?.[state.symbology.activeLayer] || null,
+    [state]
+  );
 
-  return activeLayer && (
-    <div>
-      <div className='p-4'>
-        <div className='font-bold tracking-wider text-sm text-slate-700'>Popover</div>
-        <SelectControl 
-          path={`['hover']`} 
-          params={{options: [{value: '', name:'None'}, {value: 'hover', name:'Hover'}]}} 
-        />
-        <div className='font-bold tracking-wider text-sm text-slate-700'>Attributes:</div>
-        {activeLayer.hover && 
-          <ColumnSelectControl 
-            path={`['hover-columns']`} 
-            params={{dnd:true}} 
+  return (
+    activeLayer && (
+      <div className='pb-4'>
+        <div className='flex mx-4 mt-1'>
+          <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>
+            Popover:
+          </div>
+          <div className='flex-1 flex items-center'>
+            <StyledControl>
+              <SelectControl
+                path={`['hover']`}
+                params={{
+                  options: [
+                    { value: '', name: 'None' },
+                    { value: 'hover', name: 'Hover' },
+                  ],
+                }}
+              />
+            </StyledControl>
+          </div>
+        </div>
+
+        <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+          Attributes:
+        </div>
+        {activeLayer.hover && (
+          <ColumnSelectControl
+            path={`['hover-columns']`}
+            params={{ dnd: true }}
           />
-        }
+        )}
       </div>
-    </div>
-  )
-} 
+    )
+  );
+}
 
-export default PopoverEditor
+export default PopoverEditor;

@@ -9,6 +9,7 @@ import { DndList } from '~/modules/avl-components/src'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
+import { StyledControl } from './ControlWrappers'
 import get from 'lodash/get'
 import set from 'lodash/set'
 function onlyUnique(value, index, array) {
@@ -788,12 +789,12 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
         return (
           <div
             key={i}
-            className="group/title w-full text-sm grid grid-cols-9  "
+            className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
           >
-            <div className="truncate border-t border-r border-slate-200 p-1 col-span-4">
-              {selectedCol}{" "}
+            <div className="truncate border-t border-r border-slate-200 col-span-4 px-4 py-1">
+              {selectedCol}
             </div>
-            <div className="truncate border-t border-slate-200 p-1 col-span-4 text-gray-300 cursor-default">
+            <div className="truncate border-t border-slate-200 col-span-4 text-gray-300 px-4 py-1">
               {sampleData
                 .map((row) => row[selectedCol])
                 .filter(onlyUnique)
@@ -811,8 +812,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
                 })
               }
             >
-              <div
-                style={{ fontFamily: "FontAwesome" }}
+              <i
                 className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
               />
             </div>
@@ -886,43 +886,48 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   return (
     <div className='flex w-full flex-wrap'>
       <ExistingColumnList
-        selectedColumns={selectedColumns}
+        selectedColumns={selectedColumns && selectedColumns.length ? selectedColumns : attributeNames}
         sampleData={sampleData}
         state={state}
         setState={setState}
         path={path}
         dnd={params.dnd}
       />
-
-      <label className='flex w-full'>
-        <div className='flex w-full items-center'>
-          Add:
-          <select
-            className='w-full p-2 bg-transparent'
-            value={''}
-            onChange={(e) =>
-              setState((draft) => {
-                if (e.target.value !== "") {
-                  set(
-                    draft,
-                    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                    selectedColumns
-                      ? [...selectedColumns, e.target.value]
-                      : [e.target.value]
-                  );
-                }
-              })
-            }
-          >
-            <option key={-1} value={""}></option>
-            {(hoverColumnNames || []).map((opt, i) => (
-              <option key={i} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
+      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+          Add Column:
         </div>
-      </label>
+        <div className="flex-1 flex items-center mx-4">
+          <StyledControl>
+          <label className='flex w-full'>
+              <div className='flex w-full items-center'>
+                <select
+                  className='w-full py-2 bg-transparent'
+                  value={''}
+                  onChange={(e) =>
+                    setState((draft) => {
+                      if (e.target.value !== "") {
+                        set(
+                          draft,
+                          `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                          selectedColumns
+                            ? [...selectedColumns, e.target.value]
+                            : [e.target.value]
+                        );
+                      }
+                    })
+                  }
+                >
+                  <option key={-1} value={""}></option>
+                  {(hoverColumnNames || []).map((opt, i) => (
+                    <option key={i} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+          </StyledControl>
+        </div>
     </div>
   );
 }
