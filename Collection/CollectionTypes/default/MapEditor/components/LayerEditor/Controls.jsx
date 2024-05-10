@@ -823,6 +823,48 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
   );
 };
 
+const AddColumnSelectControl = ({state, setState, selectedColumns, path, availableColumnNames}) => {
+  return (
+    <>
+      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+          Add Column
+      </div>
+      <div className="flex-1 flex items-center mx-4">
+        <StyledControl>
+        <label className='flex w-full'>
+            <div className='flex w-full items-center'>
+              <select
+                className='w-full py-2 bg-transparent'
+                value={''}
+                onChange={(e) =>
+                  setState((draft) => {
+                    if (e.target.value !== "") {
+                      set(
+                        draft,
+                        `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                        selectedColumns
+                          ? [...selectedColumns, e.target.value]
+                          : [e.target.value]
+                      );
+                    }
+                  })
+                }
+              >
+                <option key={-1} value={""}></option>
+                {(availableColumnNames || []).map((opt, i) => (
+                  <option key={i} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </label>
+        </StyledControl>
+      </div>
+    </>
+  )
+}
+
 export function ColumnSelectControl({path, params={"dnd": false}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const selectedColumns = get(
@@ -855,7 +897,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   }, [sourceId, falcorCache]); 
   
   const attributeNames = useMemo(() => attributes.filter(d => !['wkb_geometry'].includes(d)).map((attr) => attr.name), [attributes]);
-  const hoverColumnNames = (
+  const availableColumnNames = (
     selectedColumns
       ? getDiffColumns(attributeNames, selectedColumns)
       : attributeNames
@@ -886,48 +928,24 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   return (
     <div className='flex w-full flex-wrap'>
       <ExistingColumnList
-        selectedColumns={selectedColumns && selectedColumns.length ? selectedColumns : attributeNames}
+        selectedColumns={
+          selectedColumns && selectedColumns.length
+            ? selectedColumns
+            : attributeNames
+        }
         sampleData={sampleData}
         state={state}
         setState={setState}
         path={path}
         dnd={params.dnd}
       />
-      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-          Add Column:
-        </div>
-        <div className="flex-1 flex items-center mx-4">
-          <StyledControl>
-          <label className='flex w-full'>
-              <div className='flex w-full items-center'>
-                <select
-                  className='w-full py-2 bg-transparent'
-                  value={''}
-                  onChange={(e) =>
-                    setState((draft) => {
-                      if (e.target.value !== "") {
-                        set(
-                          draft,
-                          `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                          selectedColumns
-                            ? [...selectedColumns, e.target.value]
-                            : [e.target.value]
-                        );
-                      }
-                    })
-                  }
-                >
-                  <option key={-1} value={""}></option>
-                  {(hoverColumnNames || []).map((opt, i) => (
-                    <option key={i} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
-          </StyledControl>
-        </div>
+      <AddColumnSelectControl
+        state={state}
+        setState={setState}
+        selectedColumns={selectedColumns}
+        path={path}
+        availableColumnNames={availableColumnNames}
+      />
     </div>
   );
 }

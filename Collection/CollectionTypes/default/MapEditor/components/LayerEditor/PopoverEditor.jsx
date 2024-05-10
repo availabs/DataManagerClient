@@ -15,7 +15,7 @@ function PopoverEditor(props) {
       <div className='pb-4'>
         <div className='flex mx-4 mt-1'>
           <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>
-            Popover:
+            Popover
           </div>
           <div className='flex-1 flex items-center'>
             <StyledControl>
@@ -33,7 +33,7 @@ function PopoverEditor(props) {
         </div>
 
         <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-          Attributes:
+          Attributes
         </div>
         {activeLayer.hover && (
           <ColumnSelectControl
