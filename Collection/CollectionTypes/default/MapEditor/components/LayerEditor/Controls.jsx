@@ -886,9 +886,9 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
     [attributes]
   );
   const selectedColumnNames = useMemo(() => {
-    return typeof selectedColumns[0] === "string"
+    return selectedColumns ? (typeof selectedColumns[0] === "string"
       ? selectedColumns
-      : selectedColumns.map((columnObj) => columnObj.column_name);
+      : selectedColumns.map((columnObj) => columnObj.column_name)) : undefined;
   }, [selectedColumns]);
   const availableColumnNames = useMemo(() => {
     return (
