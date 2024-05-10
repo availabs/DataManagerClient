@@ -755,24 +755,13 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path, dnd}) => {
+const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, removeAttr, renameAttr}) => {
   const WrapperComponent = useMemo(() => {
     return dnd
       ? ({ children }) => (
           <DndList
             onDrop={(start, end) => {
-              const sections = [...selectedColumns];
-
-              const [item] = sections.splice(start, 1);
-              sections.splice(end, 0, item);
-
-              setState((draft) => {
-                set(
-                  draft,
-                  `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                  sections
-                );
-              });
+              reorderAttrs(start, end);
             }}
           >
             {children}
@@ -781,7 +770,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
       : ({ children }) => (
           <div className="flex w-full flex-wrap">{children}</div>
         );
-  }, [dnd, state, path, selectedColumns, dnd ]);
+  }, [dnd, selectedColumns, dnd, reorderAttrs ]);
   
   return (
     <WrapperComponent>
@@ -791,26 +780,27 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
             key={i}
             className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
           >
-            <div className="truncate border-t border-r border-slate-200 col-span-4 px-4 py-1">
-              {selectedCol}
+            <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
+              <input 
+                  type="text"
+                  className='w-full px-2  border font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+                  value={selectedCol.display_name}
+                  onChange={(e) => {
+                    renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
+                  }}
+                />
             </div>
             <div className="truncate border-t border-slate-200 col-span-4 text-gray-300 px-4 py-1">
               {sampleData
-                .map((row) => row[selectedCol])
+                .map((row) => row[selectedCol.column_name])
                 .filter(onlyUnique)
                 .join(", ")}
             </div>
             <div
               className="border-t border-slate-200 cursor-pointer text-white group-hover/title:text-black group/icon col-span-1 p-1"
-              onClick={() =>
-                setState((draft) => {
-                  set(
-                    draft,
-                    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                    selectedColumns.filter((col) => col !== selectedCol)
-                  );
-                })
-              }
+              onClick={() => {
+                removeAttr(selectedCol.column_name)
+              }}
             >
               <i
                 className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
@@ -823,7 +813,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, state, setState, path,
   );
 };
 
-const AddColumnSelectControl = ({state, setState, selectedColumns, path, availableColumnNames}) => {
+const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
     <>
       <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
@@ -837,17 +827,7 @@ const AddColumnSelectControl = ({state, setState, selectedColumns, path, availab
                 className='w-full py-2 bg-transparent'
                 value={''}
                 onChange={(e) =>
-                  setState((draft) => {
-                    if (e.target.value !== "") {
-                      set(
-                        draft,
-                        `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                        selectedColumns
-                          ? [...selectedColumns, e.target.value]
-                          : [e.target.value]
-                      );
-                    }
-                  })
+                  setState(e.target.value)
                 }
               >
                 <option key={-1} value={""}></option>
@@ -867,11 +847,13 @@ const AddColumnSelectControl = ({state, setState, selectedColumns, path, availab
 
 export function ColumnSelectControl({path, params={"dnd": false}}) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const selectedColumns = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-    params.default || params?.options?.[0]?.value
-  );
+  const selectedColumns = useMemo(() => {
+    return get(
+      state,
+      `symbology.layers[${state.symbology.activeLayer}].${path}`,
+      params.default || params?.options?.[0]?.value
+    )
+  }, [state, path, params]);
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
   const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
@@ -896,12 +878,25 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
     return columns;
   }, [sourceId, falcorCache]); 
   
-  const attributeNames = useMemo(() => attributes.filter(d => !['wkb_geometry'].includes(d)).map((attr) => attr.name), [attributes]);
-  const availableColumnNames = (
-    selectedColumns
-      ? getDiffColumns(attributeNames, selectedColumns)
-      : attributeNames
-  ).filter((d) => !["wkb_geometry"].includes(d));
+  const attributeNames = useMemo(
+    () =>
+      attributes
+        .filter((d) => !["wkb_geometry"].includes(d))
+        .map((attr) => attr.name),
+    [attributes]
+  );
+  const selectedColumnNames = useMemo(() => {
+    return typeof selectedColumns[0] === "string"
+      ? selectedColumns
+      : selectedColumns.map((columnObj) => columnObj.column_name);
+  }, [selectedColumns]);
+  const availableColumnNames = useMemo(() => {
+    return (
+      selectedColumnNames
+        ? getDiffColumns(attributeNames, selectedColumnNames)
+        : attributeNames
+    ).filter((d) => !["wkb_geometry"].includes(d));
+  }, [selectedColumnNames, attributeNames]); 
 
   React.useEffect(() => {
     falcor.get([
@@ -931,19 +926,62 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
         selectedColumns={
           selectedColumns && selectedColumns.length
             ? selectedColumns
-            : attributeNames
+            : attributeNames.map((attr) => ({column_name: attr, display_name: attr}))
         }
         sampleData={sampleData}
-        state={state}
-        setState={setState}
-        path={path}
+        reorderAttrs={(start, end) => {
+          const sections = [...selectedColumns];
+          const [item] = sections.splice(start, 1);
+          sections.splice(end, 0, item);
+          
+          setState((draft) => {
+            set(
+              draft,
+              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              sections
+            );
+          });
+        }}
+        renameAttr={({columnName, displayName}) => {
+          const newColumns = [...selectedColumns];
+          const columnIndex = newColumns.findIndex(colObj => colObj.column_name === columnName);
+          const [item] = newColumns.splice(columnIndex, 1);
+          const newItem = {...item};
+          newItem.display_name = displayName;
+          newColumns.splice(columnIndex, 0, newItem);
+          setState((draft) => {
+            set(
+              draft,
+              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              newColumns
+            );
+          })
+        }}
+        removeAttr={(columnName) => {
+          setState((draft) => {
+            set(
+              draft,
+              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              selectedColumns.filter((colObj) => colObj.column_name !== columnName)
+            );
+          })
+        }}
         dnd={params.dnd}
       />
       <AddColumnSelectControl
-        state={state}
-        setState={setState}
-        selectedColumns={selectedColumns}
-        path={path}
+        setState={(newColumn) => {
+          setState((draft) => {
+            if (newColumn !== "") {
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                selectedColumns
+                  ? [...selectedColumns, {column_name: newColumn, display_name: newColumn}]
+                  : [{column_name: newColumn, display_name: newColumn}]
+              );
+            }
+          });
+        }}
         availableColumnNames={availableColumnNames}
       />
     </div>
