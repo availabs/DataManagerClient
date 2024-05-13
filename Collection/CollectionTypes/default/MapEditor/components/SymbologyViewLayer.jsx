@@ -260,7 +260,7 @@ const HoverComp = ({ data, layer }) => {
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => {
-          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k);
+          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
           return (
           <div className="flex border-b pt-1" key={i}>
             <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
