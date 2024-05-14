@@ -15,7 +15,10 @@ import set from 'lodash/set'
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
-
+const FILTER_OPERATORS = {
+  text: ["=", "!="],
+  number: ["=", "<", ">", "between"],
+};
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
 
@@ -223,8 +226,9 @@ function SimpleControl({path}) {
 }
 
 export function SelectControl({path, params={}}) {
+  console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
-  // console.log('select control', params)
+  console.log('select control', params)
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -812,6 +816,198 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
     </WrapperComponent>
   );
 };
+
+export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, setActiveColumn}) => {
+  return (
+    <div className="flex w-full flex-wrap">
+      {Object.keys(existingFilter)?.map((selectedCol, i) => {
+        const filter = existingFilter[selectedCol];
+        const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
+        const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
+        return (
+          <div
+            key={i}
+            className={`${filterRowClass} m-1 border border-slate-200 rounded group/title w-full px-1 text-sm grid grid-cols-9 cursor-pointer hover:border-pink-500 hover:border`}
+            onClick={() => {setActiveColumn(selectedCol)}}
+          >
+            <div className="truncate col-span-8 py-1">
+              {selectedCol} <span className="font-thin">{filter.operator}</span> {filter.value}
+            </div>
+
+            <div
+              className={`cursor-pointer ${filterIconClass} group-hover/title:text-black group/icon col-span-1 p-1`}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeFilter(selectedCol)
+              }}
+            >
+              <i
+                className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export function FilterBuilder({ path, params = {} }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const {activeColumn, setActiveColumn} = params;
+
+  const existingFilter = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+    params.default || params?.options?.[0]?.value || {}
+  );
+  //RYAN TODO dynamically get filter Type
+  const FILTER_TYPE = "text";
+  console.log(FILTER_OPERATORS[FILTER_TYPE]);
+  return (
+    <>
+      {!activeColumn && (
+        <AddFilterColumn
+          path={path}
+          params={params}
+          setActiveColumn={setActiveColumn}
+        />
+      )}
+
+      {activeColumn && (
+        <>
+          <div className="flex my-1 items-center">
+            <div className="p-1">Column:</div>
+            <div className="p-2">{activeColumn}</div>
+          </div>
+          <div className="flex my-1 items-center">
+            <div className="p-1">Operator:</div>
+            <StyledControl>
+              <SelectControl
+                path={`${path}.${activeColumn}.operator`}
+                params={{
+                  options: FILTER_OPERATORS[FILTER_TYPE].map((operator) => ({
+                    value: operator,
+                    name: operator,
+                  })),
+                }}
+              />
+            </StyledControl>
+          </div>
+          <div className="flex my-1 items-center">
+            <div className="p-1">Value:</div>
+            <StyledControl>
+              <SimpleControl path={`${path}.${activeColumn}.value`} />
+            </StyledControl>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+function AddFilterColumn({ path, params = {}, setActiveColumn }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const existingFilter = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+    params.default || params?.options?.[0]?.value || {}
+  );
+
+  const existingFilterColumns = Object.keys(existingFilter);
+
+  const sourceId = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].source_id`
+  );
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama",
+        pgEnv,
+        "sources",
+        "byId",
+        sourceId,
+        "attributes",
+        "metadata",
+      ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(
+      falcorCache,
+      [
+        "dama",
+        pgEnv,
+        "sources",
+        "byId",
+        sourceId,
+        "attributes",
+        "metadata",
+        "value",
+        "columns",
+      ],
+      []
+    );
+    if (columns.length === 0) {
+      columns = get(
+        falcorCache,
+        [
+          "dama",
+          pgEnv,
+          "sources",
+          "byId",
+          sourceId,
+          "attributes",
+          "metadata",
+          "value",
+        ],
+        []
+      );
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
+
+  const attributeNames = useMemo(
+    () =>
+      attributes
+        .filter((d) => !["wkb_geometry"].includes(d))
+        .map((attr) => attr.name),
+    [attributes]
+  );
+
+  const availableFilterColumns = getDiffColumns(
+    attributeNames,
+    existingFilterColumns
+  );
+  return (
+    <AddColumnSelectControl
+      setState={(newColumn) => {
+        setState((draft) => {
+          if (newColumn !== "") {
+            set(
+              draft,
+              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              {
+                ...existingFilter,
+                [newColumn]: {
+                  operator: "=",
+                  value: "foo",
+                  columnName: newColumn,
+                },
+              }
+            );
+          }
+        });
+        setActiveColumn(newColumn);
+      }}
+      availableColumnNames={availableFilterColumns}
+    />
+  );
+}
 
 const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
