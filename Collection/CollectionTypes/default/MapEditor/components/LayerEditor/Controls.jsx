@@ -16,8 +16,8 @@ function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
 const FILTER_OPERATORS = {
-  text: ["=", "!="],
-  number: ["=", "<", ">", "between"],
+  string: ["=", "!="],
+  integer: ["=", "<", ">", "between"],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -856,14 +856,40 @@ export function FilterBuilder({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
   const {activeColumn, setActiveColumn} = params;
 
-  const existingFilter = get(
+  const sourceId = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-    params.default || params?.options?.[0]?.value || {}
+    `symbology.layers[${state.symbology.activeLayer}].source_id`
   );
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
+
+  const activeAttr = useMemo(() => {
+    return attributes.find((attr) => attr.name === activeColumn);
+  }, [activeColumn]);
+
   //RYAN TODO dynamically get filter Type
-  const FILTER_TYPE = "text";
-  console.log(FILTER_OPERATORS[FILTER_TYPE]);
+  const filterOperators = FILTER_OPERATORS[activeAttr?.type] || [];
+
   return (
     <>
       {!activeColumn && (
@@ -886,7 +912,7 @@ export function FilterBuilder({ path, params = {} }) {
               <SelectControl
                 path={`${path}.${activeColumn}.operator`}
                 params={{
-                  options: FILTER_OPERATORS[FILTER_TYPE].map((operator) => ({
+                  options: filterOperators.map((operator) => ({
                     value: operator,
                     name: operator,
                   })),
@@ -925,48 +951,20 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   useEffect(() => {
     if (sourceId) {
       falcor.get([
-        "dama",
-        pgEnv,
-        "sources",
-        "byId",
-        sourceId,
-        "attributes",
-        "metadata",
-      ]);
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
     }
   }, [sourceId]);
 
   const attributes = useMemo(() => {
-    let columns = get(
-      falcorCache,
-      [
-        "dama",
-        pgEnv,
-        "sources",
-        "byId",
-        sourceId,
-        "attributes",
-        "metadata",
-        "value",
-        "columns",
-      ],
-      []
-    );
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
     if (columns.length === 0) {
-      columns = get(
-        falcorCache,
-        [
-          "dama",
-          pgEnv,
-          "sources",
-          "byId",
-          sourceId,
-          "attributes",
-          "metadata",
-          "value",
-        ],
-        []
-      );
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
     }
     return columns;
   }, [sourceId, falcorCache]);
@@ -990,14 +988,11 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
           if (newColumn !== "") {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
               {
-                ...existingFilter,
-                [newColumn]: {
-                  operator: "=",
-                  value: "foo",
-                  columnName: newColumn,
-                },
+                operator: "=",
+                value: "foo",
+                columnName: newColumn,
               }
             );
           }
@@ -1172,13 +1167,13 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
                 selectedColumns
-                  ? [...selectedColumns, {column_name: newColumn, display_name: newColumn}]
-                  : [{column_name: newColumn, display_name: newColumn}]
+                  ? [...selectedColumns, { column_name: newColumn, display_name: newColumn }]
+                  : [{ column_name: newColumn, display_name: newColumn }]
               );
             }
           });
         }}
-        availableColumnNames={availableColumnNames}
+        availableColumnNames={ availableColumnNames }
       />
     </div>
   );

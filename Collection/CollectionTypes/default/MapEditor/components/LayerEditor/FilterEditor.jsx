@@ -54,8 +54,8 @@ function FilterEditor(props) {
       {(activeColumn || displayBuilder) && (
         <FilterBuilder
           path={`['filter']`}
-          params={{ activeColumn }}
-          setActiveColumn={setActiveColumn}
+          params={{ activeColumn, setActiveColumn }}
+          
         />
       )}
     </div>
