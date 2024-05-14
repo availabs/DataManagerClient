@@ -226,9 +226,9 @@ function SimpleControl({path}) {
 }
 
 export function SelectControl({path, params={}}) {
-  console.log("select control path::", path)
+  //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
-  console.log('select control', params)
+  //console.log('select control', params)
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
