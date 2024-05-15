@@ -120,6 +120,7 @@ const ViewLayerRender = ({
         })
       }
     })
+    
 
 
 
@@ -226,7 +227,7 @@ const HoverComp = ({ data, layer }) => {
   }, [source_id, falcorCache, hoverColumns]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
-    attributes : attributes.map(d => d.name)).filter(d => !['wkb_geometry'].includes(d))
+    attributes : attributes.map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
 
   React.useEffect(() => {
     falcor.get([
@@ -250,6 +251,7 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, view_id, pgEnv]);
 
 
+
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
@@ -258,14 +260,16 @@ const HoverComp = ({ data, layer }) => {
       {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
-        .map((k, i) => (
+        .map((k, i) => {
+          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
+          return (
           <div className="flex border-b pt-1" key={i}>
-            <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{k}</div>
+            <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
             <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
               {attrInfo?.[k]}
             </div>
           </div>
-        ))}
+        )})}
     </div>
   );
 };

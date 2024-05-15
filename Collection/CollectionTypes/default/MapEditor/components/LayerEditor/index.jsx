@@ -7,6 +7,7 @@ import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import StyleEditor from './StyleEditor'
 import PopoverEditor from './PopoverEditor'
 import LegendEditor from './LegendEditor'
+import FilterEditor from './FilterEditor'
 
 
 function LayerManager (props) {
@@ -69,7 +70,7 @@ function LayerManager (props) {
             <Tab.Panel><StyleEditor /></Tab.Panel>
             <Tab.Panel><LegendEditor /></Tab.Panel>
             <Tab.Panel><PopoverEditor /></Tab.Panel>
-            <Tab.Panel>Filter</Tab.Panel>
+            <Tab.Panel><FilterEditor /></Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
         </div>
