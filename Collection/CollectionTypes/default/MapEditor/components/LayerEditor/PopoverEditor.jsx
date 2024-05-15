@@ -5,8 +5,7 @@ import { StyledControl } from "./ControlWrappers";
 
 function PopoverEditor(props) {
   const { state, setState } = useContext(SymbologyContext);
-  const activeLayer = useMemo(
-    () => state.symbology?.layers?.[state.symbology.activeLayer] || null,
+  const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null,
     [state]
   );
 
@@ -38,7 +37,7 @@ function PopoverEditor(props) {
         {activeLayer.hover && (
           <ColumnSelectControl
             path={`['hover-columns']`}
-            params={{ dnd: true }}
+            params={{ dnd: false }}
           />
         )}
       </div>

@@ -820,7 +820,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
 export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, setActiveColumn}) => {
   return (
     <div className="flex w-full flex-wrap">
-      {Object.keys(existingFilter)?.map((selectedCol, i) => {
+      {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
@@ -1042,7 +1042,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
     return get(
       state,
       `symbology.layers[${state.symbology.activeLayer}].${path}`,
-      params.default || params?.options?.[0]?.value
+      []
     )
   }, [state, path, params]);
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
@@ -1056,6 +1056,8 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
       ]);
     }
   }, [sourceId]);
+
+  
 
   const attributes = useMemo(() => {
     let columns = get(falcorCache, [
@@ -1076,11 +1078,27 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
         .map((attr) => attr.name),
     [attributes]
   );
+
+  useEffect(() => {
+    if(selectedColumns.length === 0) {
+      setState((draft) => {
+        set(
+          draft,
+          `symbology.layers[${state.symbology.activeLayer}].${path}`,
+           attributeNames.map((attr) => ({column_name: attr, display_name: attr}))
+        );
+      })
+    }
+  }, [attributeNames]);
+
+
+
   const selectedColumnNames = useMemo(() => {
     return selectedColumns ? (typeof selectedColumns[0] === "string"
       ? selectedColumns
       : selectedColumns.map((columnObj) => columnObj.column_name)) : undefined;
   }, [selectedColumns]);
+
   const availableColumnNames = useMemo(() => {
     return (
       selectedColumnNames
@@ -1114,11 +1132,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   return (
     <div className='flex w-full flex-wrap'>
       <ExistingColumnList
-        selectedColumns={
-          selectedColumns && selectedColumns.length
-            ? selectedColumns
-            : attributeNames.map((attr) => ({column_name: attr, display_name: attr}))
-        }
+        selectedColumns={selectedColumns}
         sampleData={sampleData}
         reorderAttrs={(start, end) => {
           const sections = [...selectedColumns];
@@ -1149,6 +1163,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
           })
         }}
         removeAttr={(columnName) => {
+          console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
           setState((draft) => {
             set(
               draft,
