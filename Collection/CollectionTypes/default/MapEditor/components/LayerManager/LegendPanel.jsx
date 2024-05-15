@@ -93,14 +93,15 @@ function CategoryLegend({layer}) {
   
   
   if(!legenddata || legenddata.length === 0 ) {
-    legenddata = (paintValue || []).filter((d,i) => i > 2 )
-      .map((d,i) => {
-        if(i%2 === 0) {
-          return {color: d, label: paintValue[i+2]}
-        }
-        return null
-      })
-      .filter(d => d)
+    legenddata = []
+    // (paintValue || []).filter((d,i) => i > 2 )
+    //   .map((d,i) => {
+    //     if(i%2 === 0) {
+    //       return {color: d, label: paintValue[i+2]}
+    //     }
+    //     return null
+    //   })
+    //   .filter(d => d)
   }
 
   
@@ -120,12 +121,12 @@ function CategoryLegend({layer}) {
 }
 
 function StepLegend({layer}) {
-  // console.log('StepLegend', layer)
+  console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
   let { choroplethdata, legenddata } = useMemo(() => {
     return {
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []),
-      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []) 
+      choroplethdata: get(layer, `['choropleth-data']`, []),
+      legenddata : get(layer, `['legend-data']`, []) 
     }
   },[state])
 
