@@ -138,32 +138,33 @@ const ViewLayerRender = ({
     // -------------------------------
     // Apply filters
     // -------------------------------
-    //TODO -- handle multiple column filters
-    const {filter: layerFilter} = layerProps;
+    const { filter: layerFilter } = layerProps;
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
         if(layerFilter){
-          
-          Object.keys(layerFilter).forEach(filterColumn => {
-         
-              //console.log('update FILTERS',l.id, filterColumn, prevLayerProps?.filter?.[filterColumn], filter?.[filterColumn])
-              const mapLayerFilter = [
+          const mapLayerFilter = Object.keys(layerFilter).map(
+            (filterColumn) => {
+              //TODO
+              //"MATCH" vs "=" (text vs integer)
+              //"!="
+              //"<" ">" //['<', ['get', filterColumn], 2]
+              //"between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
+              const columnFilter = [
                 "match",
                 ["to-string", ["get", filterColumn]],
                 layerFilter[filterColumn].value,
                 true,
                 false,
               ];
-              maplibreMap.setFilter(l.id, mapLayerFilter);
-          })
+
+              return columnFilter;
+            }
+          );
+          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
         }
-      }})
-
-
-
+      }
+    });
   }, [layerProps])
-
-  // return null;
 }
 
 class ViewLayer extends AvlLayer { 
