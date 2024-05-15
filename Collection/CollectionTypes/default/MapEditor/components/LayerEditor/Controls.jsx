@@ -1163,7 +1163,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
           })
         }}
         removeAttr={(columnName) => {
-          console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
+          //console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
           setState((draft) => {
             set(
               draft,

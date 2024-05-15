@@ -46,16 +46,29 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column'])) {
+    //TODO question -- is tile URL guaranteed to already have `?col=`
+    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
       //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
-       
         let newSource = cloneDeep(layerProps.sources?.[0])
-        
+
+        let tileBase = newSource.source.tiles?.[0];
         //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
         
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
+        
+        if(layerProps.filter){
+          Object.keys(layerProps.filter).forEach(filterCol => {
+            tileBase += `,${filterCol}`
+          })
+        }
+
+        if(tileBase){
+          newSource.source.tiles = [tileBase];
+        }
+
+
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
             maplibreMap.removeLayer(l?.id) 
@@ -122,12 +135,36 @@ const ViewLayerRender = ({
     })
     
 
+    // -------------------------------
+    // Apply filters
+    // -------------------------------
+    const { filter: layerFilter } = layerProps;
+    layerProps?.layers?.forEach((l,i) => {
+      if(maplibreMap.getLayer(l.id)){
+        if(layerFilter){
+          const mapLayerFilter = Object.keys(layerFilter).map(
+            (filterColumn) => {
+              //TODO
+              //"MATCH" vs "=" (text vs integer)
+              //"!="
+              //"<" ">" //['<', ['get', filterColumn], 2]
+              //"between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
+              const columnFilter = [
+                "match",
+                ["to-string", ["get", filterColumn]],
+                layerFilter[filterColumn].value,
+                true,
+                false,
+              ];
 
-
-
+              return columnFilter;
+            }
+          );
+          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
+        }
+      }
+    });
   }, [layerProps])
-
-  // return null;
 }
 
 class ViewLayer extends AvlLayer { 
@@ -250,7 +287,7 @@ const HoverComp = ({ data, layer }) => {
     );
   }, [id, falcorCache, view_id, pgEnv]);
 
-
+  
 
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
