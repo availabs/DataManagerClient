@@ -787,14 +787,14 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
             <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
               <input 
                   type="text"
-                  className='w-full px-2  border font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+                  className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
                   value={selectedCol.display_name}
                   onChange={(e) => {
                     renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
                   }}
                 />
             </div>
-            <div className="truncate border-t border-slate-200 col-span-4 text-gray-300 px-4 py-1">
+            <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
               {sampleData
                 .map((row) => row[selectedCol.column_name])
                 .filter(onlyUnique)

@@ -58,7 +58,7 @@ function LegendEditor() {
 
   
   return (
-    <div className='w-full max-h-[250px] overflow-auto'>
+    <div className='w-full max-h-[550px] pb-4 overflow-auto'>
         {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
