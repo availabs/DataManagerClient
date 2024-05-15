@@ -77,7 +77,6 @@ const ViewLayerRender = ({
         // consol
         maplibreMap.removeSource(newSource.id)
         if(!maplibreMap.getSource(newSource.id)){
-          console.log("newSource",newSource)
           maplibreMap.addSource(newSource.id, newSource.source)
         } else {
           console.log('cant add',maplibreMap.getSource(newSource.id))
