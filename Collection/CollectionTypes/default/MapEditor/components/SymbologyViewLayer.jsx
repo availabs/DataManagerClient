@@ -46,16 +46,29 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column'])) {
+    //TODO question -- is tile URL guaranteed to already have `?col=`
+    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
       //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
-       
         let newSource = cloneDeep(layerProps.sources?.[0])
-        
+
+        let tileBase = newSource.source.tiles?.[0];
         //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
         
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
+        
+        if(layerProps.filter){
+          Object.keys(layerProps.filter).forEach(filterCol => {
+            tileBase += `,${filterCol}`
+          })
+        }
+
+        if(tileBase){
+          newSource.source.tiles = [tileBase];
+        }
+
+
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
             maplibreMap.removeLayer(l?.id) 
@@ -64,6 +77,7 @@ const ViewLayerRender = ({
         // consol
         maplibreMap.removeSource(newSource.id)
         if(!maplibreMap.getSource(newSource.id)){
+          console.log("newSource",newSource)
           maplibreMap.addSource(newSource.id, newSource.source)
         } else {
           console.log('cant add',maplibreMap.getSource(newSource.id))
@@ -122,6 +136,29 @@ const ViewLayerRender = ({
     })
     
 
+    // -------------------------------
+    // Apply filters
+    // -------------------------------
+    //TODO -- handle multiple column filters
+    const {filter: layerFilter} = layerProps;
+    layerProps?.layers?.forEach((l,i) => {
+      if(maplibreMap.getLayer(l.id)){
+        if(layerFilter){
+          
+          Object.keys(layerFilter).forEach(filterColumn => {
+         
+              //console.log('update FILTERS',l.id, filterColumn, prevLayerProps?.filter?.[filterColumn], filter?.[filterColumn])
+              const mapLayerFilter = [
+                "match",
+                ["to-string", ["get", filterColumn]],
+                layerFilter[filterColumn].value,
+                true,
+                false,
+              ];
+              maplibreMap.setFilter(l.id, mapLayerFilter);
+          })
+        }
+      }})
 
 
 
@@ -250,7 +287,7 @@ const HoverComp = ({ data, layer }) => {
     );
   }, [id, falcorCache, view_id, pgEnv]);
 
-
+  
 
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">

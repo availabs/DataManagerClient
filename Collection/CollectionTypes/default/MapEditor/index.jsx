@@ -44,8 +44,6 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     }
   )
 
-  console.log('the state', state)
-
   useEffect(() => {
     // console.log('load', +activeSymbologyId, symbologyId, symbologies)
     if(!(symbologyId) && (+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
