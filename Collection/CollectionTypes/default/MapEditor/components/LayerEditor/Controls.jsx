@@ -552,7 +552,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const categories = (value || []).filter((d,i) => i > 2 )
+  const categories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
             .map((d,i) => {
               if(i%2 === 0) {
                 return {color: d, label: value[i+2]}

@@ -16,7 +16,7 @@ function LayerManager () {
   const tabs = ['Legend', 'Layers']
   return(
     <div className='p-4'>
-      <div className='bg-white/95 w-[280px] rounded-lg drop-shadow-lg pointer-events-auto '>
+      <div className='bg-white/95 w-[280px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] overflow-x-auto'>
         <SymbologyControl /> 
         {state.symbology_id && <Tab.Group>
           <div className='flex justify-between items-center border-b'>

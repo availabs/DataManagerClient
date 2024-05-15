@@ -17,7 +17,7 @@ function LayerManager (props) {
   const tabs = ['Style', 'Legend','Popup','Filter']
   return activeLayer && (
     <div className='p-4'>
-      <div className='bg-white/95 w-[312px] rounded-lg drop-shadow-lg pointer-events-auto'>
+      <div className='bg-white/95 w-[312px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_161px)] overflow-x-auto scrollbar-xs'>
         <div className='flex justify-between items-center border-b'>
           <div className='flex text-slate-700 p-2 '>
             <input 
