@@ -91,7 +91,10 @@ function SourceSelector (props) {
       "layer-type": 'simple',
       type: viewLayer.type,
       // mapbox sources and layers
-      sources: view?.metadata?.tiles?.sources || [],
+      sources: (view?.metadata?.tiles?.sources || []).map(s => {
+        s.id = `${s.id}_${layerId}`
+        return s
+      }),
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
       isVisible: true,
