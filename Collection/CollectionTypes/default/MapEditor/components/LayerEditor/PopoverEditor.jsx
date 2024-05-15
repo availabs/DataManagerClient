@@ -11,7 +11,7 @@ function PopoverEditor(props) {
 
   return (
     activeLayer && (
-      <div className='pb-4'>
+      <div className='pb-4  max-h-[calc(100vh_-_251px)] scrollbar-xs overflow-x-hidden overflow-y-auto'>
         <div className='flex mx-4 mt-1'>
           <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>
             Popover

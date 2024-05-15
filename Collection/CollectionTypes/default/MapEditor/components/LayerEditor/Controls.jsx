@@ -801,13 +801,13 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
                 .join(", ")}
             </div>
             <div
-              className="border-t border-slate-200 cursor-pointer text-white group-hover/title:text-black group/icon col-span-1 p-1"
+              className="border-t flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
               onClick={() => {
                 removeAttr(selectedCol.column_name)
               }}
             >
-              <i
-                className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
+              <Close
+                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
               />
             </div>
           </div>

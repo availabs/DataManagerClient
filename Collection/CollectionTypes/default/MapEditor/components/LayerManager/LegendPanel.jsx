@@ -106,7 +106,7 @@ function CategoryLegend({layer}) {
 
   
   return (
-    <div className='w-full max-h-[250px] overflow-auto'>
+    <div className='w-full max-h-[250px] overflow-x-auto'>
         {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
@@ -149,7 +149,7 @@ function StepLegend({layer}) {
   }
 
   return (
-    <div className='w-full max-h-[250px] overflow-auto'>
+    <div className='w-full max-h-[250px] overflow-x-auto'>
         {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
@@ -229,7 +229,7 @@ function LayerManager (props) {
   return (
     <>     
       {/* ------Layer Pane ----------- */}
-      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] overflow-auto'>
+      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] '>
         <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)
