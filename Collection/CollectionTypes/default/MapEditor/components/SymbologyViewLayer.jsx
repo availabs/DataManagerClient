@@ -144,12 +144,7 @@ const ViewLayerRender = ({
         if(layerFilter){
           const mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumn) => {
-              //TODO
-              //"MATCH" vs "=" (text vs integer)
-              //"!="
-              //"<" ">" //['<', ['get', filterColumn], 2]
-              //"between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
-
+              //TODO "between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
               const columnFilter = [
                 layerFilter[filterColumn].operator,
                 ["to-string", ["get", filterColumn]],
