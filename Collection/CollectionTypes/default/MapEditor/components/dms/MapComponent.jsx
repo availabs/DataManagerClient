@@ -303,6 +303,10 @@ export default {
 
 const defaultStyles = [
     {
+        name: 'satellite',
+        style: 'https://api.maptiler.com/maps/satellite/style.json?key=mU28JQ6HchrQdneiq6k9'
+    },
+    {
     name: "dataviz",
     style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
   }
