@@ -57,7 +57,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
 
   useEffect(() => {
     async function updateData() {
-      console.time('update symbology')
+      //console.time('update symbology')
       //console.log('updating symbology to:', state.symbology)
       let resp = await falcor.set({
         paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'symbology']],
@@ -65,7 +65,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           [+activeSymbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
         }}}}}
       })
-      console.timeEnd('update symbology')
+      //console.timeEnd('update symbology')
       
       //console.log('resp',resp)
     }
@@ -173,34 +173,31 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           mapOptions={{
             center: [-76, 43.3],
             zoom: 6,
+            maxPitch: 60,
             protocols: [PMTilesProtocol],
+            
             styles: [
               {
-                name: "new-style",
+                name: "Default",
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
-              {
-                name: "dataviz-light",
-                style: "https://api.maptiler.com/maps/93fb4718-3184-43c3-9348-a4449deaeb53/style.json?key=mU28JQ6HchrQdneiq6k9"
+              { name: "Satellite",
+                style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-              {
-                name: '3d_source',
-                style: terrain_3d_source
+              { name: "Streets",
+                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-              {
-                name: "dataviz",
-                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+             
+              { name: "Light",
+                style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
-              {
-                name: "streets",
-                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
+              { name: "Dark",
+                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
-              {
-                name: "toner",
-                style: "https://api.maptiler.com/maps/toner-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              
-              
+              // {
+              //   name: 'Sattelite 3d ',
+              //   style: terrain_3d_source
+              // }
             ]
           }}
           leftSidebar={ false }

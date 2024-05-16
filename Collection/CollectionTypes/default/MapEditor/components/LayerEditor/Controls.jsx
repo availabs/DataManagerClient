@@ -67,11 +67,11 @@ export function SelectTypeControl({path, datapath, params={}}) {
   },[state])
 
   useEffect(() => {
-    console.log('getmetadat', sourceId)
+    //console.log('getmetadat', sourceId)
     if(sourceId) {
       falcor.get([
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ]).then(d => console.log('source metadata sourceId', sourceId, d));
+      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
     }
   },[sourceId])
 
@@ -90,7 +90,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   }, [sourceId,falcorCache])
 
   const options = useMemo(() => {
-    console.log('metadata',metadata)
+    //console.log('metadata',metadata)
     const hasCols = metadata?.length > 0 
     const hasNumber = metadata.reduce((out,curr) => {
       if(['integer', 'number'].includes(curr.type)){
@@ -109,9 +109,9 @@ export function SelectTypeControl({path, datapath, params={}}) {
   React.useEffect(() => {
     if( value === 'categories') {
       let {paint, legend} = categoryPaint(column,categorydata,colors,numCategories, showOther)
-      console.log('categories xyz', paint, isValidCategoryPaint(paint))
+      //console.log('categories xyz', paint, isValidCategoryPaint(paint))
       if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-        console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
+        //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
       
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
