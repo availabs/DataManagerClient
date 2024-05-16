@@ -1063,7 +1063,6 @@ export function ColumnSelectControl({path, params={}}) {
   const attributeNames = useMemo(
     () =>
       attributes
-        .filter((d) => !["wkb_geometry"].includes(d))
         .map((attr) => attr.name),
     [attributes]
   );
@@ -1074,11 +1073,16 @@ export function ColumnSelectControl({path, params={}}) {
         set(
           draft,
           `symbology.layers[${state.symbology.activeLayer}].${path}`,
-           attributeNames.filter((d) => !["wkb_geometry"].includes(d)).map((attr) => ({column_name: attr, display_name: attr}))
+          attributes
+            .filter((d) => !["wkb_geometry"].includes(d.name))
+            .map((attr) => ({
+              column_name: attr.name,
+              display_name: attr?.display_name || attr.name,
+            }))
         );
-      })
+      });
     }
-  }, [attributeNames]);
+  }, [attributes]);
 
 
 
