@@ -783,7 +783,9 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
             <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
               {sampleData
                 .map((row) => row[selectedCol.column_name])
+                .filter(item => item !== 'null')
                 .filter(onlyUnique)
+                .slice(0,2)
                 .join(", ")}
             </div>
             <div
@@ -1101,20 +1103,16 @@ export function ColumnSelectControl({path, params={}}) {
       "viewsbyId",
       viewId,
       "databyIndex",
-      {"from":0, "to": 2},
+      {"from":0, "to": 100},
       attributeNames
     ])
   }, [falcor, pgEnv, viewId, attributeNames]);
 
   const sampleData = useMemo(() => {
-    return Object.values(get(falcorCache, [
-      "dama",
-      pgEnv,
-      "viewsbyId",
-      viewId,
-      "databyIndex",
-    ], [])).map(v => get(falcorCache,[...v.value],''));
-  },[pgEnv, falcorCache]);
+    return Object.values(
+      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
+    ).map((v) => get(falcorCache, [...v.value], ""));
+  }, [pgEnv, falcorCache]);
 
   return (
     <div className='flex w-full flex-wrap'>
@@ -1164,12 +1162,13 @@ export function ColumnSelectControl({path, params={}}) {
         setState={(newColumn) => {
           setState((draft) => {
             if (newColumn !== "") {
+              const newAttr = attributes.find(attr => attr.name === newColumn);
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
                 selectedColumns
-                  ? [...selectedColumns, { column_name: newColumn, display_name: newColumn }]
-                  : [{ column_name: newColumn, display_name: newColumn }]
+                  ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                  : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
               );
             }
           });
