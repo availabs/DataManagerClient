@@ -37,7 +37,7 @@ function PopoverEditor(props) {
         {activeLayer.hover && (
           <ColumnSelectControl
             path={`['hover-columns']`}
-            params={{ dnd: false }}
+            params={{}}
           />
         )}
       </div>

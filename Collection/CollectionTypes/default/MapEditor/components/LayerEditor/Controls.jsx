@@ -759,25 +759,11 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, removeAttr, renameAttr}) => {
-  const WrapperComponent = useMemo(() => {
-    return dnd
-      ? ({ children }) => (
-          <DndList
-            onDrop={(start, end) => {
-              reorderAttrs(start, end);
-            }}
-          >
-            {children}
-          </DndList>
-        )
-      : ({ children }) => (
-          <div className="flex w-full flex-wrap">{children}</div>
-        );
-  }, [dnd, selectedColumns, dnd, reorderAttrs ]);
-  
+const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
   return (
-    <WrapperComponent>
+    <DndList
+      onDrop={reorderAttrs}
+    >
       {selectedColumns?.map((selectedCol, i) => {
         return (
           <div
@@ -813,7 +799,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
           </div>
         );
       })}
-    </WrapperComponent>
+    </DndList>
   );
 };
 
@@ -1037,7 +1023,7 @@ const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   )
 }
 
-export function ColumnSelectControl({path, params={"dnd": false}}) {
+export function ColumnSelectControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const selectedColumns = useMemo(() => {
     return get(
@@ -1086,7 +1072,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
         set(
           draft,
           `symbology.layers[${state.symbology.activeLayer}].${path}`,
-           attributeNames.map((attr) => ({column_name: attr, display_name: attr}))
+           attributeNames.filter((d) => !["wkb_geometry"].includes(d)).map((attr) => ({column_name: attr, display_name: attr}))
         );
       })
     }
@@ -1097,7 +1083,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   const selectedColumnNames = useMemo(() => {
     return selectedColumns ? (typeof selectedColumns[0] === "string"
       ? selectedColumns
-      : selectedColumns.map((columnObj) => columnObj.column_name)) : undefined;
+      : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
   }, [selectedColumns]);
 
   const availableColumnNames = useMemo(() => {
@@ -1173,7 +1159,6 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
             );
           })
         }}
-        dnd={params.dnd}
       />
       <AddColumnSelectControl
         setState={(newColumn) => {
