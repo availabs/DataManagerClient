@@ -16,8 +16,8 @@ function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
 const FILTER_OPERATORS = {
-  string: ["=", "!="],
-  integer: ["=", "<", ">", "between"],
+  string: ["==", "!="],
+  integer: ["==", "<", ">", "!="],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -984,13 +984,14 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
+        //TODO -- This should check `column_type` and then set the default operator and value accordingly
         setState((draft) => {
           if (newColumn !== "") {
             set(
               draft,
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
               {
-                operator: "=",
+                operator: "==",
                 value: "foo",
                 columnName: newColumn,
               }

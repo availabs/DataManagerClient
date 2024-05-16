@@ -149,12 +149,11 @@ const ViewLayerRender = ({
               //"!="
               //"<" ">" //['<', ['get', filterColumn], 2]
               //"between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
+
               const columnFilter = [
-                "match",
+                layerFilter[filterColumn].operator,
                 ["to-string", ["get", filterColumn]],
-                layerFilter[filterColumn].value,
-                true,
-                false,
+                ["to-string", layerFilter[filterColumn].value]
               ];
 
               return columnFilter;
