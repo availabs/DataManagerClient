@@ -297,7 +297,7 @@ const HoverComp = ({ data, layer }) => {
           <div className="flex border-b pt-1" key={i}>
             <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
             <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
-              {attrInfo?.[k]}
+              {attrInfo?.[k] !== "null" ? attrInfo?.[k] : ""}
             </div>
           </div>
         )})}
