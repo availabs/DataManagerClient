@@ -968,7 +968,11 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   const availableFilterColumns = getDiffColumns(
     attributeNames,
     existingFilterColumns
-  );
+  ).map((colName) => {
+    const newAttr = attributes.find((attr) => attr.name === colName);
+    return { value: colName, label: newAttr?.display_name || colName };
+  }); 
+  
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
@@ -1012,8 +1016,8 @@ const AddColumnSelectControl = ({setState, availableColumnNames}) => {
               >
                 <option key={-1} value={""}></option>
                 {(availableColumnNames || []).map((opt, i) => (
-                  <option key={i} value={opt}>
-                    {opt}
+                  <option key={i} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -1177,7 +1181,12 @@ export function ColumnSelectControl({path, params={}}) {
             }
           });
         }}
-        availableColumnNames={ availableColumnNames }
+        availableColumnNames = { 
+          availableColumnNames.map(colName => {
+            const newAttr = attributes.find(attr => attr.name === colName);
+            return { value: colName, label: newAttr?.display_name || colName };
+          }) 
+        }
       />
     </div>
   );
