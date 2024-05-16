@@ -293,14 +293,20 @@ const HoverComp = ({ data, layer }) => {
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => {
           const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
-          return (
-          <div className="flex border-b pt-1" key={i}>
-            <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
-            <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
-              {attrInfo?.[k] !== "null" ? attrInfo?.[k] : ""}
-            </div>
-          </div>
-        )})}
+          if ( !(hoverAttr.name || hoverAttr.display_name) ) {
+            return <></>;
+          }
+          else {
+            return (
+              <div className="flex border-b pt-1" key={i}>
+                <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
+                <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
+                  {attrInfo?.[k] !== "null" ? attrInfo?.[k] : ""}
+                </div>
+              </div>
+            );
+          }
+        })}
     </div>
   );
 };
