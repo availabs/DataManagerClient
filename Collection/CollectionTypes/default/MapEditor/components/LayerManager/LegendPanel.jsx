@@ -93,19 +93,20 @@ function CategoryLegend({layer}) {
   
   
   if(!legenddata || legenddata.length === 0 ) {
-    legenddata = (paintValue || []).filter((d,i) => i > 2 )
-      .map((d,i) => {
-        if(i%2 === 0) {
-          return {color: d, label: paintValue[i+2]}
-        }
-        return null
-      })
-      .filter(d => d)
+    legenddata = []
+    // (paintValue || []).filter((d,i) => i > 2 )
+    //   .map((d,i) => {
+    //     if(i%2 === 0) {
+    //       return {color: d, label: paintValue[i+2]}
+    //     }
+    //     return null
+    //   })
+    //   .filter(d => d)
   }
 
   
   return (
-    <div className='w-full max-h-[250px] overflow-auto'>
+    <div className='w-full max-h-[250px] overflow-x-auto'>
         {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
@@ -120,12 +121,12 @@ function CategoryLegend({layer}) {
 }
 
 function StepLegend({layer}) {
-  // console.log('StepLegend', layer)
+  console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
   let { choroplethdata, legenddata } = useMemo(() => {
     return {
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, []),
-      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []) 
+      choroplethdata: get(layer, `['choropleth-data']`, []),
+      legenddata : get(layer, `['legend-data']`, []) 
     }
   },[state])
 
@@ -148,7 +149,7 @@ function StepLegend({layer}) {
   }
 
   return (
-    <div className='w-full max-h-[250px] overflow-auto'>
+    <div className='w-full max-h-[250px] overflow-x-auto'>
         {legenddata.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-pink-50'>
             <div className='flex items-center h-6 w-10 justify-center  '>
@@ -228,7 +229,7 @@ function LayerManager (props) {
   return (
     <>     
       {/* ------Layer Pane ----------- */}
-      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] overflow-auto'>
+      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] '>
         <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)

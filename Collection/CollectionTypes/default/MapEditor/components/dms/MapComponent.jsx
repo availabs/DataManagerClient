@@ -32,7 +32,8 @@ const Edit = ({value, onChange, size}) => {
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
-        symbologies: cachedData.symbologies || {}
+        symbologies: cachedData.symbologies || {},
+        isEdit: true
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -160,7 +161,6 @@ const View = ({value, size}) => {
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || [],
-        view: true
     })
     const [mapLayers, setMapLayers] = useImmer([])
 

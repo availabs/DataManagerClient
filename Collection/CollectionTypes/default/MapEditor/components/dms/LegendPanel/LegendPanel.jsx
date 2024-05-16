@@ -85,8 +85,9 @@ const typePaint = {
 function CategoryLegend({layer}) {
   // console.log('categoryLegend', layer)
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
+  let  legenddata = layer?.['legend-data'] || []
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-  const categories = (paintValue || []).filter((d,i) => i > 2 )
+  const categories = legenddata || (paintValue || []).filter((d,i) => i > 2 )
     .map((d,i) => {
       if(i%2 === 0) {
         return {color: d, label: paintValue[i+2]}
@@ -94,8 +95,6 @@ function CategoryLegend({layer}) {
       return null
     })
     .filter(d => d)
-
-
   
   return (
     <div className='w-full max-h-[250px] overflow-auto'>
@@ -115,9 +114,10 @@ function CategoryLegend({layer}) {
 function StepLegend({layer}) {
   //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(MapContext);
-  const { choroplethdata } = useMemo(() => {
+  const { choroplethdata, legenddata } = useMemo(() => {
     return {
       choroplethdata: get(layer, `['choropleth-data']`, []), 
+      legenddata: layer?.['legend-data'] || []
     }
   },[state])
 
@@ -125,7 +125,7 @@ function StepLegend({layer}) {
   let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
   const max = Math.max(...choroplethdata)
   // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
-  const categories = [
+  const categories = legenddata || [
     ...(paintValue || []).filter((d,i) => i > 2 )
     .map((d,i) => {
     

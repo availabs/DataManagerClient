@@ -16,8 +16,8 @@ function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
 const FILTER_OPERATORS = {
-  string: ["=", "!="],
-  integer: ["=", "<", ">", "between"],
+  string: ["==", "!="],
+  integer: ["==", "<", ">", "!="],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -552,7 +552,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const categories = (value || []).filter((d,i) => i > 2 )
+  const categories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
             .map((d,i) => {
               if(i%2 === 0) {
                 return {color: d, label: value[i+2]}
@@ -759,25 +759,11 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, removeAttr, renameAttr}) => {
-  const WrapperComponent = useMemo(() => {
-    return dnd
-      ? ({ children }) => (
-          <DndList
-            onDrop={(start, end) => {
-              reorderAttrs(start, end);
-            }}
-          >
-            {children}
-          </DndList>
-        )
-      : ({ children }) => (
-          <div className="flex w-full flex-wrap">{children}</div>
-        );
-  }, [dnd, selectedColumns, dnd, reorderAttrs ]);
-  
+const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
   return (
-    <WrapperComponent>
+    <DndList
+      onDrop={reorderAttrs}
+    >
       {selectedColumns?.map((selectedCol, i) => {
         return (
           <div
@@ -787,33 +773,33 @@ const ExistingColumnList = ({selectedColumns, sampleData, dnd, reorderAttrs, rem
             <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
               <input 
                   type="text"
-                  className='w-full px-2  border font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+                  className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
                   value={selectedCol.display_name}
                   onChange={(e) => {
                     renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
                   }}
                 />
             </div>
-            <div className="truncate border-t border-slate-200 col-span-4 text-gray-300 px-4 py-1">
+            <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
               {sampleData
                 .map((row) => row[selectedCol.column_name])
                 .filter(onlyUnique)
                 .join(", ")}
             </div>
             <div
-              className="border-t border-slate-200 cursor-pointer text-white group-hover/title:text-black group/icon col-span-1 p-1"
+              className="border-t flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
               onClick={() => {
                 removeAttr(selectedCol.column_name)
               }}
             >
-              <i
-                className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
+              <Close
+                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
               />
             </div>
           </div>
         );
       })}
-    </WrapperComponent>
+    </DndList>
   );
 };
 
@@ -984,13 +970,14 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
+        //TODO -- This should check `column_type` and then set the default operator and value accordingly
         setState((draft) => {
           if (newColumn !== "") {
             set(
               draft,
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
               {
-                operator: "=",
+                operator: "==",
                 value: "foo",
                 columnName: newColumn,
               }
@@ -1036,7 +1023,7 @@ const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   )
 }
 
-export function ColumnSelectControl({path, params={"dnd": false}}) {
+export function ColumnSelectControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const selectedColumns = useMemo(() => {
     return get(
@@ -1085,7 +1072,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
         set(
           draft,
           `symbology.layers[${state.symbology.activeLayer}].${path}`,
-           attributeNames.map((attr) => ({column_name: attr, display_name: attr}))
+           attributeNames.filter((d) => !["wkb_geometry"].includes(d)).map((attr) => ({column_name: attr, display_name: attr}))
         );
       })
     }
@@ -1096,7 +1083,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
   const selectedColumnNames = useMemo(() => {
     return selectedColumns ? (typeof selectedColumns[0] === "string"
       ? selectedColumns
-      : selectedColumns.map((columnObj) => columnObj.column_name)) : undefined;
+      : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
   }, [selectedColumns]);
 
   const availableColumnNames = useMemo(() => {
@@ -1163,7 +1150,7 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
           })
         }}
         removeAttr={(columnName) => {
-          console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
+          //console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
           setState((draft) => {
             set(
               draft,
@@ -1172,7 +1159,6 @@ export function ColumnSelectControl({path, params={"dnd": false}}) {
             );
           })
         }}
-        dnd={params.dnd}
       />
       <AddColumnSelectControl
         setState={(newColumn) => {

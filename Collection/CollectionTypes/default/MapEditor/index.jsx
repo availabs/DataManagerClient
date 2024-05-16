@@ -16,6 +16,8 @@ import LayerEditor from './components/LayerEditor'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 
+import {terrain_3d_source} from './components/styles/4dsource.js'
+
 
 export const SymbologyContext = createContext(undefined);
 
@@ -44,8 +46,6 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
     }
   )
 
-  console.log('the state', state)
-
   useEffect(() => {
     // console.log('load', +activeSymbologyId, symbologyId, symbologies)
     if(!(symbologyId) && (+activeSymbologyId) && +symbologyId !== +activeSymbologyId) {
@@ -70,6 +70,15 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
       //console.log('resp',resp)
     }
 
+    async function updateName() {
+      let resp = await falcor.set({
+        paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'name']],
+        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
+          [+activeSymbologyId]: { attributes : { name: state.name }}
+        }}}}}
+      })
+    }
+
     let currentData = symbologies.find(s => +s.symbology_id === +activeSymbologyId)
     
     // console.log('check update', 
@@ -88,7 +97,10 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
       updateData()
       //throttle(updateData,500)
     }
-  },[state.symbology])
+    if(state?.name && state?.name !== currentData.name) {
+      updateName()
+    }
+  },[state.symbology, state.name])
   // console.log('render', state, activeSymbologyId, symbologies.find(s => +s.symbology_id === +activeSymbologyId)) 
   useEffect(() => {
     // -------------------
@@ -164,6 +176,18 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
             protocols: [PMTilesProtocol],
             styles: [
               {
+                name: "new-style",
+                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
+                name: "dataviz-light",
+                style: "https://api.maptiler.com/maps/93fb4718-3184-43c3-9348-a4449deaeb53/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              {
+                name: '3d_source',
+                style: terrain_3d_source
+              },
+              {
                 name: "dataviz",
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
@@ -175,10 +199,8 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
                 name: "toner",
                 style: "https://api.maptiler.com/maps/toner-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
-              {
-                name: "new-style",
-                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
-              }
+              
+              
             ]
           }}
           leftSidebar={ false }
