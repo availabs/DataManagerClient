@@ -170,6 +170,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           layers={ mapLayers }
           layerProps = {layerProps}
           hideLoading={true}
+          showLayerSelect={true}
           mapOptions={{
             center: [-76, 43.3],
             zoom: 6,

@@ -127,6 +127,7 @@ const Edit = ({value, onChange, size}) => {
                   layers={ mapLayers }
                   layerProps = { layerProps }
                   hideLoading={true}
+                  showLayerSelect={true}
                   mapOptions={{
                     center: [-76, 43.3],
                     zoom: 6,
@@ -240,6 +241,7 @@ const View = ({value, size}) => {
                   layers={ mapLayers }
                   layerProps = { layerProps }
                   hideLoading={true}
+                  showLayerSelect={true}
                   mapOptions={{
                     center: [-76, 43.3],
                     zoom: 6,
@@ -301,13 +303,26 @@ export default {
     "ViewComp": View
 }
 
-const defaultStyles = [
-    {
-        name: 'satellite',
-        style: 'https://api.maptiler.com/maps/satellite/style.json?key=mU28JQ6HchrQdneiq6k9'
-    },
-    {
-    name: "dataviz",
-    style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
-  }
+const defaultStyles =  [
+              {
+                name: "Default",
+                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              { name: "Satellite",
+                style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
+              },
+              { name: "Streets",
+                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
+              },
+             
+              { name: "Light",
+                style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              { name: "Dark",
+                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              // {
+              //   name: 'Sattelite 3d ',
+              //   style: terrain_3d_source
+              // }
 ]
