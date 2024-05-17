@@ -20,7 +20,6 @@ function FilterEditor(props) {
         Filters
       </div>
       <ExistingFilterList
-        existingFilter={existingFilter}
         removeFilter={(columnName) => {
           setState((draft) => {
             const newFilter = Object.keys(existingFilter).reduce((a, c) => {

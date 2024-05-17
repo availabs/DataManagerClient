@@ -805,13 +805,48 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
   );
 };
 
-export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, setActiveColumn}) => {
+export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const existingFilter = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].filter`
+  );
+
+  const sourceId = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].source_id`
+  );
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
   return (
     <div className="flex w-full flex-wrap">
       {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
+
+        const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
         return (
           <div
             key={i}
@@ -819,7 +854,7 @@ export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, 
             onClick={() => {setActiveColumn(selectedCol)}}
           >
             <div className="truncate col-span-8 py-1">
-              {selectedCol} <span className="font-thin">{filter.operator}</span> {filter.value}
+              {display_name} <span className="font-thin">{filter.operator}</span> {filter.value}
             </div>
 
             <div
@@ -892,7 +927,7 @@ export function FilterBuilder({ path, params = {} }) {
         <>
           <div className="flex my-1 items-center">
             <div className="p-1">Column:</div>
-            <div className="p-2">{activeColumn}</div>
+            <div className="p-2">{activeAttr.display_name ?? activeColumn}</div>
           </div>
           <div className="flex my-1 items-center">
             <div className="p-1">Operator:</div>
@@ -984,7 +1019,7 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
               {
                 operator: "==",
-                value: "foo",
+                value: "",
                 columnName: newColumn,
               }
             );
