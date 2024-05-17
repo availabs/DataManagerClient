@@ -16,8 +16,8 @@ function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
 const FILTER_OPERATORS = {
-  string: ["==", "!="],
-  integer: ["==", "<", ">", "!="],
+  string: ["!=", "==" ],
+  integer: ["!", "<", "<=", "==", ">=", ">", ],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
