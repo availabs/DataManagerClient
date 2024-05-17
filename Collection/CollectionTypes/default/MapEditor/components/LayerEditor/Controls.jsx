@@ -16,8 +16,8 @@ function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
 const FILTER_OPERATORS = {
-  string: ["==", "!="],
-  integer: ["==", "<", ">", "!="],
+  string: ["!=", "==" ],
+  integer: ["!", "<", "<=", "==", ">=", ">", ],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -783,7 +783,9 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
             <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
               {sampleData
                 .map((row) => row[selectedCol.column_name])
+                .filter(item => item !== 'null')
                 .filter(onlyUnique)
+                .slice(0,2)
                 .join(", ")}
             </div>
             <div
@@ -803,13 +805,48 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
   );
 };
 
-export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, setActiveColumn}) => {
+export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const existingFilter = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].filter`
+  );
+
+  const sourceId = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].source_id`
+  );
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
   return (
     <div className="flex w-full flex-wrap">
       {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
+
+        const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
         return (
           <div
             key={i}
@@ -817,7 +854,7 @@ export const ExistingFilterList = ({existingFilter, removeFilter, activeColumn, 
             onClick={() => {setActiveColumn(selectedCol)}}
           >
             <div className="truncate col-span-8 py-1">
-              {selectedCol} <span className="font-thin">{filter.operator}</span> {filter.value}
+              {display_name} <span className="font-thin">{filter.operator}</span> {filter.value}
             </div>
 
             <div
@@ -890,7 +927,7 @@ export function FilterBuilder({ path, params = {} }) {
         <>
           <div className="flex my-1 items-center">
             <div className="p-1">Column:</div>
-            <div className="p-2">{activeColumn}</div>
+            <div className="p-2">{activeAttr.display_name ?? activeColumn}</div>
           </div>
           <div className="flex my-1 items-center">
             <div className="p-1">Operator:</div>
@@ -966,7 +1003,11 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   const availableFilterColumns = getDiffColumns(
     attributeNames,
     existingFilterColumns
-  );
+  ).map((colName) => {
+    const newAttr = attributes.find((attr) => attr.name === colName);
+    return { value: colName, label: newAttr?.display_name || colName };
+  }); 
+  
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
@@ -978,7 +1019,7 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
               {
                 operator: "==",
-                value: "foo",
+                value: "",
                 columnName: newColumn,
               }
             );
@@ -1010,8 +1051,8 @@ const AddColumnSelectControl = ({setState, availableColumnNames}) => {
               >
                 <option key={-1} value={""}></option>
                 {(availableColumnNames || []).map((opt, i) => (
-                  <option key={i} value={opt}>
-                    {opt}
+                  <option key={i} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -1061,7 +1102,6 @@ export function ColumnSelectControl({path, params={}}) {
   const attributeNames = useMemo(
     () =>
       attributes
-        .filter((d) => !["wkb_geometry"].includes(d))
         .map((attr) => attr.name),
     [attributes]
   );
@@ -1072,11 +1112,16 @@ export function ColumnSelectControl({path, params={}}) {
         set(
           draft,
           `symbology.layers[${state.symbology.activeLayer}].${path}`,
-           attributeNames.filter((d) => !["wkb_geometry"].includes(d)).map((attr) => ({column_name: attr, display_name: attr}))
+          attributes
+            .filter((d) => !["wkb_geometry"].includes(d.name))
+            .map((attr) => ({
+              column_name: attr.name,
+              display_name: attr?.display_name || attr.name,
+            }))
         );
-      })
+      });
     }
-  }, [attributeNames]);
+  }, [attributes]);
 
 
 
@@ -1101,20 +1146,16 @@ export function ColumnSelectControl({path, params={}}) {
       "viewsbyId",
       viewId,
       "databyIndex",
-      {"from":0, "to": 2},
+      {"from":0, "to": 100},
       attributeNames
     ])
   }, [falcor, pgEnv, viewId, attributeNames]);
 
   const sampleData = useMemo(() => {
-    return Object.values(get(falcorCache, [
-      "dama",
-      pgEnv,
-      "viewsbyId",
-      viewId,
-      "databyIndex",
-    ], [])).map(v => get(falcorCache,[...v.value],''));
-  },[pgEnv, falcorCache]);
+    return Object.values(
+      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
+    ).map((v) => get(falcorCache, [...v.value], ""));
+  }, [pgEnv, falcorCache]);
 
   return (
     <div className='flex w-full flex-wrap'>
@@ -1164,17 +1205,23 @@ export function ColumnSelectControl({path, params={}}) {
         setState={(newColumn) => {
           setState((draft) => {
             if (newColumn !== "") {
+              const newAttr = attributes.find(attr => attr.name === newColumn);
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
                 selectedColumns
-                  ? [...selectedColumns, { column_name: newColumn, display_name: newColumn }]
-                  : [{ column_name: newColumn, display_name: newColumn }]
+                  ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                  : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
               );
             }
           });
         }}
-        availableColumnNames={ availableColumnNames }
+        availableColumnNames = { 
+          availableColumnNames.map(colName => {
+            const newAttr = attributes.find(attr => attr.name === colName);
+            return { value: colName, label: newAttr?.display_name || colName };
+          }) 
+        }
       />
     </div>
   );
