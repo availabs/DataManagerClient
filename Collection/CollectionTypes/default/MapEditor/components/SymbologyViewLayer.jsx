@@ -143,15 +143,27 @@ const ViewLayerRender = ({
       if(maplibreMap.getLayer(l.id)){
         if(layerFilter){
           const mapLayerFilter = Object.keys(layerFilter).map(
-            (filterColumn) => {
-              //TODO "between" (NEEDS ADDITIONAL INPUT FIELD IN FILTER EDITOR)
-              const columnFilter = [
-                layerFilter[filterColumn].operator,
-                ["to-string", ["get", filterColumn]],
-                ["to-string", layerFilter[filterColumn].value]
-              ];
+            (filterColumnName) => {
+              let mapFilter = [];
+              const filterOperator = layerFilter[filterColumnName].operator;
+              const getFilterCol = ["get", filterColumnName];
+              const filterValue = layerFilter[filterColumnName].value;
+              if( filterOperator === 'between'){
+                mapFilter = [
+                  "all",
+                  [">=", ["to-string", getFilterCol], ["to-string", filterValue?.[0]]],
+                  ["<=", ["to-string", getFilterCol], ["to-string", filterValue?.[1]]],
+                ]
+              }
+              else{
+                mapFilter = [
+                  filterOperator,
+                  ["to-string", getFilterCol],
+                  ["to-string", filterValue]
+                ];
+              }
 
-              return columnFilter;
+              return mapFilter;
             }
           );
           maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);

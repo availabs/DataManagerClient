@@ -17,7 +17,7 @@ function onlyUnique(value, index, array) {
 }
 const FILTER_OPERATORS = {
   string: ["!=", "==" ],
-  integer: ["!", "<", "<=", "==", ">=", ">", ],
+  integer: ["!", "<", "<=", "==", ">=", ">", "between" ],
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -847,6 +847,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
 
         const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
+        const displayedValue = filter.operator === "between" ? filter.value?.join(" and ") :  filter.value
         return (
           <div
             key={i}
@@ -854,7 +855,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
             onClick={() => {setActiveColumn(selectedCol)}}
           >
             <div className="truncate col-span-8 py-1">
-              {display_name} <span className="font-thin">{filter.operator}</span> {filter.value}
+              {display_name} <span className="font-thin">{filter.operator}</span> {displayedValue}
             </div>
 
             <div
@@ -877,7 +878,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
 
 export function FilterBuilder({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const {activeColumn, setActiveColumn} = params;
+  const {activeColumn: activeColumnName, setActiveColumn} = params;
 
   const sourceId = get(
     state,
@@ -907,15 +908,20 @@ export function FilterBuilder({ path, params = {} }) {
   }, [sourceId, falcorCache]);
 
   const activeAttr = useMemo(() => {
-    return attributes.find((attr) => attr.name === activeColumn);
-  }, [activeColumn]);
+    return attributes.find((attr) => attr.name === activeColumnName);
+  }, [activeColumnName]);
 
-  //RYAN TODO dynamically get filter Type
   const filterOperators = FILTER_OPERATORS[activeAttr?.type] || [];
+  const existingFilter = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].filter`
+  );
+  const valuePath = `${path}.${activeColumnName}.value`;
+  const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
 
   return (
     <>
-      {!activeColumn && (
+      {!activeColumnName && (
         <AddFilterColumn
           path={path}
           params={params}
@@ -923,17 +929,17 @@ export function FilterBuilder({ path, params = {} }) {
         />
       )}
 
-      {activeColumn && (
+      {activeColumnName && (
         <>
           <div className="flex my-1 items-center">
             <div className="p-1">Column:</div>
-            <div className="p-2">{activeAttr.display_name ?? activeColumn}</div>
+            <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
           </div>
           <div className="flex my-1 items-center">
             <div className="p-1">Operator:</div>
             <StyledControl>
               <SelectControl
-                path={`${path}.${activeColumn}.operator`}
+                path={`${path}.${activeColumnName}.operator`}
                 params={{
                   options: filterOperators.map((operator) => ({
                     value: operator,
@@ -944,11 +950,23 @@ export function FilterBuilder({ path, params = {} }) {
             </StyledControl>
           </div>
           <div className="flex my-1 items-center">
-            <div className="p-1">Value:</div>
+            {!isBetweenOperator && <div className="p-1">Value:</div>}
             <StyledControl>
-              <SimpleControl path={`${path}.${activeColumn}.value`} />
+              <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
             </StyledControl>
           </div>
+          {
+            isBetweenOperator &&
+              <>
+                <div className="p-1">And</div>
+                <div className="flex my-1 items-center">
+                  
+                  <StyledControl>
+                    <SimpleControl path={valuePath + "[1]"} />
+                  </StyledControl>
+                </div>
+              </>
+          }
         </>
       )}
     </>
