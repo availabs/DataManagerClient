@@ -947,26 +947,37 @@ function DomainList({params, path}) {
     ?.filter(onlyUnique);
   sampleRows.sort();
 
+  const currentFilterValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )
 
-  const currentValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )
-
-
-  return (
-    sampleRows?.map((sampleValue, i) => {
-      const selectedClass = currentValue === sampleValue ? 'bg-pink-100' : ''
+  return sampleRows
+    ?.filter((sampleValue) =>
+      sampleValue
+        .toString()
+        .toLowerCase()
+        .includes(currentFilterValue.toString().toLowerCase())
+    )
+    .map((sampleValue, i) => {
+      const selectedClass =
+        currentFilterValue === sampleValue ? "bg-pink-100" : "";
       return (
         <div
           key={i}
           className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
-          onClick={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, sampleValue)
-          })}
+          onClick={() =>
+            setState((draft) => {
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                currentFilterValue === sampleValue ? "" : sampleValue
+              );
+            })
+          }
         >
-          <div className='flex'>
+          <div className="flex">
             <input
-              readonly
+              readOnly
               type="checkbox"
-              checked={currentValue === sampleValue}    
+              checked={currentFilterValue === sampleValue}
             />
             <div className="truncate flex items-center text-[13px] px-4 py-1">
               {sampleValue}
@@ -974,9 +985,7 @@ function DomainList({params, path}) {
           </div>
         </div>
       );
-    })
-  )
-
+    });
 }
 
 export function FilterBuilder({ path, params = {} }) {
