@@ -877,10 +877,6 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   );
 };
 
-
-//TODO check current filter-value state to filter/search through all values
-//only display values that contain the current state
-//MAYBE todo -- little checkboxes next to the values to select them
 //TODO maybe this configurable -- just give it a single column name, 
 //don't fetch all the attributes, then make it parse thru state 
 function DomainList({params, path}) {
@@ -1153,7 +1149,6 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
-        //TODO -- This should check `column_type` and then set the default operator and value accordingly
         setState((draft) => {
           if (newColumn !== "") {
             set(
