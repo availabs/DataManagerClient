@@ -1,27 +1,26 @@
-import React, {useEffect, /*useMemo,*/ useState} from 'react';
+import React, {useEffect, useMemo, /*useMemo,*/ useState} from 'react';
 import {Input, Button} from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import {SourceAttributes} from '~/pages/DataManager/Source/attributes'
 import {DamaContext} from "~/pages/DataManager/store"
 import Versions from './Version/list'
-import {VersionEditor, VersionDownload} from './Version/version'
+import {VersionEditor} from './Version/components/VersionEditor.jsx'
 import SourceCategories from "./SourceCategories"
 import Metadata from './Metadata/basic.jsx'
+import {RenderLexical, RenderTextArea, RenderTextBox} from "./Metadata/components/Edit.jsx";
+import {dmsDataTypes} from "~/modules/dms/src"
 
 const Edit = ({
-                  startValue, attr, sourceId, type = 'text', cancel = () => {
-    }
+                  startValue, attr, sourceId, type = 'text', cancel = () => {}
               }) => {
-    const [value, setValue] = useState('')
-    //console.log('what is the value :', )
+    const [value, setValue] = useState(startValue)
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
-    /*const [loading, setLoading] = useState(false)*/
 
     useEffect(() => {
         setValue(startValue)
     }, [startValue])
 
-    const save = (attr, value) => {
+    const save = (value) => {
         if (sourceId) {
             falcor.set({
                 paths: [
@@ -45,32 +44,13 @@ const Edit = ({
             })
         }
     }
-
+    console.log('overview edit', type, value, startValue)
+    const Lexical = dmsDataTypes.lexical.EditComp;
     return (
-        type === 'textarea' ? (
-            <div className='w-full flex flex-col h-full border border-lime-300'>
-                <div>
-          <textarea
-              className='flex-1 w-full px-2 shadow bg-blue-100 min-h-[200px] focus:ring-blue-700 focus:border-blue-500  border-gray-300 rounded-none rounded-l-md'
-              onChange={e => setValue(e.target.value)}>
-            {value}
-          </textarea>
-                </div>
-                <div className='flex py-2'>
-                    <div className='flex-1'/>
-                    <Button themeOptions={{size: 'sm', color: 'primary'}}
-                            onClick={e => save(attr, value)}> Save </Button>
-                    <Button themeOptions={{size: 'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button>
-                </div>
-            </div>) : (
-            <div className='w-full flex flex-1'>
-                <Input
-                    className='flex-1 px-2 shadow bg-blue-100 focus:ring-blue-700 focus:border-blue-500  border-gray-300 rounded-none rounded-l-md'
-                    value={value} onChange={e => setValue(e)}/>
-                <Button themeOptions={{size: 'sm', color: 'primary'}} onClick={e => save(attr, value)}> Save </Button>
-                <Button themeOptions={{size: 'sm', color: 'cancel'}} onClick={e => cancel()}> Cancel </Button>
-            </div>
-        )
+        type === 'textarea' ?  <RenderTextArea value={value} setValue={setValue} save={save} cancel={cancel}/> :
+            type === 'lexical' ?
+                <RenderLexical Comp={Lexical} value={startValue} setValue={setValue} save={save} cancel={cancel} /> :
+                <RenderTextBox value={value} setValue={setValue} save={save} cancel={cancel}/>
     )
 }
 
@@ -85,10 +65,48 @@ const RenderPencil = ({user, editing, setEditing, attr}) => {
     )
 }
 
+const makeLexicalFormat = value => value?.root?.children ? value : {
+        root: {
+            "children": [
+                {
+                    "children": [
+                        {
+                            "detail": 0,
+                            "format": 0,
+                            "mode": "normal",
+                            "text": value || 'No Description',
+                            "type": 'text',
+                            "version": 1
+                        },
+                        {
+                            "detail": 0,
+                            "format": 0,
+                            "mode": "normal",
+                            "text": '\n\n',
+                            "type": 'text',
+                            "version": 1
+                        }
+                    ],
+                    "tag": '',
+                    "direction": "ltr",
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1
+                }
+            ],
+            "direction": "ltr",
+            "format": "",
+            "indent": 0,
+            "type": "root",
+            "version": 1
+        }
+    };
+
+
 const OverviewEdit = ({source, views, activeViewId}) => {
     const [editing, setEditing] = React.useState(null);
     const stopEditing = React.useCallback(e => {
-        e.stopPropagation();
         setEditing(null);
     }, []);
 
@@ -98,11 +116,14 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     const dateOptions = {year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric"}
     const createdTimeStamp = new Date(views.filter(d => d.view_id === activeView)?.[0]?.['_created_timestamp'] || '').toLocaleDateString(undefined, dateOptions);
     const updatedTimeStamp = new Date(views.filter(d => d.view_id === latestView)?.[0]?.['_modified_timestamp'] || '').toLocaleDateString(undefined, dateOptions);
+    const Lexical = dmsDataTypes.lexical.ViewComp;
 
     const attrNameMap = {
         'update_interval': 'update interval'
     }
     const numCols = get(source, ["metadata", "columns"], get(source, "metadata", []))?.length;
+
+    const descValue = makeLexicalFormat(source.description);
 
     return (
         <div className='p-4'>
@@ -132,17 +153,26 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                             <div className='text-sm text-gray-500 pr-14'>
                                 {editing === 'description' ?
                                     <Edit
-                                        startValue={get(source, 'description', '')}
+                                        startValue={descValue}
                                         attr={'description'}
-                                        type='textarea'
+                                        type={'lexical'}
                                         sourceId={source?.source_id}
-                                        cancel={stopEditing}/> :
-                                    get(source, 'description', false) || 'No Description'}
+                                        cancel={stopEditing}
+                                        /> :
+                                    <div className='pr-8'>
+                                        {
+                                            source.description ?
+                                            <Lexical value={descValue}/> :
+                                                <div className={'min-h-10'}>No Description</div>
+                                           }
+                                    </div>
+                                    }
                             </div>
                         </div>
                         <RenderPencil attr={'description'} user={user} editing={editing} setEditing={setEditing}/>
 
                     </div>
+
                     <div className={'ml-4'}>
                         <VersionEditor
                             view={views.filter(d => d.view_id === activeView)?.[0] || {}}
@@ -189,9 +219,9 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                                             <div className="w-full flex flex-col space-between items-left">
                                                 <div
                                                     className="text-sm font-medium text-gray-500 px-1 capitalize">{attrNameMap[attr] || attr}</div>
-                                                <div className="text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                <div className="w-full text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                     {editing === attr ?
-                                                        <div className='pt-3 pr-8'>
+                                                        <div className='pt-3 pr-8 z-10'>
                                                             <Edit
                                                                 startValue={val}
                                                                 attr={attr}
@@ -200,7 +230,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                                                             />
                                                         </div> :
                                                         <div
-                                                            className='py-2 px-2 font-semibold text-ellipsis uppercase'>{val || 'N/A'}</div>
+                                                            className='w-full py-2 px-2 font-semibold truncate uppercase'>{val || 'N/A'}</div>
                                                     }
                                                 </div>
                                             </div>

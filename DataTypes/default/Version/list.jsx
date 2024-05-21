@@ -4,7 +4,8 @@ import get from "lodash/get";
 import { Link, useParams } from "react-router-dom";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
-import Version, { VersionDownload } from "./version";
+import Version from "./version";
+import {VersionDownload} from "./components/VersionDownload.jsx";
 
 import DeleteVersion from "./delete";
 
