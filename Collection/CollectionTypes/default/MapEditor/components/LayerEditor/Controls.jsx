@@ -287,13 +287,13 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [sourceId,falcorCache])
 
-  console.log('metadata', metadata)
+  //console.log('metadata', metadata)
 
   useEffect(() => {
     if(column && layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column.split('AS ')[0]],
-        exclude: {[column.split('AS ')[0]]: ['null']},
+        groupBy: [(column).split('AS ')[0]],
+        exclude: {[(column).split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       falcor.get([
@@ -303,10 +303,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   },[column])
 
   useEffect(() => {
-    if(layerType === 'categories') {
+    if(column && layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column.split('AS ')[0]],
-        exclude: {[column.split('AS ')[0]]: ['null']},
+        groupBy: [(column).split('AS ')[0]],
+        exclude: {[(column).split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       let data = get(falcorCache, [

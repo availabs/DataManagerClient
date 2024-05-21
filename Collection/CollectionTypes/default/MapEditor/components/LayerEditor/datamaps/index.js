@@ -2,8 +2,11 @@ import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
 import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
 
 export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
+  
+  // to allow for calculated columns
+  const column_ref = (column || '').includes('AS ') ? column.split('AS ')[1] : column 
   let paint = ['match',
-      ['to-string',['get', column.split('AS ')[1]]],
+      ['to-string',['get', column_ref]],
   ]
   
   
