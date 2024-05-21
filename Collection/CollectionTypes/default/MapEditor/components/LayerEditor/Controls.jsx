@@ -18,6 +18,7 @@ function onlyUnique(value, index, array) {
 const FILTER_OPERATORS = {
   string: ["!=", "==" ],
   integer: ["!", "<", "<=", "==", ">=", ">", "between" ],
+  number: ["!", "<", "<=", "==", ">=", ">", "between" ]
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -876,13 +877,125 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   );
 };
 
+//TODO maybe this configurable -- just give it a single column name, 
+//don't fetch all the attributes, then make it parse thru state 
+function DomainList({params, path}) {
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+  const { state, setState } = React.useContext(SymbologyContext);
+  const {activeColumn: activeColumnName, setActiveColumn} = params;
+  const { viewId, sourceId } = useMemo(
+    () => ({
+      viewId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].view_id`
+      ),
+      sourceId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].source_id`
+      ),
+    }),
+    [state]
+  );
+
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
+
+  useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      viewId,
+      "databyIndex",
+      { from: 0, to: 2000 },
+      attributes
+        .filter((d) => !["wkb_geometry"].includes(d))
+        .map((attr) => attr.name),
+    ]);
+  }, [falcor, pgEnv, viewId, attributes]);
+
+  const sampleData = useMemo(() => {
+    return Object.values(
+      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
+    ).map((v) => get(falcorCache, [...v.value], ""));
+  }, [pgEnv, falcorCache]);
+
+  const sampleRows = sampleData.map((row) => row[activeColumnName])
+    ?.filter((item) => item !== "null")
+    ?.filter(onlyUnique);
+  sampleRows.sort();
+
+  const currentFilterValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )
+
+  return sampleRows
+    ?.filter((sampleValue) =>
+      sampleValue
+        .toString()
+        .toLowerCase()
+        .includes(currentFilterValue.toString().toLowerCase())
+    )
+    .map((sampleValue, i) => {
+      const selectedClass =
+        currentFilterValue === sampleValue ? "bg-pink-100" : "";
+      return (
+        <div
+          key={i}
+          className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
+          onClick={() =>
+            setState((draft) => {
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                currentFilterValue === sampleValue ? "" : sampleValue
+              );
+            })
+          }
+        >
+          <div className="flex">
+            <input
+              readOnly
+              type="checkbox"
+              checked={currentFilterValue === sampleValue}
+            />
+            <div className="truncate flex items-center text-[13px] px-4 py-1">
+              {sampleValue}
+            </div>
+          </div>
+        </div>
+      );
+    });
+}
+
 export function FilterBuilder({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
   const {activeColumn: activeColumnName, setActiveColumn} = params;
 
-  const sourceId = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].source_id`
+  const { sourceId } = useMemo(
+    () => ({
+      sourceId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].source_id`
+      ),
+    }),
+    [state]
   );
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
 
@@ -918,6 +1031,7 @@ export function FilterBuilder({ path, params = {} }) {
   );
   const valuePath = `${path}.${activeColumnName}.value`;
   const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
+  const isEqualityOperator = ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
 
   return (
     <>
@@ -931,43 +1045,49 @@ export function FilterBuilder({ path, params = {} }) {
 
       {activeColumnName && (
         <>
-          <div className="flex my-1 items-center">
-            <div className="p-1">Column:</div>
-            <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
-          </div>
-          <div className="flex my-1 items-center">
-            <div className="p-1">Operator:</div>
-            <StyledControl>
-              <SelectControl
-                path={`${path}.${activeColumnName}.operator`}
-                params={{
-                  options: filterOperators.map((operator) => ({
-                    value: operator,
-                    name: operator,
-                  })),
-                }}
-              />
-            </StyledControl>
-          </div>
-          <div className="flex my-1 items-center">
-            {!isBetweenOperator && <div className="p-1">Value:</div>}
-            <StyledControl>
-              <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
-            </StyledControl>
+          <div className='mx-4'>
+            <div className="flex my-1 items-center">
+              <div className="p-1">Column:</div>
+              <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
+            </div>
+            <div className="flex my-1 items-center">
+              <div className="p-1">Operator:</div>
+              <StyledControl>
+                <SelectControl
+                  path={`${path}.${activeColumnName}.operator`}
+                  params={{
+                    options: filterOperators.map((operator) => ({
+                      value: operator,
+                      name: operator,
+                    })),
+                  }}
+                />
+              </StyledControl>
+            </div>
+            <div className="flex my-1 items-center">
+              {!isBetweenOperator && <div className="p-1">Value:</div>}
+              <StyledControl>
+                <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
+              </StyledControl>
+            </div>
+            {
+              isBetweenOperator &&
+                <>
+                  <div className="p-1">And</div>
+                  <div className="flex my-1 items-center">
+                    
+                    <StyledControl>
+                      <SimpleControl path={valuePath + "[1]"} />
+                    </StyledControl>
+                  </div>
+                </>
+            }
           </div>
           {
-            isBetweenOperator &&
-              <>
-                <div className="p-1">And</div>
-                <div className="flex my-1 items-center">
-                  
-                  <StyledControl>
-                    <SimpleControl path={valuePath + "[1]"} />
-                  </StyledControl>
-                </div>
-              </>
+            isEqualityOperator && 
+              <DomainList params={params} path={valuePath}/>
           }
-        </>
+        </>  
       )}
     </>
   );
@@ -1029,7 +1149,6 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
-        //TODO -- This should check `column_type` and then set the default operator and value accordingly
         setState((draft) => {
           if (newColumn !== "") {
             set(
