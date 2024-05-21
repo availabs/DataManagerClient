@@ -20,12 +20,12 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
 
     const {authLevel} = user;
     const gridCols =
-        authLevel < 5 ? "grid-cols-3" :
-            !colOrigin ? "grid-cols-5" : "grid-cols-5";
+        authLevel < 5 ? "grid-cols-6" :
+            !colOrigin ? "grid-cols-8" : "grid-cols-8";
 
     const tableCols = [
-        {name: 'Column', auth: false, Comp: () => <></>},
-        {name: 'Description', auth: false},
+        {name: 'Column', auth: false, Comp: () => <></>, width: 2},
+        {name: 'Description', auth: false, width: 3},
         {name: 'Type', auth: false},
         {name: 'Display', auth: true, minAuthLevel: 5},
         {name: 'Default Fn', auth: true, minAuthLevel: 5},
@@ -55,7 +55,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                         (!tableCol.auth ||( tableCol.auth && authLevel >= tableCol.minAuthLevel)) &&
                         (!tableCol.hasOwnProperty('condition') || tableCol.condition)
                     )
-                    .map((tableCol,i) => <dd key={i} className="text-sm font-medium text-gray-600 ">{tableCol.name}</dd>)
+                    .map((tableCol,i) => <dd key={i} className={`text-sm font-medium text-gray-600 col-span-${tableCol.width || 1}`}>{tableCol.name}</dd>)
             }
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -65,7 +65,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                     .filter(col => col.origin === colOrigin)
                     .map((col, i) => (
                         <div key={i} className={`py-4 sm:py-5 sm:grid sm:${gridCols} sm:gap-4 sm:px-6`}>
-                            <dt className="text-sm text-gray-900">
+                            <dt className={`text-sm text-gray-900 col-span-2`}>
                                 <div className={'flex flex-row justify-between group'}>
                                     {editing === `${col.name}-columnName` ? <div className='pt-3 pr-8'>
                                         <Edit
@@ -111,7 +111,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
 
                             </dt>
 
-                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 flex flex-row justify-between group">
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 flex flex-row justify-between group col-span-3">
                                 {editing === `${col.name}-description` ? <div className='pr-8'>
                                     <Edit
                                         type={'lexical'}
@@ -126,7 +126,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
                                     />
                                 </div> :
                                     <div className='pr-8'>
-                                        <Lexical value={get(col, 'desc')} />
+                                        <Lexical value={get(col, 'desc', 'No Desc')} />
                                     </div>
                                 }
 
