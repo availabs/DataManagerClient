@@ -853,7 +853,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
 
         const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
         const displayedValue = isEqualityOperator
-          ? filter?.value?.join(", ")
+          ? Array.isArray(filter?.value) && filter?.value?.join(", ")
           : isBetweenOperator
           ? filter?.value?.join(" and ")
           : filter?.value;
