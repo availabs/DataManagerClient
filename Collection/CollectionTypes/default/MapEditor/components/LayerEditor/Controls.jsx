@@ -286,13 +286,13 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [sourceId,falcorCache])
 
-
+  console.log('metadata', metadata)
 
   useEffect(() => {
     if(column && layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column],
-        exclude: {[column]: ['null']},
+        groupBy: [column.split('AS ')[0]],
+        exclude: {[column.split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       falcor.get([
@@ -304,8 +304,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   useEffect(() => {
     if(layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column],
-        exclude: {[column]: ['null']},
+        groupBy: [column.split('AS ')[0]],
+        exclude: {[column.split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       let data = get(falcorCache, [
@@ -395,7 +395,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             .filter(d => !['wkb_geometry'].includes(d.name))
             .map((col,i) => {
             return (
-              <option key={i} value={col.name}>{col.name}</option>
+              <option key={i} value={col.name}>{col.display_name || col.name}</option>
             )
           })}
         </select>

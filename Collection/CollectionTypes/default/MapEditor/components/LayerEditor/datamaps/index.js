@@ -3,8 +3,10 @@ import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/D
 
 export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
   let paint = ['match',
-      ['to-string',['get', column]],
+      ['to-string',['get', column.split('AS ')[1]]],
   ]
+  
+  
   Array.from(Array(+num).keys()).forEach((d,i) => {
     let cat = ''+categoryData?.[i]?.[column]
       if(cat && cat != '[object Object]'){
@@ -13,6 +15,9 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
       }
   })
   paint.push(showOther)
+
+  console.log('categoryPaint', paint, column, categoryData)
+
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
       .map((d,i) => {
