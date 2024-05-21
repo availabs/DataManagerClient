@@ -48,14 +48,14 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     //TODO question -- is tile URL guaranteed to already have `?col=`
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
-      //console.log('data-column update')
+      console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
 
         let tileBase = newSource.source.tiles?.[0];
-        //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
+        newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
-        
+        //console.log('new source', newSource)
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         
         if(layerProps.filter){
@@ -219,6 +219,7 @@ class ViewLayer extends AvlLayer {
 
       //console.log('hover callback')
       let feature = features[0];
+      console.log('testing feature', feature)
 
       let data = [feature.id, layerId, (features[0] || {}).properties];
 

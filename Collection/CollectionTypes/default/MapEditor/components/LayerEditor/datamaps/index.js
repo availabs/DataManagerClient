@@ -2,9 +2,14 @@ import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
 import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
 
 export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
+  
+  // to allow for calculated columns
+  const column_ref = (column || '').includes('AS ') ? column.split('AS ')[1] : column 
   let paint = ['match',
-      ['to-string',['get', column]],
+      ['to-string',['get', column_ref]],
   ]
+  
+  
   Array.from(Array(+num).keys()).forEach((d,i) => {
     let cat = ''+categoryData?.[i]?.[column]
       if(cat && cat != '[object Object]'){
@@ -13,6 +18,9 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
       }
   })
   paint.push(showOther)
+
+  console.log('categoryPaint', paint, column, categoryData)
+
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
       .map((d,i) => {
