@@ -54,7 +54,10 @@ const MetadataTable = ({ source, ...props }) => {
   const columns = ['column', 'description'].map(col => ({
     Header: col,
     accessor: col,
-    align: 'left'
+    align: 'left',
+    width: col === 'column' ? '30%' : '70%',
+    minWidth: col === 'column' ? '30%' : '70%',
+    maxWidth: col === 'column' ? '30%' : '70%'
   }));
 
   const numCols = metadata?.length;
