@@ -146,21 +146,36 @@ const ViewLayerRender = ({
             (filterColumnName) => {
               let mapFilter = [];
               const filterOperator = layerFilter[filterColumnName].operator;
-              const getFilterCol = ["get", filterColumnName];
               const filterValue = layerFilter[filterColumnName].value;
-              if( filterOperator === 'between'){
+              const filterColumnClause = ["get", filterColumnName];
+
+              if(filterOperator === 'between') {
                 mapFilter = [
                   "all",
-                  [">=", ["to-string", getFilterCol], ["to-string", filterValue?.[0]]],
-                  ["<=", ["to-string", getFilterCol], ["to-string", filterValue?.[1]]],
-                ]
-              }
-              else{
-                mapFilter = [
-                  filterOperator,
-                  ["to-string", getFilterCol],
-                  ["to-string", filterValue]
+                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
                 ];
+              }
+              else {
+                if (["==", "!="].includes(filterOperator)) {
+                  //Allows for `or`, i.e. ogc_fid = 123 or 456
+                  mapFilter = [
+                    "in",
+                    filterColumnClause,
+                    ["literal", filterValue]
+                  ];
+
+                  if(filterOperator === "!="){
+                    mapFilter = ["!", mapFilter];
+                  }
+                }
+                else {
+                  mapFilter = [
+                    filterOperator,
+                    ["to-string", filterColumnClause],
+                    ["to-string", filterValue]
+                  ];
+                }
               }
 
               return mapFilter;
@@ -170,7 +185,7 @@ const ViewLayerRender = ({
         }
       }
     });
-  }, [layerProps])
+  }, [layerProps]);
 }
 
 class ViewLayer extends AvlLayer { 

@@ -843,12 +843,20 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   return (
     <div className="flex w-full flex-wrap">
       {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
+        const selectedColAttr = attributes.find(attr => attr.name === selectedCol);
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
 
+        const isEqualityOperator = selectedColAttr.type === "string" && ["!=", "=="].includes(filter.operator);
+        const isBetweenOperator = filter.operator === "between";
+
         const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
-        const displayedValue = filter.operator === "between" ? filter.value?.join(" and ") :  filter.value
+        const displayedValue = isEqualityOperator
+          ? filter?.value?.join(", ")
+          : isBetweenOperator
+          ? filter?.value?.join(" and ")
+          : filter?.value;
         return (
           <div
             key={i}
@@ -877,9 +885,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   );
 };
 
-//TODO maybe this configurable -- just give it a single column name, 
-//don't fetch all the attributes, then make it parse thru state 
-function DomainList({params, path}) {
+function EqualityFilterValueList({params, path, filterSearchValue}) {
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
   const { state, setState } = React.useContext(SymbologyContext);
   const {activeColumn: activeColumnName, setActiveColumn} = params;
@@ -926,11 +932,9 @@ function DomainList({params, path}) {
       viewId,
       "databyIndex",
       { from: 0, to: 2000 },
-      attributes
-        .filter((d) => !["wkb_geometry"].includes(d))
-        .map((attr) => attr.name),
+      [activeColumnName],
     ]);
-  }, [falcor, pgEnv, viewId, attributes]);
+  }, [falcor, pgEnv, viewId, activeColumnName]);
 
   const sampleData = useMemo(() => {
     return Object.values(
@@ -938,33 +942,44 @@ function DomainList({params, path}) {
     ).map((v) => get(falcorCache, [...v.value], ""));
   }, [pgEnv, falcorCache]);
 
-  const sampleRows = sampleData.map((row) => row[activeColumnName])
-    ?.filter((item) => item !== "null")
-    ?.filter(onlyUnique);
+  const sampleRows = useMemo(() => {
+    return sampleData
+      ?.map((row) => row[activeColumnName])
+      ?.filter((item) => item !== "null")
+      ?.filter(onlyUnique);
+  }, [sampleData, activeColumnName]);
   sampleRows.sort();
 
-  const currentFilterValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )
-
+  const currentFilterValue = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+    params.default || params?.options?.[0]?.value
+  );
   return sampleRows
     ?.filter((sampleValue) =>
       sampleValue
-        .toString()
-        .toLowerCase()
-        .includes(currentFilterValue.toString().toLowerCase())
+        ?.toString()
+        ?.toLowerCase()
+        ?.includes(filterSearchValue.toString().toLowerCase())
     )
     .map((sampleValue, i) => {
-      const selectedClass =
-        currentFilterValue === sampleValue ? "bg-pink-100" : "";
+      const isValueSelected = currentFilterValue.includes(sampleValue)
+      const selectedClass = isValueSelected ? "bg-pink-100" : "";
       return (
         <div
           key={i}
           className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
           onClick={() =>
-            setState((draft) => {
+            setState((draft) => {   
+              const newValue = isValueSelected
+                ? currentFilterValue.filter(
+                    (filterVal) => filterVal !== sampleValue
+                  )
+                : [...currentFilterValue, sampleValue];
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                currentFilterValue === sampleValue ? "" : sampleValue
+                newValue
               );
             })
           }
@@ -973,7 +988,7 @@ function DomainList({params, path}) {
             <input
               readOnly
               type="checkbox"
-              checked={currentFilterValue === sampleValue}
+              checked={isValueSelected}
             />
             <div className="truncate flex items-center text-[13px] px-4 py-1">
               {sampleValue}
@@ -986,7 +1001,8 @@ function DomainList({params, path}) {
 
 export function FilterBuilder({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const {activeColumn: activeColumnName, setActiveColumn} = params;
+  const [filterSearchValue, setFilterSearchValue] = React.useState("");
+  const { activeColumn: activeColumnName, setActiveColumn } = params;
 
   const { sourceId } = useMemo(
     () => ({
@@ -1029,10 +1045,34 @@ export function FilterBuilder({ path, params = {} }) {
     state,
     `symbology.layers[${state.symbology.activeLayer}].filter`
   );
+
   const valuePath = `${path}.${activeColumnName}.value`;
   const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
-  const isEqualityOperator = ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
+  const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
 
+  const valueInputComponent = isEqualityOperator ? (
+    <StyledControl>
+      <label className='flex'>
+        <div className='flex items-center'>
+          <input
+            className='w-full'
+            type='text' 
+            value={filterSearchValue}
+            onChange={(e) => {setFilterSearchValue(e.target.value)}}
+          />
+        </div>
+      </label>
+    </StyledControl>
+  ) : (
+    <StyledControl>
+      <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
+    </StyledControl>
+  );
+
+  const valueLabel = isEqualityOperator ? "Search values" : "Value:";
+  const valueLabelComponent = isBetweenOperator ? null : (
+    <div className="p-1">{valueLabel}</div>
+  );
   return (
     <>
       {!activeColumnName && (
@@ -1065,10 +1105,8 @@ export function FilterBuilder({ path, params = {} }) {
               </StyledControl>
             </div>
             <div className="flex my-1 items-center">
-              {!isBetweenOperator && <div className="p-1">Value:</div>}
-              <StyledControl>
-                <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
-              </StyledControl>
+              {valueLabelComponent}
+              {valueInputComponent}
             </div>
             {
               isBetweenOperator &&
@@ -1085,7 +1123,7 @@ export function FilterBuilder({ path, params = {} }) {
           </div>
           {
             isEqualityOperator && 
-              <DomainList params={params} path={valuePath}/>
+              <EqualityFilterValueList params={params} path={valuePath} filterSearchValue={filterSearchValue}/>
           }
         </>  
       )}
@@ -1146,19 +1184,37 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
     return { value: colName, label: newAttr?.display_name || colName };
   }); 
   
+  const DEFAULT_STRING_FILTER = {
+    operator: "==",
+    value: [],
+  }
+
+  const DEFAULT_NUM_FILTER = {
+    operator: "==",
+    value: ""
+  }
+
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
         setState((draft) => {
           if (newColumn !== "") {
+            const newAttr = attributes.find(attr => attr.name === newColumn);
+            let newValue = {
+              ...DEFAULT_STRING_FILTER,
+              columnName: newColumn,
+            };
+            if(newAttr.type !== "string") {
+              newValue = {
+                ...DEFAULT_NUM_FILTER,
+                columnName: newColumn,
+              }
+            }
+
             set(
               draft,
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
-              {
-                operator: "==",
-                value: "",
-                columnName: newColumn,
-              }
+              newValue
             );
           }
         });
