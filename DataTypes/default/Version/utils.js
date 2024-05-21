@@ -1,6 +1,6 @@
 import get from "lodash/get.js";
 
-export const getValue = value => typeof value === 'object' ? (value?.value ? JSON.stringify(value?.value) : 'N/A') : value;
+export const getValue = value => typeof value === 'object' ? (value?.value ? getValue(value.value) : 'N/A') : value;
 
 export function classNames(...classes) {
     return classes.filter(Boolean).join(' ')

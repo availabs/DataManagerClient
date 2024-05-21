@@ -26,7 +26,7 @@ export default function Version() {
     srcMeta = get(falcorCache, ["dama", pgEnv, "sources", "byId"], {}),
     viewMeta = get(falcorCache, ["dama", pgEnv, "views", "byId"], {}),
     view = get(falcorCache, ["dama", pgEnv, "views", "byId", viewId, 'attributes'], {}),
-      srcName = get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "attributes", "name"], {});
+      srcName = get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "attributes", "name"], '');
 
   const version = typeof view?.['version'] === 'object' ? null : view?.['version']
 

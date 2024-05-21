@@ -11,8 +11,8 @@ const attrNameMap = {
     'data_type': 'Data Type'
 }
 
-export const RenderAttribute = ({key, attr, editing, setEditing, user, val, view, display='row', valueClass}) => (
-    <div key={key} className='w-full flex justify-between group hover:bg-blue-50 rounded-lg items-middle'>
+export const RenderAttribute = ({attr, editing, setEditing, user, val, view, display='row', valueClass='w-3/4 font-semibold'}) => (
+    <div className='w-full flex justify-between group hover:bg-blue-50 rounded-lg items-middle'>
         <div className={`w-full flex flex-col sm:flex-${display} items-center pb-2 pt-5 px-1`}>
             <dt className="w-1/4 text-sm font-medium text-gray-500 capitalize">{attrNameMap[attr] || attr}</dt>
             <dd className="w-3/4 text-sm text-gray-900 sm:mt-0">
