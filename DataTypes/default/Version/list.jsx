@@ -45,7 +45,7 @@ const Versions = ({ source, views, meta }) => {
         columns={[
           {
             Header: "Version Id",
-            accessor: (c) => c["version"] || c["view_id"],
+            accessor: (c) => <Link className="text-blue-500" to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]}</Link>
           },
           {
             Header: "User",
@@ -54,10 +54,6 @@ const Versions = ({ source, views, meta }) => {
           {
             Header: "Uploaded",
             accessor: (c) => formatDate(c["_created_timestamp"]),
-          },
-          {
-            Header: "Details",
-            accessor: (c) => <Link className="text-blue-500" to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> Link to Details Page </Link>
           },
           {
             Header: " Download",
