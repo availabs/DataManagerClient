@@ -18,6 +18,7 @@ function onlyUnique(value, index, array) {
 const FILTER_OPERATORS = {
   string: ["!=", "==" ],
   integer: ["!", "<", "<=", "==", ">=", ">", "between" ],
+  number: ["!", "<", "<=", "==", ">=", ">", "between" ]
 };
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -286,13 +287,13 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [sourceId,falcorCache])
 
-
+  //console.log('metadata', metadata)
 
   useEffect(() => {
     if(column && layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column],
-        exclude: {[column]: ['null']},
+        groupBy: [(column).split('AS ')[0]],
+        exclude: {[(column).split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       falcor.get([
@@ -302,10 +303,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   },[column])
 
   useEffect(() => {
-    if(layerType === 'categories') {
+    if(column && layerType === 'categories') {
       const options = JSON.stringify({
-        groupBy: [column],
-        exclude: {[column]: ['null']},
+        groupBy: [(column).split('AS ')[0]],
+        exclude: {[(column).split('AS ')[0]]: ['null']},
         orderBy: {"2": 'desc'}
       })
       let data = get(falcorCache, [
@@ -395,7 +396,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             .filter(d => !['wkb_geometry'].includes(d.name))
             .map((col,i) => {
             return (
-              <option key={i} value={col.name}>{col.name}</option>
+              <option key={i} value={col.name}>{col.display_name || col.name}</option>
             )
           })}
         </select>
@@ -842,12 +843,20 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   return (
     <div className="flex w-full flex-wrap">
       {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
+        const selectedColAttr = attributes.find(attr => attr.name === selectedCol);
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
 
+        const isEqualityOperator = selectedColAttr.type === "string" && ["!=", "=="].includes(filter.operator);
+        const isBetweenOperator = filter.operator === "between";
+
         const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
-        const displayedValue = filter.operator === "between" ? filter.value?.join(" and ") :  filter.value
+        const displayedValue = isEqualityOperator
+          ? Array.isArray(filter?.value) && filter?.value?.join(", ")
+          : isBetweenOperator
+          ? filter?.value?.join(" and ")
+          : filter?.value;
         return (
           <div
             key={i}
@@ -876,13 +885,133 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   );
 };
 
-export function FilterBuilder({ path, params = {} }) {
+function EqualityFilterValueList({params, path, filterSearchValue}) {
+  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
   const { state, setState } = React.useContext(SymbologyContext);
   const {activeColumn: activeColumnName, setActiveColumn} = params;
+  const { viewId, sourceId } = useMemo(
+    () => ({
+      viewId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].view_id`
+      ),
+      sourceId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].source_id`
+      ),
+    }),
+    [state]
+  );
 
-  const sourceId = get(
+  useEffect(() => {
+    if (sourceId) {
+      falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+    ]);
+    }
+  }, [sourceId]);
+
+  const attributes = useMemo(() => {
+    let columns = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+    ], []);
+
+    if (columns.length === 0) {
+      columns = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+      ], []);
+    }
+    return columns;
+  }, [sourceId, falcorCache]);
+
+  useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "viewsbyId",
+      viewId,
+      "databyIndex",
+      { from: 0, to: 2000 },
+      [activeColumnName],
+    ]);
+  }, [falcor, pgEnv, viewId, activeColumnName]);
+
+  const sampleData = useMemo(() => {
+    return Object.values(
+      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
+    ).map((v) => get(falcorCache, [...v.value], ""));
+  }, [pgEnv, falcorCache]);
+
+  const sampleRows = useMemo(() => {
+    return sampleData
+      ?.map((row) => row[activeColumnName])
+      ?.filter((item) => item !== "null")
+      ?.filter(onlyUnique);
+  }, [sampleData, activeColumnName]);
+  sampleRows.sort();
+
+  const currentFilterValue = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].source_id`
+    `symbology.layers[${state.symbology.activeLayer}].${path}`,
+    params.default || params?.options?.[0]?.value
+  );
+  return sampleRows
+    ?.filter((sampleValue) =>
+      sampleValue
+        ?.toString()
+        ?.toLowerCase()
+        ?.includes(filterSearchValue.toString().toLowerCase())
+    )
+    .map((sampleValue, i) => {
+      const isValueSelected = currentFilterValue.includes(sampleValue)
+      const selectedClass = isValueSelected ? "bg-pink-100" : "";
+      return (
+        <div
+          key={i}
+          className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
+          onClick={() =>
+            setState((draft) => {   
+              const newValue = isValueSelected
+                ? currentFilterValue.filter(
+                    (filterVal) => filterVal !== sampleValue
+                  )
+                : [...currentFilterValue, sampleValue];
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                newValue
+              );
+            })
+          }
+        >
+          <div className="flex">
+            <input
+              readOnly
+              type="checkbox"
+              checked={isValueSelected}
+            />
+            <div className="truncate flex items-center text-[13px] px-4 py-1">
+              {sampleValue}
+            </div>
+          </div>
+        </div>
+      );
+    });
+}
+
+export function FilterBuilder({ path, params = {} }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const [filterSearchValue, setFilterSearchValue] = React.useState("");
+  const { activeColumn: activeColumnName, setActiveColumn } = params;
+
+  const { sourceId } = useMemo(
+    () => ({
+      sourceId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].source_id`
+      ),
+    }),
+    [state]
   );
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
 
@@ -916,9 +1045,34 @@ export function FilterBuilder({ path, params = {} }) {
     state,
     `symbology.layers[${state.symbology.activeLayer}].filter`
   );
+
   const valuePath = `${path}.${activeColumnName}.value`;
   const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
+  const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
 
+  const valueInputComponent = isEqualityOperator ? (
+    <StyledControl>
+      <label className='flex'>
+        <div className='flex items-center'>
+          <input
+            className='w-full'
+            type='text' 
+            value={filterSearchValue}
+            onChange={(e) => {setFilterSearchValue(e.target.value)}}
+          />
+        </div>
+      </label>
+    </StyledControl>
+  ) : (
+    <StyledControl>
+      <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
+    </StyledControl>
+  );
+
+  const valueLabel = isEqualityOperator ? "Search values" : "Value:";
+  const valueLabelComponent = isBetweenOperator ? null : (
+    <div className="p-1">{valueLabel}</div>
+  );
   return (
     <>
       {!activeColumnName && (
@@ -931,43 +1085,47 @@ export function FilterBuilder({ path, params = {} }) {
 
       {activeColumnName && (
         <>
-          <div className="flex my-1 items-center">
-            <div className="p-1">Column:</div>
-            <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
-          </div>
-          <div className="flex my-1 items-center">
-            <div className="p-1">Operator:</div>
-            <StyledControl>
-              <SelectControl
-                path={`${path}.${activeColumnName}.operator`}
-                params={{
-                  options: filterOperators.map((operator) => ({
-                    value: operator,
-                    name: operator,
-                  })),
-                }}
-              />
-            </StyledControl>
-          </div>
-          <div className="flex my-1 items-center">
-            {!isBetweenOperator && <div className="p-1">Value:</div>}
-            <StyledControl>
-              <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
-            </StyledControl>
+          <div className='mx-4'>
+            <div className="flex my-1 items-center">
+              <div className="p-1">Column:</div>
+              <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
+            </div>
+            <div className="flex my-1 items-center">
+              <div className="p-1">Operator:</div>
+              <StyledControl>
+                <SelectControl
+                  path={`${path}.${activeColumnName}.operator`}
+                  params={{
+                    options: filterOperators.map((operator) => ({
+                      value: operator,
+                      name: operator,
+                    })),
+                  }}
+                />
+              </StyledControl>
+            </div>
+            <div className="flex my-1 items-center">
+              {valueLabelComponent}
+              {valueInputComponent}
+            </div>
+            {
+              isBetweenOperator &&
+                <>
+                  <div className="p-1">And</div>
+                  <div className="flex my-1 items-center">
+                    
+                    <StyledControl>
+                      <SimpleControl path={valuePath + "[1]"} />
+                    </StyledControl>
+                  </div>
+                </>
+            }
           </div>
           {
-            isBetweenOperator &&
-              <>
-                <div className="p-1">And</div>
-                <div className="flex my-1 items-center">
-                  
-                  <StyledControl>
-                    <SimpleControl path={valuePath + "[1]"} />
-                  </StyledControl>
-                </div>
-              </>
+            isEqualityOperator && 
+              <EqualityFilterValueList params={params} path={valuePath} filterSearchValue={filterSearchValue}/>
           }
-        </>
+        </>  
       )}
     </>
   );
@@ -1026,20 +1184,37 @@ function AddFilterColumn({ path, params = {}, setActiveColumn }) {
     return { value: colName, label: newAttr?.display_name || colName };
   }); 
   
+  const DEFAULT_STRING_FILTER = {
+    operator: "==",
+    value: [],
+  }
+
+  const DEFAULT_NUM_FILTER = {
+    operator: "==",
+    value: ""
+  }
+
   return (
     <AddColumnSelectControl
       setState={(newColumn) => {
-        //TODO -- This should check `column_type` and then set the default operator and value accordingly
         setState((draft) => {
           if (newColumn !== "") {
+            const newAttr = attributes.find(attr => attr.name === newColumn);
+            let newValue = {
+              ...DEFAULT_STRING_FILTER,
+              columnName: newColumn,
+            };
+            if(newAttr.type !== "string") {
+              newValue = {
+                ...DEFAULT_NUM_FILTER,
+                columnName: newColumn,
+              }
+            }
+
             set(
               draft,
               `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
-              {
-                operator: "==",
-                value: "",
-                columnName: newColumn,
-              }
+              newValue
             );
           }
         });

@@ -15,10 +15,11 @@ function FilterEditor(props) {
   );
 
   return (
-    <div className="p-4 w-full">
-      <div className="w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
+    <div className="pb-4 w-full max-h-[calc(100vh_-_251px)] scrollbar-xs overflow-x-hidden overflow-y-auto">
+      <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
         Filters
       </div>
+      <div className="mx-4">
       <ExistingFilterList
         removeFilter={(columnName) => {
           setState((draft) => {
@@ -38,7 +39,8 @@ function FilterEditor(props) {
         activeColumn={activeColumn}
         setActiveColumn={setActiveColumn}
       />
-      <div className="m-2">
+      </div>
+      <div className="m-4">
         <Button
           className="p-1"
           themeOptions={{ size: "sm", color: "transparent" }}

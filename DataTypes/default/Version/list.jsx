@@ -4,7 +4,8 @@ import get from "lodash/get";
 import { Link, useParams } from "react-router-dom";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
-import Version, { VersionDownload } from "./version";
+import Version from "./version";
+import {VersionDownload} from "./components/VersionDownload.jsx";
 
 import DeleteVersion from "./delete";
 
@@ -44,7 +45,7 @@ const Versions = ({ source, views, meta }) => {
         columns={[
           {
             Header: "Version Id",
-            accessor: (c) => c["version"] || c["view_id"],
+            accessor: (c) => <Link className="text-blue-500" to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> {c["version"] || c["view_id"]}</Link>
           },
           {
             Header: "User",
@@ -53,10 +54,6 @@ const Versions = ({ source, views, meta }) => {
           {
             Header: "Uploaded",
             accessor: (c) => formatDate(c["_created_timestamp"]),
-          },
-          {
-            Header: "Details",
-            accessor: (c) => <Link className="text-blue-500" to={`${baseUrl}/source/${sourceId}/versions/${c["view_id"]}`}> Link to Details Page </Link>
           },
           {
             Header: " Download",

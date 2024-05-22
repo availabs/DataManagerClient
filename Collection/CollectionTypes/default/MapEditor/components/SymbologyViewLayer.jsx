@@ -55,7 +55,7 @@ const ViewLayerRender = ({
         let tileBase = newSource.source.tiles?.[0];
         //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
         //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
-        
+        //console.log('new source', newSource)
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         
         if(layerProps.filter){
@@ -146,21 +146,36 @@ const ViewLayerRender = ({
             (filterColumnName) => {
               let mapFilter = [];
               const filterOperator = layerFilter[filterColumnName].operator;
-              const getFilterCol = ["get", filterColumnName];
               const filterValue = layerFilter[filterColumnName].value;
-              if( filterOperator === 'between'){
+              const filterColumnClause = ["get", filterColumnName];
+
+              if(filterOperator === 'between') {
                 mapFilter = [
                   "all",
-                  [">=", ["to-string", getFilterCol], ["to-string", filterValue?.[0]]],
-                  ["<=", ["to-string", getFilterCol], ["to-string", filterValue?.[1]]],
-                ]
-              }
-              else{
-                mapFilter = [
-                  filterOperator,
-                  ["to-string", getFilterCol],
-                  ["to-string", filterValue]
+                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
                 ];
+              }
+              else {
+                if (["==", "!="].includes(filterOperator)) {
+                  //Allows for `or`, i.e. ogc_fid = 123 or 456
+                  mapFilter = [
+                    "in",
+                    filterColumnClause,
+                    ["literal", filterValue]
+                  ];
+
+                  if(filterOperator === "!="){
+                    mapFilter = ["!", mapFilter];
+                  }
+                }
+                else {
+                  mapFilter = [
+                    filterOperator,
+                    ["to-string", filterColumnClause],
+                    ["to-string", filterValue]
+                  ];
+                }
               }
 
               return mapFilter;
@@ -170,7 +185,7 @@ const ViewLayerRender = ({
         }
       }
     });
-  }, [layerProps])
+  }, [layerProps]);
 }
 
 class ViewLayer extends AvlLayer { 
@@ -204,6 +219,7 @@ class ViewLayer extends AvlLayer {
 
       //console.log('hover callback')
       let feature = features[0];
+      console.log('testing feature', feature)
 
       let data = [feature.id, layerId, (features[0] || {}).properties];
 
