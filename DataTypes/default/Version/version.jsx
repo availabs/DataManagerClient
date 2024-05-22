@@ -433,7 +433,7 @@ function ViewControls ({view}) {
         open={modalState.open}
         setOpen={setModalOpen}
       >
-        <div className="flex items-center">
+        <div className="flex items-center ">
           <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
             <i
               className="fad fa-layer-group text-blue-600"
