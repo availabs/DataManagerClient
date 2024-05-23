@@ -71,9 +71,17 @@ export default function Upload({ ctxId }) {
     const hasFinalEvent = ctx?.events.some((ctxEvent) =>
       ctxEvent.type.toLowerCase().includes(FINAL_EVENT_TYPE)
     );
+
+    const initialEvent = ctx?.events.find((ctxEvent) =>
+      ctxEvent.type?.toLowerCase().includes("initial")
+    );
+    const isGisUpload =
+      initialEvent?.type?.split(":")[0] === GIS_DATASET_EVENT_TYPE ||
+      source?.type === GIS_DATASET_SOURCE_TYPE;
+
     if (
       ctx?.events &&
-      source.type === GIS_DATASET_SOURCE_TYPE &&
+      isGisUpload &&
       !hasFinalEvent
     ) {
       //We officially have an etlContext that is eligible for a progress bar
