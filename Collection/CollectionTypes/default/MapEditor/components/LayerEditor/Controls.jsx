@@ -541,7 +541,10 @@ function CategoryControl({path, params={}}) {
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
     }
   },[state])
+  console.log("value", value)
+  console.log("categorydata", categorydata)
 
+  //Number of distinct values, not counting `null`
   const numCategories = useMemo(() => {
       //console.log('categorydata', categorydata)
       return Object.values(categorydata)
@@ -552,8 +555,9 @@ function CategoryControl({path, params={}}) {
           return out
         },0)
    }, [categorydata])
-
-  const categories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
+  console.log("numCategories",numCategories)
+  //Represents the "active list" of categories
+  const currentCategories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
             .map((d,i) => {
               if(i%2 === 0) {
                 return {color: d, label: value[i+2]}
@@ -561,7 +565,17 @@ function CategoryControl({path, params={}}) {
               return null
             })
             .filter(d => d)
+  console.log("categories",currentCategories);
 
+
+
+  const availableCategories = getDiffColumns(
+    Object.values(categorydata)
+      .filter((cat) => typeof cat[column] !== "object")
+      .map((catData) => catData[column]),
+    currentCategories.map((cat) => cat.label)
+  ).map((cat) => ({ label: cat, value: cat }));
+  console.log("availableCategories",availableCategories)
   const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
   return (
    
@@ -571,15 +585,15 @@ function CategoryControl({path, params={}}) {
           <div className='border border-transparent hover:border-slate-200 m-1 rounded '>
             <select
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
-              value={categories.length}
+              value={currentCategories.length}
               onChange={(e) => setState(draft => {
                 // console.log('SelectViewColumnControl set column path', path, e.target.value)
                 set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value)
               })}
             >
-              <option key={'def'} value={categories.length}>{categories.length} Categories</option>
+              <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
               {([10,20,30,50,100] || [])
-                .filter(d => d < numCategories && d !== categories.length)
+                .filter(d => d < numCategories && d !== currentCategories.length)
                 .map((val,i) => {
                 return (
                   <option key={i} value={val}>{val} Categories</option>
@@ -617,7 +631,7 @@ function CategoryControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {categories.map((d,i) => (
+        {currentCategories.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
@@ -632,6 +646,28 @@ function CategoryControl({path, params={}}) {
             <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
           </div>
         }
+        <div className="flex-1 flex items-center mx-4">
+          <StyledControl>
+          <label className='flex w-full'>
+              <div className='flex w-full items-center'>
+                <select
+                  className='w-full py-2 bg-transparent'
+                  value={''}
+                  onChange={(e) =>
+                    {console.log("adding new value to categoires", e)}
+                  }
+                >
+                  <option key={-1} value={""}></option>
+                  {(availableCategories || []).map((opt, i) => (
+                    <option key={i} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+          </StyledControl>
+        </div>
         </div>
       </div>
     )
