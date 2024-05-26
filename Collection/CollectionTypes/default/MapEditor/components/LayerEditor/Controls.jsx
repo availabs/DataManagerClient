@@ -811,7 +811,8 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
 
   const existingFilter = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`
+    `symbology.layers[${state.symbology.activeLayer}].filter`,
+    {}
   );
 
   const sourceId = get(
@@ -939,7 +940,7 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...v.value], ""));
+    ).map((v) => get(falcorCache, [...((v?.value,  || {})], ""));
   }, [pgEnv, falcorCache]);
 
   const sampleRows = useMemo(() => {
@@ -1043,12 +1044,13 @@ export function FilterBuilder({ path, params = {} }) {
   const filterOperators = FILTER_OPERATORS[activeAttr?.type] || [];
   const existingFilter = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`
+    `symbology.layers[${state.symbology.activeLayer}].filter`,
+    {}
   );
 
   const valuePath = `${path}.${activeColumnName}.value`;
-  const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
-  const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
+  const isBetweenOperator = existingFilter?.[activeColumnName]?.operator === "between";
+  const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter?.[activeColumnName]?.operator);
 
   const valueInputComponent = isEqualityOperator ? (
     <StyledControl>
@@ -1347,7 +1349,7 @@ export function ColumnSelectControl({path, params={}}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...v.value], ""));
+    ).map((v) => get(falcorCache, [...(v?.value, ], ""));
   }, [pgEnv, falcorCache]);
 
   return (
