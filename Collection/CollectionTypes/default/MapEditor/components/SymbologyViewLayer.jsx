@@ -58,15 +58,11 @@ const ViewLayerRender = ({
         //console.log('new source', newSource)
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         
-        if(layerProps?.filter?.length > 0){
-          tileBase += '?cols='
+        if(layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0){
           Object.keys(layerProps.filter).forEach(filterCol => {
-            console.log('test', filterCol)
             tileBase += `,${filterCol}`
           })
         }
-
-        console.log('test 123', tileBase,  newSource.source)
 
         if(tileBase){
           newSource.source.tiles = [tileBase];
@@ -255,7 +251,6 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  console.log(dctx?.falcor ? 'dmscontext' : 'cmscontext')
   const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
@@ -330,14 +325,6 @@ const HoverComp = ({ data, layer }) => {
   }, [falcor, pgEnv, view_id, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
-    console.log('get attrInfo',pgEnv,view_id, id, 
-      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
-      falcorCache,
-      get(
-      falcorCache,
-      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
-      {}
-    ))
     return get(
       falcorCache,
       ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
@@ -358,8 +345,7 @@ const HoverComp = ({ data, layer }) => {
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => {
           const hoverAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
-          let columnMetadata = JSON.parse(hoverAttr?.meta_lookup || "{}")
-          //console.log('col',hoverAttr, 'lookup',columnMetadata)
+          const columnMetadata = JSON.parse(hoverAttr?.meta_lookup || "{}")
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
             return <></>;
           }
