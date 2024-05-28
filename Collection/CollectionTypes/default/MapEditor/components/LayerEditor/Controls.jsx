@@ -1041,7 +1041,9 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...(v?.value || {})], ""));
+    ).map((v) => {
+      return v?.value ? get(falcorCache, v.value, "") : "";
+    }) 
   }, [pgEnv, falcorCache]);
 
   const sampleRows = useMemo(() => {
@@ -1450,7 +1452,11 @@ export function ColumnSelectControl({path, params={}}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...(v?.value || {})], ""));
+    ).map((v) =>  {
+      // console.log('what', v)
+
+      return v?.value ? get(falcorCache, v.value, "") : ""
+    });
   }, [pgEnv, falcorCache]);
 
   return (
