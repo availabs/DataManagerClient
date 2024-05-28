@@ -706,10 +706,12 @@ function CategoryControl({path, params={}}) {
 
                       updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
                       updatedCategoryPaint.splice(value.length-1, 0, e.target.value, rgb2hex(nextColor));
-
+                      
                       setState(draft=> {
                         set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                          paint: updatedCategoryPaint, legend: updatedCategoryLegend
+                          paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                            return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                          })
                         });
                       });
                     }
@@ -1022,7 +1024,11 @@ export function ColumnSelectControl({path, params={}}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...(v?.value || {})], ""));
+    ).map((v) =>  {
+      // console.log('what', v)
+
+      return v?.value ? get(falcorCache, v.value, "") : ""
+    });
   }, [pgEnv, falcorCache]);
 
   return (
