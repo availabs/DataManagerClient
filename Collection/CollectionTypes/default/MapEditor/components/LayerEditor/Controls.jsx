@@ -710,10 +710,13 @@ function CategoryControl({path, params={}}) {
 
                       updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
                       updatedCategoryPaint.splice(value.length-1, 0, e.target.value, rgb2hex(nextColor));
+                      
 
                       setState(draft=> {
                         set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                          paint: updatedCategoryPaint, legend: updatedCategoryLegend
+                          paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                            return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                          })
                         });
                       });
                     }
