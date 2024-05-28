@@ -53,11 +53,9 @@ const ViewLayerRender = ({
         let newSource = cloneDeep(layerProps.sources?.[0])
 
         let tileBase = newSource.source.tiles?.[0];
-        //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
-        //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
-        //console.log('new source', newSource)
-        //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
-        
+        if(tileBase && !tileBase?.includes("?cols=")){
+          tileBase += `?cols=${layerProps?.['data-column']}`;
+        }
         if(layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0){
           Object.keys(layerProps.filter).forEach(filterCol => {
             tileBase += `,${filterCol}`
