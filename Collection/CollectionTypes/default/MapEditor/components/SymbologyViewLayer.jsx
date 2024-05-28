@@ -255,6 +255,7 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
+  console.log(dctx?.falcor ? 'dmscontext' : 'cmscontext')
   const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
@@ -269,12 +270,16 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
-    if(view_id) {
-      falcor.get([
-         "dama", pgEnv, "viewsbyId", view_id, "databyId", id
-      ])
-    }
-  }, [source_id, view_id, id, hoverColumns]);
+    
+  }, [source_id, hoverColumns]);
+
+  // useEffect(() => {
+  //   if(view_id) {
+  //     falcor.get([
+  //        "dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id
+  //     ]).then(d => console.log('getting', [ "dama", pgEnv, "viewsbyId", view_id, "databyId", id], d))
+  //   }
+  // },[pgEnv,view_id,id])
 
   const attributes = React.useMemo(() => {
     if (!hoverColumns) {
@@ -325,15 +330,23 @@ const HoverComp = ({ data, layer }) => {
   }, [falcor, pgEnv, view_id, id, attributes]);
 
   const attrInfo = React.useMemo(() => {
+    console.log('get attrInfo',pgEnv,view_id, id, 
+      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
+      falcorCache,
+      get(
+      falcorCache,
+      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
+      {}
+    ))
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", view_id, "databyId", id],
+      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
       {}
-    );
+    )
   }, [id, falcorCache, view_id, pgEnv]);
 
   
-  console.log('test 123', attributes)
+  //console.log('test 123', attrInfo)
 
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">
@@ -346,7 +359,7 @@ const HoverComp = ({ data, layer }) => {
         .map((k, i) => {
           const hoverAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           let columnMetadata = JSON.parse(hoverAttr?.meta_lookup || "{}")
-          console.log('col',hoverAttr, 'lookup',columnMetadata)
+          //console.log('col',hoverAttr, 'lookup',columnMetadata)
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
             return <></>;
           }

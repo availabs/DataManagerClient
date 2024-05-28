@@ -153,12 +153,12 @@ Edit.settings = {
 }
 
 const View = ({value, size}) => {
-    console.log('Dama Map: View')
+    // console.log('Dama Map: View')
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
     const mounted = useRef(false);
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
-    console.log('cachedData', cachedData, value)
+    //console.log('cachedData', cachedData, value)
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || [],
@@ -166,7 +166,7 @@ const View = ({value, size}) => {
     const [mapLayers, setMapLayers] = useImmer([])
 
 
-    console.log('render map component view', state)
+    //console.log('render map component view', state)
     useEffect(() => {
         // -----------------------
         // Update map layers on map
