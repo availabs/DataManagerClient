@@ -163,7 +163,7 @@ function LegendRow ({ index, layer, i }) {
   const type = layer['layer-type']
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
-  const sourceUrl = `/datasources/source/${layer.source_id}`
+  const sourceUrl = `/cenrep/source/${layer.source_id}`
 
   return (
     <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
@@ -182,7 +182,7 @@ function LegendRow ({ index, layer, i }) {
               }
             }}
           >
-            <span style={{fontFamily:"FontAwesome"}}className="mx-2 fa fa-square-info group-hover/icon:text-pink-800"/>
+            <span className="mx-2 text-md text-slate-300 fa fa-info group-hover/icon:text-pink-800"/>
           </div>
         </div>
       </div>

@@ -1,7 +1,12 @@
 import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
 import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
+import get from 'lodash/get'
 
-export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc') {
+export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc', metadata) {
+
+  //console.log('categoryPaint', column, metadata)
+  
+  let columnMetadata = JSON.parse((metadata.filter(d => d.name === column)?.[0] || {})?.meta_lookup || "{}")
   
   // to allow for calculated columns
   const column_ref = (column || '').includes('AS ') ? column.split('AS ')[1] : column 
@@ -19,13 +24,13 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
   })
   paint.push(showOther)
 
-  console.log('categoryPaint', paint, column, categoryData)
+  // console.log('categoryPaint', paint, column, categoryData)
 
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
       .map((d,i) => {
         if(i%2 === 0) {
-          return {color: d, label: paint[i+2]}
+          return {color: d, label: get(columnMetadata, paint[i+2],paint[i+2]) }
         }
         return null
       })

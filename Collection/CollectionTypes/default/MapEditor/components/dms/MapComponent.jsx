@@ -128,9 +128,9 @@ const Edit = ({value, onChange, size}) => {
                   layerProps = { layerProps }
                   hideLoading={true}
                   showLayerSelect={true}
-                  mapOptions={{
-                    center: [-76, 43.3],
-                    zoom: 6,
+                   mapOptions={{
+                    center: [-73.77, 42.65],
+                    zoom: 13,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}
@@ -234,6 +234,11 @@ const View = ({value, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
+    /*
+
+    -73.77114629819935,
+          42.653137397916566
+    */
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
             <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
@@ -243,8 +248,8 @@ const View = ({value, size}) => {
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-76, 43.3],
-                    zoom: 6,
+                    center: [-73.77, 42.65],
+                    zoom: 13,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}

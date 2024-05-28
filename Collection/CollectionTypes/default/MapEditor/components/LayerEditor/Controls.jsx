@@ -110,8 +110,8 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   React.useEffect(() => {
     if( value === 'categories') {
-      let {paint, legend} = categories?.paint ? categories : categoryPaint(column,categorydata,colors,numCategories, showOther);
-      //console.log('categories xyz', paint, isValidCategoryPaint(paint))
+      let {paint, legend} = categories?.paint ? categories : categoryPaint(column, categorydata, colors, numCategories, showOther, metadata);
+      //console.log('categories xyz', column, categories)
       if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
         //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
 
@@ -382,7 +382,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
-
+            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`, {})
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
 
           })}
@@ -535,14 +535,39 @@ function CategoryControl({path, params={}}) {
   //let colors = categoricalColors
 
   //Value is literal represetnation of mapbox filter object that colors the actual map
-  let { value, column, categorydata, colors } = useMemo(() => {
+  let { value, column, categorydata, colors, sourceId } = useMemo(() => {
     return {
+      sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
     }
   },[state])
+
+  useEffect(() => {
+    //console.log('getmetadat', sourceId)
+    if(sourceId) {
+      falcor.get([
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
+    }
+  },[sourceId])
+
+  const metadataLookup = useMemo(() => {
+    //console.log('getmetadata', falcorCache)
+      let out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+      ], [])
+      if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+      return JSON.parse((out.filter(d => d.name === column)?.[0] || {})?.meta_lookup || "{}")
+      
+
+  }, [sourceId,falcorCache])
 
   //Number of total distinct values, not counting `null`
   const numCategories = useMemo(() => {
@@ -585,8 +610,7 @@ function CategoryControl({path, params={}}) {
               value={currentCategories.length}
               onChange={(e) => setState(draft => {
                   set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                });
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{});
               })}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
@@ -640,6 +664,7 @@ function CategoryControl({path, params={}}) {
               onClick={() => {
                 const updatedCategoryPaint = [...value];
                 const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
+                //console.log('test123', updatedCategoryLegend)
 
                 const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
 
@@ -647,7 +672,9 @@ function CategoryControl({path, params={}}) {
                 updatedCategoryPaint.splice(indexOfLabel, 2);
                 setState(draft=> {
                   set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                    paint: updatedCategoryPaint, legend: updatedCategoryLegend
+                    paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                      return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                    })
                   });
                 });
               }}
@@ -1420,7 +1447,7 @@ export function ColumnSelectControl({path, params={}}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...(v?.value, ], ""));
+    ).map((v) => get(falcorCache, [...(v?.value || {})], ""));
   }, [pgEnv, falcorCache]);
 
   return (

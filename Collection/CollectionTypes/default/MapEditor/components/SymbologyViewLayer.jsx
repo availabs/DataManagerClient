@@ -58,11 +58,15 @@ const ViewLayerRender = ({
         //console.log('new source', newSource)
         //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
         
-        if(layerProps.filter){
+        if(layerProps?.filter?.length > 0){
+          tileBase += '?cols='
           Object.keys(layerProps.filter).forEach(filterCol => {
+            console.log('test', filterCol)
             tileBase += `,${filterCol}`
           })
         }
+
+        console.log('test 123', tileBase,  newSource.source)
 
         if(tileBase){
           newSource.source.tiles = [tileBase];
@@ -219,7 +223,7 @@ class ViewLayer extends AvlLayer {
 
       //console.log('hover callback')
       let feature = features[0];
-      console.log('testing feature', feature)
+      // console.log('testing feature', feature)
 
       let data = [feature.id, layerId, (features[0] || {}).properties];
 
@@ -260,12 +264,17 @@ const HoverComp = ({ data, layer }) => {
   }, [layer]);
 
   useEffect(() => {
-    if(source_id && !hoverColumns) {
+    if(source_id) {
       falcor.get([
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
-  }, [source_id, hoverColumns]);
+    if(view_id) {
+      falcor.get([
+         "dama", pgEnv, "viewsbyId", view_id, "databyId", id
+      ])
+    }
+  }, [source_id, view_id, id, hoverColumns]);
 
   const attributes = React.useMemo(() => {
     if (!hoverColumns) {
@@ -284,6 +293,20 @@ const HoverComp = ({ data, layer }) => {
     }
 
   }, [source_id, falcorCache, hoverColumns]);
+
+  const metadata = React.useMemo(() => {
+   
+      let out = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+      ], [])
+      if(out.length === 0) {
+          out = get(falcorCache, [
+            "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+          ], [])
+        }
+      return out
+    
+  }, [source_id, falcorCache]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
     attributes : attributes.map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
@@ -310,9 +333,10 @@ const HoverComp = ({ data, layer }) => {
   }, [id, falcorCache, view_id, pgEnv]);
 
   
+  console.log('test 123', attributes)
 
   return (
-    <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
+    <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
@@ -320,7 +344,9 @@ const HoverComp = ({ data, layer }) => {
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => {
-          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
+          const hoverAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
+          let columnMetadata = JSON.parse(hoverAttr?.meta_lookup || "{}")
+          console.log('col',hoverAttr, 'lookup',columnMetadata)
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
             return <></>;
           }
@@ -329,7 +355,7 @@ const HoverComp = ({ data, layer }) => {
               <div className="flex border-b pt-1" key={i}>
                 <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.name || hoverAttr.display_name}</div>
                 <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
-                  {attrInfo?.[k] !== "null" ? attrInfo?.[k] : ""}
+                  {attrInfo?.[k] !== "null" ? get(columnMetadata, attrInfo?.[k],attrInfo?.[k]) : ""}
                 </div>
               </div>
             );
