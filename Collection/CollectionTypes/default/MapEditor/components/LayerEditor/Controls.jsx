@@ -325,9 +325,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       const lenRes = await falcor.get([
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ]) 
-      const len = get(lenRes, [
+      const TEMP_MAX_DATA_LENGTH = 100000;
+      const len = Math.min(get(lenRes, [
         'json', 'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
-      ])
+      ], 0),TEMP_MAX_DATA_LENGTH)
       // console.log('len', len)
       if(len > 0){
         falcor.get([
@@ -649,85 +650,90 @@ function CategoryControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {currentCategories.map((d,i) => (
-          <div key={i} className='group/title w-full flex items-center hover:bg-slate-100'>
-            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
-            </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
-            <div
-              className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
-              onClick={() => {
-                const updatedCategoryPaint = [...value];
-                const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
-                //console.log('test123', updatedCategoryLegend)
-
-                const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
-
-                //In filter array, the `label` preceeds its paint `value`
-                updatedCategoryPaint.splice(indexOfLabel, 2);
-                setState(draft=> {
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                    paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                      return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                    })
-                  });
-                });
-              }}
-            >
-              <Close
-                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
-              />
-            </div>
-          </div> 
-        ))}
-        {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
-            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
-            </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
-          </div>
-        }
-        <div className="flex-1 flex items-center mx-4">
-          <StyledControl>
-            <label className='flex w-full'>
-              <div className='flex w-full items-center'>
-                <select
-                  className='w-full py-2 bg-transparent'
-                  value={''}
-                  onChange={(e) =>
-                    {
-                      const updatedCategoryPaint = [...value];
-                      const updatedCategoryLegend = [...currentCategories];
-
-                      const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
-                      const lastColorIndex = colors.map(color => rgb2hex(color)).indexOf(lastColorUsed);
-                      const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
-
-                      updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
-                      updatedCategoryPaint.splice(value.length-1, 0, e.target.value, rgb2hex(nextColor));
-                      
-                      setState(draft=> {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                          paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                            return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                          })
-                        });
-                      });
-                    }
-                  }
-                >
-                  <option key={-1} value={""}></option>
-                  {(availableCategories || []).map((opt, i) => (
-                    <option key={i} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+          {currentCategories.map((d,i) => (
+            <div key={i} className='group/title w-full flex items-center hover:bg-slate-100'>
+              <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
               </div>
-            </label>
-          </StyledControl>
-        </div>
+              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
+              <div
+                className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
+                onClick={() => {
+                  const updatedCategoryPaint = [...value];
+                  const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
+                  //console.log('test123', updatedCategoryLegend)
+
+                  const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
+
+                  //In filter array, the `label` preceeds its paint `value`
+                  updatedCategoryPaint.splice(indexOfLabel, 2);
+                  setState(draft=> {
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                      paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                        return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                      })
+                    });
+                  });
+                }}
+              >
+                <Close
+                  className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
+                />
+              </div>
+            </div> 
+          ))}
+          {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
+              <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
+              </div>
+              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
+            </div>
+          }
+          <>
+            <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+                Add Column
+            </div>
+            <div className="flex-1 flex items-center mx-4 pb-4">
+              <StyledControl>
+                <label className='flex w-full'>
+                  <div className='flex w-full items-center'>
+                    <select
+                      className='w-full py-2 bg-transparent'
+                      value={''}
+                      onChange={(e) =>
+                        {
+                          const updatedCategoryPaint = [...value];
+                          const updatedCategoryLegend = [...currentCategories];
+
+                          const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
+                          const lastColorIndex = colors.map(color => rgb2hex(color)).indexOf(lastColorUsed);
+                          const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
+
+                          updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
+                          updatedCategoryPaint.splice(value.length-1, 0, e.target.value, rgb2hex(nextColor));
+                          
+                          setState(draft=> {
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                              paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                                return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                              })
+                            });
+                          });
+                        }
+                      }
+                    >
+                      <option key={-1} value={""}></option>
+                      {(availableCategories || []).map((opt, i) => (
+                        <option key={i} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
+              </StyledControl>
+            </div>
+          </>
         </div>
       </div>
     )
