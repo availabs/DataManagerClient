@@ -98,7 +98,7 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
     .map((d,i) => {
       
       if(i % 2 === 1) {
-        console.log('test', fnumIndex(paint[i+4] || max))
+        //console.log('test', fnumIndex(paint[i+4] || max))
         return {color: paint[i+1], label: `${fnumIndex(paint[i+2])} - ${fnumIndex(paint[i+4] || max)}`}
       }
       return null

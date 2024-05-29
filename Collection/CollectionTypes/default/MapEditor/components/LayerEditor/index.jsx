@@ -5,7 +5,7 @@ import { LayerMenu } from '../LayerManager/LayerPanel'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
 import StyleEditor from './StyleEditor'
-import PopoverEditor from './PopoverEditor'
+import PopoverEditor from '../PopoverEditor'
 import LegendEditor from './LegendEditor'
 import FilterEditor from '../FilterEditor'
 
