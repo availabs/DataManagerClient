@@ -325,15 +325,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       const lenRes = await falcor.get([
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ]) 
-      const TEMP_MAX_DATA_LENGTH = 100000;
       let len = get(lenRes, [
         'json', 'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ], 0)
-      console.log('len', len)
-      if(len > TEMP_MAX_DATA_LENGTH){
-        console.error(`data length too large, truncating to ${TEMP_MAX_DATA_LENGTH}`);
-        len = TEMP_MAX_DATA_LENGTH;
-      }
+      // console.log('len', len)
       if(len > 0){
         falcor.get([
           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', {from: 0, to: len-1}, column
