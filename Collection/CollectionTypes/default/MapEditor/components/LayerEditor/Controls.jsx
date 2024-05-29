@@ -675,7 +675,7 @@ function CategoryControl({path, params={}}) {
                 showOther ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
-              <span className="sr-only">Enable notifications</span>
+              <span className="sr-only">Show other</span>
               <div
                 className={`${
                   showOther ? 'translate-x-5' : 'translate-x-0'
@@ -878,7 +878,7 @@ function ChoroplethControl({path, params={}}) {
                 showOther ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
-              <span className="sr-only">Enable notifications</span>
+              <span className="sr-only">Show other</span>
               <div
                 className={`${
                   showOther ? 'translate-x-5' : 'translate-x-0'
