@@ -372,7 +372,7 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
   const sampleData = useMemo(() => {
     return Object.values(
       get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...(v?.value || {})], ""));
+    ).map((v) =>  v?.value ? get(falcorCache, v.value, "") : "");
   }, [pgEnv, falcorCache]);
 
   const sampleRows = useMemo(() => {
@@ -408,7 +408,7 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
                 ? currentFilterValue.filter(
                     (filterVal) => filterVal !== sampleValue
                   )
-                : [...currentFilterValue, sampleValue];
+                : [...(Array.isArray(currentFilterValue) ? currentFilterValue : []), sampleValue];
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
