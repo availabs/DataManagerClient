@@ -632,7 +632,7 @@ function CategoryControl({path, params={}}) {
                   }}
                 />
               </div>
-              <div className='flex items-center p-2'>Custom </div>
+              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex].label} </div>
             </label>
           </>
         }
