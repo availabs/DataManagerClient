@@ -536,7 +536,7 @@ function CategoryControl({path, params={}}) {
   //let colors = categoricalColors
 
   //Value is literal represetnation of mapbox filter object that colors the actual map
-  let { value, column, categorydata, colors, sourceId } = useMemo(() => {
+  let { value: mapPaint, column, categorydata, colors, sourceId } = useMemo(() => {
     return {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
@@ -546,6 +546,7 @@ function CategoryControl({path, params={}}) {
     }
   },[state])
 
+  const [activeCatIndex, setActiveCatIndex] = React.useState();
   useEffect(() => {
     //console.log('getmetadat', sourceId)
     if(sourceId) {
@@ -583,14 +584,15 @@ function CategoryControl({path, params={}}) {
    }, [categorydata])
 
   //A human readable representation of the current data categories
-  const currentCategories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
-            .map((d,i) => {
-              if(i%2 === 0) {
-                return {color: d, label: value[i+2]}
-              }
-              return null
-            })
-            .filter(d => d)
+  const currentCategories = (Array.isArray(mapPaint) ? mapPaint : [])
+    .filter((d, i) => i > 2)
+    .map((d, i) => {
+      if (i % 2 === 0) {
+        return { color: d, label: mapPaint[i + 2] };
+      }
+      return null;
+    })
+    .filter((d) => d);
 
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
@@ -603,6 +605,37 @@ function CategoryControl({path, params={}}) {
   return (
    
       <div className=' w-full items-center'>
+        {
+          activeCatIndex !== undefined  && 
+          <>
+            <label className='flex'>
+              <div className='flex items-center'>
+                <input
+                  type='color' 
+                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
+                  onChange={(e) => {
+                    const updatedCategoryPaint = [...mapPaint];
+                    const updatedCategoryLegend = [...currentCategories];
+
+                    updatedCategoryLegend[activeCatIndex].color = e.target.value;
+                
+                    const indexOfLabel = updatedCategoryPaint.indexOf(updatedCategoryLegend[activeCatIndex].label);
+                    updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
+
+                    setState(draft => {
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                        paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                          return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                        })
+                      });
+                    })
+                  }}
+                />
+              </div>
+              <div className='flex items-center p-2'>Custom </div>
+            </label>
+          </>
+        }
         <div className='flex items-center'>
           <div className='text-sm text-slate-400 px-2'>Showing</div>
           <div className='border border-transparent hover:border-slate-200 m-1 rounded '>
@@ -656,14 +689,23 @@ function CategoryControl({path, params={}}) {
         <div className='w-full max-h-[250px] overflow-auto'>
           {currentCategories.map((d,i) => (
             <div key={i} className='group/title w-full flex items-center hover:bg-slate-100'>
-              <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+              <div 
+                className='flex items-center h-8 w-8 justify-center  border-r border-b ' 
+                onClick={() => {
+                  if (activeCatIndex !== i) {
+                    setActiveCatIndex(i);
+                  } else {
+                    setActiveCatIndex(undefined);
+                  }
+                }}
+              >
                 <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
               </div>
               <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
               <div
                 className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
                 onClick={() => {
-                  const updatedCategoryPaint = [...value];
+                  const updatedCategoryPaint = [...mapPaint];
                   const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
                   //console.log('test123', updatedCategoryLegend)
 
@@ -706,7 +748,7 @@ function CategoryControl({path, params={}}) {
                       value={''}
                       onChange={(e) =>
                         {
-                          const updatedCategoryPaint = [...value];
+                          const updatedCategoryPaint = [...mapPaint];
                           const updatedCategoryLegend = [...currentCategories];
 
                           const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
@@ -714,7 +756,7 @@ function CategoryControl({path, params={}}) {
                           const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
 
                           updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
-                          updatedCategoryPaint.splice(value.length-1, 0, e.target.value, rgb2hex(nextColor));
+                          updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
                           
                           setState(draft=> {
                             set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
