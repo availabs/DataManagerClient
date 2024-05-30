@@ -289,6 +289,7 @@ export function ViewControls ({view}) {
             <Modal
                 open={modalState.open}
                 setOpen={setModalOpen}
+                themeOptions={{size:"large"}}
             >
                 <div className="flex items-center">
                     <div
