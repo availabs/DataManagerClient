@@ -36,8 +36,6 @@ export function ColumnSelectControl({path, params={}}) {
     }
   }, [sourceId]);
 
-  
-
   const attributes = useMemo(() => {
     let columns = get(falcorCache, [
       "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
@@ -96,9 +94,9 @@ export function ColumnSelectControl({path, params={}}) {
       viewId,
       "databyIndex",
       {"from":0, "to": 100},
-      attributeNames
+      selectedColumnNames
     ])
-  }, [falcor, pgEnv, viewId, attributeNames]);
+  }, [falcor, pgEnv, viewId, selectedColumnNames]);
 
   const sampleData = useMemo(() => {
     return Object.values(

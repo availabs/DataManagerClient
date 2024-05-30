@@ -293,17 +293,15 @@ const HoverComp = ({ data, layer }) => {
   }, [source_id, falcorCache, hoverColumns]);
 
   const metadata = React.useMemo(() => {
-   
-      let out = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
-      ], [])
-      if(out.length === 0) {
-          out = get(falcorCache, [
-            "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
-          ], [])
-        }
-      return out
-    
+    let out = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+    ], [])
+    if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+        ], [])
+      }
+    return out
   }, [source_id, falcorCache]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
@@ -330,9 +328,6 @@ const HoverComp = ({ data, layer }) => {
     )
   }, [id, falcorCache, view_id, pgEnv]);
 
-  
-  //console.log('test 123', attrInfo)
-
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
@@ -342,8 +337,10 @@ const HoverComp = ({ data, layer }) => {
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .map((k, i) => {
-          const hoverAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
-          const columnMetadata = JSON.parse(hoverAttr?.meta_lookup || "{}")
+          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
+
+          const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
+          const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
             return <></>;
           }
