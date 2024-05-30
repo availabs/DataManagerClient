@@ -336,6 +336,11 @@ const HoverComp = ({ data, layer }) => {
       {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
+        .sort((a,b) =>{
+          const aIndex = (hoverColumns?.findIndex(column => column.column_name === a) || 0);
+          const bIndex = (hoverColumns?.findIndex(column => column.column_name === b) || 0);
+          return aIndex - bIndex;
+        })
         .map((k, i) => {
           const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
 
