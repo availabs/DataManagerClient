@@ -1,7 +1,8 @@
 import React, { useContext, useMemo } from "react";
-import { SymbologyContext } from "../../";
-import { ColumnSelectControl, SelectControl } from "./Controls";
-import { StyledControl } from "./ControlWrappers";
+import { SymbologyContext } from "../..";
+import { SelectControl } from "../LayerEditor/Controls";
+import {ColumnSelectControl} from "./PopoverControls";
+import { StyledControl } from "../LayerEditor/ControlWrappers";
 
 function PopoverEditor(props) {
   const { state, setState } = useContext(SymbologyContext);

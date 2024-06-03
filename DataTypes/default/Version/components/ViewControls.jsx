@@ -119,8 +119,8 @@ const DownloadModalCheckboxGroup = ({
                                         title,
                                     }) => {
     return (
-        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-            <div className="flex justify-between items-center w-1/2 text-md leading-6 text-gray-900">
+        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
+            <div className="flex w-full justify-between items-center p-2 w-1/2 text-md leading-6 text-gray-900">
                 <div className="text-center h-fit">{title}:</div>
                 <div>
                     <Button
@@ -289,6 +289,7 @@ export function ViewControls ({view}) {
             <Modal
                 open={modalState.open}
                 setOpen={setModalOpen}
+                themeOptions={{size:"large"}}
             >
                 <div className="flex items-center">
                     <div
