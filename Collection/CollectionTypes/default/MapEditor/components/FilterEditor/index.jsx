@@ -29,6 +29,7 @@ function FilterEditor(props) {
                 }
                 return a;
               }, {});
+              setActiveColumn(null);
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].filter`,
@@ -45,7 +46,7 @@ function FilterEditor(props) {
           className="p-1"
           themeOptions={{ size: "sm", color: "transparent" }}
           onClick={() => {
-            setDisplayBuilder(!displayBuilder);
+            setDisplayBuilder(true);
             setActiveColumn(null);
           }}
         >
