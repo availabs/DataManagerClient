@@ -59,7 +59,7 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
   return (
     <div className="flex w-full flex-wrap">
       {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
-        const selectedColAttr = attributes.find(attr => attr.name === selectedCol);
+        const selectedColAttr = attributes.find(attr => attr.name === selectedCol) || {};
         const filter = existingFilter[selectedCol];
         const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
         const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 

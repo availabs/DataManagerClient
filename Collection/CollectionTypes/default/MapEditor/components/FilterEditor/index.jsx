@@ -22,6 +22,8 @@ function FilterEditor(props) {
       <div className="mx-4">
         <ExistingFilterList
           removeFilter={(columnName) => {
+            setActiveColumn(null);
+            setDisplayBuilder(false);
             setState((draft) => {
               const newFilter = Object.keys(existingFilter).reduce((a, c) => {
                 if (c !== columnName) {
@@ -29,7 +31,6 @@ function FilterEditor(props) {
                 }
                 return a;
               }, {});
-              setActiveColumn(null);
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].filter`,
