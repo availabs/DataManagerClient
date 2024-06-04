@@ -46,26 +46,15 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    //TODO question -- is tile URL guaranteed to already have `?col=`
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
       //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
-
         let tileBase = newSource.source.tiles?.[0];
-        if(tileBase && !tileBase?.includes("?cols=")){
-          tileBase += `?cols=${layerProps?.['data-column']}`;
-        }
-        if(layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0){
-          Object.keys(layerProps.filter).forEach(filterCol => {
-            tileBase += `,${filterCol}`
-          })
-        }
 
         if(tileBase){
-          newSource.source.tiles = [tileBase];
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
         }
-
 
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
@@ -140,6 +129,7 @@ const ViewLayerRender = ({
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
         if(layerFilter){
+          console.log("layerFilter", layerFilter)
           const mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
@@ -185,6 +175,38 @@ const ViewLayerRender = ({
     });
   }, [layerProps]);
 }
+
+const getLayerTileUrl = (tileBase, layerProps) => {
+  let newTileUrl = tileBase;
+
+  const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
+  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]);
+  if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
+    if (!newTileUrl?.includes("?cols=")) {
+      newTileUrl += `?cols=`;
+    }
+
+    if (layerProps?.["data-column"] && !getUrlHasDataColumn(newTileUrl)) {
+      newTileUrl += layerProps?.["data-column"];
+    }
+
+    if (getUrlHasDataColumn(newTileUrl) && layerHasFilter) {
+      newTileUrl += ",";
+    }
+
+    if (layerHasFilter) {
+      Object.keys(layerProps.filter).forEach((filterCol, i) => {
+        newTileUrl += `${filterCol}`;
+
+        if (i < Object.keys(layerProps.filter).length - 1) {
+          newTileUrl += ",";
+        }
+      });
+    }
+  }
+
+  return newTileUrl;
+};
 
 class ViewLayer extends AvlLayer { 
   // constructor makes onHover not work??

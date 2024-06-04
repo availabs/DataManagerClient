@@ -17,8 +17,8 @@ const getDiffColumns = (baseArray, subArray) => {
 
 const FILTER_OPERATORS = {
   string: ["!=", "==" ],
-  integer: ["!", "<", "<=", "==", ">=", ">", "between" ],
-  number: ["!", "<", "<=", "==", ">=", ">", "between" ]
+  integer: ["!=", "<", "<=", "==", ">=", ">", "between" ],
+  number: ["!=", "<", "<=", "==", ">=", ">", "between" ]
 };
 
 export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
@@ -403,12 +403,14 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
           key={i}
           className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
           onClick={() =>
-            setState((draft) => {   
+            setState((draft) => {  
+
               const newValue = isValueSelected
                 ? currentFilterValue.filter(
                     (filterVal) => filterVal !== sampleValue
                   )
                 : [...(Array.isArray(currentFilterValue) ? currentFilterValue : []), sampleValue];
+                // : [...currentFilterValue, sampleValue];
               set(
                 draft,
                 `symbology.layers[${state.symbology.activeLayer}].${path}`,
