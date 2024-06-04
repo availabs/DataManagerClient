@@ -129,7 +129,6 @@ const ViewLayerRender = ({
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
         if(layerFilter){
-          console.log("layerFilter", layerFilter)
           const mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
