@@ -205,7 +205,7 @@ function RangeControl({path,params={}}) {
   )
 }
 
-function SimpleControl({path}) {
+function SimpleControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   return (
     <label className='flex'>
@@ -213,7 +213,7 @@ function SimpleControl({path}) {
         <input
           className='w-full'
           type='text' 
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, '#ccc')}
+          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params?.default ?? '#ccc')}
           onChange={(e) => setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
           })}

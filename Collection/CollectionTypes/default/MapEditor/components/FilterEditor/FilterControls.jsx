@@ -68,11 +68,18 @@ export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}
         const isBetweenOperator = filter.operator === "between";
 
         const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
-        const displayedValue = isEqualityOperator
-          ? Array.isArray(filter?.value) && filter?.value?.join(", ")
-          : isBetweenOperator
-          ? filter?.value?.join(" and ")
-          : filter?.value;
+        let displayedValue = filter?.value;
+
+        if(isEqualityOperator){
+          if(Array.isArray(filter?.value)){
+            displayedValue = filter?.value?.join(", ");
+          }          
+        }
+        else if(isBetweenOperator){
+          if(Array.isArray(filter?.value)){
+            displayedValue = filter?.value?.join(" and ");
+          }
+        }
         return (
           <div
             key={i}
@@ -169,7 +176,7 @@ export function FilterBuilder({ path, params = {} }) {
     </StyledControl>
   ) : (
     <StyledControl>
-      <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
+      <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} params={{default:''}}/>
     </StyledControl>
   );
 
@@ -220,7 +227,7 @@ export function FilterBuilder({ path, params = {} }) {
                   <div className="flex my-1 items-center">
                     
                     <StyledControl>
-                      <SimpleControl path={valuePath + "[1]"} />
+                      <SimpleControl path={valuePath + "[1]"} params={{default:''}}/>
                     </StyledControl>
                   </div>
                 </>
