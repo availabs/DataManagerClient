@@ -396,7 +396,7 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
         ?.includes(filterSearchValue.toString().toLowerCase())
     )
     .map((sampleValue, i) => {
-      const isValueSelected = currentFilterValue.includes(sampleValue)
+      const isValueSelected = currentFilterValue?.includes(sampleValue)
       const selectedClass = isValueSelected ? "bg-pink-100" : "";
       return (
         <div
