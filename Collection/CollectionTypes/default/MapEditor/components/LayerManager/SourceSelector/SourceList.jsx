@@ -6,11 +6,13 @@ import { useParams } from "react-router-dom";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../../Source/attributes";
 import {CheckCircleIcon} from "@heroicons/react/20/solid/index.js";
+import { DEFAULT_SOURCE } from "../SourceSelector";
+
 const SourceThumb = ({ source, selectedSource, setSource }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
   const activeViewId = selectedSource.viewId;
 
-  const isActiveSource = selectedSource?.source_id === source.source_id;
+  const isActiveSource = selectedSource?.sourceId === source.source_id;
   const lengthPath = ["dama", pgEnv, "sources", "byId", source.source_id, "views", "length"];
 
   const viewLength = useMemo(() => {
@@ -50,11 +52,19 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
       <div 
         className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`} 
         onClick={() => {
-          const newSource = {...source, add:true, sourceId: source.source_id};
-          if(viewLength === 1 && sourceViews.length === 1){
-            newSource.viewId = sourceViews[0].view_id;
+          if (selectedSource.sourceId !== source.source_id) {
+            const newSource = {
+              ...source,
+              add: true,
+              sourceId: source.source_id,
+            };
+            if (viewLength === 1 && sourceViews.length === 1) {
+              newSource.viewId = sourceViews[0].view_id;
+            }
+            setSource(newSource);
+          } else {
+            setSource({ ...DEFAULT_SOURCE, add: true });
           }
-          setSource(newSource)
         }}
       >
         <div>
@@ -81,7 +91,14 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
               const isActiveView = activeViewId === view.view_id
               return (
                 <div
-                  onClick={(e) => setSource({...selectedSource, viewId: view.view_id})}
+                  onClick={() => {
+                    console.log("about to set viuewId, view::",view)
+                    if (!isActiveView) {
+                      setSource({ ...selectedSource, viewId: view.view_id });
+                    } else {
+                      setSource({ ...selectedSource, viewId: undefined });
+                    }
+                  }}
                   className={`flex items-center ${isActiveView ? 'bg-gray-300 hover:bg-gray-400' : 'hover:bg-gray-300'} px-2`}
                   key={view.view_id}
                 >
@@ -102,7 +119,6 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
 
 
 const SourcesList = ({selectedSource, setSource}) => {
-  console.log("sources list render")
   const [layerSearch, setLayerSearch] = useState("");
   const { cat1, cat2, ...rest } = useParams();
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);

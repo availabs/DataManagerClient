@@ -1,4 +1,5 @@
 import React, { useEffect, useContext , useMemo, useRef } from 'react'
+import {Button} from '~/modules/avl-components/src'
 import {SymbologyContext} from '../../..'
 import { DamaContext } from "../../../../../../../store";
 import get from 'lodash/get'
@@ -12,17 +13,18 @@ import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../
 
 import SourcesList from './SourceList';
 
+export const DEFAULT_SOURCE = {
+  active: false,
+  sourceId: null,
+  viewId: null,
+  add: false
+};
+
 function SourceSelector () {
   const { state, setState } = React.useContext(SymbologyContext);
   const { pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext);
-  const cancelButtonRef = useRef(null)
 
-  const [source, setSource] = React.useState({
-    active: false,
-    sourceId: null,
-    viewId: null,
-    add: false
-  });
+  const [source, setSource] = React.useState(DEFAULT_SOURCE);
 
   // ---------------------------------
   // -- get sources to list
@@ -75,9 +77,11 @@ function SourceSelector () {
   const addLayer = () => {
     const newSource = sources.filter(d => d.source_id === +source.sourceId)?.[0] || {}
     const view = views.filter(d => d.view_id === +source.viewId)?.[0] || {}
-
+    console.log("views in inindex", views, source.viewId)
+    console.log("viewviewview",view)
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
+    console.log("viewLayerviewLayer",viewLayer)
     // console.log('newSource', newSource)
     //--------------------------------------------
     // Format for adding a layer
@@ -94,8 +98,9 @@ function SourceSelector () {
       type: viewLayer.type,
       // mapbox sources and layers
       sources: (view?.metadata?.tiles?.sources || []).map(s => {
-        s.id = `${s.id}_${layerId}`
-        return s
+        const newS = {...s}
+        newS.id = `${s.id}_${layerId}`
+        return newS;
       }),
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
@@ -116,6 +121,7 @@ function SourceSelector () {
     setSource({ add: false, sourceId: null, viewId: null})
   }
 
+  const canAddLayer = (source?.sourceId && source?.viewId);
   return (
     <div className='relative'>
       <div
@@ -153,16 +159,33 @@ function SourceSelector () {
         <div className="mt-2 w-full">
           <SourcesList selectedSource={source} setSource={setSource}/>
         </div>
-        <div className='mt-5 sm:mt-4 sm:flex sm:flex-row-reverse'>
-          <button
+        <div className='mt-5 sm:mt-4 sm:flex justify-end'>
+          <div className='mr-1'>
+          <Button
             type='button'
-            className='mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-            onClick={() => setSource({ ...source, add: !source.add })}
-            ref={cancelButtonRef}
+            themeOptions={{color:"cancel"}}
+            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+            onClick={() => setSource({ ...DEFAULT_SOURCE })}
           >
             Cancel
-          </button>
+          </Button>
+          </div>
+          <div>
+          <Button
+            type='button'
+            themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
+
+            disabled={!canAddLayer}
+            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+            onClick={() => addLayer()}
+          >
+            Add layer
+          </Button>
+          </div>
+
+
         </div>
+
       </Modal>
     </div>
   );
