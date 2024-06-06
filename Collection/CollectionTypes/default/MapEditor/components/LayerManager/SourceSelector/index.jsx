@@ -1,24 +1,29 @@
-import React, { useEffect, useContext , useMemo } from 'react'
-import {SymbologyContext} from '../../'
-import { DamaContext } from "../../../../../../store";
+import React, { useEffect, useContext , useMemo, useRef } from 'react'
+import {SymbologyContext} from '../../..'
+import { DamaContext } from "../../../../../../../store";
 import get from 'lodash/get'
 import set from 'lodash/set'
-import { getLayer } from './utils'
-import { Plus, Close } from '../icons'
+import { getLayer } from '../utils'
+import { Plus, Close } from '../../icons'
+import { Modal } from "../SymbologyControl";
+import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
+import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../../Source/attributes"
 
-import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../Source/attributes"
+import SourcesList from './SourceList';
 
-function SourceSelector (props) {
-  const { state, setState  } = React.useContext(SymbologyContext);
-  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
+function SourceSelector () {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const { pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext);
+  const cancelButtonRef = useRef(null)
 
   const [source, setSource] = React.useState({
     active: false,
     sourceId: null,
-    viewId: null
-  })
-  
+    viewId: null,
+    add: false
+  });
+
   // ---------------------------------
   // -- get sources to list
   // ---------------------------------
@@ -61,12 +66,9 @@ function SourceSelector (props) {
   }, [source.sourceId, falcor, pgEnv]);
 
   const views = useMemo(() => {
-    setSource({...source, viewId: null})
-    // cobsole.log('get views')
     return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", source.sourceId, "views", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, source.sourceId, pgEnv]);
-
 
   const layers = useMemo(() => state.symbology?.layers || [], [state.symbology])
 
@@ -116,65 +118,54 @@ function SourceSelector (props) {
 
   return (
     <div className='relative'>
-      <div className='p-1 rounded hover:bg-slate-100 m-1' onClick={() => setSource({...source, add: !source.add})}>
-        {source.add ? 
-          <Close className='fill-slate-500' /> :
+      <div
+        className='p-1 rounded hover:bg-slate-100 m-1'
+        onClick={() => setSource({ ...source, add: !source.add })}
+      >
+        {source.add ? (
+          <Close className='fill-slate-500' />
+        ) : (
           <Plus className='fill-slate-500' />
-        }
-        {/*<i 
-          className={`${source.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
-          
-        />*/}
+        )}
       </div>
-      {source.add && <div className='absolute z-20 -left-[244px] p-2 top-[37px] border w-[280px] bg-white'>
-        <div className='w-full p-1 text-sm font-bold text-blue-500'>select source:</div>
-        <select 
-          onChange={(e) => setSource({...source, sourceId: e.target.value})}
-          className='p-2 w-full bg-slate-100'>
-          <option value={null}>---select source---</option>
-          {sources.map((source) => (
-            <option key={source.source_id} className='p-1 hover:bg-blue-100' value={source.source_id}>
-              {source.display_name || source.name}
-            </option>)
-          )}
-        </select>
-        {source.sourceId && 
-          <>
-            <div className='w-full p-1 text-sm font-bold text-blue-500'>select view:</div>
-            <select 
-              onChange={(e) => setSource({...source, viewId: e.target.value})}
-              className='p-2 w-full bg-slate-100'>
-              <option value={null}>---select view---</option>
-              {views.map((view) => (
-                <option key={view.view_id} className='p-1 hover:bg-blue-100' value={view.view_id}>
-                  {view.version || view.view_id}
-                </option>)
-              )}
-            </select>
-            <div className='w-full flex justify-end p-2'>
-              <div 
-                onClick={() => source.viewId ? addLayer() : null}
-                className={`${ source.viewId ? 
-                  'inline-flex w-32 justify-center rounded-lg cursor-pointer text-sm font-semibold py-1 px-1 bg-blue-600 text-white hover:bg-blue-500 shadow-lg border border-b-4 border-blue-800 hover:border-blue-700 active:border-b-2 active:mb-[2px] active:shadow-none':
-                  'inline-flex w-32 justify-center rounded-lg cursor-not-allowed text-sm font-semibold py-1 px-1 bg-slate-300 text-white shadow border border-slate-400 border-b-4'
-                }`}
-              >
-                <span className='flex items-center'>
-                  <span className='pr-2'>add layer</span>
-                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </>
-        }
-        </div> 
-      }
+
+      <Modal
+        open={source.add}
+        setOpen={() => setSource({ ...source, add: !source.add })}
+        width={'max-w-6xl'}
+      >
+        <div className='sm:flex sm:items-start'>
+          <div className='mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10'>
+            <i
+              className='fad fa-layer-group text-blue-600'
+              aria-hidden='true'
+            />
+          </div>
+          <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full'>
+            <Dialog.Title
+              as='h3'
+              className='text-base font-semibold leading-6 text-gray-900'
+            >
+              Create New Map
+            </Dialog.Title>
+          </div>
+        </div>
+        <div className="mt-2 w-full">
+          <SourcesList selectedSource={source} setSource={setSource}/>
+        </div>
+        <div className='mt-5 sm:mt-4 sm:flex sm:flex-row-reverse'>
+          <button
+            type='button'
+            className='mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+            onClick={() => setSource({ ...source, add: !source.add })}
+            ref={cancelButtonRef}
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
     </div>
-  )
+  );
 }
 
-
-
-export default SourceSelector
+export default SourceSelector;
