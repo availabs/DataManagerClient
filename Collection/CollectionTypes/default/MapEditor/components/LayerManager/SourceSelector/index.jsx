@@ -77,11 +77,8 @@ function SourceSelector () {
   const addLayer = () => {
     const newSource = sources.filter(d => d.source_id === +source.sourceId)?.[0] || {}
     const view = views.filter(d => d.view_id === +source.viewId)?.[0] || {}
-    console.log("views in inindex", views, source.viewId)
-    console.log("viewviewview",view)
     const layerId = Math.random().toString(36).replace(/[^a-z]+/g, '')
     const viewLayer = view?.metadata?.tiles?.layers?.[0]
-    console.log("viewLayerviewLayer",viewLayer)
     // console.log('newSource', newSource)
     //--------------------------------------------
     // Format for adding a layer

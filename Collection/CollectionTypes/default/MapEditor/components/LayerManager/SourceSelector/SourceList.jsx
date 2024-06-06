@@ -92,7 +92,6 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
               return (
                 <div
                   onClick={() => {
-                    console.log("about to set viuewId, view::",view)
                     if (!isActiveView) {
                       setSource({ ...selectedSource, viewId: view.view_id });
                     } else {
