@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import get from "lodash/get";
 import SourcesLayout from "../../../../../../../Source/layout";
-import { useParams } from "react-router-dom";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../../../../Source/attributes";
 import {CheckCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { DEFAULT_SOURCE } from "../SourceSelector";
 
-const SourceThumb = ({ source, selectedSource, setSource }) => {
+const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
   const activeViewId = selectedSource.viewId;
 
@@ -40,13 +38,6 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
     )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes)).sort((a,b) => new Date(b?._modified_timestamp) - new Date(a?._modified_timestamp))
   }, [falcorCache])
 
-//On click, display all versions underneath the selected source
-//If only 1 version exists, auto-select
-
-//Finally, when a version has been selected, the "add" button in the bottom-right becomes enabled.
-
-//TODO -- fix the `category` link
-
   return (
     <div>
       <div 
@@ -73,10 +64,37 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
           </div>
           <div>
             {(get(source, 'categories', []) || [])
-              .map(cat => (typeof cat === 'string' ? [cat] : cat).map((s, i) => (
-                <Link key={i} to={`${baseUrl}/cat/${i > 0 ? cat[i - 1] + "/" : ""}${s}`}
-                      className={`text-xs p-1 px-2 ${isActiveSource ? 'bg-blue-300 text-blue-500' : 'bg-blue-200 text-blue-600'} mr-2`}>{s}</Link>
-              )))
+              .map(cat => (typeof cat === 'string' ? [cat] : cat).map((s, i) => {
+                const isActiveCat = s === cat1;
+
+                let colorClass = 'bg-blue-100 text-blue-400 hover:bg-blue-400';
+
+                if (isActiveSource || isActiveCat) {
+                  //one level of color boldness
+                  colorClass = 'bg-blue-300 text-blue-500 hover:bg-blue-400';
+                  if (isActiveSource && isActiveCat) {
+                    //two level of boldness
+                    colorClass = 'bg-blue-400 text-blue-600 hover:bg-blue-500';
+                  }
+                }
+
+                return (
+                  <div 
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isActiveCat) {
+                        setCat1("")
+                      }
+                      else {
+                        setCat1(s)
+                      }
+                    }} 
+                    className={`inline hover:cursor-pointer text-xs p-1 px-2 ${colorClass}  mr-2`}
+                  >
+                    {s}
+                  </div>
+              )}))
             }
           </div>
           <div className='py-2 block'>
@@ -119,7 +137,8 @@ const SourceThumb = ({ source, selectedSource, setSource }) => {
 
 const SourcesList = ({selectedSource, setSource}) => {
   const [layerSearch, setLayerSearch] = useState("");
-  const { cat1, cat2, ...rest } = useParams();
+  const [cat1, setCat1] = useState();
+  const [cat2, setCat2] = useState();
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
   const sourceDataCat = 'Unknown'
@@ -160,8 +179,7 @@ const SourcesList = ({selectedSource, setSource}) => {
   }, {})
   const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
   return (
-
-    <SourcesLayout baseUrl={baseUrl} isListAll={isListAll}>
+    <SourcesLayout baseUrl={baseUrl} isListAll={isListAll} hideBreadcrumbs={true}>
       <div className="py-4 flex flex-rows items-center">
         <input
             className="w-full text-lg p-2 border border-gray-300 "
@@ -169,7 +187,6 @@ const SourcesList = ({selectedSource, setSource}) => {
             value={layerSearch}
             onChange={(e) => setLayerSearch(e.target.value)}
         />
-
         <button
             className={actionButtonClassName}
             title={'Toggle Sort'}
@@ -177,13 +194,14 @@ const SourcesList = ({selectedSource, setSource}) => {
         >
           <i className={`fa-solid ${sort === 'asc' ? `fa-arrow-down-z-a` : `fa-arrow-down-a-z`} text-xl text-blue-400`}/>
         </button>
-
-        <Link
-            to={isListAll ? `${baseUrl}` : `${baseUrl}/listall`}
+        <div
+            onClick={() => {
+              setCat1("")
+              setLayerSearch("")
+            }}
             className={actionButtonClassName} title={isListAll ? 'View Key Sources' : 'View All Sources'}>
           <i className={`fa-solid ${isListAll ? `fa-filter-list` : `fa-list-ul`} text-xl text-blue-400`}/>
-        </Link>
-
+        </div>
       </div>
       <div className={'flex flex-row'}>
         <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
@@ -191,14 +209,24 @@ const SourcesList = ({selectedSource, setSource}) => {
               .filter(cat => cat !== sourceDataCat)
               .sort((a,b) => a.localeCompare(b))
               .map(cat => (
-              <Link
+              <div
                   key={cat}
-                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100` : `bg-white`} hover:bg-blue-50 p-2 rounded-md flex items-center`}
-                  to={`${baseUrl}${isListAll ? `/listall` : ``}/cat/${cat}`}
+                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100 hover:bg-blue-200` : `bg-white hover:bg-blue-50`}  hover:cursor-pointer p-2 rounded-md flex items-center`}
+                  onClick={() => {
+                    if (cat === cat1) {
+                      setCat1("")
+                    }
+                    else {
+                      setCat1(cat)
+                    }
+                  }}
               >
-                <i className={'fa fa-category'} /> {cat}
-                <div className={'bg-blue-200 text-blue-600 text-xs w-5 h-5 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>{categoriesCount[cat]}</div>
-              </Link>
+                <i className={'fa fa-category'} /> 
+                {cat}
+                <div className={'bg-blue-200 text-blue-600 text-xs w-5 h-5 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>
+                  {categoriesCount[cat]}
+                </div>
+              </div>
           ))
           }
         </div>
@@ -233,7 +261,17 @@ const SourcesList = ({selectedSource, setSource}) => {
                   const m = sort === 'asc' ? 1 : -1;
                   return m * a.name?.localeCompare(b.name)
                 })
-                .map((s, i) => <SourceThumb key={i} source={s} baseUrl={baseUrl} selectedSource={selectedSource} setSource={setSource} />)
+                .map((s, i) => (
+                  <SourceThumb
+                    cat1={cat1}
+                    setCat1={setCat1}
+                    key={i}
+                    source={s}
+                    baseUrl={baseUrl}
+                    selectedSource={selectedSource}
+                    setSource={setSource}
+                  />
+                ))
           }
         </div>
       </div>
