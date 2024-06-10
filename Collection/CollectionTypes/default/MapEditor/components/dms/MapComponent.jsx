@@ -128,9 +128,9 @@ const Edit = ({value, onChange, size}) => {
                   layerProps = { layerProps }
                   hideLoading={true}
                   showLayerSelect={true}
-                   mapOptions={{
-                    center: [-73.77, 42.65],
-                    zoom: 13,
+                  mapOptions={{
+                    center: [-75.17, 42.85],
+                    zoom: 6.6,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}
@@ -248,8 +248,8 @@ const View = ({value, size}) => {
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-73.77, 42.65],
-                    zoom: 13,
+                    center: [-75.17, 42.85],
+                    zoom: 6.6,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}

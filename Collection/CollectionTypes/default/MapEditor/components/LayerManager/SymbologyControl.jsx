@@ -13,7 +13,7 @@ import get from 'lodash/get'
 export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-6', initialFocus, children}) {
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-30" initialFocus={initialFocus} onClose={setOpen}>
+      <Dialog as="div" className="relative z-30 " initialFocus={initialFocus} onClose={setOpen}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

@@ -3,22 +3,22 @@ Map Editor
 
 color range
 	- move calculations to server side and don't fetch data
-	- add show other and case statement to paint for geoms without 
+	x add show other and case statement to paint for geoms without 
 	- do real jenks
 
 categories
-	- remove category
-	- set custom color for category
-	- add category from top 500
+	x remove category
+	x set custom color for category
+	x add category from top 500
 
 Legend
 	- Add Catption
-	- Edit Legend Entries
-	- Reorder legend entries
+	x Edit Legend Entries
+	x Reorder legend entries
 
 popover
-	- use map popover
-	- edit and pass attributes
+	x use map popover
+	x edit and pass attributes
 
 controls
 	- duplicate layer

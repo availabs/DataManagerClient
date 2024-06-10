@@ -153,7 +153,7 @@ function SourceSelector () {
             </Dialog.Title>
           </div>
         </div>
-        <div className="mt-2 w-full">
+        <div className="mt-2 w-full max-h-[calc(100vh_-_200px)]">
           <SourcesList selectedSource={source} setSource={setSource}/>
         </div>
         <div className='mt-5 sm:mt-4 sm:flex justify-end'>

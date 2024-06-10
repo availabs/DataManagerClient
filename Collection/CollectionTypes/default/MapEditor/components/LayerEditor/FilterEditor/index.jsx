@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from "react";
 import { Button } from "~/modules/avl-components/src";
-import { SymbologyContext } from "../../";
+import { SymbologyContext } from "../../../";
 import { ExistingFilterList, FilterBuilder } from "./FilterControls";
 import get from "lodash/get";
 import set from "lodash/set";

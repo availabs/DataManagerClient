@@ -1,11 +1,11 @@
 import React, { useContext , useMemo, useEffect }from 'react'
-import { SymbologyContext } from "../../";
-import { DamaContext } from "../../../../../../store"
+import { SymbologyContext } from "../../../";
+import { DamaContext } from "../../../../../../../store"
 
-import { Close } from '../icons'
+import { Close } from '../../icons'
 import { DndList } from '~/modules/avl-components/src'
 
-import {AddColumnSelectControl} from "../LayerEditor/Controls"
+import {AddColumnSelectControl} from "../Controls"
 import get from 'lodash/get'
 import set from 'lodash/set'
 function onlyUnique(value, index, array) {
