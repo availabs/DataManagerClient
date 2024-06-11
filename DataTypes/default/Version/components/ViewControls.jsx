@@ -4,7 +4,7 @@ import {DamaContext} from "../../../../store/index.js";
 import get from "lodash/get.js";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { Input, Button, Modal } from "~/modules/avl-components/src"
-
+import { DAMA_HOST } from '~/config'
 const OUTPUT_FILE_TYPES = [
     "CSV",
     "ESRI Shapefile",
@@ -241,6 +241,7 @@ export function ViewControls ({view}) {
                     fileTypes: modalState.fileTypes,
                     columns: modalState.columns,
                     user_id: user.id,
+                    email: user.email,
                     groupedByColumn: modalState.groupedByColumn
                 };
 
@@ -257,6 +258,7 @@ export function ViewControls ({view}) {
                 const createFinalEvent = await res.json();
                 setModalState(defaultModalState);
             } catch (err) {
+                console.log(err)
                 setModalState({...modalState, loading: false, open: true});
             }
         }

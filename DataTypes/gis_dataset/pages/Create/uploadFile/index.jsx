@@ -11,6 +11,7 @@ export default function UploadGisDataset({ state, dispatch }) {
   const {
     etlContextId,
     userId,
+    email,
     damaServerPath,
     polling,
     pollingInterval,
@@ -28,6 +29,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       // text form-data fields must be sent before files fields.
       formData.append("etlContextId", etlContextId);
       formData.append("user_id", userId);
+      formData.append("email", email);
       formData.append("fileSizeBytes", file.size);
       formData.append("file", file);
       

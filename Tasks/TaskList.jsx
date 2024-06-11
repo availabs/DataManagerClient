@@ -16,7 +16,8 @@ export const ETL_CONTEXT_ATTRS = [
   "parent_context_id",
   "type",
   //"duration",
-  "payload"
+  "payload",
+  "user"
 ];
 
 function timeAgo(input) {
