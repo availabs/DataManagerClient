@@ -120,7 +120,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
                   key={view.view_id}
                 >
                   <div className='mx-2'>
-                    {view.version ?? view.data_table}
+                    {view.version ?? view.view_id}
                   </div>
                   {isActiveView && <CheckCircleIcon className='ml-2 text-green-700 h-4 w-4'/>}
                 </div>
