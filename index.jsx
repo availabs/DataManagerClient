@@ -22,6 +22,8 @@ import { DamaContext } from "./store"
 
 import DamaMap from './Collection/CollectionTypes/default/MapEditor/components/dms/MapComponent'
 
+import MapEditor from './MapEditor';
+
 const DAMA_Wrapper = (Component, DAMA_ARGS) => {
 
   const {
@@ -210,6 +212,18 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component:  DAMA_Wrapper(Del, DAMA_ARGS)
+    },
+    // Map Editor
+    {
+      name: "Data Collections",
+      path: `${baseUrl}/mapeditor/:symbologyId`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(MapEditor, DAMA_ARGS)
     },
     /**
      * COLLECTIONS
