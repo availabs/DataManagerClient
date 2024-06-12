@@ -42,7 +42,6 @@ const MapEditor = () => {
 
   const symbologies = useMemo(() => {
     const cacheSymbologies = (get(falcorCache, ["dama", pgEnv, "symbologies", "byId"], {}))
-    console.log('Collections updating symbologies', cacheSymbologies, falcorCache)
     return Object.values(cacheSymbologies)
       .map((v) => {
         // if symbology is created by call it returns in value
