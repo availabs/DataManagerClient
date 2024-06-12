@@ -8,6 +8,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 
 import { Table } from "~/modules/avl-components/src";
 import { TasksLayout } from "./components/TasksLayout";
+import { UserCell } from './TaskList';
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
@@ -27,8 +28,9 @@ const COLUMNS = [
     Header: "Event ID",
   },
   {
-    accessor: "user_id",
-    Header: "User ID",
+    accessor: "user",
+    Header: "User",
+    Cell: UserCell
   },
   { accessor: "created_at", Header: "Created At", Cell: DateCell },
   { accessor: "type", Header: "Type" },
@@ -71,7 +73,7 @@ const TaskPageComponent = props => {
     etl_context_id,
     "allEvents",
     paramIndices,
-    ["event_id","etl_context_id", "created_at", "type", "payload"]
+    ["event_id","etl_context_id", "created_at", "type", "payload", "user"]
   ])
 
   //get length of data

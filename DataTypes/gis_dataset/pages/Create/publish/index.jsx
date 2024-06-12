@@ -34,6 +34,7 @@ export default function PublishButton({ state, dispatch }) {
     etlContextId,
     gisUploadId,
     userId,
+    email,
     customViewAttributes,
     sourceType,
     mbtilesOptions
@@ -68,6 +69,7 @@ export default function PublishButton({ state, dispatch }) {
           },
           parent_context_id: etlContextId,
           user_id: userId,
+          email: email,
           tableDescriptor,
           gisUploadId,
           layerName,
@@ -75,8 +77,6 @@ export default function PublishButton({ state, dispatch }) {
           customViewAttributes,
           mbtilesOptions,
         };
-
-        console.log('publish', publishData)
 
         const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
         {
