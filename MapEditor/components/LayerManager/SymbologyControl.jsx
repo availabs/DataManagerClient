@@ -67,13 +67,11 @@ export function CreateSymbologyModal ({ open, setOpen})  {
   const createSymbologyMap = async () => {
     const newSymbology = {
       name: modalState.name,
-      collection_id: collectionId,
       description: 'map',
       symbology: {
         layers: {}
       }
     }
-    console.log('newSymbology', newSymbology)
 
     let resp = await falcor.call(
         ["dama", "symbology", "symbology", "create"],
@@ -87,7 +85,7 @@ export function CreateSymbologyModal ({ open, setOpen})  {
     
     if(symbology_id) {
       setOpen(false)
-      navigate(`${baseUrl}/collection/${collectionId}/mapeditor/${symbology_id}`)
+      navigate(`${baseUrl}/mapeditor/${symbology_id}`)
     }
     
 
@@ -174,15 +172,19 @@ function SymbologyMenu({ button}) {
                 )}
               </Menu.Item>
               <div className='w-full border' />
-              {symbologies.map(sym => (
+              {symbologies.map(sym => {
+                console.log("sym", sym)
+                return (
                 <Menu.Item key={sym.symbology_id}>
                   <div 
-                    onClick={() => navigate(`${baseUrl}/collection/${collection.collection_id}/mapeditor/${sym.symbology_id}`)}
+                    onClick={() => {
+                      navigate(`${baseUrl}/mapeditor/${sym.symbology_id}`)}
+                    }
                     className={`group flex w-full items-center hover:bg-pink-100 text-slate-600 rounded-md px-2 py-2 text-sm`}>
                     {sym.name}
                   </div>
                 
-              </Menu.Item>))}
+              </Menu.Item>)})}
             </div>
           </Menu.Items>
         </Transition>
