@@ -1,10 +1,10 @@
-import React, { useContext , useMemo, useCallback, Fragment, useRef} from 'react'
+import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
 
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
+import { CaretDown, MenuDots , Plus} from '../icons'
 
 import { SelectSymbology } from './SymbologySelector';
 import get from 'lodash/get'
@@ -56,11 +56,11 @@ export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-
 export function CreateSymbologyModal ({ open, setOpen})  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
-  const { pgEnv, falcor, baseUrl } = React.useContext(DamaContext)
-  const { state } = React.useContext(SymbologyContext)
+  const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
+  const { state } = useContext(SymbologyContext)
   const { collectionId } = useParams()
   const navigate = useNavigate()
-  const [modalState, setModalState] = React.useState({
+  const [modalState, setModalState] = useState({
     name: '',
     loading: false
   })
@@ -139,51 +139,25 @@ export function CreateSymbologyModal ({ open, setOpen})  {
 
 
 
-function SymbologyMenu({ button}) {
-  const { state, setState, symbologies, collection } = React.useContext(SymbologyContext);
-  const { baseUrl } = React.useContext(DamaContext)
-  const [showCreate, setShowCreate] = React.useState(false)
-  const navigate = useNavigate()
+function SymbologyMenu({ button, className}) {
+  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
+  const { baseUrl } = useContext(DamaContext)
+  const [showCreate, setShowCreate] = useState(false)
 
   return (
-      <div>
-      <CreateSymbologyModal open={showCreate} setOpen={setShowCreate}/>
-      <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button>
-          {button}
-        </Menu.Button>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          <Menu.Items className='absolute z-40 -left-[238px]  w-[270px] origin-top-right divide-y divide-gray-100 bg-slate-100 shadow-lg ring-1 ring-black/5 focus:outline-none'>
-            <div className="px-1 py-1 ">
-              <Menu.Item>
-                {({ active }) => (
-                  <div 
-                    onClick={() => setShowCreate(true)}
-                    className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center hover:bg-pink-100 text-slate-600 rounded-md px-2 py-2 text-sm`}>New Map</div>
-                )}
-              </Menu.Item>
-              <div className='w-full border' />
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
+      <div 
+        onClick={() => setShowCreate(true)}
+        className={className}
+      >
+        <CreateSymbologyModal open={showCreate} setOpen={setShowCreate}/>
+        {button}
       </div>
   )
 } 
 
 
-function SymbologyControlMenu({ button}) {
-  const { state, setState  } = React.useContext(SymbologyContext);
+function SymbologyControlMenu({ button }) {
+  const { state, setState  } = useContext(SymbologyContext);
 
   return (
       <Menu as="div" className="relative inline-block text-left">
@@ -233,34 +207,47 @@ function SymbologyControlMenu({ button}) {
 } 
 
 function SymbologyControl () {
-  const { state, setState } = React.useContext(SymbologyContext);
+  const { state, setState } = useContext(SymbologyContext);
   
+  const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
+  const menuButtonClassName = `cursor-pointer fill-gray-400 group-hover:fill-pink-700`
+
   return (
-    <div className='p-1'>
-      <div className='flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
-          <input 
-            type="text"
-            className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
-            placeholder={'Select / Create New Map'}
-            value={state.name}
-            onChange={(e) => setState(draft => {
-                draft.name = e.target.value
-              })
-            }
-          />
-          {
-            state.symbology_id && <div className='flex items-center pt-1.5'>
-              <SymbologyControlMenu button={
-                <MenuDots className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
-              } />
-              </div>
+    <div className='p-1 flex'>
+      <div className='w-full flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
+        <input 
+          type="text"
+          className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
+          placeholder={'Select / Create New Map'}
+          value={state.name}
+          onChange={(e) => setState(draft => {
+              draft.name = e.target.value
+            })
           }
-          <div className='flex items-center '>
-            <SelectSymbology />
-          </div>
+        />
+        {
+          state.symbology_id && <div className='flex items-center pt-1.5'>
+            <SymbologyControlMenu button={
+              <MenuDots className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
+            } />
+            </div>
+        }
+      </div>
+      <div className='flex items-center ml-1'>
+        <SymbologyMenu 
+          className={`mr-2 ${menuButtonContainerClassName}`}
+          button={
+            <Plus className={menuButtonClassName}/>
+          }
+        />
+        <SelectSymbology 
+          className={menuButtonContainerClassName}
+          button={
+            <CaretDown className={menuButtonClassName}/>
+          }
+        />
       </div>
     </div>
-
   )
 }
 

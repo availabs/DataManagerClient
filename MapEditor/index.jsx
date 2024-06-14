@@ -16,9 +16,7 @@ import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
-
-import {terrain_3d_source} from './components/styles/4dsource.js'
-
+import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 export const SymbologyContext = createContext(undefined);
 
@@ -41,19 +39,28 @@ const MapEditor = () => {
     }
   }, [symbologyId, pgEnv])
 
-  const symbologies = useMemo(() => {
-    const cacheSymbologies = (get(falcorCache, ["dama", pgEnv, "symbologies", "byId"], {}))
-    return Object.values(cacheSymbologies)
-      .map((v) => {
-        // if symbology is created by call it returns in value
-        let curVal = v.attributes?.value ? v.attributes?.value : v.attributes
-        const newVal = { ...curVal};
-        Object.keys(v.attributes).forEach((key) => {
-          newVal[key] = v.attributes[key]?.value || v.attributes[key];
-        });
-        return newVal;
-      })
+  useEffect(() => {
+    async function fetchAllSymbologies() {
+      const symbologyLengthPath = ["dama", pgEnv, "symbologies", "length"];
+      const resp = await falcor.get(symbologyLengthPath);
 
+      const symbologyIdsPath = [
+        "dama",
+        pgEnv,
+        "symbologies",
+        "byIndex",
+        { from: 0, to: get(resp.json, symbologyLengthPath, 0) - 1 },
+        "attributes", Object.values(SymbologyAttributes)
+      ];
+      await falcor.get(symbologyIdsPath);
+    }
+
+    fetchAllSymbologies();
+  }, []);
+
+  const symbologies = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
   // --------------------------------------------------
@@ -76,12 +83,11 @@ const MapEditor = () => {
 
   useEffect(() => {
     // console.log('load', +symbologyId, symbologyId, symbologies)
-    if(!(symbologyId) && (+symbologyId) && +symbologyId !== +symbologyId) {
-      navigate(`${baseUrl}/mapeditor/${symbologyId}`)
-      let currentData = symbologies.find(s => +s.symbology_id === +symbologyId)
-      setState(currentData)
+    if (!!state.symbology_id && (+symbologyId !== +state.symbology_id)) {
+      const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
+      setState(currentData);
     }
-  },[symbologyId, symbologyId, symbologies, falcorCache])
+  },[symbologyId, symbologies, falcorCache]);
 
   useEffect(() => {
     async function updateData() {
