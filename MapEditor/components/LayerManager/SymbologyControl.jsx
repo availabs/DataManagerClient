@@ -6,6 +6,7 @@ import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
 
+import { SelectSymbology } from './SymbologySelector';
 import get from 'lodash/get'
 
 
@@ -172,19 +173,6 @@ function SymbologyMenu({ button}) {
                 )}
               </Menu.Item>
               <div className='w-full border' />
-              {symbologies.map(sym => {
-                console.log("sym", sym)
-                return (
-                <Menu.Item key={sym.symbology_id}>
-                  <div 
-                    onClick={() => {
-                      navigate(`${baseUrl}/mapeditor/${sym.symbology_id}`)}
-                    }
-                    className={`group flex w-full items-center hover:bg-pink-100 text-slate-600 rounded-md px-2 py-2 text-sm`}>
-                    {sym.name}
-                  </div>
-                
-              </Menu.Item>)})}
             </div>
           </Menu.Items>
         </Transition>
@@ -268,9 +256,7 @@ function SymbologyControl () {
               </div>
           }
           <div className='flex items-center '>
-            <SymbologyMenu
-              button={<div className='flex items-center p-2  border-2 border-transparent h-10  hover fill-slate-400 hover:fill-slate-800 cursor-pointer'> <CaretDown  className=''/> </div>}
-            />
+            <SelectSymbology />
           </div>
       </div>
     </div>

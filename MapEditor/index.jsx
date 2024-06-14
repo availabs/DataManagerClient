@@ -30,18 +30,6 @@ const MapEditor = () => {
   const { symbologyId } = useParams()
 
   useEffect(() => {
-    async function fetchAllSymbologies() {
-      const symbologyLengthPath = ["dama", pgEnv, "symbologies", "length"];
-      falcor.get(symbologyLengthPath).then((resp) =>{
-        console.log("symb length resp",resp);
-      });
-    }
-
-    fetchAllSymbologies();
-  }, []);
-
-
-  useEffect(() => {
     async function fetchSymbologyData() {
       // console.log('fetchSymbologyData ids', symbologyIds)
       const symbologyPath = ["dama", pgEnv, "symbologies", "byId", [symbologyId] , "attributes", Object.values(SymbologyAttributes)];
