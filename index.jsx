@@ -216,6 +216,18 @@ const DamaRoutes = DAMA_ARGS => {
     // Map Editor
     {
       name: "Data Collections",
+      path: `${baseUrl}/mapeditor`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(MapEditor, DAMA_ARGS)
+    },
+    // Map Editor
+    {
+      name: "Data Collections",
       path: `${baseUrl}/mapeditor/:symbologyId`,
       exact: true,
       authLevel,
