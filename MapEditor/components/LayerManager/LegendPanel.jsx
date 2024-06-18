@@ -197,7 +197,7 @@ function LegendRow ({ index, layer, i }) {
   )
 }
 
-function LayerManager (props) {
+function LegendPanel (props) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const layers = useMemo(() => state.symbology?.layers ||  {}, [state])
   //console.log('layers', layers)
@@ -227,8 +227,8 @@ function LayerManager (props) {
 
   return (
     <>     
-      {/* ------Layer Pane ----------- */}
-      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] overflow-x-auto scrollbar-sm '>
+      {/* ------ Legend Pane ----------- */}
+      <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] scrollbar-sm '>
         <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)
@@ -239,4 +239,4 @@ function LayerManager (props) {
   )
 }
 
-export default LayerManager
+export default LegendPanel
