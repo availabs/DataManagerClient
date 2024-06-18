@@ -7,28 +7,14 @@ import { Modal } from "../SymbologyControl";
 import { Dialog } from '@headlessui/react'
 
 import { SymbologiesList } from './SymbologiesList';
-import { CreateSymbologyModal } from '../SymbologyControl';
+import { DEFAULT_MODAL_STATE } from '../SymbologyControl';
 
-const DEFAULT_MODAL_STATE = {
-  open: false,
-  symbologyId: null
-};
-
-export const SelectSymbology = ({ button, className }) => {
+export const SelectSymbology = ({ modalState, setModalState }) => {
   const { baseUrl } = React.useContext(DamaContext);
-  const [modalState, setModalState] = useState(DEFAULT_MODAL_STATE);
   const navigate = useNavigate();
-  const [showCreate, setShowCreate] = useState(false);
 
   return (
     <div>
-      <div
-        className={className}
-        onClick={() => setModalState({ ...modalState, open: !modalState.open })}
-      >
-        {button}
-      </div>
-      <CreateSymbologyModal open={showCreate} setOpen={setShowCreate}/>
       <Modal
         open={modalState.open}
         setOpen={() => setModalState({ ...modalState, open: !modalState.open })}

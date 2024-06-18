@@ -4,7 +4,7 @@ import { DamaContext } from "../../../store"
 
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { CaretDown, MenuDots , Plus} from '../icons'
+import { MenuDots , Plus} from '../icons'
 
 import { SelectSymbology } from './SymbologySelector';
 import get from 'lodash/get'
@@ -139,7 +139,7 @@ export function CreateSymbologyModal ({ open, setOpen})  {
 
 
 
-function SymbologyMenu({ button, className}) {
+function CreateSymbologyMenu({ button, className}) {
   const { state, setState, symbologies, collection } = useContext(SymbologyContext);
   const { baseUrl } = useContext(DamaContext)
   const [showCreate, setShowCreate] = useState(false)
@@ -205,46 +205,58 @@ function SymbologyControlMenu({ button }) {
       </Menu>
   )
 } 
-
+export const DEFAULT_MODAL_STATE = {
+  open: false,
+  symbologyId: null
+};
 function SymbologyControl () {
   const { state, setState } = useContext(SymbologyContext);
   
-  const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
-  const menuButtonClassName = `cursor-pointer fill-gray-400 group-hover:fill-pink-700`
+  const [modalState, setModalState] = useState(DEFAULT_MODAL_STATE);
 
+  const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   return (
     <div className='p-1 flex'>
-      <div className='w-full flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
-        <input 
+      <div className='w-full p-1 flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
+        <input
+          readOnly
           type="text"
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
           value={state.name}
-          onChange={(e) => setState(draft => {
-              draft.name = e.target.value
-            })
-          }
+          onClick={() => setModalState({...modalState, open: true})}
         />
         {
-          state.symbology_id && <div className='flex items-center pt-1.5'>
-            <SymbologyControlMenu button={
-              <MenuDots className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
-            } />
-            </div>
+          state.symbology_id && 
+          <div className='flex items-center mr-2'>
+            <i className='fa-regular fa-floppy-disk cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700'/>
+          </div>
+        }
+        <div className='flex items-center mr-1'>
+          <CreateSymbologyMenu 
+            className="relative inline-block text-left"
+            button={
+              <Plus className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
+            }
+          />
+        </div>
+        {
+          state.symbology_id && 
+          <div className='flex items-center pt-1.5'>
+            <SymbologyControlMenu 
+              button={
+                <MenuDots className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
+              }
+            />
+           </div>
         }
       </div>
       <div className='flex items-center ml-1'>
-        <SymbologyMenu 
-          className={`mr-2 ${menuButtonContainerClassName}`}
-          button={
-            <Plus className={menuButtonClassName}/>
-          }
-        />
+
         <SelectSymbology 
           className={menuButtonContainerClassName}
-          button={
-            <CaretDown className={menuButtonClassName}/>
-          }
+          modalState={modalState}
+          setModalState={setModalState}
         />
       </div>
     </div>
