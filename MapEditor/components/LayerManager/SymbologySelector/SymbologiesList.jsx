@@ -108,7 +108,8 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
   const categories = [...new Set(
     symbologies
         .filter(symbology => {
-          return isListAll || (!isListAll && !symbology?.categories?.find(cat => cat.includes(sourceDataCat)))
+          const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : JSON.parse(symbology?.categories)
+          return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
         })
         .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))
   ].sort()

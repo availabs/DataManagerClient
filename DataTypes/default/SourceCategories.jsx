@@ -185,8 +185,9 @@ const SourceCategories = props => {
 
   const removeCategory = React.useCallback((parent, child = 0) => {
     if (child === 0) {
-      categories.splice(parent, 1);
-      setCategories(categories);
+      const newCats = [...categories];
+      newCats.splice(parent, 1);
+      setCategories(newCats);
     }
     else {
       const cats = categories[parent];
