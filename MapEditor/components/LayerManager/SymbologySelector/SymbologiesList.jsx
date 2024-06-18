@@ -4,6 +4,8 @@ import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
+import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCategories";
+
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;
   return (
@@ -90,7 +92,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
         "symbologies",
         "byIndex",
         { from: 0, to: get(resp.json, symbologyLengthPath, 0) - 1 },
-        "attributes", ['name', 'description', 'symbology_id']
+        "attributes", ['name', 'description', 'symbology_id', 'categories']
       ];
       await falcor.get(symbologyIdsPath);
     }
@@ -105,8 +107,8 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
 
   const categories = [...new Set(
     symbologies
-        .filter(source => {
-          return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+        .filter(symbology => {
+          return isListAll || (!isListAll && !symbology?.categories?.find(cat => cat.includes(sourceDataCat)))
         })
         .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))
   ].sort()
@@ -118,7 +120,12 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
     return acc;
   }, {})
 
-  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
+  const selectedSymbology = useMemo(() => {
+    return symbologies.find(symb => symb.symbology_id === selectedSymbologyId) ?? {}
+  }, [pgEnv, falcorCache, selectedSymbologyId]);
+
+  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2';
+
   return (
     <SourcesLayout baseUrl={baseUrl} isListAll={isListAll} hideBreadcrumbs={true}>
       <div className="py-4 flex flex-rows items-center">
@@ -146,6 +153,11 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
       </div>
       <div className={'flex flex-row'}>
         <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+          <SourceCategories 
+            symbology={selectedSymbology}
+            editingCategories={!!selectedSymbologyId}
+            entityType={'symbologies'}
+          />
           {(categories || [])
               .filter(cat => cat !== sourceDataCat)
               .sort((a,b) => a.localeCompare(b))

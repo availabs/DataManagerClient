@@ -153,36 +153,33 @@ function SourceSelector () {
             </Dialog.Title>
           </div>
         </div>
-        <div className="mt-2 w-full max-h-[calc(100vh_-_200px)]">
+        <div className="mt-2 w-full">
           <SourcesList selectedSource={source} setSource={setSource}/>
         </div>
         <div className='mt-5 sm:mt-4 sm:flex justify-end'>
           <div className='mr-1'>
-          <Button
-            type='button'
-            themeOptions={{color:"cancel"}}
-            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-            onClick={() => setSource({ ...DEFAULT_SOURCE })}
-          >
-            Cancel
-          </Button>
+            <Button
+              type='button'
+              themeOptions={{color:"cancel"}}
+              className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+              onClick={() => setSource({ ...DEFAULT_SOURCE })}
+            >
+              Cancel
+            </Button>
           </div>
           <div>
-          <Button
-            type='button'
-            themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
+            <Button
+              type='button'
+              themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
 
-            disabled={!canAddLayer}
-            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-            onClick={() => addLayer()}
-          >
-            Add layer
-          </Button>
+              disabled={!canAddLayer}
+              className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+              onClick={() => addLayer()}
+            >
+              Add layer
+            </Button>
           </div>
-
-
         </div>
-
       </Modal>
     </div>
   );

@@ -7,23 +7,24 @@ import { Button } from "~/modules/avl-components/src"
 
 import { useClickOutside } from "~/pages/DataManager/utils/useClickOutside"
 
-const useSourceCategories = ({ source }) => {
-
+const useSourceCategories = ({ source, symbology = {}, entityType = 'sources' }) => {
   const [categories, _setCategories] = React.useState([]);
 
   const { pgEnv, falcor } = React.useContext(DamaContext);
 
+  const entityId = entityType === 'sources' ? source.source_id : symbology.symbology_id;
+
   const setCategories = React.useCallback(cats => {
     falcor.set({
       paths: [
-        ['dama', pgEnv, 'sources', 'byId', source.source_id, 'attributes', 'categories']
+        ['dama', pgEnv, entityType, 'byId', entityId, 'attributes', 'categories']
       ],
       jsonGraph: {
         dama: {
           [pgEnv]: {
-            sources: {
+            [entityType]: {
               byId: {
-                [source.source_id]: {
+                [entityId]: {
                   attributes : {
                     categories: JSON.stringify(cats)
                   }
@@ -34,17 +35,19 @@ const useSourceCategories = ({ source }) => {
         }
       }
     }).then(() => {})
-  }, [pgEnv, falcor, source.source_id]);
+  }, [pgEnv, falcor, entityId]);
+
+  const entity = entityType === 'sources' ? source : symbology;
 
   React.useEffect(() => {
-    const cats = get(source, "categories", []);
+    const cats = get(entity, "categories", []);
     if (Array.isArray(cats)) {
       _setCategories(cats);
     }
     else {
       _setCategories([]);
     }
-  }, [source]);
+  }, [entity]);
 
   return [categories, setCategories];
 }
@@ -194,7 +197,7 @@ const SourceCategories = props => {
 
   return (
     <div>
-      { categories.map((cats, i) => (
+      { categories?.map((cats, i) => (
           <CategoryList key={ i }
             categories={ cats }
             parent={ i }

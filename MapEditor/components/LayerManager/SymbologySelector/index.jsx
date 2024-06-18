@@ -32,7 +32,7 @@ export const SelectSymbology = ({ button, className }) => {
       <Modal
         open={modalState.open}
         setOpen={() => setModalState({ ...modalState, open: !modalState.open })}
-        width={"w-[1200px] min-h-[1000px]"}
+        width={"w-[1200px]"}
       >
         <div className="sm:flex sm:items-start">
           <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -50,7 +50,7 @@ export const SelectSymbology = ({ button, className }) => {
             </Dialog.Title>
           </div>
         </div>
-        <div className="mt-2 w-full max-h-[calc(100vh_-_200px)]">
+        <div className="mt-2 ">
           <SymbologiesList
             selectedSymbologyId={modalState.symbologyId}
             setSelectedSymbologyId= {
