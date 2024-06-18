@@ -8,6 +8,7 @@ import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCatego
 
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;
+  const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []
   return (
     <div>
       <div 
@@ -25,7 +26,7 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
             <span>{symbology.name}</span>
           </div>
           <div>
-            {(get(symbology, 'categories', []) || [])
+            {symCats
               .map(cat => (typeof cat === 'string' ? [cat] : cat).map((s, i) => {
                 const isActiveCat = s === cat1;
 
@@ -108,10 +109,15 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
   const categories = [...new Set(
     symbologies
         .filter(symbology => {
-          const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : JSON.parse(symbology?.categories)
+          const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []//JSON.parse(symbology?.categories)
+          console.log('symbology ', symbology.categories,) 
+          
           return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
         })
-        .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))
+        .reduce((acc, s) => {
+          let cats = Array.isArray(s?.categories) ?  s.categories : []
+          return [...acc, ...(cats.map(s1 => s1[0]) || [])]
+        }, []))
   ].sort()
 
   const categoriesCount = categories.reduce((acc, cat) => {
@@ -188,7 +194,9 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
           {
             symbologies
                 .filter(source => {
-                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+                  const symCats = Array.isArray(source?.categories) ? source?.categories : []//JSON.parse(symbology?.categories)
+          
+                  return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
                 })
                 .filter(source => {
                   let output = true;
@@ -204,7 +212,8 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
                   return output;
                 })
                 .filter(source => {
-                  let searchTerm = (source.name + " " + (source?.categories || [])
+                  const symCats = Array.isArray(source?.categories) ? source?.categories : []
+                  let searchTerm = (source.name + " " + (symCats || [])
                       .reduce((out,cat) => {
                         out += Array.isArray(cat) ? cat.join(' ') : typeof cat === 'string' ? cat : '';
                         return out
