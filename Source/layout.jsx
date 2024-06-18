@@ -32,26 +32,25 @@ export const Header = ({baseUrl=''}) => {
     <div className='pt-[2px]'>
       <div className='h-full z-50'>
         <Dropdown control={
-          <div key={'asdasd'} className='px-2 flex text-lg'>
+          <div className='px-2 flex text-lg'>
             <div className=' font-medium text-gray-800'> Data Manager</div>
             <div className='fal fa-angle-down px-3 mt-[6px] '/>
-            {/*<div style={{color: 'red', paddingLeft: '15px', fontWeight: 'bold' }}>PG</div>*/}
           </div>}
-          className={`text-gray-800 group z-50`} openType='click'
+          className={`text-gray-800 group z-50`} 
+          openType='click'
         >
-          <div key={'as'} className='p-1 bg-blue-500 text-base z-40'>
-           <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/`, 'fa fa-files flex-shrink-0  pr-1', 'Sources')}
+          <div className='p-1 bg-blue-500 text-base z-40'>
+            <div key={'Sources'} className='py-1 '>
+              {Item(`${baseUrl}/`, 'fa fa-files flex-shrink-0  pr-1', 'Sources')}
             </div>
-            <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/collections`, 'fa fa-folders flex-shrink-0  pr-1', 'Collections')}
+            <div key={'Map Editor'} className='py-1 '>
+              {Item(`${baseUrl}/mapeditor`, 'fa fa-pen-to-square flex-shrink-0  pr-1', 'Map Editor')}
             </div>
-            
-            <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/tasks`, 'fa fa-list flex-shrink-0  pr-1', 'Activity')}
+            <div key={'Activity'} className='py-1 '>
+              {Item(`${baseUrl}/tasks`, 'fa fa-list flex-shrink-0  pr-1', 'Activity')}
             </div>
-             <div key={'k'} className='py-1 '>
-                {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
+            <div key={'Upload'} className='py-1 '>
+              {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
             </div>
           </div>
         </Dropdown>
