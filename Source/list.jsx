@@ -55,7 +55,7 @@ const SourcesList = () => {
   const { cat1, cat2, ...rest } = useParams();
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
-  const sourceDataCat = 'Source Data'
+  const sourceDataCat = 'Unknown'
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
 
   useEffect(() => {

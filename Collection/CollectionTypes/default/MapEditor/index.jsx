@@ -16,6 +16,8 @@ import LayerEditor from './components/LayerEditor'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 
+import {terrain_3d_source} from './components/styles/4dsource.js'
+
 
 export const SymbologyContext = createContext(undefined);
 
@@ -55,7 +57,7 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
 
   useEffect(() => {
     async function updateData() {
-      console.time('update symbology')
+      //console.time('update symbology')
       //console.log('updating symbology to:', state.symbology)
       let resp = await falcor.set({
         paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'symbology']],
@@ -63,9 +65,18 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           [+activeSymbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
         }}}}}
       })
-      console.timeEnd('update symbology')
+      //console.timeEnd('update symbology')
       
       //console.log('resp',resp)
+    }
+
+    async function updateName() {
+      let resp = await falcor.set({
+        paths: [['dama', pgEnv, 'symbologies', 'byId', +activeSymbologyId, 'attributes', 'name']],
+        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
+          [+activeSymbologyId]: { attributes : { name: state.name }}
+        }}}}}
+      })
     }
 
     let currentData = symbologies.find(s => +s.symbology_id === +activeSymbologyId)
@@ -86,7 +97,10 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
       updateData()
       //throttle(updateData,500)
     }
-  },[state.symbology])
+    if(state?.name && state?.name !== currentData.name) {
+      updateName()
+    }
+  },[state.symbology, state.name])
   // console.log('render', state, activeSymbologyId, symbologies.find(s => +s.symbology_id === +activeSymbologyId)) 
   useEffect(() => {
     // -------------------
@@ -156,27 +170,35 @@ const MapEditor = ({collection, symbologies, activeSymbologyId, ...props}) => {
           layers={ mapLayers }
           layerProps = {layerProps}
           hideLoading={true}
+          showLayerSelect={true}
           mapOptions={{
             center: [-76, 43.3],
             zoom: 6,
+            maxPitch: 60,
             protocols: [PMTilesProtocol],
+            
             styles: [
               {
-                name: "dataviz",
+                name: "Default",
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
-              {
-                name: "streets",
-                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
+              { name: "Satellite",
+                style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-              {
-                name: "toner",
-                style: "https://api.maptiler.com/maps/toner-v2/style.json?key=mU28JQ6HchrQdneiq6k9"
+              { name: "Streets",
+                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-              {
-                name: "new-style",
-                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
-              }
+             
+              { name: "Light",
+                style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              { name: "Dark",
+                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
+              // {
+              //   name: 'Sattelite 3d ',
+              //   style: terrain_3d_source
+              // }
             ]
           }}
           leftSidebar={ false }

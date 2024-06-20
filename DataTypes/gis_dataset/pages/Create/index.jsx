@@ -24,8 +24,7 @@ export default function UploadGisDataset({
 
   // console.log('tippecanoeOptions', tippecanoeOptions)
   const { name: damaSourceName, source_id: sourceId, type } = source;
-  const { pgEnv, baseUrl, falcor } = React.useContext(DamaContext);
-
+  const { pgEnv, baseUrl, falcor, user:ctxUser } = React.useContext(DamaContext);
   const navigate = useNavigate()
  
   const [state, dispatch] = useReducer(reducer, {
@@ -34,7 +33,8 @@ export default function UploadGisDataset({
       databaseColumnNames : 
       (source?.metadata?.columns || source?.metadata || []).map(d => d.name),
     damaSourceName: damaSourceName,
-    userId: 7,
+    userId: user?.id ?? ctxUser.id,
+    email: user?.email ?? ctxUser.email,
     etlContextId: null,
     customViewAttributes: { years: [] },
     dataType: dataType,

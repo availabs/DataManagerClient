@@ -39,12 +39,12 @@ const Pages = {
       hidden: true,
       component: MetadataAdvanced,
   },
-  meta: {
-      name: "Metadata",
-      path: "/meta",
-      hidden: false,
-      component: MetadataBasic,
-  },
+  // meta: {
+  //     name: "Metadata",
+  //     path: "/meta",
+  //     hidden: false,
+  //     component: MetadataBasic,
+  // },
   admin: {
     name: "Admin",
     path: "/admin",

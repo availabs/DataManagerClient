@@ -18,6 +18,7 @@ export const SymbologyAttributes = {
   // metadata: "metadata",
   symbology: "symbology",
   // source_dependencies: "source_dependencies",
+  categories: "categories",
   _created_timestamp: "_created_timestamp",
   _modified_timestamp: "_modified_timestamp",
 };

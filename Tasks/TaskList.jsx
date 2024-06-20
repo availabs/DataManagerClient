@@ -16,7 +16,8 @@ export const ETL_CONTEXT_ATTRS = [
   "parent_context_id",
   "type",
   //"duration",
-  "payload"
+  "payload",
+  "user"
 ];
 
 function timeAgo(input) {
@@ -81,6 +82,18 @@ const DurationCell = (d) => {
   )
 }
 
+export const UserCell = ({value}) => {
+  if (typeof value === 'string' && value?.includes("@")) {
+    return value
+  }
+  else if (typeof value !== 'object') {
+    return `User ${value}`
+  }
+  else {
+    return ''
+  }
+}
+
 const COLUMNS = [
   {
     accessor: "etl_context_id",
@@ -103,6 +116,11 @@ const COLUMNS = [
     Cell: ({value}) => {
       return typeof value === 'string' ? value : "";
     }
+  },
+  {
+    accessor: "user",
+    Header: "User",
+    Cell: UserCell,
   },
   { accessor: "created_at", Header: "Started", Cell: StartedAtCell },
   { accessor: "duration", Header: "Duration", Cell: DurationCell},
@@ -198,7 +216,7 @@ const TaskList = (props) => {
             "attributes",
             "name",
           ]);
-          r.source_name = sourceName;
+          r.source_name = typeof sourceName === 'string' ? sourceName : '';
         }
         return r;
       })

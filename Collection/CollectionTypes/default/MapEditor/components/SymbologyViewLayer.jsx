@@ -46,16 +46,16 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column'])) {
+    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
       //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
-       
         let newSource = cloneDeep(layerProps.sources?.[0])
-        
-        //newSource.source.tiles[0] += `?cols=${layerProps?.['data-column']}`
-        //newSource.source.tiles[0] = newSource.source.tiles[0].replace('https://graph.availabs.org', 'http://localhost:4444')
-        
-        //console.log('change source columns', newSource.source.tiles[0], layerProps?.sources?.[0].id, newSource.id)
+        let tileBase = newSource.source.tiles?.[0];
+
+        if(tileBase){
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+        }
+
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
             maplibreMap.removeLayer(l?.id) 
@@ -120,14 +120,92 @@ const ViewLayerRender = ({
         })
       }
     })
+    
 
+    // -------------------------------
+    // Apply filters
+    // -------------------------------
+    const { filter: layerFilter } = layerProps;
+    layerProps?.layers?.forEach((l,i) => {
+      if(maplibreMap.getLayer(l.id)){
+        if(layerFilter){
+          const mapLayerFilter = Object.keys(layerFilter).map(
+            (filterColumnName) => {
+              let mapFilter = [];
+              const filterOperator = layerFilter[filterColumnName].operator;
+              const filterValue = layerFilter[filterColumnName].value;
+              const filterColumnClause = ["get", filterColumnName];
 
+              if(filterOperator === 'between') {
+                mapFilter = [
+                  "all",
+                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                ];
+              }
+              else {
+                if (["==", "!="].includes(filterOperator)) {
+                  //Allows for `or`, i.e. ogc_fid = 123 or 456
+                  mapFilter = [
+                    "in",
+                    filterColumnClause,
+                    ["literal", filterValue]
+                  ];
 
+                  if(filterOperator === "!="){
+                    mapFilter = ["!", mapFilter];
+                  }
+                }
+                else {
+                  mapFilter = [
+                    filterOperator,
+                    ["to-string", filterColumnClause],
+                    ["to-string", filterValue]
+                  ];
+                }
+              }
 
-  }, [layerProps])
-
-  // return null;
+              return mapFilter;
+            }
+          );
+          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
+        }
+      }
+    });
+  }, [layerProps]);
 }
+
+const getLayerTileUrl = (tileBase, layerProps) => {
+  let newTileUrl = tileBase;
+
+  const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
+  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]);
+  if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
+    if (!newTileUrl?.includes("?cols=")) {
+      newTileUrl += `?cols=`;
+    }
+
+    if (layerProps?.["data-column"] && !getUrlHasDataColumn(newTileUrl)) {
+      newTileUrl += layerProps?.["data-column"];
+    }
+
+    if (getUrlHasDataColumn(newTileUrl) && layerHasFilter) {
+      newTileUrl += ",";
+    }
+
+    if (layerHasFilter) {
+      Object.keys(layerProps.filter).forEach((filterCol, i) => {
+        newTileUrl += `${filterCol}`;
+
+        if (i < Object.keys(layerProps.filter).length - 1) {
+          newTileUrl += ",";
+        }
+      });
+    }
+  }
+
+  return newTileUrl;
+};
 
 class ViewLayer extends AvlLayer { 
   // constructor makes onHover not work??
@@ -160,6 +238,7 @@ class ViewLayer extends AvlLayer {
 
       //console.log('hover callback')
       let feature = features[0];
+      // console.log('testing feature', feature)
 
       let data = [feature.id, layerId, (features[0] || {}).properties];
 
@@ -200,12 +279,21 @@ const HoverComp = ({ data, layer }) => {
   }, [layer]);
 
   useEffect(() => {
-    if(source_id && !hoverColumns) {
+    if(source_id) {
       falcor.get([
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
+    
   }, [source_id, hoverColumns]);
+
+  // useEffect(() => {
+  //   if(view_id) {
+  //     falcor.get([
+  //        "dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id
+  //     ]).then(d => console.log('getting', [ "dama", pgEnv, "viewsbyId", view_id, "databyId", id], d))
+  //   }
+  // },[pgEnv,view_id,id])
 
   const attributes = React.useMemo(() => {
     if (!hoverColumns) {
@@ -225,8 +313,20 @@ const HoverComp = ({ data, layer }) => {
 
   }, [source_id, falcorCache, hoverColumns]);
 
+  const metadata = React.useMemo(() => {
+    let out = get(falcorCache, [
+      "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+    ], [])
+    if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+        ], [])
+      }
+    return out
+  }, [source_id, falcorCache]);
+
   let getAttributes = (typeof attributes?.[0] === 'string' ?
-    attributes : attributes.map(d => d.name)).filter(d => !['wkb_geometry'].includes(d))
+    attributes : attributes.map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
 
   React.useEffect(() => {
     falcor.get([
@@ -244,28 +344,43 @@ const HoverComp = ({ data, layer }) => {
   const attrInfo = React.useMemo(() => {
     return get(
       falcorCache,
-      ["dama", pgEnv, "viewsbyId", view_id, "databyId", id],
+      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
       {}
-    );
+    )
   }, [id, falcorCache, view_id, pgEnv]);
 
-
   return (
-    <div className="bg-white p-4 max-h-64 max-w-lg scrollbar-xs overflow-y-scroll">
+    <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
       {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
-        .map((k, i) => (
-          <div className="flex border-b pt-1" key={i}>
-            <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{k}</div>
-            <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
-              {attrInfo?.[k]}
-            </div>
-          </div>
-        ))}
+        .sort((a,b) =>{
+          const aIndex = (hoverColumns?.findIndex(column => column.column_name === a) || 0);
+          const bIndex = (hoverColumns?.findIndex(column => column.column_name === b) || 0);
+          return aIndex - bIndex;
+        })
+        .map((k, i) => {
+          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
+
+          const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
+          const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
+          if ( !(hoverAttr.name || hoverAttr.display_name) ) {
+            return <></>;
+          }
+          else {
+            return (
+              <div className="flex border-b pt-1" key={i}>
+                <div className="flex-1 font-medium text-xs text-slate-400 pl-1">{hoverAttr.display_name || hoverAttr.name }</div>
+                <div className="flex-1 text-right text-sm font-thin pl-4 pr-1">
+                  {attrInfo?.[k] !== "null" ? get(columnMetadata, attrInfo?.[k],attrInfo?.[k]) : ""}
+                </div>
+              </div>
+            );
+          }
+        })}
     </div>
   );
 };
