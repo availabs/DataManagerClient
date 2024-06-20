@@ -293,7 +293,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         
         sources[0].source.tiles[0] = sources[0].source.tiles[0] + '?cols=ogc_fid'
       }
-      console.log('sources after', sources[0].source.tiles[0])
+      //console.log('sources after', sources[0].source.tiles[0])
       
 
       return {
