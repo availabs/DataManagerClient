@@ -20,6 +20,7 @@ import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 export const SymbologyContext = createContext(undefined);
 
+export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
 const MapEditor = () => {
   const mounted = useRef(false);
@@ -63,23 +64,33 @@ const MapEditor = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
+  const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+  let initialSymbology = {
+    name: '',
+    // collection_id: collection.collection_id,
+    description: '',
+    // symbology: {
+    //   layers: {},
+    // }
+  };
+
+  if(window.localStorage){
+    const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
+    if(localStorageSymbology){
+      initialSymbology = localStorageSymbology
+    }
+
+  } else if(symbologies?.some(s => +s.symbology_id === +symbologyId)){
+    initialSymbology = symbologies?.find(s => +s.symbology_id === +symbologyId);
+  }
+
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
   // once loaded this is mutable here 
   // and is written to db on change
   // ---------------------------------------------------
-  const [state,setState] = useImmer(
-    symbologies?.find(s => +s.symbology_id === +symbologyId) ||
-    {
-      name: '',
-      // collection_id: collection.collection_id,
-      description: '',
-      // symbology: {
-      //   layers: {},
-      // }
-    }
-  )
+  const [state,setState] = useImmer(initialSymbology)
 
   useEffect(() => {
     // console.log('load', +symbologyId, symbologyId, symbologies)
@@ -90,49 +101,21 @@ const MapEditor = () => {
   },[symbologyId, symbologies, falcorCache]);
 
   useEffect(() => {
-    async function updateData() {
-      //console.time('update symbology')
-      //console.log('updating symbology to:', state.symbology)
-      let resp = await falcor.set({
-        paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'symbology']],
-        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
-          [+symbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
-        }}}}}
-      })
-      //console.timeEnd('update symbology')
-      
-      //console.log('resp',resp)
-    }
 
-    async function updateName() {
-      let resp = await falcor.set({
-        paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'name']],
-        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
-          [+symbologyId]: { attributes : { name: state.name }}
-        }}}}}
-      })
+    async function updateData() {
+      if(window.localStorage) { 
+        window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+      }
     }
 
     let currentData = symbologies.find(s => +s.symbology_id === +symbologyId)
-    
-    // console.log('check update', 
-    //   Object.values(state?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`), 
-    //   Object.values(currentData?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`),
-    //   state?.symbology?.layers,
-    //   currentData?.symbology?.layers,
-    //   symbologies.find(s => +s.symbology_id === +symbologyId),
-    //   symbologyId,      
-    //   symbologies,
-    //   !isEqual(state?.symbology, currentData?.symbology), 
-    //   // state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
-    // )
-    
-    if(state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) {
+
+    if(
+      (state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) || 
+      (state?.name && state?.name !== currentData?.name) 
+    ) {
       updateData()
       //throttle(updateData,500)
-    }
-    if(state?.name && state?.name !== currentData.name) {
-      updateName()
     }
   },[state.symbology, state.name])
   // console.log('render', state, symbologyId, symbologies.find(s => +s.symbology_id === +symbologyId)) 
@@ -141,7 +124,8 @@ const MapEditor = () => {
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    if(symbologies.find(s => +s.symbology_id === +symbologyId)) {
+    const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
+    if(!localStorageSymbology && symbologies.find(s => +s.symbology_id === +symbologyId)) {
       setState(symbologies.find(s => +s.symbology_id === +symbologyId))
     }
   },[symbologies.length, symbologyId])

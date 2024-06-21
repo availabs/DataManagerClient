@@ -1,16 +1,15 @@
-import { useContext, useState, useRef } from 'react'
+import { useContext, useState, useRef, useMemo } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
 import { Button } from "~/modules/avl-components/src";
 import { Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import get from 'lodash/get'
+import isEqual from "lodash/isEqual"
 import {Modal} from '../'
-
+import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 export function SaveChangesMenu({ button, className}) {
-  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
-  const { baseUrl } = useContext(DamaContext)
   const [showSaveChanges, setShowSaveChanges] = useState(false)
 
   return (
@@ -34,37 +33,37 @@ const INITIAL_SAVE_CHANGES_MODAL_STATE = {
 function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
-  const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
-  const { state } = useContext(SymbologyContext)
-  const { collectionId } = useParams()
+  const { pgEnv, falcor, falcorCache, baseUrl } = useContext(DamaContext)
+  const { state, setState } = useContext(SymbologyContext)
+  const { symbologyId } = useParams()
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
-  const createSymbologyMap = async () => {
-    const newSymbology = {
-      name: modalState.name,
-      description: 'map',
-      symbology: {
-        layers: {}
-      }
-    }
+  const symbologies = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
 
-    let resp = await falcor.call(
-        ["dama", "symbology", "symbology", "create"],
-        [pgEnv, newSymbology]
-    )
-    let symbology_id = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
-    await falcor.invalidate(["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"])
-    // await falcor.get()
-    // await falcor.invalidate(["dama", pgEnv, "symbologies", "byId"])
-    console.log('created symbology', resp, symbology_id)
+  async function updateData() {
+    //console.log('updating symbology to:', state.symbology)
+    await falcor.set({
+      paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'symbology']],
+      jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
+        [+symbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
+      }}}}}
+    })
+    //console.timeEnd('update symbology')
     
-    if(symbology_id) {
-      setOpen(false)
-      navigate(`${baseUrl}/mapeditor/${symbology_id}`)
-    }
-    
+    //console.log('resp',resp)
+  }
 
+  async function updateName() {
+    await falcor.set({
+      paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'name']],
+      jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
+        [+symbologyId]: { attributes : { name: state.name }}
+      }}}}}
+    })
   }
   
   const actionButtonClassName = modalState.action === 'discard' ? 'danger' : 'primary' 
@@ -160,9 +159,20 @@ function SaveChangesModal ({ open, setOpen })  {
           <Button
             themeOptions={{ size: "sm", color: actionButtonClassName }}
             onClick={() => {
+              if(modalState.action === 'save'){
+                const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
+                if(state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) {
+                  updateData()
+                  //throttle(updateData,500)
+                }
+                if(state?.name && state?.name !== currentData.name) {
+                  updateName()
+                }
+              }
 
+              setOpen(false);
+              setModalState(INITIAL_SAVE_CHANGES_MODAL_STATE);
             }}
-            disabled={modalState.loading || modalState.name?.length < 4}
           >
             {modalState.action} changes
           </Button>
@@ -171,7 +181,8 @@ function SaveChangesModal ({ open, setOpen })  {
           <Button
             themeOptions={{ size: "sm", color: 'transparent' }}
             onClick={() => {
-              setOpen(false)
+              setOpen(false);
+              setModalState(INITIAL_SAVE_CHANGES_MODAL_STATE);
             }}
           >
             Cancel
