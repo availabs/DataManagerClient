@@ -9,6 +9,7 @@ import { MenuDots , Plus} from '../../icons'
 import { SelectSymbology } from '../SymbologySelector';
 import get from 'lodash/get'
 
+import { CreateSymbologyMenu, SymbologyControlMenu, SaveChangesMenu } from './components'
 
 
 export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-6', initialFocus, children}) {
@@ -53,172 +54,11 @@ export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-
 }
 
 
-function CreateSymbologyModal ({ open, setOpen})  {
-  const cancelButtonRef = useRef(null)
-  // const submit = useSubmit()
-  const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
-  const { state } = useContext(SymbologyContext)
-  const { collectionId } = useParams()
-  const navigate = useNavigate()
-  const [modalState, setModalState] = useState({
-    name: '',
-    loading: false
-  })
-
-  const createSymbologyMap = async () => {
-    const newSymbology = {
-      name: modalState.name,
-      description: 'map',
-      symbology: {
-        layers: {}
-      }
-    }
-
-    let resp = await falcor.call(
-        ["dama", "symbology", "symbology", "create"],
-        [pgEnv, newSymbology]
-    )
-    let symbology_id = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
-    await falcor.invalidate(["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"])
-    // await falcor.get()
-    // await falcor.invalidate(["dama", pgEnv, "symbologies", "byId"])
-    console.log('created symbology', resp, symbology_id)
-    
-    if(symbology_id) {
-      setOpen(false)
-      navigate(`${baseUrl}/mapeditor/${symbology_id}`)
-    }
-    
-
-  }
-  
-  return (
-    <Modal
-      open={open}
-      setOpen={setOpen}
-      initialFocus={cancelButtonRef}
-    >
-      <div className="sm:flex sm:items-start">
-        <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-          <i className="fad fa-layer-group text-blue-600" aria-hidden="true" />
-        </div>
-        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-          <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
-            Create New Map
-          </Dialog.Title>
-          <div className="mt-2 w-full">
-            <input
-              value={modalState.name}
-              onChange={e => setModalState({...state, name: e.target.value})} 
-              className='p-2 bg-slate-100 text-lg font-medium w-full' placeholder={'Map Name'}/>
-          </div>
-        </div>
-      </div>
-      <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-        <button
-          type="button"
-          disabled={modalState.loading || modalState.name?.length < 4}
-          className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-          onClick={createSymbologyMap}
-        >
-          Creat{modalState.loading ? 'ing...' : 'e'}
-        </button>
-        <button
-          type="button"
-          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          onClick={() => setOpen(false) }
-          ref={cancelButtonRef}
-        >
-          Cancel
-        </button>
-      </div>
-    </Modal>
-  )
-
-}
-
-function SaveChangesMenu({ button, className}) {
-  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
-  const { baseUrl } = useContext(DamaContext)
-  const [showSaveChanges, setShowSaveChanges] = useState(false)
-
-  return (
-      <div 
-        onClick={() => setShowSaveChanges(true)}
-        className={className}
-      >
-        <SaveChangesModal open={showSaveChanges} setOpen={setShowSaveChanges}/>
-        {button}
-      </div>
-  )
-} 
-
-function CreateSymbologyMenu({ button, className}) {
-  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
-  const { baseUrl } = useContext(DamaContext)
-  const [showCreate, setShowCreate] = useState(false)
-
-  return (
-      <div 
-        onClick={() => setShowCreate(true)}
-        className={className}
-      >
-        <CreateSymbologyModal open={showCreate} setOpen={setShowCreate}/>
-        {button}
-      </div>
-  )
-} 
 
 
-function SymbologyControlMenu({ button }) {
-  const { state, setState  } = useContext(SymbologyContext);
 
-  return (
-      <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button>
-          {button}
-        </Menu.Button>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          <Menu.Items className='absolute right-0 w-36 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
-            <div className=" py-1 ">
-              {/*<Menu.Item>
-                {({ active }) => (
-                  <div className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}>Zoom to Fit</div>
-                )}
-              </Menu.Item>*/}
-              <Menu.Item>
-                {({ active }) => (
-                  <div 
-                    className={`${
-                      active ? 'bg-pink-50 ' : ''
-                    } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
-                    onClick={() => {
-                      // setState(draft => {
-                      //   delete draft.symbology.layers[layer.id]
-                      //   Object.values(draft.symbology.layers)
-                      //     .sort((a, b) => a.order - b.order)
-                      //     .forEach((l,i) => l.order = i)
-                      // })
-                    }}
-                  >Delete</div>
-                )}
-              </Menu.Item>
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
-  )
-} 
+
+
 export const INITIAL_NEW_MAP_MODAL_STATE = {
   open: false,
   symbologyId: null
