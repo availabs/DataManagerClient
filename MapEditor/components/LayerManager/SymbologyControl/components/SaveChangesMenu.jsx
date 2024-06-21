@@ -1,12 +1,9 @@
-import { useContext, useState, Fragment, useRef } from 'react'
+import { useContext, useState, useRef } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
-
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
+import { Button } from "~/modules/avl-components/src";
+import { Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../../../icons'
-
-import { SelectSymbology } from '../../SymbologySelector';
 import get from 'lodash/get'
 import {Modal} from '../'
 
@@ -27,7 +24,13 @@ export function SaveChangesMenu({ button, className}) {
   )
 }
 
+const INITIAL_SAVE_CHANGES_MODAL_STATE = {
+  action: 'save',
+  name: ''
+};
 
+//RYAN TODO -- set initial/default name of "saveas" input to be something like "Current Map (1)" or "Copy of Current Map (1)", etc.
+// next -- get it to make the API call to `save`, when save is selected and confirmed
 function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
@@ -35,10 +38,7 @@ function SaveChangesModal ({ open, setOpen })  {
   const { state } = useContext(SymbologyContext)
   const { collectionId } = useParams()
   const navigate = useNavigate()
-  const [modalState, setModalState] = useState({
-    name: '',
-    loading: false
-  })
+  const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
   const createSymbologyMap = async () => {
     const newSymbology = {
@@ -67,45 +67,116 @@ function SaveChangesModal ({ open, setOpen })  {
 
   }
   
+  const actionButtonClassName = modalState.action === 'discard' ? 'danger' : 'primary' 
+
   return (
     <Modal
       open={open}
       setOpen={setOpen}
       initialFocus={cancelButtonRef}
     >
-      <div className="sm:flex sm:items-start">
+      <div className="flex items-center ">
         <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-          <i className="fad fa-layer-group text-blue-600" aria-hidden="true" />
+          <i className='fa-regular fa-floppy-disk text-blue-600' aria-hidden="true"/>
         </div>
-        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+        <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
           <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
-            Create New Map
+            Manage Changes
           </Dialog.Title>
-          <div className="mt-2 w-full">
+        </div>
+      </div>
+      <div className='flex items-center'>
+        <div className="mt-4 ml-1 flex  flex-col items-start justify-items-start">
+          <div className='flex items-center'>
+            <input
+              id={"discard"}
+              name={"discard"}
+              value={"discard"}
+              type="radio"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={modalState.action === "discard"}
+              onChange={(e) => setModalState({...modalState, action: e.target.value})}
+            />
+            <label
+              htmlFor={"discard"}
+              className="ml-2 text-sm text-gray-900"
+            >
+              discard
+            </label>
+          </div>
+          <div className='flex items-center'>
+            <input
+              id={"save"}
+              name={"save"}
+              value={"save"}
+              type="radio"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={modalState.action === "save"}
+              onChange={(e) => {
+                console.log(e.target.value);
+                setModalState({...modalState, action: e.target.value})
+              }}
+            />
+            <label
+                htmlFor={"save"}
+                className="ml-2 text-sm text-gray-900"
+            >
+              save
+            </label>
+          </div>
+          <div className='flex items-center'>
+            <input
+              id={"saveas"}
+              name={"saveas"}
+              value={"saveas"}
+              type="radio"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={modalState.action === "saveas"}
+              onChange={(e) => setModalState({...modalState, action: e.target.value})}
+            />
+            <label
+              htmlFor={"saveas"}
+              className="ml-2 text-sm text-gray-900"
+            >
+              saveas
+            </label>
+          </div>
+        </div>
+        {
+          modalState.action === "saveas" && 
+          <div className="flex mt-4 ml-4 items-start justify-items-start">
             <input
               value={modalState.name}
               onChange={e => setModalState({...state, name: e.target.value})} 
-              className='p-2 bg-slate-100 text-lg font-medium w-full' placeholder={'Map Name'}/>
+              className='p-1 bg-slate-100 ' 
+              placeholder={'New Map Name'}
+            />
           </div>
-        </div>
+        }
       </div>
+
       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-        <button
-          type="button"
-          disabled={modalState.loading || modalState.name?.length < 4}
-          className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-          onClick={createSymbologyMap}
-        >
-          Creat{modalState.loading ? 'ing...' : 'e'}
-        </button>
-        <button
-          type="button"
-          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          onClick={() => setOpen(false) }
-          ref={cancelButtonRef}
-        >
-          Cancel
-        </button>
+        <div className="px-1">
+          <Button
+            themeOptions={{ size: "sm", color: actionButtonClassName }}
+            onClick={() => {
+
+            }}
+            disabled={modalState.loading || modalState.name?.length < 4}
+          >
+            {modalState.action} changes
+          </Button>
+        </div>
+        <div className="px-1">
+          <Button
+            themeOptions={{ size: "sm", color: 'transparent' }}
+            onClick={() => {
+              setOpen(false)
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </Modal>
   )
