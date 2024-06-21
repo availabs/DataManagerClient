@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import {Button} from '~/modules/avl-components/src'
 import { DamaContext } from "../../../../store"
 
-import { Modal } from "../SymbologyControl";
 import { Dialog } from '@headlessui/react'
 
 import { SymbologiesList } from './SymbologiesList';
-import { DEFAULT_MODAL_STATE } from '../SymbologyControl';
+import { Modal, INITIAL_NEW_MAP_MODAL_STATE } from '../SymbologyControl';
 
 export const SelectSymbology = ({ modalState, setModalState }) => {
   const { baseUrl } = React.useContext(DamaContext);
@@ -52,7 +51,7 @@ export const SelectSymbology = ({ modalState, setModalState }) => {
               type="button"
               themeOptions={{ color: "cancel" }}
               className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-              onClick={() => setModalState(DEFAULT_MODAL_STATE)}
+              onClick={() => setModalState(INITIAL_NEW_MAP_MODAL_STATE)}
             >
               Cancel
             </Button>
@@ -67,7 +66,7 @@ export const SelectSymbology = ({ modalState, setModalState }) => {
               className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
               onClick={() => {
                 navigate(`${baseUrl}/mapeditor/${modalState.symbologyId}`)
-                setModalState(DEFAULT_MODAL_STATE)
+                setModalState(INITIAL_NEW_MAP_MODAL_STATE)
               }}
             >
               Open Symbology

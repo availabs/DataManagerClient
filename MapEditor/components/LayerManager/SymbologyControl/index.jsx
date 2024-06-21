@@ -1,12 +1,12 @@
 import { useContext, useState, Fragment, useRef } from 'react'
-import { SymbologyContext } from '../../'
-import { DamaContext } from "../../../store"
+import { SymbologyContext } from '../../..'
+import { DamaContext } from "../../../../store"
 
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../icons'
+import { MenuDots , Plus} from '../../icons'
 
-import { SelectSymbology } from './SymbologySelector';
+import { SelectSymbology } from '../SymbologySelector';
 import get from 'lodash/get'
 
 
@@ -53,7 +53,7 @@ export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-
 }
 
 
-export function CreateSymbologyModal ({ open, setOpen})  {
+function CreateSymbologyModal ({ open, setOpen})  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
   const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
@@ -137,7 +137,21 @@ export function CreateSymbologyModal ({ open, setOpen})  {
 
 }
 
+function SaveChangesMenu({ button, className}) {
+  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
+  const { baseUrl } = useContext(DamaContext)
+  const [showSaveChanges, setShowSaveChanges] = useState(false)
 
+  return (
+      <div 
+        onClick={() => setShowSaveChanges(true)}
+        className={className}
+      >
+        <SaveChangesModal open={showSaveChanges} setOpen={setShowSaveChanges}/>
+        {button}
+      </div>
+  )
+} 
 
 function CreateSymbologyMenu({ button, className}) {
   const { state, setState, symbologies, collection } = useContext(SymbologyContext);
@@ -205,14 +219,20 @@ function SymbologyControlMenu({ button }) {
       </Menu>
   )
 } 
-export const DEFAULT_MODAL_STATE = {
+export const INITIAL_NEW_MAP_MODAL_STATE = {
   open: false,
   symbologyId: null
 };
+
+const INITIAL_SAVE_CHANGES_MODAL_STATE = {
+
+};
+
 function SymbologyControl () {
   const { state, setState } = useContext(SymbologyContext);
   
-  const [modalState, setModalState] = useState(DEFAULT_MODAL_STATE);
+  const [newMapModalState, setNewMapModalState] = useState(INITIAL_NEW_MAP_MODAL_STATE);
+  const [saveChangesModalState, setSaveChangesModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   return (
@@ -224,12 +244,17 @@ function SymbologyControl () {
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
           value={state.name}
-          onClick={() => setModalState({...modalState, open: true})}
+          onClick={() => setNewMapModalState({...newMapModalState, open: true})}
         />
         {
           state.symbology_id && 
+
           <div className='flex items-center mr-2'>
-            <i className='fa-regular fa-floppy-disk cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700'/>
+            <SaveChangesMenu 
+              button={
+                <i className='fa-regular fa-floppy-disk cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
+              }
+            />
           </div>
         }
         <div className='flex items-center mr-1'>
@@ -252,11 +277,10 @@ function SymbologyControl () {
         }
       </div>
       <div className='flex items-center ml-1'>
-
         <SelectSymbology 
           className={menuButtonContainerClassName}
-          modalState={modalState}
-          setModalState={setModalState}
+          modalState={newMapModalState}
+          setModalState={setNewMapModalState}
         />
       </div>
     </div>
