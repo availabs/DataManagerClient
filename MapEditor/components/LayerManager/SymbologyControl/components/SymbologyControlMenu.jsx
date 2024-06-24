@@ -5,13 +5,33 @@ import { DamaContext } from "../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MenuDots , Plus} from '../../../icons'
-
+import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
 import { SelectSymbology } from '../../SymbologySelector';
 import get from 'lodash/get'
 
 
 export function SymbologyControlMenu({ button }) {
   const { state, setState  } = useContext(SymbologyContext);
+  const { pgEnv, falcor, falcorCache, baseUrl } = useContext(DamaContext)
+  const { symbologyId } = useParams()
+  const navigate = useNavigate()
+
+
+  //RYAN TODO -- MUST POP A CONFIRMATION MODAL
+  const deleteSymbology = async () => {
+
+    const resp = await falcor.call(
+      ["dama", "symbology", "symbology", "delete"],
+      [pgEnv, symbologyId]
+    );
+
+    console.log("deletge responmse", resp)
+    const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+    window.localStorage.setItem(symbologyLocalStorageKey, null);
+    // console.log('created symbology', newSymb, newSymbologyId)
+    navigate(`${baseUrl}/mapeditor`)
+  }
+
 
   return (
       <Menu as="div" className="relative inline-block text-left">
@@ -43,12 +63,7 @@ export function SymbologyControlMenu({ button }) {
                       active ? 'bg-pink-50 ' : ''
                     } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
                     onClick={() => {
-                      // setState(draft => {
-                      //   delete draft.symbology.layers[layer.id]
-                      //   Object.values(draft.symbology.layers)
-                      //     .sort((a, b) => a.order - b.order)
-                      //     .forEach((l,i) => l.order = i)
-                      // })
+                      deleteSymbology()
                     }}
                   >Delete</div>
                 )}
