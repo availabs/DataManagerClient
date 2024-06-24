@@ -64,24 +64,25 @@ const MapEditor = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
-  const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+  const origSymbology = useMemo(() => {
+    return symbologies?.find(s => +s.symbology_id === +symbologyId);
+  }, [symbologies, symbologyId]);
+
   let initialSymbology = {
     name: '',
-    // collection_id: collection.collection_id,
     description: '',
-    // symbology: {
-    //   layers: {},
-    // }
+    symbology: {
+      layers: {},
+    }
   };
 
-  if(window.localStorage){
-    const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
-    if(localStorageSymbology){
-      initialSymbology = localStorageSymbology
-    }
-
-  } else if(symbologies?.some(s => +s.symbology_id === +symbologyId)){
-    initialSymbology = symbologies?.find(s => +s.symbology_id === +symbologyId);
+  const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+  const localStorageSymbology = JSON.parse(window?.localStorage?.getItem(symbologyLocalStorageKey));
+  if(localStorageSymbology){
+    initialSymbology = localStorageSymbology;
+  }
+  else if (origSymbology) {
+    initialSymbology = origSymbology;
   }
 
   // --------------------------------------------------
@@ -92,14 +93,15 @@ const MapEditor = () => {
   // ---------------------------------------------------
   const [state,setState] = useImmer(initialSymbology)
 
+  // Resets state if URL param does not match symbology currently in state
   useEffect(() => {
     // console.log('load', +symbologyId, symbologyId, symbologies)
     if (!!state.symbology_id && (+symbologyId !== +state.symbology_id)) {
-      const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
-      setState(currentData);
+      setState(origSymbology);
     }
-  },[symbologyId, symbologies, falcorCache]);
+  },[origSymbology]);
 
+  // Updates localStorage whenever state changes 
   useEffect(() => {
     async function updateData() {
       if(window.localStorage) { 
@@ -107,27 +109,27 @@ const MapEditor = () => {
       }
     }
 
-    let currentData = symbologies.find(s => +s.symbology_id === +symbologyId)
-
     if(
-      (state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) || 
-      (state?.name && state?.name !== currentData?.name) 
+      (state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) || 
+      (state?.name && state?.name !== origSymbology?.name) 
     ) {
       updateData()
       //throttle(updateData,500)
     }
-  },[state.symbology, state.name])
-  // console.log('render', state, symbologyId, symbologies.find(s => +s.symbology_id === +symbologyId)) 
+  },[state?.symbology, state?.name]);
+
+
+  // If we don't have local storage data for this symbology, use data from API
   useEffect(() => {
     // -------------------
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
     const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
-    if(!localStorageSymbology && symbologies.find(s => +s.symbology_id === +symbologyId)) {
-      setState(symbologies.find(s => +s.symbology_id === +symbologyId))
+    if(!localStorageSymbology && origSymbology) {
+      setState(origSymbology)
     }
-  },[symbologies.length, symbologyId])
+  },[symbologies.length, origSymbology])
 
   //--------------------------
   // -- Map Layers are the instantation

@@ -6,8 +6,9 @@ import { Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
-import {Modal} from '../'
+import { Modal } from '../'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
+import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
 
 export function SaveChangesMenu({ button, className}) {
   const [showSaveChanges, setShowSaveChanges] = useState(false)
@@ -23,10 +24,6 @@ export function SaveChangesMenu({ button, className}) {
   )
 }
 
-const INITIAL_SAVE_CHANGES_MODAL_STATE = {
-  action: 'save',
-  name: ''
-};
 
 //RYAN TODO -- set initial/default name of "saveas" input to be something like "Current Map (1)" or "Copy of Current Map (1)", etc.
 // next -- get it to make the API call to `save`, when save is selected and confirmed
@@ -34,15 +31,21 @@ function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
   const { pgEnv, falcor, falcorCache, baseUrl } = useContext(DamaContext)
-  const { state, setState } = useContext(SymbologyContext)
+  const { state, setState, symbologies } = useContext(SymbologyContext)
   const { symbologyId } = useParams()
   const navigate = useNavigate()
-  const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
-  const symbologies = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, pgEnv]);
+  const origSymbology = useMemo(() => {
+    return symbologies.find(s => +s.symbology_id === +symbologyId);
+  }, [symbologies, symbologyId]);
+
+  //RYAN TODO -- make a function that parses name to determine what number to append
+  const INITIAL_SAVE_CHANGES_MODAL_STATE = {
+    action: 'save',
+    name: state?.name + " (1) "
+  };
+
+  const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
   async function updateData() {
     //console.log('updating symbology to:', state.symbology)
@@ -65,7 +68,29 @@ function SaveChangesModal ({ open, setOpen })  {
       }}}}}
     })
   }
-  
+
+  const createSymbologyMap = async () => {
+    const newSymbology = {
+      ...state,
+      name: modalState.name
+    }
+
+    const resp = await falcor.call(
+      ["dama", "symbology", "symbology", "create"],
+      [pgEnv, newSymbology]
+    );
+
+    const newSymbologyId = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
+    const newSymb = get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'],{})?.[newSymbologyId]?.attributes
+    // console.log('created symbology', newSymb, newSymbologyId)
+    
+    if(newSymbologyId) {
+      setOpen(false);
+      setState(newSymb);
+      navigate(`${baseUrl}/mapeditor/${newSymbologyId}`)
+    }
+  }
+
   const actionButtonClassName = modalState.action === 'discard' ? 'danger' : 'primary' 
 
   return (
@@ -100,7 +125,7 @@ function SaveChangesModal ({ open, setOpen })  {
               htmlFor={"discard"}
               className="ml-2 text-sm text-gray-900"
             >
-              discard
+              Discard
             </label>
           </div>
           <div className='flex items-center'>
@@ -112,7 +137,6 @@ function SaveChangesModal ({ open, setOpen })  {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               checked={modalState.action === "save"}
               onChange={(e) => {
-                console.log(e.target.value);
                 setModalState({...modalState, action: e.target.value})
               }}
             />
@@ -120,7 +144,7 @@ function SaveChangesModal ({ open, setOpen })  {
                 htmlFor={"save"}
                 className="ml-2 text-sm text-gray-900"
             >
-              save
+              Save
             </label>
           </div>
           <div className='flex items-center'>
@@ -137,7 +161,7 @@ function SaveChangesModal ({ open, setOpen })  {
               htmlFor={"saveas"}
               className="ml-2 text-sm text-gray-900"
             >
-              saveas
+              Save As
             </label>
           </div>
         </div>
@@ -146,7 +170,7 @@ function SaveChangesModal ({ open, setOpen })  {
           <div className="flex mt-4 ml-4 items-start justify-items-start">
             <input
               value={modalState.name}
-              onChange={e => setModalState({...state, name: e.target.value})} 
+              onChange={e => setModalState({...modalState, name: e.target.value})} 
               className='p-1 bg-slate-100 ' 
               placeholder={'New Map Name'}
             />
@@ -159,18 +183,22 @@ function SaveChangesModal ({ open, setOpen })  {
           <Button
             themeOptions={{ size: "sm", color: actionButtonClassName }}
             onClick={() => {
+              const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+
               if(modalState.action === 'save'){
-                const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
-                if(state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) {
+                if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
                   updateData()
-                  //throttle(updateData,500)
                 }
-                if(state?.name && state?.name !== currentData.name) {
+                if(state?.name && state?.name !== origSymbology.name) {
                   updateName()
                 }
               } else if (modalState.action === 'discard') {
-                const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
-                setState(currentData)
+                window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+                setState(origSymbology)
+              }
+              else if (modalState.action === "saveas") {
+                window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+                createSymbologyMap();
               }
 
               setOpen(false);
