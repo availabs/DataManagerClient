@@ -168,6 +168,9 @@ function SaveChangesModal ({ open, setOpen })  {
                 if(state?.name && state?.name !== currentData.name) {
                   updateName()
                 }
+              } else if (modalState.action === 'discard') {
+                const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
+                setState(currentData)
               }
 
               setOpen(false);

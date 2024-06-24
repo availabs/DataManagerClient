@@ -101,7 +101,6 @@ const MapEditor = () => {
   },[symbologyId, symbologies, falcorCache]);
 
   useEffect(() => {
-
     async function updateData() {
       if(window.localStorage) { 
         window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
