@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { Button } from "~/modules/avl-components/src";
-import { SymbologyContext } from "../../";
-import { FilterBuilder, ExistingFilterList } from "./Controls";
+import { SymbologyContext } from "../../../";
+import { ExistingFilterList, FilterBuilder } from "./FilterControls";
 import get from "lodash/get";
 import set from "lodash/set";
 
@@ -20,32 +20,34 @@ function FilterEditor(props) {
         Filters
       </div>
       <div className="mx-4">
-      <ExistingFilterList
-        removeFilter={(columnName) => {
-          setState((draft) => {
-            const newFilter = Object.keys(existingFilter).reduce((a, c) => {
-              if (c !== columnName) {
-                a[c] = existingFilter[c];
-              }
-              return a;
-            }, {});
-            set(
-              draft,
-              `symbology.layers[${state.symbology.activeLayer}].filter`,
-              newFilter
-            );
-          });
-        }}
-        activeColumn={activeColumn}
-        setActiveColumn={setActiveColumn}
-      />
+        <ExistingFilterList
+          removeFilter={(columnName) => {
+            setActiveColumn(null);
+            setDisplayBuilder(false);
+            setState((draft) => {
+              const newFilter = Object.keys(existingFilter).reduce((a, c) => {
+                if (c !== columnName) {
+                  a[c] = existingFilter[c];
+                }
+                return a;
+              }, {});
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].filter`,
+                newFilter
+              );
+            });
+          }}
+          activeColumn={activeColumn}
+          setActiveColumn={setActiveColumn}
+        />
       </div>
       <div className="m-4">
         <Button
           className="p-1"
           themeOptions={{ size: "sm", color: "transparent" }}
           onClick={() => {
-            setDisplayBuilder(!displayBuilder);
+            setDisplayBuilder(true);
             setActiveColumn(null);
           }}
         >
@@ -56,7 +58,6 @@ function FilterEditor(props) {
         <FilterBuilder
           path={`['filter']`}
           params={{ activeColumn, setActiveColumn }}
-          
         />
       )}
     </div>

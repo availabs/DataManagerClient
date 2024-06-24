@@ -121,7 +121,7 @@ function CategoryLegend({layer}) {
 }
 
 function StepLegend({layer}) {
-  console.log('StepLegend', layer)
+  //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
   let { choroplethdata, legenddata } = useMemo(() => {
     return {

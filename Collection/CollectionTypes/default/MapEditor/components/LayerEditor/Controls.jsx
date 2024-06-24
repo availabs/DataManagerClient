@@ -4,7 +4,7 @@ import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Switch } from '@headlessui/react'
 // import get from 'lodash/get'
 import isEqual from 'lodash/isEqual'
-import { Plus, Close, MenuDots, CaretDown } from '../icons'
+import { Close, CaretDown } from '../icons'
 import { DndList } from '~/modules/avl-components/src'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
@@ -15,11 +15,7 @@ import set from 'lodash/set'
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
-const FILTER_OPERATORS = {
-  string: ["!=", "==" ],
-  integer: ["!", "<", "<=", "==", ">=", ">", "between" ],
-  number: ["!", "<", "<=", "==", ">=", ">", "between" ]
-};
+
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
 
@@ -49,13 +45,14 @@ export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
-  let { value, viewId, sourceId,paintValue, column, categorydata, choroplethdata, colors, colorrange, numCategories, numbins, method, showOther } = useMemo(() => {
+  let { value, viewId, sourceId,paintValue, column, categories, categorydata, choroplethdata, colors, colorrange, numCategories, numbins, method, showOther } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       paintValue : get(state, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
@@ -109,11 +106,11 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   React.useEffect(() => {
     if( value === 'categories') {
-      let {paint, legend} = categoryPaint(column,categorydata,colors,numCategories, showOther)
-      //console.log('categories xyz', paint, isValidCategoryPaint(paint))
+      let {paint, legend} = categories?.paint ? categories : categoryPaint(column, categorydata, colors, numCategories, showOther, metadata);
+      //console.log('categories xyz', column, categories)
       if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
         //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
-      
+
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
           set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -208,7 +205,7 @@ function RangeControl({path,params={}}) {
   )
 }
 
-function SimpleControl({path}) {
+function SimpleControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   return (
     <label className='flex'>
@@ -216,7 +213,7 @@ function SimpleControl({path}) {
         <input
           className='w-full'
           type='text' 
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, '#ccc')}
+          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params?.default ?? '#ccc')}
           onChange={(e) => setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
           })}
@@ -328,9 +325,9 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       const lenRes = await falcor.get([
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ]) 
-      const len = get(lenRes, [
+      let len = get(lenRes, [
         'json', 'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
-      ])
+      ], 0)
       // console.log('len', len)
       if(len > 0){
         falcor.get([
@@ -381,7 +378,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
-
+            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`, {})
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
 
           })}
@@ -490,7 +487,6 @@ function CategoricalColorControl({path, params={}}) {
   let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors['cat1'])
 
   // console.log('value', value, path)
-
   return (
       <div className='flex w-full items-center'>
         <ControlMenu 
@@ -533,15 +529,44 @@ function CategoryControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
-  let { value, column, categorydata, colors } = useMemo(() => {
+
+  //Value is literal represetnation of mapbox filter object that colors the actual map
+  let { value: mapPaint, column, categorydata, colors, sourceId } = useMemo(() => {
     return {
+      sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1'])
+      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
     }
   },[state])
 
+  const [activeCatIndex, setActiveCatIndex] = React.useState();
+  useEffect(() => {
+    //console.log('getmetadat', sourceId)
+    if(sourceId) {
+      falcor.get([
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
+    }
+  },[sourceId])
+
+  const metadataLookup = useMemo(() => {
+    //console.log('getmetadata', falcorCache)
+      let out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+      ], [])
+      if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+      return JSON.parse((out.filter(d => d.name === column)?.[0] || {})?.meta_lookup || "{}")
+      
+
+  }, [sourceId,falcorCache])
+
+  //Number of total distinct values, not counting `null`
   const numCategories = useMemo(() => {
       //console.log('categorydata', categorydata)
       return Object.values(categorydata)
@@ -553,33 +578,73 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const categories = (Array.isArray(value) ? value : []).filter((d,i) => i > 2 )
-            .map((d,i) => {
-              if(i%2 === 0) {
-                return {color: d, label: value[i+2]}
-              }
-              return null
-            })
-            .filter(d => d)
+  //A human readable representation of the current data categories
+  const currentCategories = (Array.isArray(mapPaint) ? mapPaint : [])
+    .filter((d, i) => i > 2)
+    .map((d, i) => {
+      if (i % 2 === 0) {
+        return { color: d, label: mapPaint[i + 2] };
+      }
+      return null;
+    })
+    .filter((d) => d);
+
+  const availableCategories = getDiffColumns(
+    Object.values(categorydata)
+      .filter((cat) => typeof cat[column] !== "object")
+      .map((catData) => catData[column]),
+    currentCategories.map((cat) => cat.label)
+  ).map((cat) => ({ label: cat, value: cat }));
 
   const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
   return (
    
       <div className=' w-full items-center'>
+        {
+          activeCatIndex !== undefined  && 
+          <>
+            <label className='flex'>
+              <div className='flex items-center'>
+                <input
+                  type='color' 
+                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
+                  onChange={(e) => {
+                    const updatedCategoryPaint = [...mapPaint];
+                    const updatedCategoryLegend = [...currentCategories];
+
+                    updatedCategoryLegend[activeCatIndex].color = e.target.value;
+                
+                    const indexOfLabel = updatedCategoryPaint.indexOf(updatedCategoryLegend[activeCatIndex].label);
+                    updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
+
+                    setState(draft => {
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                        paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                          return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                        })
+                      });
+                    })
+                  }}
+                />
+              </div>
+              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex].label} </div>
+            </label>
+          </>
+        }
         <div className='flex items-center'>
           <div className='text-sm text-slate-400 px-2'>Showing</div>
           <div className='border border-transparent hover:border-slate-200 m-1 rounded '>
             <select
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
-              value={categories.length}
+              value={currentCategories.length}
               onChange={(e) => setState(draft => {
-                // console.log('SelectViewColumnControl set column path', path, e.target.value)
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value)
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{});
               })}
             >
-              <option key={'def'} value={categories.length}>{categories.length} Categories</option>
+              <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
               {([10,20,30,50,100] || [])
-                .filter(d => d < numCategories && d !== categories.length)
+                .filter(d => d < numCategories && d !== currentCategories.length)
                 .map((val,i) => {
                 return (
                   <option key={i} value={val}>{val} Categories</option>
@@ -605,7 +670,7 @@ function CategoryControl({path, params={}}) {
                 showOther ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
-              <span className="sr-only">Enable notifications</span>
+              <span className="sr-only">Show other</span>
               <div
                 className={`${
                   showOther ? 'translate-x-5' : 'translate-x-0'
@@ -617,21 +682,99 @@ function CategoryControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {categories.map((d,i) => (
-          <div key={i} className='w-full flex items-center hover:bg-slate-100'>
-            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
+          {currentCategories.map((d,i) => (
+            <div key={i} className='group/title w-full flex items-center hover:bg-slate-100'>
+              <div 
+                className='flex items-center h-8 w-8 justify-center  border-r border-b ' 
+                onClick={() => {
+                  if (activeCatIndex !== i) {
+                    setActiveCatIndex(i);
+                  } else {
+                    setActiveCatIndex(undefined);
+                  }
+                }}
+              >
+                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
+              </div>
+              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
+              <div
+                className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
+                onClick={() => {
+                  const updatedCategoryPaint = [...mapPaint];
+                  const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
+                  //console.log('test123', updatedCategoryLegend)
+
+                  const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
+
+                  //In filter array, the `label` preceeds its paint `value`
+                  updatedCategoryPaint.splice(indexOfLabel, 2);
+                  setState(draft=> {
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                      paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                        return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                      })
+                    });
+                  });
+                }}
+              >
+                <Close
+                  className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
+                />
+              </div>
+            </div> 
+          ))}
+          {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
+              <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
+              </div>
+              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
             </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
-          </div> 
-        ))}
-        {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
-            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
+          }
+          <>
+            <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+                Add Column
             </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
-          </div>
-        }
+            <div className="flex-1 flex items-center mx-4 pb-4">
+              <StyledControl>
+                <label className='flex w-full'>
+                  <div className='flex w-full items-center'>
+                    <select
+                      className='w-full py-2 bg-transparent'
+                      value={''}
+                      onChange={(e) =>
+                        {
+                          const updatedCategoryPaint = [...mapPaint];
+                          const updatedCategoryLegend = [...currentCategories];
+
+                          const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
+                          const lastColorIndex = colors.map(color => rgb2hex(color)).indexOf(lastColorUsed);
+                          const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
+
+                          updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
+                          updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
+                          
+                          setState(draft=> {
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                              paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
+                                return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                              })
+                            });
+                          });
+                        }
+                      }
+                    >
+                      <option key={-1} value={""}></option>
+                      {(availableCategories || []).map((opt, i) => (
+                        <option key={i} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
+              </StyledControl>
+            </div>
+          </>
         </div>
       </div>
     )
@@ -730,7 +873,7 @@ function ChoroplethControl({path, params={}}) {
                 showOther ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
-              <span className="sr-only">Enable notifications</span>
+              <span className="sr-only">Show other</span>
               <div
                 className={`${
                   showOther ? 'translate-x-5' : 'translate-x-0'
@@ -760,472 +903,7 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
-  return (
-    <DndList
-      onDrop={reorderAttrs}
-    >
-      {selectedColumns?.map((selectedCol, i) => {
-        return (
-          <div
-            key={i}
-            className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
-          >
-            <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
-              <input 
-                  type="text"
-                  className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
-                  value={selectedCol.display_name}
-                  onChange={(e) => {
-                    renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
-                  }}
-                />
-            </div>
-            <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
-              {sampleData
-                .map((row) => row[selectedCol.column_name])
-                .filter(item => item !== 'null')
-                .filter(onlyUnique)
-                .slice(0,2)
-                .join(", ")}
-            </div>
-            <div
-              className="border-t flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
-              onClick={() => {
-                removeAttr(selectedCol.column_name)
-              }}
-            >
-              <Close
-                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
-              />
-            </div>
-          </div>
-        );
-      })}
-    </DndList>
-  );
-};
-
-export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
-  const { state, setState } = React.useContext(SymbologyContext);
-
-  const existingFilter = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`
-  );
-
-  const sourceId = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].source_id`
-  );
-  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
-
-  useEffect(() => {
-    if (sourceId) {
-      falcor.get([
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-    ]);
-    }
-  }, [sourceId]);
-
-  const attributes = useMemo(() => {
-    let columns = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-    ], []);
-
-    if (columns.length === 0) {
-      columns = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-      ], []);
-    }
-    return columns;
-  }, [sourceId, falcorCache]);
-  return (
-    <div className="flex w-full flex-wrap">
-      {Object.keys(existingFilter || {})?.map((selectedCol, i) => {
-        const selectedColAttr = attributes.find(attr => attr.name === selectedCol);
-        const filter = existingFilter[selectedCol];
-        const filterRowClass = activeColumn === selectedCol ? 'bg-pink-100' : ''
-        const filterIconClass = activeColumn === selectedCol ? 'text-pink-100': 'text-white' 
-
-        const isEqualityOperator = selectedColAttr.type === "string" && ["!=", "=="].includes(filter.operator);
-        const isBetweenOperator = filter.operator === "between";
-
-        const display_name = attributes.find(attr => attr.name === selectedCol)?.display_name || selectedCol;
-        const displayedValue = isEqualityOperator
-          ? Array.isArray(filter?.value) && filter?.value?.join(", ")
-          : isBetweenOperator
-          ? filter?.value?.join(" and ")
-          : filter?.value;
-        return (
-          <div
-            key={i}
-            className={`${filterRowClass} m-1 border border-slate-200 rounded group/title w-full px-1 text-sm grid grid-cols-9 cursor-pointer hover:border-pink-500 hover:border`}
-            onClick={() => {setActiveColumn(selectedCol)}}
-          >
-            <div className="truncate col-span-8 py-1">
-              {display_name} <span className="font-thin">{filter.operator}</span> {displayedValue}
-            </div>
-
-            <div
-              className={`cursor-pointer ${filterIconClass} group-hover/title:text-black group/icon col-span-1 p-1`}
-              onClick={(e) => {
-                e.stopPropagation();
-                removeFilter(selectedCol)
-              }}
-            >
-              <i
-                className="mx-2 fa fa-x cursor-pointer group-hover/icon:text-pink-800"
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-function EqualityFilterValueList({params, path, filterSearchValue}) {
-  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
-  const { state, setState } = React.useContext(SymbologyContext);
-  const {activeColumn: activeColumnName, setActiveColumn} = params;
-  const { viewId, sourceId } = useMemo(
-    () => ({
-      viewId: get(
-        state,
-        `symbology.layers[${state.symbology.activeLayer}].view_id`
-      ),
-      sourceId: get(
-        state,
-        `symbology.layers[${state.symbology.activeLayer}].source_id`
-      ),
-    }),
-    [state]
-  );
-
-  useEffect(() => {
-    if (sourceId) {
-      falcor.get([
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-    ]);
-    }
-  }, [sourceId]);
-
-  const attributes = useMemo(() => {
-    let columns = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-    ], []);
-
-    if (columns.length === 0) {
-      columns = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-      ], []);
-    }
-    return columns;
-  }, [sourceId, falcorCache]);
-
-  useEffect(() => {
-    falcor.get([
-      "dama",
-      pgEnv,
-      "viewsbyId",
-      viewId,
-      "databyIndex",
-      { from: 0, to: 2000 },
-      [activeColumnName],
-    ]);
-  }, [falcor, pgEnv, viewId, activeColumnName]);
-
-  const sampleData = useMemo(() => {
-    return Object.values(
-      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...v.value], ""));
-  }, [pgEnv, falcorCache]);
-
-  const sampleRows = useMemo(() => {
-    return sampleData
-      ?.map((row) => row[activeColumnName])
-      ?.filter((item) => item !== "null")
-      ?.filter(onlyUnique);
-  }, [sampleData, activeColumnName]);
-  sampleRows.sort();
-
-  const currentFilterValue = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-    params.default || params?.options?.[0]?.value
-  );
-  return sampleRows
-    ?.filter((sampleValue) =>
-      sampleValue
-        ?.toString()
-        ?.toLowerCase()
-        ?.includes(filterSearchValue.toString().toLowerCase())
-    )
-    .map((sampleValue, i) => {
-      const isValueSelected = currentFilterValue.includes(sampleValue)
-      const selectedClass = isValueSelected ? "bg-pink-100" : "";
-      return (
-        <div
-          key={i}
-          className={`${selectedClass} px-4 w-full text-sm hover:bg-pink-200 hover:cursor-pointer`}
-          onClick={() =>
-            setState((draft) => {   
-              const newValue = isValueSelected
-                ? currentFilterValue.filter(
-                    (filterVal) => filterVal !== sampleValue
-                  )
-                : [...currentFilterValue, sampleValue];
-              set(
-                draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                newValue
-              );
-            })
-          }
-        >
-          <div className="flex">
-            <input
-              readOnly
-              type="checkbox"
-              checked={isValueSelected}
-            />
-            <div className="truncate flex items-center text-[13px] px-4 py-1">
-              {sampleValue}
-            </div>
-          </div>
-        </div>
-      );
-    });
-}
-
-export function FilterBuilder({ path, params = {} }) {
-  const { state, setState } = React.useContext(SymbologyContext);
-  const [filterSearchValue, setFilterSearchValue] = React.useState("");
-  const { activeColumn: activeColumnName, setActiveColumn } = params;
-
-  const { sourceId } = useMemo(
-    () => ({
-      sourceId: get(
-        state,
-        `symbology.layers[${state.symbology.activeLayer}].source_id`
-      ),
-    }),
-    [state]
-  );
-  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
-
-  useEffect(() => {
-    if (sourceId) {
-      falcor.get([
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-    ]);
-    }
-  }, [sourceId]);
-
-  const attributes = useMemo(() => {
-    let columns = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-    ], []);
-
-    if (columns.length === 0) {
-      columns = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-      ], []);
-    }
-    return columns;
-  }, [sourceId, falcorCache]);
-
-  const activeAttr = useMemo(() => {
-    return attributes.find((attr) => attr.name === activeColumnName);
-  }, [activeColumnName]);
-
-  const filterOperators = FILTER_OPERATORS[activeAttr?.type] || [];
-  const existingFilter = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`
-  );
-
-  const valuePath = `${path}.${activeColumnName}.value`;
-  const isBetweenOperator = existingFilter[activeColumnName]?.operator === "between";
-  const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter[activeColumnName]?.operator);
-
-  const valueInputComponent = isEqualityOperator ? (
-    <StyledControl>
-      <label className='flex'>
-        <div className='flex items-center'>
-          <input
-            className='w-full'
-            type='text' 
-            value={filterSearchValue}
-            onChange={(e) => {setFilterSearchValue(e.target.value)}}
-          />
-        </div>
-      </label>
-    </StyledControl>
-  ) : (
-    <StyledControl>
-      <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} />
-    </StyledControl>
-  );
-
-  const valueLabel = isEqualityOperator ? "Search values" : "Value:";
-  const valueLabelComponent = isBetweenOperator ? null : (
-    <div className="p-1">{valueLabel}</div>
-  );
-  return (
-    <>
-      {!activeColumnName && (
-        <AddFilterColumn
-          path={path}
-          params={params}
-          setActiveColumn={setActiveColumn}
-        />
-      )}
-
-      {activeColumnName && (
-        <>
-          <div className='mx-4'>
-            <div className="flex my-1 items-center">
-              <div className="p-1">Column:</div>
-              <div className="p-2">{activeAttr.display_name ?? activeColumnName}</div>
-            </div>
-            <div className="flex my-1 items-center">
-              <div className="p-1">Operator:</div>
-              <StyledControl>
-                <SelectControl
-                  path={`${path}.${activeColumnName}.operator`}
-                  params={{
-                    options: filterOperators.map((operator) => ({
-                      value: operator,
-                      name: operator,
-                    })),
-                  }}
-                />
-              </StyledControl>
-            </div>
-            <div className="flex my-1 items-center">
-              {valueLabelComponent}
-              {valueInputComponent}
-            </div>
-            {
-              isBetweenOperator &&
-                <>
-                  <div className="p-1">And</div>
-                  <div className="flex my-1 items-center">
-                    
-                    <StyledControl>
-                      <SimpleControl path={valuePath + "[1]"} />
-                    </StyledControl>
-                  </div>
-                </>
-            }
-          </div>
-          {
-            isEqualityOperator && 
-              <EqualityFilterValueList params={params} path={valuePath} filterSearchValue={filterSearchValue}/>
-          }
-        </>  
-      )}
-    </>
-  );
-}
-
-function AddFilterColumn({ path, params = {}, setActiveColumn }) {
-  const { state, setState } = React.useContext(SymbologyContext);
-  const existingFilter = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].${path}`,
-    params.default || params?.options?.[0]?.value || {}
-  );
-
-  const existingFilterColumns = Object.keys(existingFilter);
-
-  const sourceId = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}].source_id`
-  );
-  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
-
-  useEffect(() => {
-    if (sourceId) {
-      falcor.get([
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-    ]);
-    }
-  }, [sourceId]);
-
-  const attributes = useMemo(() => {
-    let columns = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-    ], []);
-
-    if (columns.length === 0) {
-      columns = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-      ], []);
-    }
-    return columns;
-  }, [sourceId, falcorCache]);
-
-  const attributeNames = useMemo(
-    () =>
-      attributes
-        .filter((d) => !["wkb_geometry"].includes(d))
-        .map((attr) => attr.name),
-    [attributes]
-  );
-
-  const availableFilterColumns = getDiffColumns(
-    attributeNames,
-    existingFilterColumns
-  ).map((colName) => {
-    const newAttr = attributes.find((attr) => attr.name === colName);
-    return { value: colName, label: newAttr?.display_name || colName };
-  }); 
-  
-  const DEFAULT_STRING_FILTER = {
-    operator: "==",
-    value: [],
-  }
-
-  const DEFAULT_NUM_FILTER = {
-    operator: "==",
-    value: ""
-  }
-
-  return (
-    <AddColumnSelectControl
-      setState={(newColumn) => {
-        setState((draft) => {
-          if (newColumn !== "") {
-            const newAttr = attributes.find(attr => attr.name === newColumn);
-            let newValue = {
-              ...DEFAULT_STRING_FILTER,
-              columnName: newColumn,
-            };
-            if(newAttr.type !== "string") {
-              newValue = {
-                ...DEFAULT_NUM_FILTER,
-                columnName: newColumn,
-              }
-            }
-
-            set(
-              draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}.${newColumn}`,
-              newValue
-            );
-          }
-        });
-        setActiveColumn(newColumn);
-      }}
-      availableColumnNames={availableFilterColumns}
-    />
-  );
-}
-
-const AddColumnSelectControl = ({setState, availableColumnNames}) => {
+export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
     <>
       <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
@@ -1257,177 +935,12 @@ const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   )
 }
 
-export function ColumnSelectControl({path, params={}}) {
-  const { state, setState } = React.useContext(SymbologyContext);
-  const selectedColumns = useMemo(() => {
-    return get(
-      state,
-      `symbology.layers[${state.symbology.activeLayer}].${path}`,
-      []
-    )
-  }, [state, path, params]);
-  const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
-  const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
-  const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
-
-  useEffect(() => {
-    if (sourceId) {
-      falcor.get([
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ]);
-    }
-  }, [sourceId]);
-
-  
-
-  const attributes = useMemo(() => {
-    let columns = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-    ], []);
-    if (columns.length === 0) {
-      columns = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-      ], []);
-    }
-    return columns;
-  }, [sourceId, falcorCache]); 
-  
-  const attributeNames = useMemo(
-    () =>
-      attributes
-        .map((attr) => attr.name),
-    [attributes]
-  );
-
-  useEffect(() => {
-    if(selectedColumns.length === 0) {
-      setState((draft) => {
-        set(
-          draft,
-          `symbology.layers[${state.symbology.activeLayer}].${path}`,
-          attributes
-            .filter((d) => !["wkb_geometry"].includes(d.name))
-            .map((attr) => ({
-              column_name: attr.name,
-              display_name: attr?.display_name || attr.name,
-            }))
-        );
-      });
-    }
-  }, [attributes]);
-
-
-
-  const selectedColumnNames = useMemo(() => {
-    return selectedColumns ? (typeof selectedColumns[0] === "string"
-      ? selectedColumns
-      : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
-  }, [selectedColumns]);
-
-  const availableColumnNames = useMemo(() => {
-    return (
-      selectedColumnNames
-        ? getDiffColumns(attributeNames, selectedColumnNames)
-        : attributeNames
-    ).filter((d) => !["wkb_geometry"].includes(d));
-  }, [selectedColumnNames, attributeNames]); 
-
-  React.useEffect(() => {
-    falcor.get([
-      "dama",
-      pgEnv,
-      "viewsbyId",
-      viewId,
-      "databyIndex",
-      {"from":0, "to": 100},
-      attributeNames
-    ])
-  }, [falcor, pgEnv, viewId, attributeNames]);
-
-  const sampleData = useMemo(() => {
-    return Object.values(
-      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) => get(falcorCache, [...v.value], ""));
-  }, [pgEnv, falcorCache]);
-
-  return (
-    <div className='flex w-full flex-wrap'>
-      <ExistingColumnList
-        selectedColumns={selectedColumns}
-        sampleData={sampleData}
-        reorderAttrs={(start, end) => {
-          const sections = [...selectedColumns];
-          const [item] = sections.splice(start, 1);
-          sections.splice(end, 0, item);
-          
-          setState((draft) => {
-            set(
-              draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
-              sections
-            );
-          });
-        }}
-        renameAttr={({columnName, displayName}) => {
-          const newColumns = [...selectedColumns];
-          const columnIndex = newColumns.findIndex(colObj => colObj.column_name === columnName);
-          const [item] = newColumns.splice(columnIndex, 1);
-          const newItem = {...item};
-          newItem.display_name = displayName;
-          newColumns.splice(columnIndex, 0, newItem);
-          setState((draft) => {
-            set(
-              draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
-              newColumns
-            );
-          })
-        }}
-        removeAttr={(columnName) => {
-          //console.log('column_name', columnName, selectedColumns.filter((colObj) => colObj.column_name !== columnName))
-          setState((draft) => {
-            set(
-              draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
-              selectedColumns.filter((colObj) => colObj.column_name !== columnName)
-            );
-          })
-        }}
-      />
-      <AddColumnSelectControl
-        setState={(newColumn) => {
-          setState((draft) => {
-            if (newColumn !== "") {
-              const newAttr = attributes.find(attr => attr.name === newColumn);
-              set(
-                draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                selectedColumns
-                  ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-                  : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-              );
-            }
-          });
-        }}
-        availableColumnNames = { 
-          availableColumnNames.map(colName => {
-            const newAttr = attributes.find(attr => attr.name === colName);
-            return { value: colName, label: newAttr?.display_name || colName };
-          }) 
-        }
-      />
-    </div>
-  );
-}
-
-
 export const controlTypes = {
   'color': ColorControl,
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
   'choroplethControl':ChoroplethControl, 
-  'columnSelectControl': ColumnSelectControl,
   'range': RangeControl,
   'simple': SimpleControl,
   'select': SelectControl,

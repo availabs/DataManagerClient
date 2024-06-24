@@ -226,6 +226,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     out.sources.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
+        s.source.url += '?cols=ogc_fid'
         if(s.source.url.includes('.pmtiles')){
           s.source.url = s.source.url
             .replace('https://', 'pmtiles://')
@@ -241,6 +242,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
     get(out,'tiles.sources',[])
       .forEach(s => {
         if(s?.source?.url) {
+          //console.log('hola', s?.source?.url)
           s.source.url = s.source.url.replace('$HOST', TILEHOST)
         }
       })
@@ -284,6 +286,15 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           layers.push(pinnedGeomLayer);
         }
       }
+
+      console.log('sources', sources)
+
+      if(sources?.[0]?.source?.tiles?.[0] && !sources[0].source.tiles[0].includes('?') ) {
+        
+        sources[0].source.tiles[0] = sources[0].source.tiles[0] + '?cols=ogc_fid'
+      }
+      //console.log('sources after', sources[0].source.tiles[0])
+      
 
       return {
             name: source.name,
