@@ -83,11 +83,11 @@ function SymbologyControl () {
           type="text"
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
-          value={state.name}
+          value={state?.name}
           onClick={() => setNewMapModalState({...newMapModalState, open: true})}
         />
         {
-          state.symbology_id && 
+          state?.symbology_id && 
 
           <div className='flex items-center mr-2'>
             <SaveChangesMenu 
@@ -106,7 +106,7 @@ function SymbologyControl () {
           />
         </div>
         {
-          state.symbology_id && 
+          state?.symbology_id && 
           <div className='flex items-center pt-1.5'>
             <SymbologyControlMenu 
               button={

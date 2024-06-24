@@ -106,11 +106,13 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
+  console.log('symbologies', symbologies)
+
   const categories = [...new Set(
     symbologies
         .filter(symbology => {
           const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []//JSON.parse(symbology?.categories)
-          console.log('symbology ', symbology.categories,) 
+          //console.log('symbology ', symbology.categories,) 
           
           return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
         })

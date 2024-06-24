@@ -12,7 +12,7 @@ import FilterEditor from './FilterEditor'
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
+  const activeLayer = useMemo(() => state?.symbology?.layers?.[state?.symbology?.activeLayer] || null, [state])
 
   const tabs = ['Style', 'Legend','Popup','Filter']
   return activeLayer && (
@@ -26,9 +26,9 @@ function LayerManager (props) {
             placeholder={'Select / Create New Map'}
             value={state?.symbology?.layers?.[state?.symbology?.activeLayer]?.name}
             onChange={(e) => setState(draft => { 
-              //if(draft.symbology.activeLayer && draft.symbology.layers[draft.symbology.activeLayer].name){
+              if(draft.symbology.activeLayer && draft.symbology.layers[draft.symbology.activeLayer].name){
                 draft.symbology.layers[draft.symbology.activeLayer].name = e.target.value 
-              //}
+              }
             })}
           />
           </div>
