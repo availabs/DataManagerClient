@@ -106,7 +106,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
-  console.log('symbologies', symbologies)
+  //console.log('symbologies', symbologies)
 
   const categories = [...new Set(
     symbologies

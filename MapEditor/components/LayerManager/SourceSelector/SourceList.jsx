@@ -21,6 +21,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     async function fetchData() {
 
       const resp = await falcor.get(lengthPath);
+      console.log('get sources', source.source_id)
       await falcor.get([
         "dama", pgEnv, "sources", "byId",
         source.source_id, "views", "byIndex",
@@ -36,7 +37,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     return Object.values(
       get(falcorCache,["dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex"], {}
     )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes)).sort((a,b) => new Date(b?._modified_timestamp) - new Date(a?._modified_timestamp))
-  }, [falcorCache])
+  }, [falcorCache, source.source_id])
 
   return (
     <div>
@@ -44,6 +45,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
         className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`} 
         onClick={() => {
           if (selectedSource.sourceId !== source.source_id) {
+
             const newSource = {
               ...source,
               add: true,
