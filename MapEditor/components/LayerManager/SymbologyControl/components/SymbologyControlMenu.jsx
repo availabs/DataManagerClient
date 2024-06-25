@@ -1,25 +1,31 @@
 import { useContext, useState, Fragment, useRef } from 'react'
-import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
-
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
+import { Button } from "~/modules/avl-components/src";
+import { Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../../../icons'
 import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
-import { SelectSymbology } from '../../SymbologySelector';
-import get from 'lodash/get'
+import { Modal } from '../'
 
+export function SymbologyControlMenu({ button, className }) {
+  const [showSaveChanges, setShowSaveChanges] = useState(false)
 
-export function SymbologyControlMenu({ button }) {
-  const { state, setState  } = useContext(SymbologyContext);
+  return (
+      <div 
+        onClick={() => setShowSaveChanges(true)}
+        className={className}
+      >
+        <DeleteSymbologyModal open={showSaveChanges} setOpen={setShowSaveChanges}/>
+        {button}
+      </div>
+  )
+}
+
+const DeleteSymbologyModal = ({open, setOpen}) => {
   const { pgEnv, falcor, falcorCache, baseUrl } = useContext(DamaContext)
   const { symbologyId } = useParams()
   const navigate = useNavigate()
 
-
-  //RYAN TODO -- MUST POP A CONFIRMATION MODAL
   const deleteSymbology = async () => {
-
     const resp = await falcor.call(
       ["dama", "symbology", "symbology", "delete"],
       [pgEnv, symbologyId]
@@ -28,49 +34,48 @@ export function SymbologyControlMenu({ button }) {
     console.log("deletge responmse", resp)
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
     window.localStorage.setItem(symbologyLocalStorageKey, null);
-    // console.log('created symbology', newSymb, newSymbologyId)
+
     navigate(`${baseUrl}/mapeditor`)
   }
 
-
   return (
-      <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button>
-          {button}
-        </Menu.Button>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          <Menu.Items className='absolute right-0 w-36 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
-            <div className=" py-1 ">
-              {/*<Menu.Item>
-                {({ active }) => (
-                  <div className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}>Zoom to Fit</div>
-                )}
-              </Menu.Item>*/}
-              <Menu.Item>
-                {({ active }) => (
-                  <div 
-                    className={`${
-                      active ? 'bg-pink-50 ' : ''
-                    } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
-                    onClick={() => {
-                      deleteSymbology()
-                    }}
-                  >Delete</div>
-                )}
-              </Menu.Item>
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
+    <Modal
+      open={open}
+      setOpen={setOpen}
+    >
+      <div className="sm:flex sm:items-start">
+        <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+          <i className="fad fa-layer-group text-blue-600" aria-hidden="true" />
+        </div>
+        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+          <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
+            Delete Symbology
+          </Dialog.Title>
+        </div>
+      </div>
+      <div className='flex items-center capitalize'>
+        Are you sure you want to delete this symbology? This action cannot be undone.
+      </div>
+      <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+        <div className='px-1'>
+          <Button
+            themeOptions={{ size: "sm", color: 'danger' }}
+            className={" capitalize"}
+            onClick={deleteSymbology}
+          >
+            Delete
+          </Button>
+        </div>
+        <div className='px-1'>
+          <Button
+            themeOptions={{ size: "sm", color: 'transparent' }}
+            className={" capitalize"}
+            onClick={() => setOpen(false) }
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
-} 
+}

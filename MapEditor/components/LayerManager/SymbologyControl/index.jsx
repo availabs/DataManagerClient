@@ -77,7 +77,7 @@ function SymbologyControl () {
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   return (
     <div className='p-1 flex'>
-      <div className='w-full p-1 flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
+      <div className='w-full px-1 flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
         <input
           readOnly
           type="text"
@@ -97,7 +97,7 @@ function SymbologyControl () {
             />
           </div>
         }
-        <div className='flex items-center mr-1'>
+        <div className='flex items-center mr-2'>
           <CreateSymbologyMenu 
             className="relative inline-block text-left"
             button={
@@ -107,10 +107,10 @@ function SymbologyControl () {
         </div>
         {
           state?.symbology_id && 
-          <div className='flex items-center pt-1.5'>
+          <div className='flex items-center'>
             <SymbologyControlMenu 
               button={
-                <MenuDots className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
+                <i className='fa-regular fa-trash cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
               }
             />
            </div>
