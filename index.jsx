@@ -20,7 +20,7 @@ import { registerDataType } from './DataTypes'
 import { DamaContext } from "./store"
 
 
-import DamaMap from './Collection/CollectionTypes/default/MapEditor/components/dms/MapComponent'
+import DamaMap from './MapEditor/components/dms/MapComponent'
 
 import MapEditor from './MapEditor';
 
