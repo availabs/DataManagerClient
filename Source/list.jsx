@@ -57,7 +57,7 @@ const SourceThumb = ({ source }) => {
 const SourcesList = () => {
   const [layerSearch, setLayerSearch] = useState("");
   const { cat1, cat2, ...rest } = useParams();
-  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor, falcorCache, user} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
   const sourceDataCat = 'Unknown'
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
@@ -104,7 +104,7 @@ const SourcesList = () => {
     })?.length
     return acc;
   }, {})
-  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
+  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2';
   return (
 
     <SourcesLayout baseUrl={baseUrl} isListAll={isListAll}>
@@ -129,6 +129,15 @@ const SourcesList = () => {
             className={actionButtonClassName} title={isListAll ? 'View Key Sources' : 'View All Sources'}>
           <i className={`fa-solid ${isListAll ? `fa-filter-list` : `fa-list-ul`} text-xl text-blue-400`}/>
         </Link>
+
+        {
+          user?.authed && user.authLevel === 10 &&
+            <Link
+                to={`${baseUrl}/settings`}
+                className={actionButtonClassName} title={'Settings'}>
+              <i className={`fa-solid fa-gear text-xl text-blue-400`}/>
+            </Link>
+        }
 
       </div>
       <div className={'flex flex-row'}>

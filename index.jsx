@@ -13,7 +13,7 @@ import CollectionDelete from "./Collection/delete";
 
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
-
+import SettingsComponent from "./Source/settings";
 
 import { registerDataType } from './DataTypes'
 
@@ -362,6 +362,16 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
+    },
+    { name: "Settings",
+      path: `${ baseUrl }/settings`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(SettingsComponent, DAMA_ARGS)
     }
   ];
 };
