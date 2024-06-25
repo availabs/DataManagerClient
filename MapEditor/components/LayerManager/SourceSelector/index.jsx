@@ -1,5 +1,5 @@
 import React, { useEffect, useContext , useMemo, useRef } from 'react'
-import {Button} from '~/modules/avl-components/src'
+//import {Button} from '~/modules/avl-components/src'
 import {SymbologyContext} from '../../..'
 import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
@@ -158,17 +158,18 @@ function SourceSelector () {
         </div>
         <div className='mt-5 sm:mt-4 sm:flex justify-end'>
           <div className='mr-1'>
-            <Button
+          
+            <button
               type='button'
               themeOptions={{color:"cancel"}}
               className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
               onClick={() => setSource({ ...DEFAULT_SOURCE })}
             >
               Cancel
-            </Button>
+            </button>
           </div>
           <div>
-            <Button
+            <button
               type='button'
               themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
 
@@ -177,7 +178,7 @@ function SourceSelector () {
               onClick={() => addLayer()}
             >
               Add layer
-            </Button>
+            </button>
           </div>
         </div>
       </Modal>

@@ -42,7 +42,7 @@ export function Modal({open, setOpen, width='sm:my-8 sm:w-full sm:max-w-lg sm:p-
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className={`relative transform overflow-hidden rounded-lg bg-white px-4 h-[calc(100vh_-_100px)] pb-4 pt-5 text-left shadow-xl transition-all ${width}`}>
+              <Dialog.Panel className={`relative transform overflow-auto rounded-lg bg-white px-4 h-[calc(100vh_-_100px)] pb-4 pt-5 text-left shadow-xl transition-all ${width}`}>
                 {children}
               </Dialog.Panel>
             </Transition.Child>

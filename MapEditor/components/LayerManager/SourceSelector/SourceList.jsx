@@ -42,7 +42,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
   return (
     <div>
       <div 
-        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`} 
+        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} overflow-hidden block border shadow flex`} 
         onClick={() => {
           if (selectedSource.sourceId !== source.source_id) {
 
@@ -206,7 +206,7 @@ const SourcesList = ({selectedSource, setSource}) => {
         </div>
       </div>
       <div className={'flex flex-row'}>
-        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
           {(categories || [])
               .filter(cat => cat !== sourceDataCat)
               .sort((a,b) => a.localeCompare(b))
@@ -232,7 +232,7 @@ const SourcesList = ({selectedSource, setSource}) => {
           ))
           }
         </div>
-        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[65dvh] overflow-y-auto overflow-x-hidden scrollbar-sm'}>
           {
             sources
                 .filter(source => {
