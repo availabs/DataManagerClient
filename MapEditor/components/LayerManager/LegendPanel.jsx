@@ -173,7 +173,7 @@ function LegendRow ({ index, layer, i }) {
   }
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typePaint[layer.type](layer)
+  let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
   const type = layer['layer-type']
   //console.log('legend row type', type)
 

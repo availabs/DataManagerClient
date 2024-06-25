@@ -7,7 +7,7 @@ import set from 'lodash/set'
 import { Plus, Close } from '../../icons'
 
 
-import { CollectionAttributes, SymbologyAttributes, getAttributes } from "../../../../.././../../Collection/attributes"
+import { CollectionAttributes, SymbologyAttributes, getAttributes } from "../../../../Collection/attributes"
 
 
 let iconList = [
@@ -41,7 +41,7 @@ let iconList = [
 
 
 function SymbologySelector ({index, tab}) {
-  const { state, setState, falcor, falcorCache, pgEnv } = React.useContext(MapContext);
+  const { state, setState, falcor, falcorCache, pgEnv ='hazmit_dama' } = React.useContext(MapContext);
   // const { pgEnv, baseUrl, falcor, falcorCache } = React.useContext(DamaContext)
 
   const [collection, setCollection] = React.useState({
@@ -55,50 +55,53 @@ function SymbologySelector ({index, tab}) {
   // ---------------------------------
   useEffect(() => {
     async function fetchData() {
-      // console.log('pgEnv', pgEnv)
-      const lengthPath = ["dama", pgEnv, "collections", "length"];
+      console.log('pgEnv', pgEnv)
+
+      const lengthPath = ["dama", pgEnv, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
-      // console.log('test',get(resp.json, lengthPath, 0) , resp)
+      console.log('test',get(resp.json, lengthPath, 0) , resp)
       await falcor.get([
-        "dama", pgEnv, "collections", "byIndex",
+        "dama", pgEnv, "symbologies", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
-        "attributes", Object.values(CollectionAttributes)
+        "attributes", Object.values(SymbologyAttributes)
       ]);
     }
     fetchData();
   }, [falcor, pgEnv]);
 
-  const collections = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byIndex"], {}))
+  const symbologies = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
+
+  console.log('hola im ghere symbologies', symbologies)
 
   //----------------------------------
   // -- get selected collection symbologies
   // ---------------------------------
-  useEffect(() => {
-    async function fetchData() {
-      //console.time("fetch data");
-      const {collectionId} = collection
-      const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
-      const resp = await falcor.get(lengthPath);
-      return await falcor.get([
-        "dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex",
-        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
-        "attributes", Object.values(SymbologyAttributes)
-      ]);
-    }
-    if(collection.collectionId) {
-      fetchData();
-    }
-  }, [collection.collectionId, falcor, pgEnv]);
+  // useEffect(() => {
+  //   async function fetchData() {
+  //     //console.time("fetch data");
+  //     const {collectionId} = collection
+  //     const lengthPath = ["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"];
+  //     const resp = await falcor.get(lengthPath);
+  //     return await falcor.get([
+  //       "dama", pgEnv, "collections", "byId", collectionId, "symbologies", "byIndex",
+  //       { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+  //       "attributes", Object.values(SymbologyAttributes)
+  //     ]);
+  //   }
+  //   if(collection.collectionId) {
+  //     fetchData();
+  //   }
+  // }, [collection.collectionId, falcor, pgEnv]);
 
-  const symbologies = useMemo(() => {
-    setCollection({...collection, symbologyId: null})
-    // cobsole.log('get symbologies')
-    return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byId", collection.collectionId, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, collection.collectionId, pgEnv]);
+  // const symbologies = useMemo(() => {
+  //   setCollection({...collection, symbologyId: null})
+  //   // cobsole.log('get symbologies')
+  //   return Object.values(get(falcorCache, ["dama", pgEnv, "collections", "byId", collection.collectionId, "symbologies", "byIndex"], {}))
+  //     .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  // }, [falcorCache, collection.collectionId, pgEnv]);
 
 
   const layers = useMemo(() => state.symbology?.layers || [], [state.symbology])
@@ -142,21 +145,10 @@ function SymbologySelector ({index, tab}) {
           className={`${collection.add ? 'fa fa-x' : 'fa fa-plus'} cursor-pointer text-slate-400 hover:text-slate-900 h-4 w-4 fa-fw  flex items-center justify-center rounded`}
         />*/}
       </div>
-      {collection.add && <div className='absolute z-20 -left-[248px] p-2 top-[37px] border w-[280px] bg-white'>
-        <div className='w-full p-1 text-sm font-bold text-blue-500'>select collection:</div>
-        <select 
-          onChange={(e) => setCollection({...collection, collectionId: e.target.value})}
-          className='p-2 w-full bg-slate-100'>
-          <option value={null}>---select collection---</option>
-          {collections.map((collection) => (
-            <option key={collection.collection_id} className='p-1 hover:bg-blue-100' value={collection.collection_id}>
-              {collection.display_name || collection.name}
-            </option>)
-          )}
-        </select>
-        {collection.collectionId && 
+      <div className='bg-white p-2'>
+        {collection.add  && 
           <>
-            <div className='w-full p-1 text-sm font-bold text-blue-500'>select view:</div>
+            <div className='w-full p-1 text-sm font-bold text-blue-500 '>select view:</div>
             <select 
               onChange={(e) => setCollection({...collection, symbologyId: e.target.value})}
               className='p-2 w-full bg-slate-100'>
@@ -185,8 +177,7 @@ function SymbologySelector ({index, tab}) {
             </div>
           </>
         }
-        </div> 
-      }
+      </div>
     </div>
   )
 }

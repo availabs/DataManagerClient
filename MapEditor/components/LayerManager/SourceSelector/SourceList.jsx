@@ -21,6 +21,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     async function fetchData() {
 
       const resp = await falcor.get(lengthPath);
+      console.log('get sources', source.source_id)
       await falcor.get([
         "dama", pgEnv, "sources", "byId",
         source.source_id, "views", "byIndex",
@@ -36,14 +37,15 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     return Object.values(
       get(falcorCache,["dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex"], {}
     )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes)).sort((a,b) => new Date(b?._modified_timestamp) - new Date(a?._modified_timestamp))
-  }, [falcorCache])
+  }, [falcorCache, source.source_id])
 
   return (
     <div>
       <div 
-        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`} 
+        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} overflow-hidden block border shadow flex`} 
         onClick={() => {
           if (selectedSource.sourceId !== source.source_id) {
+
             const newSource = {
               ...source,
               add: true,
@@ -204,7 +206,7 @@ const SourcesList = ({selectedSource, setSource}) => {
         </div>
       </div>
       <div className={'flex flex-row'}>
-        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
           {(categories || [])
               .filter(cat => cat !== sourceDataCat)
               .sort((a,b) => a.localeCompare(b))
@@ -230,7 +232,7 @@ const SourcesList = ({selectedSource, setSource}) => {
           ))
           }
         </div>
-        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[65dvh] overflow-y-auto overflow-x-hidden scrollbar-sm'}>
           {
             sources
                 .filter(source => {
