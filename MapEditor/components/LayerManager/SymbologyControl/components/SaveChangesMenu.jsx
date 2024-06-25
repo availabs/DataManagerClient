@@ -25,11 +25,8 @@ export function SaveChangesMenu({ button, className}) {
 }
 
 
-//RYAN TODO -- set initial/default name of "saveas" input to be something like "Current Map (1)" or "Copy of Current Map (1)", etc.
-// next -- get it to make the API call to `save`, when save is selected and confirmed
 function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
-  // const submit = useSubmit()
   const { pgEnv, falcor, falcorCache, baseUrl } = useContext(DamaContext)
   const { state, setState, symbologies } = useContext(SymbologyContext)
   const { symbologyId } = useParams()
@@ -39,10 +36,28 @@ function SaveChangesModal ({ open, setOpen })  {
     return symbologies.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
-  //RYAN TODO -- make a function that parses name to determine what number to append
+  const initialSaveAsName = useMemo(() => {
+    if(state?.name.includes("(") && state?.name.includes(")")){
+      const openParenIndex = state?.name.indexOf("(");
+      const closeParenIndex = state?.name.indexOf(")");
+      const oldCopyNumber = parseInt(state?.name.slice(openParenIndex+1, closeParenIndex))
+
+      if(!isNaN(oldCopyNumber)){
+        const newName = state?.name.substring(0,openParenIndex+1) + (oldCopyNumber+1) + state?.name.substring(closeParenIndex)
+        return newName;
+      }
+      else {
+        return state?.name + " (1) ";
+      }
+    }
+    else {
+      return state?.name + " (1) ";
+    }
+  }, [state.name]);
+
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
     action: 'save',
-    name: state?.name + " (1) "
+    name: initialSaveAsName
   };
 
   const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
@@ -110,7 +125,7 @@ function SaveChangesModal ({ open, setOpen })  {
         </div>
       </div>
       <div className='flex items-center'>
-        <div className="mt-4 ml-1 flex  flex-col items-start justify-items-start">
+        <div className="mt-4 ml-1 w-32 flex  flex-col items-start justify-items-start">
           <div className='flex items-center'>
             <input
               id={"discard"}
@@ -167,11 +182,11 @@ function SaveChangesModal ({ open, setOpen })  {
         </div>
         {
           modalState.action === "saveas" && 
-          <div className="flex mt-4 ml-4 items-start justify-items-start">
+          <div className="flex mt-4 ml-4 w-full items-start justify-items-start">
             <input
               value={modalState.name}
               onChange={e => setModalState({...modalState, name: e.target.value})} 
-              className='p-1 bg-slate-100 ' 
+              className='p-1 w-full bg-slate-100 ' 
               placeholder={'New Map Name'}
             />
           </div>
