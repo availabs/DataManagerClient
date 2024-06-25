@@ -71,7 +71,7 @@ const SourcesList = () => {
         "dama", pgEnv, "sources", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(SourceAttributes)
-      ]);
+      ], ["dama-info", pgEnv, "settings"]);
     }
 
     fetchData();
@@ -82,10 +82,19 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
+  const filteredCategories = useMemo(() => {
+    return get(falcorCache, ["dama-info", pgEnv, "settings", "value", "filtered_categories"], []);
+  }, [falcorCache, pgEnv]);
+
   const categories = [...new Set(
       sources
           .filter(source => {
-            return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+            return isListAll || (
+                // we're not listing all sources
+                !isListAll &&
+                !source.categories?.find(cat =>
+                    // find if current category $cat includes any of filtered categories
+                    filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
           })
           .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
 
@@ -125,7 +134,7 @@ const SourcesList = () => {
       <div className={'flex flex-row'}>
         <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
           {(categories || [])
-              .filter(cat => cat !== sourceDataCat)
+              // .filter(cat => cat !== sourceDataCat) // should be already filtered out. if not, fix categories logic.
               .sort((a,b) => a.localeCompare(b))
               .map(cat => (
               <Link
@@ -143,7 +152,12 @@ const SourcesList = () => {
           {
             sources
                 .filter(source => {
-                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+                  return isListAll || (
+                      // we're not listing all sources
+                      !isListAll &&
+                      !source.categories?.find(cat =>
+                          // find if current category $cat includes any of filtered categories
+                          filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
                 })
                 .filter(source => {
                   let output = true;
