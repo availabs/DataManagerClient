@@ -47,32 +47,28 @@ function SaveChangesModal ({ open, setOpen })  {
         return newName;
       }
       else {
-        return state?.name + " (1) ";
+        return state?.name + " (1)";
       }
     }
     else {
-      return state?.name + " (1) ";
+      return state?.name + " (1)";
     }
   }, [state.name]);
 
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
-    action: 'save',
+    action: null,
     name: initialSaveAsName
   };
 
   const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
 
   async function updateData() {
-    //console.log('updating symbology to:', state.symbology)
     await falcor.set({
       paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'symbology']],
       jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
         [+symbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
       }}}}}
     })
-    //console.timeEnd('update symbology')
-    
-    //console.log('resp',resp)
   }
 
   async function updateName() {
@@ -97,7 +93,6 @@ function SaveChangesModal ({ open, setOpen })  {
 
     const newSymbologyId = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
     const newSymb = get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'],{})?.[newSymbologyId]?.attributes
-    // console.log('created symbology', newSymb, newSymbologyId)
     
     if(newSymbologyId) {
       setOpen(false);
@@ -106,7 +101,39 @@ function SaveChangesModal ({ open, setOpen })  {
     }
   }
 
-  const actionButtonClassName = modalState.action === 'discard' ? 'danger' : 'primary' 
+  const onSubmit = () => {
+    const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+
+    if(modalState.action === 'save'){
+      if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
+        updateData()
+      }
+      if(state?.name && state?.name !== origSymbology.name) {
+        updateName()
+      }
+    } else if (modalState.action === 'discard') {
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+      setState(origSymbology)
+    }
+    else if (modalState.action === "saveas") {
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+      createSymbologyMap();
+    }
+
+    setOpen(false);
+    setModalState(INITIAL_SAVE_CHANGES_MODAL_STATE);
+  }
+ 
+  const isSymbologyModified = useMemo(() => {
+    return (
+      state?.symbology?.layers && 
+      origSymbology && 
+      !isEqual(state?.symbology?.layers, origSymbology?.symbology?.layers)
+    );
+  }, [state?.symbology, origSymbology]);
+
+  const modalButtonType = modalState.action === 'discard' ? 'danger' : 'primary';
+  const modalButtonClassName = !modalState.action ? "disabled:opacity-75 " : " ";
 
   return (
     <Modal
@@ -122,9 +149,14 @@ function SaveChangesModal ({ open, setOpen })  {
           <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
             Manage Changes
           </Dialog.Title>
+          {
+            !isSymbologyModified ? 
+              <div className="text-sm text-green-700 italic">No pending changes</div> :
+              <div className="text-sm text-red-400 font-semibold">You have unsaved changes</div>
+          }
         </div>
       </div>
-      <div className='flex items-center'>
+      <div className='flex items-center capitalize'>
         <div className="mt-4 ml-1 w-32 flex  flex-col items-start justify-items-start">
           <div className='flex items-center'>
             <input
@@ -134,6 +166,7 @@ function SaveChangesModal ({ open, setOpen })  {
               type="radio"
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               checked={modalState.action === "discard"}
+              disabled={!isSymbologyModified}
               onChange={(e) => setModalState({...modalState, action: e.target.value})}
             />
             <label
@@ -151,6 +184,7 @@ function SaveChangesModal ({ open, setOpen })  {
               type="radio"
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               checked={modalState.action === "save"}
+              disabled={!isSymbologyModified}
               onChange={(e) => {
                 setModalState({...modalState, action: e.target.value})
               }}
@@ -196,29 +230,10 @@ function SaveChangesModal ({ open, setOpen })  {
       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
         <div className="px-1">
           <Button
-            themeOptions={{ size: "sm", color: actionButtonClassName }}
-            onClick={() => {
-              const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
-
-              if(modalState.action === 'save'){
-                if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
-                  updateData()
-                }
-                if(state?.name && state?.name !== origSymbology.name) {
-                  updateName()
-                }
-              } else if (modalState.action === 'discard') {
-                window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
-                setState(origSymbology)
-              }
-              else if (modalState.action === "saveas") {
-                window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
-                createSymbologyMap();
-              }
-
-              setOpen(false);
-              setModalState(INITIAL_SAVE_CHANGES_MODAL_STATE);
-            }}
+            themeOptions={{ size: "sm", color: modalButtonType }}
+            className={modalButtonClassName + " capitalize"}
+            disabled={!modalState.action}
+            onClick={onSubmit}
           >
             {modalState.action} changes
           </Button>
