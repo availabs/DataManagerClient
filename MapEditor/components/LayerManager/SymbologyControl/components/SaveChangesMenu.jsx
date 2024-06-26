@@ -96,6 +96,7 @@ function SaveChangesModal ({ open, setOpen })  {
     
     if(newSymbologyId) {
       setOpen(false);
+      setModalState({ action: null, name:'' });
       setState(newSymb);
       navigate(`${baseUrl}/mapeditor/${newSymbologyId}`)
     }

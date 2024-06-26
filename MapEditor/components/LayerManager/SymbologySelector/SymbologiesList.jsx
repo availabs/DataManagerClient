@@ -5,6 +5,7 @@ import get from 'lodash/get'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCategories";
+import { SymbologyContext } from '~/pages/DataManager/MapEditor';
 
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;
@@ -74,39 +75,15 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
 
 
 export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) => {
-  const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
+  const { falcorCache, pgEnv, baseUrl } = React.useContext(DamaContext);
+  const { symbologies } = React.useContext(SymbologyContext);
+
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
   const [layerSearch, setLayerSearch] = useState("");
   const [cat1, setCat1] = useState();
   const [cat2, setCat2] = useState();
   const [sort, setSort] = useState('asc');
   const sourceDataCat = 'Unknown'
-
-  useEffect(() => {
-    async function fetchAllSymbologies() {
-      const symbologyLengthPath = ["dama", pgEnv, "symbologies", "length"];
-      const resp = await falcor.get(symbologyLengthPath);
-
-      const symbologyIdsPath = [
-        "dama",
-        pgEnv,
-        "symbologies",
-        "byIndex",
-        { from: 0, to: get(resp.json, symbologyLengthPath, 0) - 1 },
-        "attributes", ['name', 'description', 'symbology_id', 'categories']
-      ];
-      await falcor.get(symbologyIdsPath);
-    }
-
-    fetchAllSymbologies();
-  }, []);
-
-  const symbologies = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, pgEnv]);
-
-  //console.log('symbologies', symbologies)
 
   const categories = [...new Set(
     symbologies

@@ -61,7 +61,8 @@ const MapEditor = () => {
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]))
+      .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
   const origSymbology = useMemo(() => {

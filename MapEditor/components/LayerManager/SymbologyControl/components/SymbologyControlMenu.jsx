@@ -31,7 +31,6 @@ const DeleteSymbologyModal = ({open, setOpen}) => {
       [pgEnv, symbologyId]
     );
 
-    console.log("deletge responmse", resp)
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
     window.localStorage.setItem(symbologyLocalStorageKey, null);
 
@@ -53,7 +52,7 @@ const DeleteSymbologyModal = ({open, setOpen}) => {
           </Dialog.Title>
         </div>
       </div>
-      <div className='flex items-center capitalize'>
+      <div className='flex items-center'>
         Are you sure you want to delete this symbology? This action cannot be undone.
       </div>
       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
