@@ -6,8 +6,8 @@ import { Menu, Transition, Switch } from '@headlessui/react'
 import isEqual from 'lodash/isEqual'
 import { Close, CaretDown } from '../icons'
 import { DndList } from '~/modules/avl-components/src'
-import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
-import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
+import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
+import { isValidCategoryPaint } from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
 import { StyledControl } from './ControlWrappers'
 import get from 'lodash/get'
@@ -45,7 +45,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, choroplethdata, colors, colorrange, numbins, method, showOther } = useMemo(() => {
+  let { value, viewId, sourceId, paintValue, categories} = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -53,14 +53,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
       paintValue : get(state, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choropleth-data']`, {}),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      //numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
     }
   },[state])
 
@@ -120,9 +112,8 @@ export function SelectTypeControl({path, datapath, params={}}) {
         })
       }
     } else if(value === 'choropleth') {
-      const { paint, legend } = newCatPaint;
+      const { paint, legend } = categories;
       if(paint && !isEqual(paint,paintValue)) {
-        //RYAN TODO -- prob set `numbins` here equal to legend.length  
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
           set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -329,10 +320,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       metadata,
       colorrange
     };
-  }, [state]) 
+  }, [state]);
 
-  //we intentionally do not update when `numCategories` changes
-  //if we do, it will overwrite the legend/paint, regardless if we inserted/removed specific elements
   useEffect(() => {
     const newReqData = async () => {
       let resp = await falcor.call(
@@ -343,9 +332,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     }
 
     if(column){
-      console.log("requesting paint data, SelectViewColumnControl. column && layerType::", column, layerType)
       newReqData()
     }
+  // we intentionally do not update when `numCategories` changes
+  // if we do, it will overwrite any inserted/removed/re-labelled elements
+  // since all that is done on client-side only
   },[
     layerType,
     column,
@@ -363,8 +354,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   }, [falcorCache]);
 
   useEffect(() => {
-    if (layerType === "categories") {
-      console.log("detected new category paint", newCatPaint);
+      console.log("layertype::", layerType);
+      console.log("new paint detected, setting symbology property. newCatPaint::", newCatPaint)
       setState((draft) => {
         set(
           draft,
@@ -372,7 +363,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           newCatPaint
         );
       });
-    }
   }, [newCatPaint]);
 
   return (
@@ -835,24 +825,11 @@ function ChoroplethControl({path, params={}}) {
   },[state])
 
   const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId,'categoryPaint', 'value'], {});
+    return get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'categoryPaint', 'value'], {});
   }, [falcorCache]);
   
-  const { paint: newPaint, legend } = newCatPaint
+  const { legend } = newCatPaint
 
-  const categories = [
-    ...(Array.isArray(newPaint) ? value : []).filter((d,i) => i > 2 )
-    .map((d,i) => {
-    
-      if(i%2 === 1) {
-        //console.log('test 123', d, i)
-        return {color: newPaint[i+1], label: `${newPaint[i+2]} - ${newPaint[i+4]}`}
-      }
-      return null
-    })
-    .filter(d => d)
-  ]
-  console.log("categories", categories)
   const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
   return (
    
