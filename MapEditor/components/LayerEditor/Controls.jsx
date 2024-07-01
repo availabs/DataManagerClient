@@ -56,10 +56,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
     }
   },[state])
 
-  const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId,'categoryPaint', 'value'], {});
-  }, [falcorCache]);
-
   useEffect(() => {
     //console.log('getmetadat', sourceId)
     if(sourceId) {
@@ -244,8 +240,9 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories } = useMemo(() => ({
+  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories, symbology_id: symbologyId } = useMemo(() => ({
     layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
+    symbology_id: get(state,`symbology_id`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
@@ -323,16 +320,16 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   }, [state]);
 
   useEffect(() => {
-    const newReqData = async () => {
-      let resp = await falcor.call(
-        ['dama',pgEnv,'viewsbyId', viewId, 'categoryPaint'],
+    const getSymbologyPaint = async () => {
+      console.log("getting new paint for symbology::",symbologyId)
+      await falcor.call(
+        ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint'],
         [pgEnv, paintOptions]
       );
-      console.log("resp from server side paint option", resp);
     }
 
     if(column){
-      newReqData()
+      getSymbologyPaint()
     }
   // we intentionally do not update when `numCategories` changes
   // if we do, it will overwrite any inserted/removed/re-labelled elements
@@ -350,19 +347,17 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   ]);
 
   const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId,'categoryPaint', 'value'], {});
+    return get(falcorCache, ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint', 'value'], {});
   }, [falcorCache]);
 
   useEffect(() => {
-      console.log("layertype::", layerType);
-      console.log("new paint detected, setting symbology property. newCatPaint::", newCatPaint)
-      setState((draft) => {
-        set(
-          draft,
-          `symbology.layers[${state.symbology.activeLayer}].categories`,
-          newCatPaint
-        );
-      });
+    setState((draft) => {
+      set(
+        draft,
+        `symbology.layers[${state.symbology.activeLayer}].categories`,
+        newCatPaint
+      );
+    });
   }, [newCatPaint]);
 
   return (
@@ -407,14 +402,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
 
 function ColorRangeControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+  const rangeColorKey = get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`,colorbrewer.schemeGroups.sequential[0])
+  const numbins = get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9)
+  const value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[rangeColorKey][numbins])
   
-  let rangeColorKey = get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`,colorbrewer.schemeGroups.sequential[0])
-  let numbins = get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9)
-  // console.log('select control', colorbrewer,rangeColorKey, numbins)
-  let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[rangeColorKey][numbins])
-  
-  // console.log('value', value, path, colorbrewer)
-
   return (
       <div className='flex w-full items-center'>
         <ControlMenu 
@@ -530,24 +521,20 @@ function CategoricalColorControl({path, params={}}) {
 function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  // console.log('select control', params)
-  //let colors = categoricalColors
   
-  //Value is literal represetnation of mapbox filter object that colors the actual map
-  let { column, categorydata, colors, sourceId, viewId, categories, layerType, showOther  } = useMemo(() => {
+  let { column, categorydata, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId  } = useMemo(() => {
     return {
       layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       categories: get(state,`symbology.layers[${state.symbology.activeLayer}].categories`),
-
-      //value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
+      symbology_id: get(state,`symbology_id`),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
     }
-  },[state])
+  }, [state]);
 
   const metadata = useMemo(() => {
     let out = get(falcorCache, [
@@ -574,7 +561,7 @@ function CategoryControl({path, params={}}) {
 
   const getNewPaint = async (paintOptions) => {
     await falcor.call(
-      ['dama',pgEnv,'viewsbyId', viewId,'categoryPaint'],
+      ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint'],
       [pgEnv, paintOptions]
     );    
   }
@@ -812,11 +799,12 @@ function ChoroplethControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
-  let { value, viewId, numbins, method, colorKey } = useMemo(() => {
+  let { value, viewId, numbins, method, colorKey, symbology_id: symbologyId } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      symbology_id: get(state,`symbology_id`),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
@@ -825,7 +813,7 @@ function ChoroplethControl({path, params={}}) {
   },[state])
 
   const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'categoryPaint', 'value'], {});
+    return get(falcorCache, ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint', 'value'], {});
   }, [falcorCache]);
   
   const { legend } = newCatPaint
