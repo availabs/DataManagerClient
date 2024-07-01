@@ -100,7 +100,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
     if( value === 'categories') {
       const { paint, legend } = categories;
       if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
-
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
           set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -130,7 +129,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value);
           })}
         >
           {(options || []).map((opt,i) => {
@@ -240,7 +239,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories, symbology_id: symbologyId } = useMemo(() => ({
+  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories, column, symbology_id: symbologyId } = useMemo(() => ({
     layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
     symbology_id: get(state,`symbology_id`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -252,11 +251,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
     colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
     categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
+    column: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
   }),[state])
-
-  const column = useMemo(() => {
-    return get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
-  },[state])
 
   useEffect(() => {
     if(sourceId) {
@@ -281,6 +277,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   //console.log('metadata', metadata)
 
   //This is used JUST for maxCategoryLength
+  //we fetch the data ahead of time so that the user doesn't have to wait when the "add column" menu
   useEffect(() => {
     const requestData = async () => {
       const options = JSON.stringify({
@@ -302,7 +299,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     if(column && layerType === 'categories') {
       requestData();
     }
-  }, [column])
+  }, [column, layerType]);
 
   const paintOptions = useMemo(() => {
     return {
@@ -522,7 +519,7 @@ function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   
-  let { column, categorydata, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId  } = useMemo(() => {
+  let { column, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId  } = useMemo(() => {
     return {
       layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
@@ -530,11 +527,34 @@ function CategoryControl({path, params={}}) {
       categories: get(state,`symbology.layers[${state.symbology.activeLayer}].categories`),
       symbology_id: get(state,`symbology_id`),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
     }
   }, [state]);
+
+  useEffect(() => {
+    const requestData = async () => {
+      const options = JSON.stringify({
+        exclude: {[column]: ['null']},
+      })
+      const lenRes = await falcor.get([
+        'dama', pgEnv,'viewsbyId', viewId, 'options', options, 'length'
+      ]) 
+      let len = get(lenRes, [
+        'json', 'dama', pgEnv,'viewsbyId', viewId, 'options', options, 'length'
+      ], 0)
+
+      if(len > 0){
+        falcor.get([
+          'dama', pgEnv, 'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: len-1 }, column
+        ])
+      }
+    }
+    if(column && layerType === 'categories') {
+      requestData();
+    }
+  }, [column, layerType]);
+
 
   const metadata = useMemo(() => {
     let out = get(falcorCache, [
@@ -547,6 +567,15 @@ function CategoryControl({path, params={}}) {
       }
     return out
   }, [sourceId, falcorCache])
+
+  const categoryData = useMemo(() => {
+    const options = JSON.stringify({
+      exclude: {[column]: ['null']},
+    })
+    return get(falcorCache, [
+      'dama', pgEnv, 'viewsbyId', viewId, 'options', options, 'databyIndex'
+    ])
+  }, [falcorCache]);
 
   const paintOptions = useMemo(() => {
     return {
@@ -567,11 +596,10 @@ function CategoryControl({path, params={}}) {
   }
   const [activeCatIndex, setActiveCatIndex] = React.useState();
   useEffect(() => {
-    //console.log('getmetadat', sourceId)
     if(sourceId) {
       falcor.get([
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
+      ]);
     }
   },[sourceId])
 
@@ -590,24 +618,24 @@ function CategoryControl({path, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  //Number of total distinct values, not counting `null`
+  //Number of total non-null distinct values
   const maxCategoryLength = useMemo(() => {
-      return Object.values(categorydata)
-        .reduce((out,cat) => {
-          if(typeof cat[column] !== 'object') {
-            out++
-          }
-          return out
-        },0)
-   }, [categorydata])
+    return Object.values(categoryData)
+      .reduce((out,cat) => {
+        if(typeof cat[column] !== 'object') {
+          out++
+        }
+        return out
+      },0)
+   }, [categoryData]);
 
   const mapPaint = categories?.paint?? [];
   const currentCategories = categories?.legend ?? [];
-
   const availableCategories = getDiffColumns(
-    Object.values(categorydata)
+    Object.values(categoryData)
       .filter((cat) => typeof cat[column] !== "object")
-      .map((catData) => catData[column]),
+      .map((catData) => catData[column])
+      .filter(onlyUnique),
     currentCategories.map((cat) => cat.label)
   ).map((cat) => ({ label: cat, value: cat }));
 
@@ -796,31 +824,19 @@ function CategoryControl({path, params={}}) {
 
 function ChoroplethControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  // console.log('select control', params)
-  //let colors = categoricalColors
-  let { value, viewId, numbins, method, colorKey, symbology_id: symbologyId } = useMemo(() => {
+  let { numbins, method, colorKey, categories, showOther } = useMemo(() => {
     return {
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
-      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      symbology_id: get(state,`symbology_id`),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
+      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans')
-    }
-  },[state])
+      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
+    };
+  }, [state])
 
-  const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint', 'value'], {});
-  }, [falcorCache]);
-  
-  const { legend } = newCatPaint
+  const { legend } = categories;
 
-  const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
   return (
-   
       <div className=' w-full items-center'>
         <div className='flex items-center'>
           <div className='text-sm text-slate-400 px-2'>Showing</div>
