@@ -138,7 +138,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
         </div>
       </div>
       <div className={'flex flex-row'}>
-        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
           <SourceCategories 
             symbology={selectedSymbology}
             editingCategories={!!selectedSymbologyId}
@@ -169,7 +169,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
           ))
           }
         </div>
-        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
           {
             symbologies
                 .filter(source => {
