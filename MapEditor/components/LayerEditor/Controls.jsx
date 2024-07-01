@@ -302,27 +302,35 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   }, [column, layerType]);
 
   const paintOptions = useMemo(() => {
-    return {
-      layerType,
-      column,
-      view_id: viewId,
-      colors,
-      numCategories,
-      numbins,
-      showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
-      method,
-      metadata,
-      colorrange
-    };
+    if(layerType === "choropleth"){
+      return JSON.stringify({
+        layerType,
+        column,
+        view_id: viewId,
+        numbins,
+        method,
+        colorrange
+      });
+    }
+    else {
+      return JSON.stringify({
+        layerType,
+        column,
+        view_id: viewId,
+        colors,
+        numCategories,
+        showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
+        metadata,
+      });
+    }
   }, [state]);
 
   useEffect(() => {
     const getSymbologyPaint = async () => {
       console.log("getting new paint for symbology::",symbologyId)
-      await falcor.call(
-        ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint'],
-        [pgEnv, paintOptions]
-      );
+      falcor.get([
+        'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
+      ]);
     }
 
     if(column){
@@ -344,7 +352,9 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   ]);
 
   const newCatPaint = useMemo(() => {
-    return get(falcorCache, ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint', 'value'], {});
+    return get(falcorCache, [
+      'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions, 'value'
+    ], {});
   }, [falcorCache]);
 
   useEffect(() => {
@@ -586,13 +596,12 @@ function CategoryControl({path, params={}}) {
       showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
       metadata,
     };
-  }, [state]) 
+  }, [state]);
 
-  const getNewPaint = async (paintOptions) => {
-    await falcor.call(
-      ['dama', pgEnv, 'symbology', 'byId', symbologyId, 'categoryPaint'],
-      [pgEnv, paintOptions]
-    );    
+  const getNewPaint = async (paintOptions) => {   
+    falcor.get([
+      'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
+    ]);
   }
   const [activeCatIndex, setActiveCatIndex] = React.useState();
   useEffect(() => {
@@ -680,7 +689,7 @@ function CategoryControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={currentCategories.length}
               onChange={(e) => {
-                getNewPaint({...paintOptions, numCategories: e.target.value})
+                getNewPaint(JSON.stringify({...paintOptions, numCategories: e.target.value}))
               }}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
