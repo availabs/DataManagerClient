@@ -55,8 +55,6 @@ function LegendEditor() {
   if(!legenddata || legenddata.length === 0 ) {
     return <div> No Legend Data </div>
   }
-
-  
   return (
     <div className='w-full max-h-[550px] pb-4 overflow-auto'>
         {legenddata.map((d,i) => (
@@ -71,11 +69,12 @@ function LegendEditor() {
                 className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
                 placeholder={'Select / Create New Map'}
                 value={legenddata[i].label}
-                onChange={(e) => setState(draft => { 
-                  //if(draft.symbology.activeLayer && draft.symbology.layers[draft.symbology.activeLayer].name){
-                    draft.symbology.layers[draft.symbology.activeLayer]['legend-data'][i].label = e.target.value 
-                  //}
-                })}
+                onChange={(e) => {
+                  setState(draft => { 
+                    draft.symbology.layers[draft.symbology.activeLayer].categories.legend[i].label = e.target.value;
+                    draft.symbology.layers[draft.symbology.activeLayer]['legend-data'][i].label = e.target.value;   
+                })
+              }}
               />
             </div>
           </div> 

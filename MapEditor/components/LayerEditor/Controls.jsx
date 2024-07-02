@@ -660,18 +660,22 @@ function CategoryControl({path, params={}}) {
                   type='color' 
                   value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
                   onChange={(e) => {
-                    const updatedCategoryPaint = [...mapPaint];
-                    const updatedCategoryLegend = [...currentCategories];
-
-                    updatedCategoryLegend[activeCatIndex].color = e.target.value;
-                
-                    const indexOfLabel = updatedCategoryPaint.indexOf(updatedCategoryLegend[activeCatIndex].label);
-                    updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
-
                     setState(draft => {
+                      const draftCats = get(state,`symbology.layers[${state.symbology.activeLayer}].categories`, {});
+                      const updatedCategoryPaint = [...draftCats.paint];
+                  
+                      const indexOfLabel = mapPaint.indexOf(currentCategories[activeCatIndex].label);
+                      updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
+
+
                       set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                        paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                          return {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                        paint: updatedCategoryPaint, legend: draftCats.legend.map((d, i) => {
+                          const newLegendRow = {color: d.color, label: get(metadataLookup, d.label, d.label )}
+                          if(i === activeCatIndex){
+                            newLegendRow.color = e.target.value;
+                          }
+
+                          return newLegendRow;
                         })
                       });
                     })
