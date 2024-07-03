@@ -1,5 +1,5 @@
 import React, { useEffect, useContext , useMemo, useRef } from 'react'
-import {Button} from '~/modules/avl-components/src'
+//import {Button} from '~/modules/avl-components/src'
 import {SymbologyContext} from '../../..'
 import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
@@ -149,40 +149,38 @@ function SourceSelector () {
               as='h3'
               className='text-base font-semibold leading-6 text-gray-900'
             >
-              Create New Map
+              Add Layer
             </Dialog.Title>
           </div>
         </div>
-        <div className="mt-2 w-full max-h-[calc(100vh_-_200px)]">
+        <div className="mt-2 w-full">
           <SourcesList selectedSource={source} setSource={setSource}/>
         </div>
         <div className='mt-5 sm:mt-4 sm:flex justify-end'>
           <div className='mr-1'>
-          <Button
-            type='button'
-            themeOptions={{color:"cancel"}}
-            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-            onClick={() => setSource({ ...DEFAULT_SOURCE })}
-          >
-            Cancel
-          </Button>
+          
+            <button
+              type='button'
+              themeOptions={{color:"cancel"}}
+              className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+              onClick={() => setSource({ ...DEFAULT_SOURCE })}
+            >
+              Cancel
+            </button>
           </div>
           <div>
-          <Button
-            type='button'
-            themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
+            <button
+              type='button'
+              themeOptions={canAddLayer ? {color:"primary"} : {color:"transparent"}}
 
-            disabled={!canAddLayer}
-            className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
-            onClick={() => addLayer()}
-          >
-            Add layer
-          </Button>
+              disabled={!canAddLayer}
+              className='inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto'
+              onClick={() => addLayer()}
+            >
+              Add layer
+            </button>
           </div>
-
-
         </div>
-
       </Modal>
     </div>
   );

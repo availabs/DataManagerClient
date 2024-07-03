@@ -231,7 +231,7 @@ function LegendPanel (props) {
     <>
       {/* ------Layer Pane ----------- */}
       <div className='p-4'>
-        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)] overflow-auto pointer-events-auto scrollbar-sm'>
+        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)] max-w-[300px] overflow-auto pointer-events-auto scrollbar-sm'>
           {layersBySymbology.map((symb) => (
             <div
               key={symb.symbology_id}

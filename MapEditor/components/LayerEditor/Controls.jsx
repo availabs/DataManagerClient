@@ -90,7 +90,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   const options = useMemo(() => {
     //console.log('metadata',metadata)
     const hasCols = metadata?.length > 0 
-    const hasNumber = metadata.reduce((out,curr) => {
+    const hasNumber = metadata?.reduce((out,curr) => {
       if(['integer', 'number'].includes(curr.type)){
         out = true
       }

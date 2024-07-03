@@ -5,6 +5,8 @@ import SourcesLayout from "./layout";
 import { useParams } from "react-router-dom";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
+import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";
+import {dmsDataTypes} from "~/modules/dms/src"
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
@@ -24,6 +26,7 @@ const SourceThumb = ({ source }) => {
     fetchData();
   }, [falcor, falcorCache, source, pgEnv]);
 
+  const Lexical = dmsDataTypes.lexical.ViewComp;
 
   return (
     <div className="w-full p-4 bg-white hover:bg-blue-50 block border shadow flex">
@@ -40,7 +43,8 @@ const SourceThumb = ({ source }) => {
           }
         </div>
         <Link to={`${baseUrl}/source/${source.source_id}`} className="py-2 block">
-          {source.description}
+
+          <Lexical value={makeLexicalFormat(source.description)}/>
         </Link>
       </div>
 
@@ -53,7 +57,7 @@ const SourceThumb = ({ source }) => {
 const SourcesList = () => {
   const [layerSearch, setLayerSearch] = useState("");
   const { cat1, cat2, ...rest } = useParams();
-  const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext);
+  const {pgEnv, baseUrl, falcor, falcorCache, user} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
   const sourceDataCat = 'Unknown'
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
@@ -67,7 +71,7 @@ const SourcesList = () => {
         "dama", pgEnv, "sources", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(SourceAttributes)
-      ]);
+      ], ["dama-info", pgEnv, "settings"]);
     }
 
     fetchData();
@@ -78,10 +82,19 @@ const SourcesList = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, pgEnv]);
 
+  const filteredCategories = useMemo(() => {
+    return get(falcorCache, ["dama-info", pgEnv, "settings", "value", "filtered_categories"], []);
+  }, [falcorCache, pgEnv]);
+
   const categories = [...new Set(
       sources
           .filter(source => {
-            return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+            return isListAll || (
+                // we're not listing all sources
+                !isListAll &&
+                !source.categories?.find(cat =>
+                    // find if current category $cat includes any of filtered categories
+                    filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
           })
           .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
 
@@ -91,7 +104,7 @@ const SourcesList = () => {
     })?.length
     return acc;
   }, {})
-  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2'
+  const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2';
   return (
 
     <SourcesLayout baseUrl={baseUrl} isListAll={isListAll}>
@@ -117,11 +130,20 @@ const SourcesList = () => {
           <i className={`fa-solid ${isListAll ? `fa-filter-list` : `fa-list-ul`} text-xl text-blue-400`}/>
         </Link>
 
+        {
+          user?.authed && user.authLevel === 10 &&
+            <Link
+                to={`${baseUrl}/settings`}
+                className={actionButtonClassName} title={'Settings'}>
+              <i className={`fa-solid fa-gear text-xl text-blue-400`}/>
+            </Link>
+        }
+
       </div>
       <div className={'flex flex-row'}>
         <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[80dvh] overflow-auto scrollbar-sm'}>
           {(categories || [])
-              .filter(cat => cat !== sourceDataCat)
+              // .filter(cat => cat !== sourceDataCat) // should be already filtered out. if not, fix categories logic.
               .sort((a,b) => a.localeCompare(b))
               .map(cat => (
               <Link
@@ -139,7 +161,12 @@ const SourcesList = () => {
           {
             sources
                 .filter(source => {
-                  return isListAll || (!isListAll && !source.categories?.find(cat => cat.includes(sourceDataCat)))
+                  return isListAll || (
+                      // we're not listing all sources
+                      !isListAll &&
+                      !source.categories?.find(cat =>
+                          // find if current category $cat includes any of filtered categories
+                          filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
                 })
                 .filter(source => {
                   let output = true;

@@ -18,7 +18,7 @@ function LayerManager () {
     <div className='p-4'>
       <div className='bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] scroll-xs'>
         <SymbologyControl /> 
-        {state.symbology_id && <Tab.Group>
+        {state?.symbology_id && <Tab.Group>
           <div className='flex justify-between items-center border-b'>
             <Tab.List>
               {tabs.map(tabName => (

@@ -13,14 +13,14 @@ import CollectionDelete from "./Collection/delete";
 
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
-
+import SettingsComponent from "./Source/settings";
 
 import { registerDataType } from './DataTypes'
 
 import { DamaContext } from "./store"
 
 
-import DamaMap from './Collection/CollectionTypes/default/MapEditor/components/dms/MapComponent'
+import DamaMap from './MapEditor/components/dms/MapComponent'
 
 import MapEditor from './MapEditor';
 
@@ -216,6 +216,18 @@ const DamaRoutes = DAMA_ARGS => {
     // Map Editor
     {
       name: "Data Collections",
+      path: `${baseUrl}/mapeditor`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component:  DAMA_Wrapper(MapEditor, DAMA_ARGS)
+    },
+    // Map Editor
+    {
+      name: "Data Collections",
       path: `${baseUrl}/mapeditor/:symbologyId`,
       exact: true,
       authLevel,
@@ -350,6 +362,16 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
+    },
+    { name: "Settings",
+      path: `${ baseUrl }/settings`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(SettingsComponent, DAMA_ARGS)
     }
   ];
 };

@@ -28,6 +28,7 @@ const getData = async () => {
 const Edit = ({value, onChange, size}) => {
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
+    console.log('pg env MapContext ', pgEnv)
     const mounted = useRef(false);
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
     const [state,setState] = useImmer({
