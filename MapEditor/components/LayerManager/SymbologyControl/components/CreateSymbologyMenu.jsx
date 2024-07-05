@@ -27,17 +27,19 @@ export function CreateSymbologyMenu({ button, className}) {
   )
 }
 
-function CreateSymbologyModal ({ open, setOpen})  {
+const DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE = {
+  name: '',
+  loading: false
+};
+
+function CreateSymbologyModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
   // const submit = useSubmit()
   const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
-  const { state } = useContext(SymbologyContext)
+  const { state, setState } = useContext(SymbologyContext)
   const { collectionId } = useParams()
   const navigate = useNavigate()
-  const [modalState, setModalState] = useState({
-    name: '',
-    loading: false
-  })
+  const [modalState, setModalState] = useState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE)
 
   const createSymbologyMap = async () => {
     const newSymbology = {
@@ -52,18 +54,19 @@ function CreateSymbologyModal ({ open, setOpen})  {
         ["dama", "symbology", "symbology", "create"],
         [pgEnv, newSymbology]
     )
-    let symbology_id = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
-    await falcor.invalidate(["dama", pgEnv, "collections", "byId", collectionId, "symbologies", "length"])
-    // await falcor.get()
-    // await falcor.invalidate(["dama", pgEnv, "symbologies", "byId"])
-    console.log('created symbology', resp, symbology_id)
+    const newSymb = Object.values(
+      get(resp, ["json", "dama", pgEnv, "symbologies", "byId"], {})
+    ).filter((item) => Object.keys(item).includes("attributes"))?.[0]
+      ?.attributes;
+
+    let { symbology_id } = newSymb || false;
     
     if(symbology_id) {
-      setOpen(false)
+      setOpen(false);
+      setModalState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE);
+      setState(newSymb);
       navigate(`${baseUrl}/mapeditor/${symbology_id}`)
     }
-    
-
   }
   
   return (
@@ -100,7 +103,10 @@ function CreateSymbologyModal ({ open, setOpen})  {
         <button
           type="button"
           className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-          onClick={() => setOpen(false) }
+          onClick={() => {
+            setOpen(false);
+            setModalState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE);
+          }}
           ref={cancelButtonRef}
         >
           Cancel
