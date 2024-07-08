@@ -576,24 +576,14 @@ function CategoryControl({path, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  //Number of total non-null distinct values
-  const maxCategoryLength = useMemo(() => {
-    return Object.values(categoryData)
-      .reduce((out,cat) => {
-        if(typeof cat[column] !== 'object') {
-          out++
-        }
-        return out
-      },0)
-   }, [categoryData]);
-
   const mapPaint = categories?.paint?? [];
   const currentCategories = categories?.legend ?? [];
+  const allValues = Object.values(categoryData)
+    .filter((cat) => typeof cat[column] !== "object")
+    .map((catData) => catData[column])
+    .filter(onlyUnique);
   const availableCategories = getDiffColumns(
-    Object.values(categoryData)
-      .filter((cat) => typeof cat[column] !== "object")
-      .map((catData) => catData[column])
-      .filter(onlyUnique),
+    allValues,
     currentCategories.map((cat) => cat.label)
   ).map((cat) => ({ label: cat, value: cat }));
 
@@ -649,7 +639,7 @@ function CategoryControl({path, params={}}) {
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
               {([10,20,30,50,100] || [])
-                .filter(d => d < maxCategoryLength && d !== currentCategories.length)
+                .filter(d => d < allValues.length && d !== currentCategories.length)
                 .map((val,i) => {
                 return (
                   <option key={i} value={val}>{val} Categories</option>
