@@ -325,48 +325,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     }
   }, [state]);
 
-  useEffect(() => {
-    const getSymbologyPaint = async () => {
-      console.log("getting new paint for symbology::",symbologyId)
-      falcor.get([
-        'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
-      ]);
-    }
-
-    if(column){
-      getSymbologyPaint()
-    }
-  // we intentionally do not update when `numCategories` changes
-  // if we do, it will overwrite any inserted/removed/re-labelled elements
-  // since all that is done on client-side only
-  },[
-    layerType,
-    column,
-    viewId,
-    colors,
-    numbins,
-    showOther,
-    method,
-    metadata,
-    colorrange
-  ]);
-
-  const newCatPaint = useMemo(() => {
-    return get(falcorCache, [
-      'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions, 'value'
-    ], {});
-  }, [falcorCache]);
-
-  useEffect(() => {
-    setState((draft) => {
-      set(
-        draft,
-        `symbology.layers[${state.symbology.activeLayer}].categories`,
-        newCatPaint
-      );
-    });
-  }, [newCatPaint]);
-
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -547,18 +505,9 @@ function CategoryControl({path, params={}}) {
       const options = JSON.stringify({
         exclude: {[column]: ['null']},
       })
-      const lenRes = await falcor.get([
-        'dama', pgEnv,'viewsbyId', viewId, 'options', options, 'length'
-      ]) 
-      let len = get(lenRes, [
-        'json', 'dama', pgEnv,'viewsbyId', viewId, 'options', options, 'length'
-      ], 0)
-
-      if(len > 0){
-        falcor.get([
-          'dama', pgEnv, 'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: len-1 }, column
-        ])
-      }
+      falcor.get([
+        'dama', pgEnv, 'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 100 }, column
+      ])
     }
     if(column && layerType === 'categories') {
       requestData();
@@ -682,7 +631,7 @@ function CategoryControl({path, params={}}) {
                   }}
                 />
               </div>
-              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex].label} </div>
+              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex]?.label} </div>
             </label>
           </>
         }
@@ -693,7 +642,9 @@ function CategoryControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={currentCategories.length}
               onChange={(e) => {
-                getNewPaint(JSON.stringify({...paintOptions, numCategories: e.target.value}))
+                setState(draft=> {
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`,e.target.value)
+                })
               }}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
@@ -916,7 +867,7 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {legend.map((d,i) => (
+        {legend?.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>

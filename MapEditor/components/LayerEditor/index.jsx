@@ -1,9 +1,15 @@
-import React, { useContext , useMemo, Fragment}from 'react'
+import React, { useContext , useMemo, Fragment, useEffect}from 'react'
 import {SymbologyContext} from '../../'
+import { DamaContext } from "../../../store"
 import { Plus, Close, MenuDots } from '../icons'
+import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
 import { LayerMenu } from '../LayerManager/LayerPanel'
+import { isValidCategoryPaint } from './datamaps'
+import colorbrewer from '../LayerManager/colors'//"colorbrewer"
+import { StyledControl } from './ControlWrappers'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-
+import get from 'lodash/get'
+import set from 'lodash/set'
 import StyleEditor from './StyleEditor'
 import PopoverEditor from './PopoverEditor'
 import LegendEditor from './LegendEditor'
@@ -12,7 +18,103 @@ import FilterEditor from './FilterEditor'
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const activeLayer = useMemo(() => state?.symbology?.layers?.[state?.symbology?.activeLayer] || null, [state])
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
+
+  const { layerType, viewId, sourceId, colors, showOther, numbins, method, column, colorrange, numCategories, symbology_id: symbologyId, activeLayer } = useMemo(() => ({
+    layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
+    symbology_id: get(state,`symbology_id`),
+    viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
+    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+    colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
+    numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
+    showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
+    numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
+    method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
+    colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
+    categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
+    column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, null ),
+    activeLayer: get(state, `symbology.layers[${state.symbology.activeLayer}]`, null ),
+  }),[state]);
+
+  const metadata = useMemo(() => {
+    let out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+      ], [])
+    if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+    return out
+  }, [sourceId,falcorCache]);
+
+  const paintOptions = useMemo(() => {
+    if(layerType === "choropleth"){
+      return JSON.stringify({
+        layerType,
+        column,
+        view_id: viewId,
+        numbins,
+        method,
+        colorrange
+      });
+    }
+    else {
+      return JSON.stringify({
+        layerType,
+        column,
+        view_id: viewId,
+        colors,
+        numCategories,
+        showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
+        metadata,
+      });
+    }
+  }, [state]);
+
+  useEffect(() => {
+    const getSymbologyPaint = async () => {
+      console.log("getting new paint for symbology::",symbologyId)
+      falcor.get([
+        'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
+      ]);
+    }
+
+    if(column){
+      getSymbologyPaint()
+    }
+  },[
+    layerType,
+    column,
+    viewId,
+    colors,
+    numCategories,
+    numbins,
+    showOther,
+    method,
+    metadata,
+    colorrange
+  ]);
+
+  const newCatPaint = useMemo(() => {
+    return get(falcorCache, [
+      'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions, 'value'
+    ], {});
+  }, [falcorCache]);
+  useEffect(() => {
+    setState((draft) => {
+      set(
+        draft,
+        `symbology.layers[${state.symbology.activeLayer}].categories`,
+        newCatPaint
+      );
+    });
+  }, [newCatPaint]);
+
+
+
+
+
 
   const tabs = ['Style', 'Legend','Popup','Filter']
   return activeLayer && (
