@@ -67,14 +67,17 @@ function LegendEditor() {
               <input 
                 type="text"
                 className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
-                placeholder={'Select / Create New Map'}
+                placeholder={d.value}
                 value={legenddata[i].label}
                 onChange={(e) => {
-                  setState(draft => { 
-                    draft.symbology.layers[draft.symbology.activeLayer].categories.legend[i].label = e.target.value;
-                    draft.symbology.layers[draft.symbology.activeLayer]['legend-data'][i].label = e.target.value;   
-                })
-              }}
+                  setState(draft => {
+                    set(
+                      draft,
+                      `symbology.layers[${state.symbology.activeLayer}]['paint-override']['labels']['${d.value}']`,
+                      e.target.value
+                    ); 
+                  })
+                }}
               />
             </div>
           </div> 

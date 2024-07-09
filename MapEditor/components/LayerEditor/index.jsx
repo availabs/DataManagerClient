@@ -20,7 +20,7 @@ function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const { layerType, viewId, sourceId, colors, showOther, numbins, method, column, colorrange, numCategories, symbology_id: symbologyId, activeLayer } = useMemo(() => ({
+  const { layerType, viewId, sourceId, colors, showOther, numbins, method, column, colorrange, numCategories, symbology_id: symbologyId, activeLayer, paintOverride } = useMemo(() => ({
     layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
     symbology_id: get(state,`symbology_id`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -34,6 +34,7 @@ function LayerManager (props) {
     categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
     column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, null ),
     activeLayer: get(state, `symbology.layers[${state.symbology.activeLayer}]`, null ),
+    paintOverride: get(state,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {})
   }),[state]);
 
   const metadata = useMemo(() => {
@@ -56,7 +57,8 @@ function LayerManager (props) {
         view_id: viewId,
         numbins,
         method,
-        colorrange
+        colorrange,
+        paintOverride
       });
     }
     else {
@@ -68,6 +70,7 @@ function LayerManager (props) {
         numCategories,
         showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
         metadata,
+        paintOverride
       });
     }
   }, [state]);
@@ -93,7 +96,8 @@ function LayerManager (props) {
     showOther,
     method,
     metadata,
-    colorrange
+    colorrange,
+    paintOverride
   ]);
 
   const newCatPaint = useMemo(() => {
@@ -107,6 +111,11 @@ function LayerManager (props) {
         draft,
         `symbology.layers[${state.symbology.activeLayer}].categories`,
         newCatPaint
+      );
+      set(
+        draft,
+        `symbology.layers[${state.symbology.activeLayer}]['legend-data']`,
+        newCatPaint?.legend
       );
     });
   }, [newCatPaint]);

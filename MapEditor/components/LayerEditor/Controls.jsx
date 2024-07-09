@@ -130,6 +130,9 @@ export function SelectTypeControl({path, datapath, params={}}) {
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value);
+            if (value !== e.target.value) {
+              set(draft,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {});
+            }
           })}
         >
           {(options || []).map((opt,i) => {
@@ -239,7 +242,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories, column, symbology_id: symbologyId } = useMemo(() => ({
+  const { layerType, viewId, sourceId, colors, showOther, numbins, method, colorrange, numCategories, column, symbology_id: symbologyId, paintOverride } = useMemo(() => ({
     layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
     symbology_id: get(state,`symbology_id`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -251,7 +254,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
     colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
     categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-    column: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
+    column: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null ),
+    paintOverride: get(state, `symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {}),
   }),[state])
 
   useEffect(() => {
@@ -301,30 +305,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     }
   }, [column, layerType]);
 
-  const paintOptions = useMemo(() => {
-    if(layerType === "choropleth"){
-      return JSON.stringify({
-        layerType,
-        column,
-        view_id: viewId,
-        numbins,
-        method,
-        colorrange
-      });
-    }
-    else {
-      return JSON.stringify({
-        layerType,
-        column,
-        view_id: viewId,
-        colors,
-        numCategories,
-        showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
-        metadata,
-      });
-    }
-  }, [state]);
-
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -341,7 +321,12 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`, {})
+            set(
+              draft,
+              `symbology.layers[${state.symbology.activeLayer}]['paint-override']`,
+              { colors: paintOverride?.colors ?? [] }
+            );
+
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
 
           })}
@@ -468,6 +453,7 @@ function CategoricalColorControl({path, params={}}) {
                     <div
                       className = {`flex-1 flex w-full p-2`}
                       onClick={() => setState(draft => {
+                        set(draft,`symbology.layers[${state.symbology.activeLayer}]['paint-override']['colors']`, {});
                         set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors[colorKey])
                       })}
                     >
@@ -487,7 +473,7 @@ function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   
-  let { column, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId  } = useMemo(() => {
+  let { column, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId, paintOverride  } = useMemo(() => {
     return {
       layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
@@ -496,23 +482,11 @@ function CategoryControl({path, params={}}) {
       symbology_id: get(state,`symbology_id`),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc',
+      paintOverride: get(state,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {})
     }
   }, [state]);
 
-  useEffect(() => {
-    const requestData = async () => {
-      const options = JSON.stringify({
-        exclude: {[column]: ['null']},
-      })
-      falcor.get([
-        'dama', pgEnv, 'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 100 }, column
-      ])
-    }
-    if(column && layerType === 'categories') {
-      requestData();
-    }
-  }, [column, layerType]);
 
 
   const metadata = useMemo(() => {
@@ -536,22 +510,6 @@ function CategoryControl({path, params={}}) {
     ])
   }, [falcorCache]);
 
-  const paintOptions = useMemo(() => {
-    return {
-      layerType,
-      column,
-      view_id: viewId,
-      colors,
-      showOther: showOther ? '#ccc' : 'rgba(0,0,0,0)',
-      metadata,
-    };
-  }, [state]);
-
-  const getNewPaint = async (paintOptions) => {   
-    falcor.get([
-      'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
-    ]);
-  }
   const [activeCatIndex, setActiveCatIndex] = React.useState();
   useEffect(() => {
     if(sourceId) {
@@ -584,9 +542,12 @@ function CategoryControl({path, params={}}) {
     .filter(onlyUnique);
   const availableCategories = getDiffColumns(
     allValues,
-    currentCategories.map((cat) => cat.label)
-  ).map((cat) => ({ label: cat, value: cat }));
-
+    currentCategories.map((cat) => cat.value)
+  ).map((cat) =>  {
+    //We want to retain and use previous "custom labels" until a category changes.
+    const label = get(paintOverride,['labels',cat], cat)
+    return { label, value: cat }
+  });
   return (
    
       <div className=' w-full items-center'>
@@ -600,23 +561,11 @@ function CategoryControl({path, params={}}) {
                   value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
                   onChange={(e) => {
                     setState(draft => {
-                      const draftCats = get(state,`symbology.layers[${state.symbology.activeLayer}].categories`, {});
-                      const updatedCategoryPaint = [...draftCats.paint];
-                  
-                      const indexOfLabel = mapPaint.indexOf(currentCategories[activeCatIndex].label);
-                      updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
-
-
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                        paint: updatedCategoryPaint, legend: draftCats.legend.map((d, i) => {
-                          const newLegendRow = {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                          if(i === activeCatIndex){
-                            newLegendRow.color = e.target.value;
-                          }
-
-                          return newLegendRow;
-                        })
-                      });
+                      set(
+                        draft,
+                        `symbology.layers[${state.symbology.activeLayer}]['paint-override']['colors']['${activeCatIndex}']`,
+                        e.target.value
+                      );
                     })
                   }}
                 />
@@ -633,7 +582,9 @@ function CategoryControl({path, params={}}) {
               value={currentCategories.length}
               onChange={(e) => {
                 setState(draft=> {
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`,e.target.value)
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`,e.target.value);
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['paint-override']['added']`,[]);
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['paint-override']['removed']`,[]);
                 })
               }}
             >
@@ -695,21 +646,27 @@ function CategoryControl({path, params={}}) {
               <div
                 className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
                 onClick={() => {
-                  const updatedCategoryPaint = [...mapPaint];
-                  const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
-                  //console.log('test123', updatedCategoryLegend)
+                  setState((draft) => {
+                    const removedFromPaint = paintOverride?.removed ? [...paintOverride.removed] : [];
+                    let addedToPaint = paintOverride?.added ? [...paintOverride.added] : [];
 
-                  const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
-
-                  //In filter array, the `label` preceeds its paint `value`
-                  updatedCategoryPaint.splice(indexOfLabel, 2);
-                  setState(draft=> {
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                      paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                        return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                      })
-                    });
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}].num-categories`,updatedCategoryLegend.length);
+                    if(addedToPaint.includes(d.value)){
+                      //this category was manually added, so we remove from that override
+                      addedToPaint = addedToPaint.filter(colVal => colVal !== d.value);
+                      set(
+                        draft,
+                        `symbology.layers[${state.symbology.activeLayer}]['paint-override']['added']`,
+                        addedToPaint
+                      );
+                    } else {
+                      //this category is part of the default set, so we add an override
+                      removedFromPaint.push(d.value);
+                      set(
+                        draft,
+                        `symbology.layers[${state.symbology.activeLayer}]['paint-override']['removed']`,
+                        removedFromPaint
+                      );
+                    }
                   });
                 }}
               >
@@ -738,23 +695,16 @@ function CategoryControl({path, params={}}) {
                       className='w-full py-2 bg-transparent'
                       value={''}
                       onChange={(e) =>
-                        {
-                          const updatedCategoryPaint = [...mapPaint];
-                          const updatedCategoryLegend = [...currentCategories];
+                        {                          
+                          setState((draft) => {
+                            const addedToPaint = [...paintOverride?.added] ?? [];
 
-                          const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
-                          const lastColorIndex = colors.map(color => rgb2hex(color)).indexOf(lastColorUsed);
-                          const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
-
-                          updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
-                          updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
-                          
-                          setState(draft=> {
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                              paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                                return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                              })
-                            });
+                            addedToPaint.push(e.target.value);
+                            set(
+                              draft,
+                              `symbology.layers[${state.symbology.activeLayer}]['paint-override']['added']`,
+                              addedToPaint.filter(onlyUnique)
+                            );
                           });
                         }
                       }
