@@ -44,7 +44,7 @@ export const Edit = ({
                             sources: {
                                 byId: {
                                     [sourceId]: {
-                                        attributes: {[attr]: JSON.stringify(value)}
+                                        attributes: {[attr]: type === 'lexical' ? JSON.stringify(value) : value}
                                     }
                                 }
                             }
