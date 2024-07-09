@@ -120,11 +120,6 @@ function LayerManager (props) {
     });
   }, [newCatPaint]);
 
-
-
-
-
-
   const tabs = ['Style', 'Legend','Popup','Filter']
   return activeLayer && (
     <div className='p-4'>

@@ -45,7 +45,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
-  let { value, viewId, sourceId, paintValue, categories} = useMemo(() => {
+  let { value, viewId, sourceId, paintValue, categories, column} = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -108,7 +108,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       }
     } else if(value === 'choropleth') {
       const { paint, legend } = categories;
-      if(paint && !isEqual(paint,paintValue)) {
+      if(paint && !isEqual(paint, paintValue)) {
         setState(draft => {
           set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
           set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -121,7 +121,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
       })
     } 
   }, [value, categories])
-
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -129,10 +128,30 @@ export function SelectTypeControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value);
+            const updatedLayer = {...get(draft, `symbology.layers[${state.symbology.activeLayer}]`)}
+            //updatedLayer[path] = e.target.value
+
+            //TODO I Cannot GET `PATH` TO WORK
+            set(updatedLayer, 'layer-type', e.target.value);
             if (value !== e.target.value) {
-              set(draft,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {});
+              set(updatedLayer, `['paint-override']`, {});
+              // set(draft,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {});
             }
+            if (e.target.value === "choropleth") {
+              const currentCol =  metadata.find(d => d.name === column);
+              //If the current data-column is not choropleth compatible, change it
+              console.log("currentCol",currentCol)
+              if(!['integer', 'number'].includes(currentCol.type)){
+                const defaultCol = metadata.find(d => ['integer', 'number'].includes(d.type));
+                if(defaultCol){
+                  console.log("setting dfefault col",defaultCol)
+                  set(updatedLayer, `['data-column']`, defaultCol.name);
+                  //set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultCol.name)
+                }
+              }
+            }
+            console.log("about to update layer", updatedLayer)
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]`, updatedLayer);
           })}
         >
           {(options || []).map((opt,i) => {
@@ -728,17 +747,15 @@ function CategoryControl({path, params={}}) {
 
 function ChoroplethControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
-  let { numbins, method, colorKey, categories, showOther } = useMemo(() => {
+  let { numbins, method, colorKey, categories, showOther, legenddata } = useMemo(() => {
     return {
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
       method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc',
+      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []),
     };
   }, [state])
-
-  const { legend } = categories;
 
   return (
       <div className=' w-full items-center'>
@@ -807,7 +824,7 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {legend?.map((d,i) => (
+        {legenddata?.map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
