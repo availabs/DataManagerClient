@@ -129,28 +129,28 @@ export function SelectTypeControl({path, datapath, params={}}) {
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
             const updatedLayer = {...get(draft, `symbology.layers[${state.symbology.activeLayer}]`)}
-            //updatedLayer[path] = e.target.value
+            const currentCol =  metadata.find(d => d.name === column);
 
-            //TODO I Cannot GET `PATH` TO WORK
             set(updatedLayer, 'layer-type', e.target.value);
             if (value !== e.target.value) {
               set(updatedLayer, `['paint-override']`, {});
-              // set(draft,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {});
             }
             if (e.target.value === "choropleth") {
-              const currentCol =  metadata.find(d => d.name === column);
               //If the current data-column is not choropleth compatible, change it
-              console.log("currentCol",currentCol)
               if(!['integer', 'number'].includes(currentCol.type)){
                 const defaultCol = metadata.find(d => ['integer', 'number'].includes(d.type));
                 if(defaultCol){
-                  console.log("setting dfefault col",defaultCol)
                   set(updatedLayer, `['data-column']`, defaultCol.name);
-                  //set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultCol.name)
                 }
               }
             }
-            console.log("about to update layer", updatedLayer)
+            else {
+              const defaultCol = metadata.filter(d => !['wkb_geometry'].includes(d.name))[0]
+              if(!currentCol && defaultCol){
+                set(updatedLayer, `['data-column']`, defaultCol.name);
+              }
+            }
+
             set(draft, `symbology.layers[${state.symbology.activeLayer}]`, updatedLayer);
           })}
         >
@@ -492,7 +492,7 @@ function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   
-  let { column, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId, paintOverride  } = useMemo(() => {
+  let { column, colors, sourceId, viewId, categories, layerType, showOther, symbology_id: symbologyId, paintOverride, legenddata  } = useMemo(() => {
     return {
       layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
@@ -502,7 +502,8 @@ function CategoryControl({path, params={}}) {
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc',
-      paintOverride: get(state,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {})
+      paintOverride: get(state,`symbology.layers[${state.symbology.activeLayer}]['paint-override']`, {}),
+      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []),
     }
   }, [state]);
 
@@ -553,8 +554,7 @@ function CategoryControl({path, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  const mapPaint = categories?.paint?? [];
-  const currentCategories = categories?.legend ?? [];
+  const currentCategories = legenddata ?? [];
   const allValues = Object.values(categoryData)
     .filter((cat) => typeof cat[column] !== "object")
     .map((catData) => catData[column])
@@ -577,7 +577,7 @@ function CategoryControl({path, params={}}) {
               <div className='flex items-center'>
                 <input
                   type='color' 
-                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
+                  value={legenddata[activeCatIndex].color}
                   onChange={(e) => {
                     setState(draft => {
                       set(
