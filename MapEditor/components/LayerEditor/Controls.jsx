@@ -137,7 +137,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             }
             if (e.target.value === "choropleth") {
               //If the current data-column is not choropleth compatible, change it
-              if(!['integer', 'number'].includes(currentCol.type)){
+              if(!currentCol || !['integer', 'number'].includes(currentCol.type)){
                 const defaultCol = metadata.find(d => ['integer', 'number'].includes(d.type));
                 if(defaultCol){
                   set(updatedLayer, `['data-column']`, defaultCol.name);
