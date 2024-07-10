@@ -716,6 +716,7 @@ function CategoryControl({path, params={}}) {
                       onChange={(e) =>
                         {                          
                           setState((draft) => {
+                            let removedFromPaint = paintOverride?.removed ? [...paintOverride.removed] : [];
                             const addedToPaint = [...paintOverride?.added] ?? [];
 
                             addedToPaint.push(e.target.value);
@@ -724,6 +725,15 @@ function CategoryControl({path, params={}}) {
                               `symbology.layers[${state.symbology.activeLayer}]['paint-override']['added']`,
                               addedToPaint.filter(onlyUnique)
                             );
+
+                            if(removedFromPaint.includes(e.target.value)){
+                              removedFromPaint = removedFromPaint.filter(colVal => colVal !== e.target.value);
+                              set(
+                                draft,
+                                `symbology.layers[${state.symbology.activeLayer}]['paint-override']['removed']`,
+                                removedFromPaint
+                              );
+                            }
                           });
                         }
                       }

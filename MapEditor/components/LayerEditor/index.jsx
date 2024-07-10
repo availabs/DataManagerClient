@@ -77,7 +77,6 @@ function LayerManager (props) {
 
   useEffect(() => {
     const getSymbologyPaint = async () => {
-      console.log("getting new paint for symbology::",symbologyId)
       falcor.get([
         'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
       ]);
@@ -91,7 +90,6 @@ function LayerManager (props) {
     column,
     viewId,
     colors,
-    numCategories,
     numbins,
     showOther,
     method,
@@ -106,18 +104,21 @@ function LayerManager (props) {
     ], {});
   }, [falcorCache]);
   useEffect(() => {
-    setState((draft) => {
-      set(
-        draft,
-        `symbology.layers[${state.symbology.activeLayer}].categories`,
-        newCatPaint
-      );
-      set(
-        draft,
-        `symbology.layers[${state.symbology.activeLayer}]['legend-data']`,
-        newCatPaint?.legend
-      );
-    });
+    //hacky fix for state getting reset for some reason...
+    if (Object.keys(newCatPaint).length > 0) {
+      setState((draft) => {
+        set(
+          draft,
+          `symbology.layers[${state.symbology.activeLayer}].categories`,
+          newCatPaint
+        );
+        set(
+          draft,
+          `symbology.layers[${state.symbology.activeLayer}]['legend-data']`,
+          newCatPaint?.legend
+        );
+      });
+    }
   }, [newCatPaint]);
 
   const tabs = ['Style', 'Legend','Popup','Filter']
