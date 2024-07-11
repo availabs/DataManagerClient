@@ -299,8 +299,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
 
   //console.log('metadata', metadata)
 
-  //This is used JUST for maxCategoryLength
-  //we fetch the data ahead of time so that the user doesn't have to wait when the "add column" menu
   useEffect(() => {
     const requestData = async () => {
       const options = JSON.stringify({
@@ -312,10 +310,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       let len = get(lenRes, [
         'json', 'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'length'
       ], 0)
-
+      console.log("***data len",len)
       if(len > 0){
         falcor.get([
-          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', {from: 0, to: len-1}, column
+          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', {from: 0, to: 100}, column
         ])
       }
     }
@@ -608,13 +606,15 @@ function CategoryControl({path, params={}}) {
               }}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
-              {([10,20,30,50,100] || [])
-                .filter(d => d < allValues.length && d !== currentCategories.length)
-                .map((val,i) => {
-                return (
-                  <option key={i} value={val}>{val} Categories</option>
-                )
-              })}
+              {
+                ([10,20,30,50,100] || [])
+                  // .filter(d => d < allValues.length && d !== currentCategories.length)
+                  .map((val,i) => {
+                    return (
+                      <option key={i} value={val}>{val} Categories</option>
+                    )
+                })
+              }
             </select>
           </div>
         </div>
