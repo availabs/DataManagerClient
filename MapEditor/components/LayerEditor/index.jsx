@@ -1,8 +1,9 @@
 import React, { useContext , useMemo, Fragment, useEffect}from 'react'
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../store"
+import isEqual from "lodash/isEqual"
 import { Plus, Close, MenuDots } from '../icons'
-import { rgb2hex, toHex, categoricalColors } from '../LayerManager/utils'
+import { rgb2hex, toHex, categoricalColors,usePrevious } from '../LayerManager/utils'
 import { LayerMenu } from '../LayerManager/LayerPanel'
 import { isValidCategoryPaint } from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
@@ -14,7 +15,6 @@ import StyleEditor from './StyleEditor'
 import PopoverEditor from './PopoverEditor'
 import LegendEditor from './LegendEditor'
 import FilterEditor from './FilterEditor'
-
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
@@ -75,14 +75,16 @@ function LayerManager (props) {
     }
   }, [state]);
 
+  const prevPaintOptions = usePrevious(paintOptions);
+
   useEffect(() => {
     const getSymbologyPaint = async () => {
       falcor.get([
         'dama', pgEnv, 'symbologies', 'byId', symbologyId, 'paint', 'options', paintOptions
       ]);
     }
-
-    if(column){
+    
+    if(column && !!prevPaintOptions && !isEqual(paintOptions, prevPaintOptions)){
       getSymbologyPaint()
     }
   },[
