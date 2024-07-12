@@ -833,7 +833,7 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {legenddata.map((d,i) => (
+        {(legenddata || []).map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
