@@ -270,13 +270,17 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv, falcor, falcorCache } = ctx;
+  let { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 
   const hoverColumns = React.useMemo(() => {
     return layer.props['hover-columns'];
   }, [layer]);
+
+  if(!pgEnv) {
+    pgEnv = 'hazmit_dama'
+  }
 
   useEffect(() => {
     if(source_id) {
@@ -286,6 +290,8 @@ const HoverComp = ({ data, layer }) => {
     }
     
   }, [source_id, hoverColumns]);
+
+
 
   // useEffect(() => {
   //   if(view_id) {
