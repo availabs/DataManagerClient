@@ -122,30 +122,13 @@ function CategoryLegend({layer}) {
 function StepLegend({layer}) {
   //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
-  let { choroplethdata, legenddata } = useMemo(() => {
+  let { legenddata } = useMemo(() => {
     return {
-      choroplethdata: get(layer, `['choropleth-data']`, []),
       legenddata : get(layer, `['legend-data']`, []) 
     }
   },[state])
 
-  const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-  const max = Math.max(...choroplethdata)
-  // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
-  if(!legenddata || legenddata.length === 0 ) {
-    legenddata = [
-      ...(paintValue || []).filter((d,i) => i > 2 )
-      .map((d,i) => {
-      
-        if(i % 2 === 1) {
-          return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
-        }
-        return null
-      })
-      .filter(d => d)
-    ]
-  }
+  const Symbol = typeSymbols[layer.type] || typeSymbols['fill']``
 
   return (
     <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>

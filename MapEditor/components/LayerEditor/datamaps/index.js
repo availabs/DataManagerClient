@@ -24,7 +24,7 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
   })
   paint.push(showOther)
 
-  // console.log('categoryPaint', paint, column, categoryData)
+  //console.log('categoryPaint', paint, column, categoryData)
 
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
@@ -61,7 +61,7 @@ let methods = {
 
 let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
 
-export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
+export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks  ) {
   //console.log('paint method', method)
   let paint = [
       'step',
@@ -70,17 +70,12 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
       //'#51bbd6',
       // 100,
   ]
-  // console.log('choroplethdata', choroplethdata)
-  if(!Array.isArray(choroplethdata)) {
-    return false
-  }
-  let domain = methods[method](choroplethdata, num).map(d => round(d,2))
-  const max = Math.max(...choroplethdata)
+
+  let domain = colorBreaks;
 
   if(!Array.isArray(domain) || domain.length  === 0){
     return false
   }
-  console.log('max', max)
 
   domain
    //.filter((d,i) => i < domain.length-1)
@@ -106,7 +101,7 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
     .filter(d => d)
   ]
 
-  console.log('legend', legend)
+  //console.log('legend', legend)
   return { paint, legend }
 
   
