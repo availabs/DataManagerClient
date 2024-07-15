@@ -494,17 +494,15 @@ function CategoricalColorControl({path, params={}}) {
 function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  // console.log('select control', params)
-  //let colors = categoricalColors
 
-  //Value is literal represetnation of mapbox filter object that colors the actual map
-  let { value: mapPaint, column, categorydata, colors, sourceId } = useMemo(() => {
+  let { value: mapPaint, column, categorydata, colors, sourceId, categories } = useMemo(() => {
     return {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
+      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
     }
   },[state])
 
@@ -546,16 +544,7 @@ function CategoryControl({path, params={}}) {
    }, [categorydata])
 
   //A human readable representation of the current data categories
-  const currentCategories = (Array.isArray(mapPaint) ? mapPaint : [])
-    .filter((d, i) => i > 2)
-    .map((d, i) => {
-      if (i % 2 === 0) {
-        return { color: d, label: mapPaint[i + 2] };
-      }
-      return null;
-    })
-    .filter((d) => d);
-
+  const currentCategories = categories?.legend
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
       .filter((cat) => typeof cat[column] !== "object")
@@ -577,18 +566,22 @@ function CategoryControl({path, params={}}) {
                   value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
                   onChange={(e) => {
                     const updatedCategoryPaint = [...mapPaint];
-                    const updatedCategoryLegend = [...currentCategories];
-
-                    updatedCategoryLegend[activeCatIndex].color = e.target.value;
-                
-                    const indexOfLabel = updatedCategoryPaint.indexOf(updatedCategoryLegend[activeCatIndex].label);
+                    const indexOfLabel = updatedCategoryPaint.indexOf(currentCategories[activeCatIndex].label);
                     updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
 
                     setState(draft => {
+                      const newLegend = currentCategories.map((d, i) => {
+                        if (i === activeCatIndex) {
+                          return { color: e.target.value, label: get(metadataLookup, d.label, d.label) }
+                        }
+                        else {
+                          return { color: d.color, label: get(metadataLookup, d.label, d.label) }
+                        }
+                      })
+
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, newLegend)
                       set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
-                        paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                          return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                        })
+                        paint: updatedCategoryPaint, legend: newLegend
                       });
                     })
                   }}
@@ -669,13 +662,13 @@ function CategoryControl({path, params={}}) {
                 onClick={() => {
                   const updatedCategoryPaint = [...mapPaint];
                   const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
-                  //console.log('test123', updatedCategoryLegend)
-
                   const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
 
                   //In filter array, the `label` preceeds its paint `value`
                   updatedCategoryPaint.splice(indexOfLabel, 2);
                   setState(draft=> {
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length); //RYAN TODO TEST THIS A LOT, COULD BE SOME ISSUES
                     set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
                       paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                         return {color: d.color, label: get(metadataLookup, d.label, d.label )}
