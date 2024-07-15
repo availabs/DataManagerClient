@@ -147,6 +147,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
           setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, colorBreaks)
           })
         }
       } else if( value === 'simple' && typeof paintValue !== 'string') {
@@ -755,18 +756,24 @@ function ChoroplethControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
-  let { numbins, method, colorKey, legenddata, showOther } = useMemo(() => {
+  let { numbins, method, colorKey, legenddata, showOther, choroplethdata } = useMemo(() => {
     return {
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
       method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
       legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
     }
   },[state])
 
+  const { breaks, max } = choroplethdata;
+  const categories = breaks?.map((d,i) => {
+    return {color: legenddata[i], label: `${breaks[i]} - ${breaks[i+1] || max}`}
+  })
+  .filter(d => d);
+
   return (
-   
       <div className=' w-full items-center'>
         <div className='flex items-center'>
           <div className='text-sm text-slate-400 px-2'>Showing</div>
@@ -836,7 +843,7 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {(legenddata || []).map((d,i) => (
+        {(categories || []).map((d,i) => (
           <div key={i} className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
