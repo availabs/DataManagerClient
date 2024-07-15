@@ -167,8 +167,10 @@ const MapEditor = () => {
                 ...oldLayers, 
                 // add new layers
                 ...newLayers
-            ].sort((a,b) => state.symbology.layers[b.id].order - state.symbology.layers[a.id].order)
-            // console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
+            ]
+            //.filter(d => state.symbology.layers[d.id])
+            .sort((a,b) => state.symbology.layers[b?.id]?.order - state.symbology.layers[a?.id]?.order)
+            console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
             return out
           })
       }
