@@ -107,11 +107,22 @@ export function SelectTypeControl({path, datapath, params={}}) {
   React.useEffect(() => {
     const setPaint = async () => {
       if( value === 'categories') {
-        let {paint, legend} = categories?.paint ? categories : categoryPaint(column, categorydata, colors, numCategories, showOther, metadata);
+        let { paint, legend } =
+          categories?.paint && categories?.legend
+            ? categories
+            : categoryPaint(
+                column,
+                categorydata,
+                colors,
+                numCategories,
+                showOther,
+                metadata
+              );
         //console.log('categories xyz', column, categories)
         if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther))
+          //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther, metadata))
           setState(draft => {
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {paint, legend}) //RYAN TODO -- THIS ALSO VERY DANGEROUS TEST PLZ
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
           })
@@ -543,8 +554,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  //A human readable representation of the current data categories
-  const currentCategories = categories?.legend
+  const currentCategories = categories?.legend ?? []
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
       .filter((cat) => typeof cat[column] !== "object")
