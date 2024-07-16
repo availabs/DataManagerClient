@@ -169,7 +169,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             legend.pop();
           }
         }
-        console.log(" showOther, paint, legend", {showOther, paint, legend})
+
         if(paint && !isEqual(paint,paintValue)) {
           //console.log('update choropleth paint', column, numbins, method)
           setState(draft => {
