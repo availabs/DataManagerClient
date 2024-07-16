@@ -160,12 +160,12 @@ export function SelectTypeControl({path, datapath, params={}}) {
         //console.log('test paint', paint, paintValue)
         const isShowOtherEnabled = showOther === '#ccc';
         if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "Other") {
-            legend.push({color: showOther, label: "Other"});
+          if(legend[legend.length-1].label !== "No data") {
+            legend.push({color: showOther, label: "No data"});
           }
           legend[legend.length-1].color = showOther;
         } else {
-          if(legend[legend.length-1].label === "Other") {
+          if(legend[legend.length-1].label === "No data") {
             legend.pop();
           }
         }
@@ -845,7 +845,7 @@ function ChoroplethControl({path, params={}}) {
           </div>
         </div>
         <div className='flex items-center'>
-          <div className='text-sm text-slate-400 px-2'>Show Other</div>
+          <div className='text-sm text-slate-400 px-2'>Show missing data</div>
           <div className='flex items-center'>
             <Switch
               checked={isShowOtherEnabled}
@@ -883,7 +883,7 @@ function ChoroplethControl({path, params={}}) {
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
             </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
+            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>No data</div>
             </div>
           }
         </div>
