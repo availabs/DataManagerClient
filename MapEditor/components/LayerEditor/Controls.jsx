@@ -46,7 +46,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id } = useMemo(() => {
+  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata } = useMemo(() => {
     return {
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -55,6 +55,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
@@ -150,14 +151,21 @@ export function SelectTypeControl({path, datapath, params={}}) {
           numbins,
           method
         }
-        const res = await falcor.get([
-          "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-        ]);
-        const colorBreaks = get(res, [
-          "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-        ])
+        let colorBreaks; 
+
+        if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
+          colorBreaks = choroplethdata;
+        }
+        else {
+          console.log("getting new choropleth breaks")
+          const res = await falcor.get([
+            "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
+          ]);
+          colorBreaks = get(res, [
+            "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
+          ])
+        }
         let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        //console.log('test paint', paint, paintValue)
         const isShowOtherEnabled = showOther === '#ccc';
         if(isShowOtherEnabled) {
           if(legend[legend.length-1].label !== "No data") {
@@ -186,7 +194,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       }
     }
     setPaint();
-  }, [value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method])
+  }, [value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
     <label className='flex w-full'>
@@ -780,6 +788,10 @@ function CategoryControl({path, params={}}) {
     )
 }
 
+function roundToNearestTen(v) {
+  return Math.pow(10, Math.round(Math.log10(v)));
+}
+
 function ChoroplethControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
@@ -803,6 +815,74 @@ function ChoroplethControl({path, params={}}) {
   .filter(d => d);
 
   const isShowOtherEnabled = showOther === '#ccc'
+  console.log({breaks, categories})
+
+  /**
+   * categories[0] is breaks[0] to breaks[1]
+   * categories[n-1] (last element) is breaks[n-1] to max
+   * minimum value of non-first break, is the value of the prior break + 1
+   * max value of non-last break, is the value of the next break - 1
+   * TODO -- what if lower bound is 0? can't move it 10%!
+   */
+  const rangeInputs = categories?.map((category, catIndex) => {
+    return (
+      <div key={`range_input_${catIndex}`}>
+        <div
+          key={catIndex}
+          className="w-full flex items-center hover:bg-slate-100 cursor-auto"
+        >
+          <div className="flex items-center h-8 w-8 justify-center  border-r border-b ">
+            <div
+              className="w-4 h-4 rounded border-[0.5px] border-slate-600"
+              style={{ backgroundColor: category.color }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-center flex-1 px-4 text-slate-600 border-b h-8 truncate w-full">
+            <i 
+              className="fa-solid fa-chevron-left cursor-pointer p-2 hover:text-pink-700"
+              onClick={() => {
+                console.log("move lower bound for range::", category.label);
+
+                setState((draft) => {
+                  const minBreakValue = breaks[catIndex-1] + 1;
+                  const newBreaks = [...breaks];
+                  newBreaks[catIndex] = catIndex !== 0 ? Math.max(newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10), minBreakValue) : newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10);
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                })
+              }}
+            
+            />
+            {category.label}
+            <i 
+              className="fa-solid fa-chevron-right cursor-pointer p-2 hover:text-pink-700"
+              onClick={() => {
+                console.log("move upper bound for range::", category.label);
+
+                setState((draft) => {
+                  const newBreaks = [...breaks];
+                  if(catIndex !== categories.length-1){
+                    const maxBreakValue = catIndex === categories.length-2 ? max - 1 : breaks[catIndex+2] - 1;
+                    newBreaks[catIndex+1] = Math.min(newBreaks[catIndex+1] + roundToNearestTen(newBreaks[catIndex+1]/10), maxBreakValue);
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                  }
+                  else {
+                    //adjust max
+                    const newMax = max + roundToNearestTen(max/10);
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['max']`, newMax)
+                  }
+
+                })
+              }}
+            
+            />
+          </div>
+        </div>
+      </div>
+    );
+  });
+  
+  
+  
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>
@@ -814,6 +894,7 @@ function ChoroplethControl({path, params={}}) {
               onChange={(e) => setState(draft => {
                 // console.log('SelectViewColumnControl set column path', path, e.target.value)
                 set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-bins']`, e.target.value)
+                set(draft, `symbology.layers[${state.symbology.activeLayer}].['choroplethdata']`, {});
                 set(draft, `symbology.layers[${state.symbology.activeLayer}].['color-range']`, colorbrewer[colorKey][e.target.value])
               })}
             >
@@ -844,7 +925,7 @@ function ChoroplethControl({path, params={}}) {
             </select>
           </div>
         </div>
-        <div className='flex items-center'>
+        <div className='flex items-center pb-2'>
           <div className='text-sm text-slate-400 px-2'>Show missing data</div>
           <div className='flex items-center'>
             <Switch
@@ -871,14 +952,7 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-        {(categories || []).map((d,i) => (
-          <div key={i} className='w-full flex items-center hover:bg-slate-100'>
-            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
-            </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
-          </div> 
-        ))}
+          {rangeInputs}
           {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
