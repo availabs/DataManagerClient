@@ -2,7 +2,7 @@ import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
 import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
 import get from 'lodash/get'
 
-export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc', metadata) {
+export function categoryPaint(column, categoryData, colors, num=10, metadata) {
 
   //console.log('categoryPaint', column, metadata)
   
@@ -14,7 +14,6 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
       ['to-string',['get', column_ref]],
   ]
   
-  
   Array.from(Array(+num).keys()).forEach((d,i) => {
     let cat = ''+categoryData?.[i]?.[column]
       if(cat && cat != '[object Object]'){
@@ -22,10 +21,6 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
         paint.push(toHex(colors[i % colors.length]))
       }
   })
-  paint.push(showOther)
-
-  //console.log('categoryPaint', paint, column, categoryData)
-
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
       .map((d,i) => {

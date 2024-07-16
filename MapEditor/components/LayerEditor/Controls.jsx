@@ -12,6 +12,7 @@ import colorbrewer from '../LayerManager/colors'//"colorbrewer"
 import { StyledControl } from './ControlWrappers'
 import get from 'lodash/get'
 import set from 'lodash/set'
+import cloneDeep from 'lodash/cloneDeep'
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
@@ -106,23 +107,38 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   React.useEffect(() => {
     const setPaint = async () => {
-      if( value === 'categories') {
-        let { paint, legend } =
-          categories?.paint && categories?.legend
-            ? categories
-            : categoryPaint(
-                column,
-                categorydata,
-                colors,
-                numCategories,
-                showOther,
-                metadata
-              );
-        //console.log('categories xyz', column, categories)
+      if (value === 'categories') {
+        let { paint, legend } = categories?.paint && categories?.legend
+          ? cloneDeep(categories)
+          : categoryPaint(
+            column,
+            categorydata,
+            colors,
+            numCategories,
+            metadata
+          );
+
+        if (!(paint.length % 2)) {
+          paint.push(showOther);
+        } else {
+          paint[paint.length-1] = showOther;
+        }
+
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled) {
+          if(legend[legend.length-1].label !== "Other") {
+            legend.push({color: showOther, label: "Other"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "Other") {
+            legend.pop();
+          }
+        }
+
         if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          //console.log('update category paint', column, numCategories, showOther, categorydata, categoryPaint(column,categorydata,colors,numCategories,showOther, metadata))
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {paint, legend}) //RYAN TODO -- THIS ALSO VERY DANGEROUS TEST PLZ
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, { paint, legend }) //RYAN TODO -- THIS ALSO VERY DANGEROUS TEST PLZ
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
           })
@@ -357,7 +373,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`, {})
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {})
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
 
           })}
@@ -507,7 +523,7 @@ function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  let { value: mapPaint, column, categorydata, colors, sourceId, categories } = useMemo(() => {
+  let { value: mapPaint, column, categorydata, colors, sourceId, categories, showOther } = useMemo(() => {
     return {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
@@ -515,6 +531,7 @@ function CategoryControl({path, params={}}) {
       categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
       colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
       categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
     }
   },[state])
 
@@ -555,7 +572,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const currentCategories = categories?.legend ?? []
+  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? []
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
       .filter((cat) => typeof cat[column] !== "object")
@@ -563,7 +580,7 @@ function CategoryControl({path, params={}}) {
     currentCategories.map((cat) => cat.label)
   ).map((cat) => ({ label: cat, value: cat }));
 
-  const showOther = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
+  const isShowOtherEnabled = showOther === '#ccc'
   return (
    
       <div className=' w-full items-center'>
@@ -574,7 +591,7 @@ function CategoryControl({path, params={}}) {
               <div className='flex items-center'>
                 <input
                   type='color' 
-                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].categories.legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
+                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}]['categories'].legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
                   onChange={(e) => {
                     const updatedCategoryPaint = [...mapPaint];
                     const indexOfLabel = updatedCategoryPaint.indexOf(currentCategories[activeCatIndex].label);
@@ -591,7 +608,7 @@ function CategoryControl({path, params={}}) {
                       })
 
                       set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, newLegend)
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
                         paint: updatedCategoryPaint, legend: newLegend
                       });
                     })
@@ -609,8 +626,8 @@ function CategoryControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={currentCategories.length}
               onChange={(e) => setState(draft => {
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{});
+                set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{});
+                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
               })}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
@@ -628,23 +645,21 @@ function CategoryControl({path, params={}}) {
           <div className='text-sm text-slate-400 px-2'>Show Other</div>
           <div className='flex items-center'>
             <Switch
-              checked={showOther}
+              checked={isShowOtherEnabled}
               onChange={()=>{
                 setState(draft=> {
-                  const update = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc' ? 'rgba(0,0,0,0)' : '#ccc'
-                  // console.log('update', update  )
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,update)
-                  
+                  const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, update) 
                 })
               }}
               className={`${
-                showOther ? 'bg-blue-500' : 'bg-gray-200'
+                isShowOtherEnabled ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
               <span className="sr-only">Show other</span>
               <div
                 className={`${
-                  showOther ? 'translate-x-5' : 'translate-x-0'
+                  isShowOtherEnabled ? 'translate-x-5' : 'translate-x-0'
                 } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
               />
             </Switch>
@@ -680,7 +695,7 @@ function CategoryControl({path, params={}}) {
                   setState(draft=> {
                     set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
                     set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length); //RYAN TODO TEST THIS A LOT, COULD BE SOME ISSUES
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
                       paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                         return {color: d.color, label: get(metadataLookup, d.label, d.label )}
                       })
@@ -694,9 +709,9 @@ function CategoryControl({path, params={}}) {
               </div>
             </div> 
           ))}
-          {showOther && <div className='w-full flex items-center hover:bg-slate-100'>
+          {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
               <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') }}/>
+                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
               </div>
               <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
             </div>
@@ -725,11 +740,13 @@ function CategoryControl({path, params={}}) {
                           updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
                           
                           setState(draft=> {
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}].categories`,{
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
                               paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                                 return {color: d.color, label: get(metadataLookup, d.label, d.label )}
                               })
                             });
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
                           });
                         }
                       }
@@ -762,7 +779,7 @@ function ChoroplethControl({path, params={}}) {
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
       method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
       legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`),
+      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, { breaks: [] }),
       showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
     }
   },[state])
