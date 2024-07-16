@@ -156,8 +156,20 @@ export function SelectTypeControl({path, datapath, params={}}) {
         const colorBreaks = get(res, [
           "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
         ])
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks']);
+        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
         //console.log('test paint', paint, paintValue)
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled) {
+          if(legend[legend.length-1].label !== "Other") {
+            legend.push({color: showOther, label: "Other"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "Other") {
+            legend.pop();
+          }
+        }
+        console.log(" showOther, paint, legend", {showOther, paint, legend})
         if(paint && !isEqual(paint,paintValue)) {
           //console.log('update choropleth paint', column, numbins, method)
           setState(draft => {
@@ -780,16 +792,17 @@ function ChoroplethControl({path, params={}}) {
       method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
       legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
       choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, { breaks: [] }),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc'
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
     }
   },[state])
 
   const { breaks, max } = choroplethdata;
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i], label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i].color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
   })
   .filter(d => d);
 
+  const isShowOtherEnabled = showOther === '#ccc'
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>
@@ -835,23 +848,21 @@ function ChoroplethControl({path, params={}}) {
           <div className='text-sm text-slate-400 px-2'>Show Other</div>
           <div className='flex items-center'>
             <Switch
-              checked={showOther}
+              checked={isShowOtherEnabled}
               onChange={()=>{
                 setState(draft=> {
-                  const update = get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,'#ccc') === '#ccc' ? 'rgba(0,0,0,0)' : '#ccc'
-                  // console.log('update', update  )
+                  const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
                   set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,update)
-                  
                 })
               }}
               className={`${
-                showOther ? 'bg-blue-500' : 'bg-gray-200'
+                isShowOtherEnabled ? 'bg-blue-500' : 'bg-gray-200'
               } relative inline-flex h-4 w-8 items-center rounded-full `}
             >
               <span className="sr-only">Show other</span>
               <div
                 className={`${
-                  showOther ? 'translate-x-5' : 'translate-x-0'
+                  isShowOtherEnabled ? 'translate-x-5' : 'translate-x-0'
                 } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
               />
             </Switch>
@@ -868,7 +879,13 @@ function ChoroplethControl({path, params={}}) {
             <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
           </div> 
         ))}
-        
+          {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
+            <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
+              <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
+            </div>
+            <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
+            </div>
+          }
         </div>
       </div>
     )

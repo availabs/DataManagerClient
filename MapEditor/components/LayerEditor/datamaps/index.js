@@ -56,7 +56,7 @@ let methods = {
 
 let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
 
-export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks  ) {
+export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks, showOther  ) {
   //console.log('paint method', method)
   let paint = [
       'step',
@@ -81,8 +81,6 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
 
   paint.push(colors[num-1])
 
-
-
   const legend = [
     ...(paint || []).filter((d,i) => i > 2 )
     .map((d,i) => {
@@ -96,23 +94,8 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     .filter(d => d)
   ]
 
-  //console.log('legend', legend)
-  return { paint, legend }
 
-  
-;
-
-
-  // let inerpaint = [
-  //     'interpolate',
-  //     ['linear'],
-  //     [get, 'column'],
-  //     // 274,
-  //     // ['to-color', '#f5e5f3'],
-  //     // 1551,
-  //     // ['to-color', '#8d00ac']
-  // ]
-
+  return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
 
 }
 
