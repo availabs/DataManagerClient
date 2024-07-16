@@ -138,7 +138,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
         if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, { paint, legend }) //RYAN TODO -- THIS ALSO VERY DANGEROUS TEST PLZ
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, { paint, legend })
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
           })
@@ -694,7 +694,7 @@ function CategoryControl({path, params={}}) {
                   updatedCategoryPaint.splice(indexOfLabel, 2);
                   setState(draft=> {
                     set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length); //RYAN TODO TEST THIS A LOT, COULD BE SOME ISSUES
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
                     set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
                       paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                         return {color: d.color, label: get(metadataLookup, d.label, d.label )}
@@ -746,7 +746,7 @@ function CategoryControl({path, params={}}) {
                               })
                             });
                             set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
+                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend) 
                           });
                         }
                       }
