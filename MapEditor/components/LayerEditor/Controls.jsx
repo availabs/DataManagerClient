@@ -158,12 +158,18 @@ export function SelectTypeControl({path, datapath, params={}}) {
         }
         else {
           console.log("getting new choropleth breaks")
+          setState(draft => {
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, true)
+          })
           const res = await falcor.get([
             "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
           ]);
           colorBreaks = get(res, [
             "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
           ])
+          setState(draft => {
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
+          })
         }
         let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
         const isShowOtherEnabled = showOther === '#ccc';
@@ -815,7 +821,6 @@ function ChoroplethControl({path, params={}}) {
   .filter(d => d);
 
   const isShowOtherEnabled = showOther === '#ccc'
-  console.log({breaks, categories})
 
   /**
    * categories[0] is breaks[0] to breaks[1]
@@ -837,44 +842,50 @@ function ChoroplethControl({path, params={}}) {
               style={{ backgroundColor: category.color }}
             />
           </div>
-          <div className="flex items-center justify-between text-center flex-1 px-4 text-slate-600 border-b h-8 truncate overflow-auto w-full">
-            <i 
-              className="fa-solid fa-chevron-left cursor-pointer p-2 hover:text-pink-700"
-              onClick={() => {
-                console.log("move lower bound for range::", category.label);
-
-                setState((draft) => {
-                  const minBreakValue = breaks[catIndex-1] + 1;
-                  const newBreaks = [...breaks];
-                  newBreaks[catIndex] = catIndex !== 0 ? Math.max(newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10), minBreakValue) : newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10);
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
-                })
-              }}
-            
-            />
+          <div className="flex items-center justify-between text-center flex-1 px-2 text-slate-600 border-b h-8 truncate overflow-auto w-full">
+            <div className='px-2 w-[10px]'>
+              {
+                catIndex !== 0 && 
+                  <i 
+                    className="fa-solid fa-chevron-left cursor-pointer hover:text-pink-700"
+                    onClick={() => {
+                      console.log("move lower bound for range::", category.label);
+                      setState((draft) => {
+                        const minBreakValue = breaks[catIndex-1] + 1;
+                        const newBreaks = [...breaks];
+                        newBreaks[catIndex] = catIndex !== 0 ? Math.max(newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10), minBreakValue) : newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10);
+                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                      })
+                    }}
+                  />
+              }
+            </div>
             {category.label}
-            <i 
-              className="fa-solid fa-chevron-right cursor-pointer p-2 hover:text-pink-700"
-              onClick={() => {
-                console.log("move upper bound for range::", category.label);
+            <div className='px-2 w-[10px]'>
+              {
+                catIndex !== categories.length-1 && 
+                  <i 
+                    className="fa-solid fa-chevron-right cursor-pointer hover:text-pink-700"
+                    onClick={() => {
+                      console.log("move upper bound for range::", category.label);
+                      setState((draft) => {
+                        const newBreaks = [...breaks];
+                        if(catIndex !== categories.length-1){
+                          const maxBreakValue = catIndex === categories.length-2 ? max - 1 : breaks[catIndex+2] - 1;
+                          newBreaks[catIndex+1] = Math.min(newBreaks[catIndex+1] + roundToNearestTen(newBreaks[catIndex+1]/10), maxBreakValue);
+                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                        }
+                        else {
+                          //adjust max
+                          const newMax = max + roundToNearestTen(max/10);
+                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['max']`, newMax)
+                        }
+                      })
+                    }}
+                  />
+              }
+            </div>
 
-                setState((draft) => {
-                  const newBreaks = [...breaks];
-                  if(catIndex !== categories.length-1){
-                    const maxBreakValue = catIndex === categories.length-2 ? max - 1 : breaks[catIndex+2] - 1;
-                    newBreaks[catIndex+1] = Math.min(newBreaks[catIndex+1] + roundToNearestTen(newBreaks[catIndex+1]/10), maxBreakValue);
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
-                  }
-                  else {
-                    //adjust max
-                    const newMax = max + roundToNearestTen(max/10);
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['max']`, newMax)
-                  }
-
-                })
-              }}
-            
-            />
           </div>
         </div>
       </div>
