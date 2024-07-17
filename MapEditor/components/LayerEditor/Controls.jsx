@@ -803,14 +803,15 @@ function ChoroplethControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
-  let { numbins, method, colorKey, legenddata, showOther, choroplethdata } = useMemo(() => {
+  let { numbins, method, colorKey, legenddata, showOther, choroplethdata, isLoadingColorbreaks } = useMemo(() => {
     return {
       numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
       colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
       method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
       legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
       choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, { breaks: [] }),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
+      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
+      isLoadingColorbreaks: get(state, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
     }
   },[state])
 
@@ -885,7 +886,6 @@ function ChoroplethControl({path, params={}}) {
                   />
               }
             </div>
-
           </div>
         </div>
       </div>
@@ -963,7 +963,14 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         <div className='w-full max-h-[250px] overflow-auto'>
-          {rangeInputs}
+          {
+            isLoadingColorbreaks ?  (
+                <div className="flex w-full justify-center overflow-hidden pb-2" >
+                  Creating scale...
+                  <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+                </div>
+              ) : rangeInputs
+          }
           {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
               <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
