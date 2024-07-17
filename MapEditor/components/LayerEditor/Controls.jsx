@@ -179,7 +179,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
         }
 
         if(paint && !isEqual(paint,paintValue)) {
-          //console.log('update choropleth paint', column, numbins, method)
           setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -393,6 +392,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, {});
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {})
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
 
@@ -837,7 +837,7 @@ function ChoroplethControl({path, params={}}) {
               style={{ backgroundColor: category.color }}
             />
           </div>
-          <div className="flex items-center justify-between text-center flex-1 px-4 text-slate-600 border-b h-8 truncate w-full">
+          <div className="flex items-center justify-between text-center flex-1 px-4 text-slate-600 border-b h-8 truncate overflow-auto w-full">
             <i 
               className="fa-solid fa-chevron-left cursor-pointer p-2 hover:text-pink-700"
               onClick={() => {

@@ -59,12 +59,9 @@ let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
 export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks, showOther  ) {
   //console.log('paint method', method)
   let paint = [
-      'step',
-      ['get', column],
-     
-      //'#51bbd6',
-      // 100,
-  ]
+    'step',
+    ["to-number", ['get', column]],
+  ];
 
   let domain = colorBreaks;
 
@@ -72,11 +69,9 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     return false
   }
 
-  domain
-   //.filter((d,i) => i < domain.length-1)
-    .forEach((d,i) => {
+  domain.forEach((d,i) => {
     paint.push(colors[i]);
-    paint.push(+d)
+    paint.push(Math.floor(+d))
   })
 
   paint.push(colors[num-1])
