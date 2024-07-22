@@ -9,7 +9,7 @@ import { Modal, INITIAL_NEW_MAP_MODAL_STATE } from '~/pages/DataManager/MapEdito
 import { MapContext } from '../../MapComponent'
 import { SymbologyAttributes, getAttributes } from "../../../../../Collection/attributes"
 
-export const SelectSymbology = ({ modalState, setModalState, index }) => {
+export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
   const { state, setState, falcor, falcorCache, pgEnv ='hazmit_dama' } = useContext(MapContext);
   // ---------------------------------
   // -- get Symbologies to list
@@ -49,7 +49,7 @@ export const SelectSymbology = ({ modalState, setModalState, index }) => {
 
       draft.symbologies[''+symbologyId] = newSymbology
 
-      draft.tabs[index].rows = [...draft.tabs[index].rows, {
+      draft.tabs[tabIndex].rows = [...draft.tabs[tabIndex].rows, {
         type: 'symbology', 
         name: newSymbology.name,
         symbologyId: newSymbology.symbology_id 

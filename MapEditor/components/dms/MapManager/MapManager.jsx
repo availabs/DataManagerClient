@@ -74,16 +74,28 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 }
 
 
-function SymbologyRow ({index, tabIndex, row, rowIndex}) {
+function SymbologyRow ({tabIndex, row, rowIndex}) {
   const { state, setState  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
-  const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row.symbologyId])
+  const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row])
   const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {}),[symbology])
 
   //const Icon = typeIcons?.[layer?.type] || typeIcons['Line']
   const visible = state?.symbologies?.[symbology.symbology_id]?.isVisible
 
   // console.log('testing', visible)
+  const toggleVisibility = useMemo(() => {
+    return () => setState(draft => {
+      draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
+      Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
+        draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
+          let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
+          let update = val === 'visible' ? 'none' : 'visible'
+          draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
+        })
+      })
+    })
+  }, [state, setState]);
 
   return (
     <div className={`w-full  px-2 flex border-white/85 border hover:border-pink-500 group items-center`}>
@@ -91,32 +103,30 @@ function SymbologyRow ({index, tabIndex, row, rowIndex}) {
         type='checkbox'
         checked={visible}
         className='h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-600'
-        onChange={() => 
-          setState(draft => {
-            draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
-            Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
-              draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
-                  let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
-                  let update = val === 'visible' ? 'none' : 'visible'
-                  draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
-              })
-            })
-        })}
+        onChange={toggleVisibility}
       /></div>
       <div 
-        onClick={() => 
-          setState(draft => {
-            draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
-            Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
-              draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
-                  let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
-                  let update = val === 'visible' ? 'none' : 'visible'
-                  draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
-              })
-            })
-        })}
-      className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'>{symbology?.name || ' no name'}</div>
-      {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
+        onClick={state.isEdit ? () => {}: toggleVisibility}
+        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
+      >
+        { state.isEdit ? (
+            <input
+              className="block w-[220px] flex flex-1 bg-transparent px-2 text-slate-800 placeholder:text-gray-400  focus:border-0"
+              value={symbology?.name}
+              placeholder='Layer Name'
+              type='text'
+              onChange={(e) => {
+                const layerName = e.target.value;
+                setState(draft => {
+                  draft.symbologies[row.symbologyId].name = layerName;
+                  draft.tabs[tabIndex].rows[rowIndex].name =  layerName;
+                })
+              }}
+            />
+          ) : 
+            symbology?.name || ' no name'
+        }
+      </div>
       {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
         <SymbologyMenu 
           button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
@@ -189,7 +199,7 @@ export const INITIAL_NEW_MAP_MODAL_STATE = {
 function TabPanel ({tabIndex, tab}) {
   const { state, setState } = React.useContext(MapContext);
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
-  const [newMapModalState, setNewMapModalState] = React.useState(INITIAL_NEW_MAP_MODAL_STATE);
+  const [addSymbologyModalState, setAddSymbologyModalState] = React.useState(INITIAL_NEW_MAP_MODAL_STATE);
   return (
     <div className='w-full'>
       {/* --- Header --- */}
@@ -208,7 +218,7 @@ function TabPanel ({tabIndex, tab}) {
         {state.isEdit && (
           <div className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
             onClick={() => {
-              setNewMapModalState({...newMapModalState, open: true})}
+              setAddSymbologyModalState({...addSymbologyModalState, open: true})}
             }
           >
             <Plus className='fill-slate-500 hover:fill-pink-300 hover:cursor-pointer' 
@@ -281,10 +291,10 @@ function TabPanel ({tabIndex, tab}) {
           </SymbologyMenu>
           <div className='flex items-center ml-1'>
             <SelectSymbology
-              index={tabIndex}
+              tabIndex={tabIndex}
               className={menuButtonContainerClassName}
-              modalState={newMapModalState}
-              setModalState={setNewMapModalState}
+              modalState={addSymbologyModalState}
+              setModalState={setAddSymbologyModalState}
             />
           </div>
         </>
