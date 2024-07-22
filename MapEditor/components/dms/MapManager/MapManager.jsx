@@ -4,8 +4,8 @@ import { MapContext } from '../MapComponent'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown, Plus} from '../../icons'
 import get from 'lodash/get'
+import { SelectSymbology } from './SymbologySelector'
 // import LegendPanel from './LegendPanel'
-import SymbologySelector from './SymbologySelector'
 
 const typeIcons = {
   'fill': Fill,
@@ -182,9 +182,14 @@ const rowTypes = {
   'symbology': SymbologyRow,
   'category': CategoryRow
 }
-
+export const INITIAL_NEW_MAP_MODAL_STATE = {
+  open: false,
+  symbologyId: null
+};
 function TabPanel ({tabIndex, tab}) {
   const { state, setState } = React.useContext(MapContext);
+  const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
+  const [newMapModalState, setNewMapModalState] = React.useState(INITIAL_NEW_MAP_MODAL_STATE);
   return (
     <div className='w-full'>
       {/* --- Header --- */}
@@ -200,7 +205,16 @@ function TabPanel ({tabIndex, tab}) {
             })}
           />
         </div>
-        
+        {state.isEdit && (
+          <div className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
+            onClick={() => {
+              setNewMapModalState({...newMapModalState, open: true})}
+            }
+          >
+            <Plus className='fill-slate-500 hover:fill-pink-300 hover:cursor-pointer' 
+          />
+          </div>
+        )}
         {state.isEdit && (<>
           <SymbologyMenu 
             button={
@@ -265,10 +279,14 @@ function TabPanel ({tabIndex, tab}) {
                 })}
               </div>
           </SymbologyMenu>
-
-
-          
-          <SymbologySelector index={tabIndex} />
+          <div className='flex items-center ml-1'>
+            <SelectSymbology
+              index={tabIndex}
+              className={menuButtonContainerClassName}
+              modalState={newMapModalState}
+              setModalState={setNewMapModalState}
+            />
+          </div>
         </>
         )}
       </div>
