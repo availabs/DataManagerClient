@@ -1,11 +1,6 @@
 import { useEffect, useState, useMemo, useContext } from 'react'
 import SourcesLayout from "../../../../../Source/layout";
-import { DamaContext } from "../../../../../store"
 import get from 'lodash/get'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
-import { MapContext } from '../../MapComponent'
-import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCategories";
-import { SymbologyContext } from '~/pages/DataManager/MapEditor';
 import { CMSContext } from '~/modules/dms/src'
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;

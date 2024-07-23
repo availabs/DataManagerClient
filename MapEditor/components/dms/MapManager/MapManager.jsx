@@ -118,6 +118,11 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
               onChange={(e) => {
                 const layerName = e.target.value;
                 setState(draft => {
+                  const newLayers = Object.keys(draft.symbologies[row.symbologyId].symbology.layers).reduce((acc, layerKey) => {
+                    acc[layerKey] = {...draft.symbologies[row.symbologyId].symbology.layers[layerKey], name: layerName}
+                    return acc;
+                  }, {})
+                  draft.symbologies[row.symbologyId].symbology.layers = newLayers;
                   draft.symbologies[row.symbologyId].name = layerName;
                   draft.tabs[tabIndex].rows[rowIndex].name =  layerName;
                 })
