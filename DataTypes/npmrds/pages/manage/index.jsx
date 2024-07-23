@@ -34,10 +34,36 @@ const checkDateRanges = (dateRanges) => {
     return "Dates are not continuous and they are overlapped";
   } else if (isContinuous && isOverlapped) {
     return "Dates are continuous but they are overlapped";
-  } else {
-    return "Invalid date ranges";
   }
+
+  return "Invalid date ranges";
 };
+
+const findMinMaxDates = (dateRanges) => {
+  console.log("Da", dateRanges);
+  if (dateRanges.length === 0) {
+    throw new Error("Date ranges array is empty.");
+  }
+
+  let minDate = new Date(dateRanges[0].start_date);
+  let maxDate = new Date(dateRanges[0].end_date);
+
+  for (const { start_date: start, end_date: end } of dateRanges) {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (startDate < minDate) minDate = startDate;
+    if (endDate > maxDate) maxDate = endDate;
+  }
+
+  return (
+    {
+      startDate: minDate.toISOString().split("T")[0],
+      endDate: maxDate.toISOString().split("T")[0],
+    } || {}
+  );
+};
+
 const SourceAttributes = {
   source_id: "source_id",
   name: "name",
@@ -89,11 +115,12 @@ export default function NpmrdsManage({
   activeViewId,
   ...props
 }) {
-  const { baseUrl, user: ctxUser } = useContext(DamaContext);
+  const { user: ctxUser, pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
 
+  console.log("pgEnv", pgEnv);
   const [showModal, setShowModal] = React.useState(false);
-  const [selectedViewIds, setSelectedViewIds] = React.useState([]);
+  const [selectedViews, setSelectedViews] = React.useState([]);
   useEffect(() => {
     const fetchData = async () => {
       const lengthPath = ["dama", "npmrds", "sources", "length"];
@@ -240,7 +267,7 @@ export default function NpmrdsManage({
   }, [availableViews]);
 
   const dateRanges = useMemo(() => {
-    return ([...selectedViewIds, activeView] || [])
+    return ([...selectedViews, activeView] || [])
       .filter(
         (v) => v && v.metadata && v.metadata.start_date && v.metadata.end_date
       )
@@ -248,9 +275,7 @@ export default function NpmrdsManage({
         start_date: dr?.metadata?.start_date,
         end_date: dr?.metadata?.end_date,
       }));
-  }, [selectedViewIds, activeView]);
-
-  console.log("dateRanges", dateRanges);
+  }, [selectedViews, activeView]);
 
   const msgString = useMemo(() => {
     return checkDateRanges(dateRanges);
@@ -263,6 +288,44 @@ export default function NpmrdsManage({
     "End Date",
     "Tmcs",
   ];
+
+  console.log("selectedViews", selectedViews);
+  const updateNpmrds = async () => {
+    console.log("Called");
+    const publishData = {
+      source_id: source?.source_id || null,
+      view_id: activeView?.view_id,
+      user_id: ctxUser?.user_id,
+      npmrds_raw_view_ids: selectedViews.map((svs) => svs.value),
+      name: source?.name,
+      type: "npmrds",
+      ...findMinMaxDates(dateRanges),
+      pgEnv,
+    };
+
+    console.log("publishData", publishData);
+    try {
+      const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/npmrds/add`, {
+        method: "POST",
+        body: JSON.stringify(publishData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const publishFinalEvent = await res.json();
+      console.log("publishFinalEvent: ", publishFinalEvent);
+      const { etl_context_id, source_id } = publishFinalEvent;
+
+      props.setLoading(false);
+      if (source_id && etl_context_id) {
+        navigate(`/datasources/source/${source_id}/uploads/${etl_context_id}`);
+      } else {
+        navigate(`/datasources/source/${source_id}`);
+      }
+    } catch (err) {
+      console.log("error : ", err);
+    }
+  };
   return (
     <div className="w-full p-5">
       <div className="flex m-3">
@@ -288,70 +351,83 @@ export default function NpmrdsManage({
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto px-5 py-3">
-        <table className="min-w-full bg-white">
-          <thead>
-            <tr>
-              {headers.map((key) => (
-                <th
-                  key={key}
-                  className="py-2 px-4 bg-gray-200 text-left border-b"
-                >
-                  {key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(groupbyState).map((group) => (
-              <React.Fragment key={group}>
-                {groupbyState[group].map((item, index) => (
-                  <tr key={index}>
-                    {index === 0 && (
-                      <td
-                        rowSpan={groupbyState[group].length}
-                        className="py-2 px-4 border-b font-bold"
-                      >
-                        {group}
-                      </td>
-                    )}
-                    <td
-                      key={`${group}.${item?.view_id}`}
-                      className="py-2 px-4 border-b"
-                    >
-                      {item?.view_id}
-                    </td>
-                    <td
-                      key={`${group}.${item?.metadata?.npmrds_version}`}
-                      className="py-2 px-4 border-b"
-                    >
-                      {item?.metadata?.npmrds_version}
-                    </td>
-                    <td
-                      key={`${group}.${item?.metadata?.start_date}`}
-                      className="py-2 px-4 border-b"
-                    >
-                      {item?.metadata?.start_date}
-                    </td>
-                    <td
-                      key={`${group}.${item?.metadata?.end_date}`}
-                      className="py-2 px-4 border-b"
-                    >
-                      {item?.metadata?.end_date}
-                    </td>
-                    <td
-                      key={`${group}.${item?.metadata?.no_of_tmc}`}
-                      className="py-2 px-4 border-b"
-                    >
-                      {item?.metadata?.no_of_tmc}
-                    </td>
-                  </tr>
+
+      {Object.keys(groupbyState).length ? (
+        <div className="overflow-x-auto px-5 py-3">
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr>
+                {headers.map((key) => (
+                  <th
+                    key={key}
+                    className="py-2 px-4 bg-gray-200 text-left border-b"
+                  >
+                    {key}
+                  </th>
                 ))}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(groupbyState).map((group) => (
+                <React.Fragment key={group}>
+                  {groupbyState[group].map((item, index) => (
+                    <tr key={index}>
+                      {index === 0 && (
+                        <td
+                          rowSpan={groupbyState[group].length}
+                          className="py-2 px-4 border-b font-bold"
+                        >
+                          {group}
+                        </td>
+                      )}
+                      <td
+                        key={`${group}.${item?.view_id}`}
+                        className="py-2 px-4 border-b"
+                      >
+                        {item?.view_id}
+                      </td>
+                      <td
+                        key={`${group}.${item?.metadata?.npmrds_version}`}
+                        className="py-2 px-4 border-b"
+                      >
+                        {item?.metadata?.npmrds_version}
+                      </td>
+                      <td
+                        key={`${group}.${item?.metadata?.start_date}`}
+                        className="py-2 px-4 border-b"
+                      >
+                        {item?.metadata?.start_date}
+                      </td>
+                      <td
+                        key={`${group}.${item?.metadata?.end_date}`}
+                        className="py-2 px-4 border-b"
+                      >
+                        {item?.metadata?.end_date}
+                      </td>
+                      <td
+                        key={`${group}.${item?.metadata?.no_of_tmc}`}
+                        className="py-2 px-4 border-b"
+                      >
+                        {item?.metadata?.no_of_tmc}
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div
+          className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-red-400"
+          role="alert"
+        >
+          <span className="font-medium">
+            Please! Add npmrds by clicking Add button
+          </span>
+        </div>
+      )}
+
       {showModal ? (
         <>
           <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
@@ -370,30 +446,35 @@ export default function NpmrdsManage({
                 </div>
 
                 <div className="relative p-6 flex-auto">
-                  <MultiSelect
-                    options={availableViewOptions}
-                    onChange={setSelectedViewIds}
-                    value={selectedViewIds}
-                  />
                   {msgString ? (
                     <>
-                      <span>{msgString}</span>
+                      <div
+                        className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                        role="alert"
+                      >
+                        <span className="font-medium">{msgString}</span>
+                      </div>
                     </>
                   ) : null}
+                  <MultiSelect
+                    options={availableViewOptions}
+                    onChange={setSelectedViews}
+                    value={selectedViews}
+                  />
                 </div>
 
                 <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
-                  {/* <button
+                  <button
                     className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                     type="button"
                     onClick={() => setShowModal(false)}
                   >
                     Close
-                  </button> */}
+                  </button>
                   <button
                     className="cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     type="button"
-                    onClick={() => setShowModal(false)}
+                    onClick={updateNpmrds}
                   >
                     Save Changes
                   </button>
