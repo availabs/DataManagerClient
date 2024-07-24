@@ -123,7 +123,7 @@ const Edit = ({value, onChange, size}) => {
 
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
+            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 65px)'}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }

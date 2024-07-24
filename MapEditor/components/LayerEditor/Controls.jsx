@@ -151,6 +151,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
           numbins,
           method
         }
+
         let colorBreaks; 
 
         if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
