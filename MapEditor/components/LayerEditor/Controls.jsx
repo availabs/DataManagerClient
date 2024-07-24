@@ -129,7 +129,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
         const colorBreaks = get(res, [
           "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
         ])
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks']);
+        let { paint, legend } = choroplethPaint(column, colorBreaks?.['max'], colorrange, numbins, method, colorBreaks?.['breaks']);
         //console.log('test paint', paint, paintValue)
         if(paint && !isEqual(paint,paintValue)) {
           //console.log('update choropleth paint', column, numbins, method)
