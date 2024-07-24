@@ -172,10 +172,10 @@ function LegendRow ({ index, layer, i }) {
   //console.log('legend row type', type)
 
   return (
-    <div onClick={toggleSymbology} className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
+    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div  className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
+        <div onClick={toggleSymbology} className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
         {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
         <div className='text-sm pt-1 px-0.5 flex items-center'>
           <LayerMenu 

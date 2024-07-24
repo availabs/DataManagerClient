@@ -20,7 +20,7 @@ export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
 
       const lengthPath = ["dama", pgEnv, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
-      console.log('test',get(resp.json, lengthPath, 0) , resp)
+
       await falcor.get([
         "dama", pgEnv, "symbologies", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
