@@ -122,13 +122,24 @@ function CategoryLegend({layer}) {
 function StepLegend({layer}) {
   //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
-  let { legenddata } = useMemo(() => {
+  let { legenddata, isLoadingColorbreaks } = useMemo(() => {
     return {
-      legenddata : get(layer, `['legend-data']`, []) 
+      legenddata : get(layer, `['legend-data']`, []),
+      isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false)
     }
-  },[state])
-
+  },[state]);
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']``
+
+  if(isLoadingColorbreaks){
+    return (
+      <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
+        <div className="flex w-full justify-center overflow-hidden pb-2" >
+          Creating legend...
+          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>

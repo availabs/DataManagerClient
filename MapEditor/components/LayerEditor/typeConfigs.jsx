@@ -53,7 +53,7 @@ const typeConfigs = {
             options: [
               {name:'Column Select', value: 'simple'},
             ],
-            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+            format: (v) => {console.log("v",v);return `${((v?.length-3 || 0)/2) || '10'} Categories`}
           },
           path: `layers[1].paint['fill-color']`
         }
@@ -84,7 +84,7 @@ const typeConfigs = {
         {
           type: 'choroplethControl',
           params: {
-            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+            format: (v) => `${((v?.[3]?.length-3 || 0)/2) || '10'} Categories`
           },
           path: `layers[1].paint['fill-color']`
         }
@@ -246,7 +246,7 @@ const typeConfigs = {
         {
           type: 'choroplethControl',
           params: {
-            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+            format: (v) => `${((v?.[3]?.length-3 || 0)/2) || '10'} Categories`
           },
           path: `layers[1].paint['circle-color']`
         }
@@ -429,7 +429,7 @@ const typeConfigs = {
         {
           type: 'choroplethControl',
           params: {
-            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
+            format: (v) => `${((v?.[3]?.length-3 || 0)/2) || '10'} Categories`
           },
           path: `layers[1].paint['line-color']`
         }
