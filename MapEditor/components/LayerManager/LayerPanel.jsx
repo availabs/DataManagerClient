@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
 import get from 'lodash/get'
 import { ZoomToFit } from './ZoomToFit'
+import { DuplicateLayerItem } from './DuplicateLayerItem'
 
 const typeIcons = {
   'fill': Fill,
@@ -36,6 +37,9 @@ export function LayerMenu({layer, button, location='left-0'}) {
             <div className="px-1 py-1 ">
               <Menu.Item>
                 <ZoomToFit layer={layer}/>
+              </Menu.Item>
+              <Menu.Item>
+                <DuplicateLayerItem layer={layer}/>
               </Menu.Item>
               <Menu.Item>
                 {({ active }) => (

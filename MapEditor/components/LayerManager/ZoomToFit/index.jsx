@@ -82,7 +82,7 @@ export const ZoomToFit = ({ layer }) => {
       })
     }}
     className={`${
-      isZoomActive ? 'bg-blue-100 ' : ''
+      isZoomActive ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-pink-50 '
     } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}
   >
     Zoom to Fit

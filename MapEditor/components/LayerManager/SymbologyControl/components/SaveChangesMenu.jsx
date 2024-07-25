@@ -24,6 +24,25 @@ export function SaveChangesMenu({ button, className}) {
   )
 }
 
+export const generateDefaultName = (oldName) => {
+  if(oldName.includes("(") && oldName.includes(")")){
+    const openParenIndex = oldName.indexOf("(");
+    const closeParenIndex = oldName.indexOf(")");
+    const oldCopyNumber = parseInt(oldName.slice(openParenIndex+1, closeParenIndex))
+
+    if(!isNaN(oldCopyNumber)){
+      const newName = oldName.substring(0,openParenIndex+1) + (oldCopyNumber+1) + oldName.substring(closeParenIndex)
+      return newName;
+    }
+    else {
+      return oldName + " (1)";
+    }
+  }
+  else {
+    return oldName + " (1)";
+  }
+}
+
 
 function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
@@ -37,22 +56,7 @@ function SaveChangesModal ({ open, setOpen })  {
   }, [symbologies, symbologyId]);
 
   const initialSaveAsName = useMemo(() => {
-    if(state?.name.includes("(") && state?.name.includes(")")){
-      const openParenIndex = state?.name.indexOf("(");
-      const closeParenIndex = state?.name.indexOf(")");
-      const oldCopyNumber = parseInt(state?.name.slice(openParenIndex+1, closeParenIndex))
-
-      if(!isNaN(oldCopyNumber)){
-        const newName = state?.name.substring(0,openParenIndex+1) + (oldCopyNumber+1) + state?.name.substring(closeParenIndex)
-        return newName;
-      }
-      else {
-        return state?.name + " (1)";
-      }
-    }
-    else {
-      return state?.name + " (1)";
-    }
+    return generateDefaultName(state?.name)
   }, [state.name]);
 
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
