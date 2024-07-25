@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import set from 'lodash/set'
 import isEqual from 'lodash/isEqual'
 import mapboxgl from "maplibre-gl";
-export const ZoomToFit = ({ active, layer }) => {
+export const ZoomToFit = ({ layer }) => {
   const { state, setState  } = useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = useContext(DamaContext);
   const { view_id } = layer;
@@ -55,28 +55,34 @@ export const ZoomToFit = ({ active, layer }) => {
     }
   }, [viewMetadata, extent]);
 
+  const extentBox = useMemo(() => {
+    if (extent) {
+      const parsedExtent = JSON.parse(extent);      
+      const coordinates = parsedExtent.coordinates[0];
+      const mapGeom = coordinates.reduce((bounds, coord) => {
+        return bounds.extend(coord);
+      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+      return [mapGeom['_sw'], mapGeom['_ne']]
+    } else {
+      return null;
+    }
+  }, [extent])
+
+  const isZoomActive = isEqual(JSON.stringify(zoomToFit), JSON.stringify(extentBox));
   return (
   <div 
     onClick={() => {
       setState(draft => {
-        const parsedExtent = JSON.parse(extent);      
-        const coordinates = parsedExtent.coordinates[0];
-        const mapGeom = coordinates.reduce((bounds, coord) => {
-          return bounds.extend(coord);
-        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-        const finalBox = [mapGeom['_sw'], mapGeom['_ne']]
-
-        if(isEqual(zoomToFit, finalBox)){
-          console.log("same zoomToFit, resetting prop");
+        if(isZoomActive){
           set(draft,`symbology.zoomToFit`,[]);
         }
         else {
-          set(draft,`symbology.zoomToFit`,finalBox);
+          set(draft,`symbology.zoomToFit`,extentBox);
         }
       })
     }}
     className={`${
-      active ? 'bg-blue-50 ' : ''
+      isZoomActive ? 'bg-blue-100 ' : ''
     } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}
   >
     Zoom to Fit

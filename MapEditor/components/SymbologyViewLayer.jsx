@@ -173,8 +173,7 @@ const ViewLayerRender = ({
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
       maplibreMap.fitBounds(allLayerProps.zoomToFit, {
-        duration: 400,
-        zoom: 8
+        duration: 400
       });
     }
   }, [maplibreMap, allLayerProps?.zoomToFit]);
