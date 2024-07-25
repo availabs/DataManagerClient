@@ -81,14 +81,19 @@ function SaveChangesModal ({ open, setOpen })  {
   }
 
   const createSymbologyMap = async () => {
-    const newSymbology = {
+    let newSymbology = JSON.stringify({
       ...state,
       name: modalState.name
-    }
+    });
 
+    Object.keys(state.symbology.layers).forEach(oldLayerId => {
+      const newLayerId = Math.random().toString(36).replace(/[^a-z]+/g, '');
+      newSymbology = newSymbology.replaceAll(oldLayerId, newLayerId)
+    });
+    
     const resp = await falcor.call(
       ["dama", "symbology", "symbology", "create"],
-      [pgEnv, newSymbology]
+      [pgEnv, JSON.parse(newSymbology)]
     );
 
     const newSymbologyId = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
