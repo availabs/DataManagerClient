@@ -10,7 +10,7 @@ import { MapContext } from '../../MapComponent'
 import { SymbologyAttributes, getAttributes } from "../../../../../Collection/attributes"
 
 export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
-  const { state, setState, falcor, falcorCache, pgEnv ='hazmit_dama' } = useContext(MapContext);
+  const { state, setState, falcor, falcorCache, pgEnv ='freight_data' } = useContext(MapContext);
   // ---------------------------------
   // -- get Symbologies to list
   // ---------------------------------
