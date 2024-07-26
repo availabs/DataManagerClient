@@ -53,7 +53,7 @@ const typeConfigs = {
             options: [
               {name:'Column Select', value: 'simple'},
             ],
-            format: (v) => {console.log("v",v);return `${((v?.length-3 || 0)/2) || '10'} Categories`}
+            format: (v) => {return `${((v?.length-3 || 0)/2) || '10'} Categories`}
           },
           path: `layers[1].paint['fill-color']`
         }

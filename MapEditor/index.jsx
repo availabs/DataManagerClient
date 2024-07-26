@@ -176,14 +176,13 @@ const MapEditor = () => {
       }
     }
     updateLayers()
-  }, [state?.symbology?.layers])
+  }, [state?.symbology?.layers, state.symbology.zoomToFit])
   
 
-  const layerProps = useMemo(() =>  state?.symbology?.layers || {}, [state?.symbology?.layers]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state.symbology.zoomToFit } || {}), [state?.symbology?.layers, state.symbology.zoomToFit]);
 
   // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
 	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
-
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

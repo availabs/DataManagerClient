@@ -28,7 +28,7 @@ const ViewLayerRender = ({
             maplibreMap.removeLayer(l.id)
           }
         } catch (e) {
-          console.log('catch', e)
+          //console.log('catch', e)
         }
       })
     }
@@ -39,10 +39,6 @@ const ViewLayerRender = ({
   
   // - On layerProps change
   useEffect(() => {
-    // console.log('update layer props', layerProps)
-    
-
-   
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
@@ -69,7 +65,7 @@ const ViewLayerRender = ({
           console.log('cant add',maplibreMap.getSource(newSource.id))
         }
 
-        let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
+        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
             if(maplibreMap.getLayer(beneathLayer?.id)){
               maplibreMap.addLayer(l, beneathLayer?.id) 
@@ -173,6 +169,14 @@ const ViewLayerRender = ({
       }
     });
   }, [layerProps]);
+
+  useEffect(() => {
+    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
+      maplibreMap.fitBounds(allLayerProps.zoomToFit, {
+        duration: 400
+      });
+    }
+  }, [maplibreMap, allLayerProps?.zoomToFit]);
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {

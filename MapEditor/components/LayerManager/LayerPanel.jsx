@@ -6,6 +6,8 @@ import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
 import get from 'lodash/get'
+import { ZoomToFit } from './ZoomToFit'
+import { DuplicateLayerItem } from './DuplicateLayerItem'
 
 const typeIcons = {
   'fill': Fill,
@@ -34,11 +36,10 @@ export function LayerMenu({layer, button, location='left-0'}) {
           <Menu.Items className={`absolute ${location} mt-1 w-36 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none`}>
             <div className="px-1 py-1 ">
               <Menu.Item>
-                {({ active }) => (
-                  <div className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}>Zoom to Fit</div>
-                )}
+                <ZoomToFit layer={layer}/>
+              </Menu.Item>
+              <Menu.Item>
+                <DuplicateLayerItem layer={layer}/>
               </Menu.Item>
               <Menu.Item>
                 {({ active }) => (
