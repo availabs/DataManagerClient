@@ -1,19 +1,13 @@
-import { useContext, useState, Fragment, useRef } from 'react'
+import { useContext, useState, useRef } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
-
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../../../icons'
-
-import { SelectSymbology } from '../../SymbologySelector';
+import { Dialog } from '@headlessui/react'
+import { useNavigate } from 'react-router-dom'
 import get from 'lodash/get'
-import {Modal} from '../'
+import { Modal } from '../'
 
 
 export function CreateSymbologyMenu({ button, className}) {
-  const { state, setState, symbologies, collection } = useContext(SymbologyContext);
-  const { baseUrl } = useContext(DamaContext)
   const [showCreate, setShowCreate] = useState(false)
 
   return (
@@ -34,10 +28,8 @@ const DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE = {
 
 function CreateSymbologyModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
-  // const submit = useSubmit()
   const { pgEnv, falcor, baseUrl } = useContext(DamaContext)
   const { state, setState } = useContext(SymbologyContext)
-  const { collectionId } = useParams()
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE)
 
@@ -62,9 +54,14 @@ function CreateSymbologyModal ({ open, setOpen })  {
     let { symbology_id } = newSymb || false;
     
     if(symbology_id) {
+      await falcor.invalidate(
+        ["dama", pgEnv, "symbologies", "byIndex"],
+        ["dama", pgEnv, "symbologies", "byId"],
+        ["dama", pgEnv, "symbologies", "length"]
+      )
       setOpen(false);
-      setModalState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE);
       setState(newSymb);
+      setModalState(DEFAULT_CREATE_SYMBOLOGY_MODAL_STATE);
       navigate(`${baseUrl}/mapeditor/${symbology_id}`)
     }
   }

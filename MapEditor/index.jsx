@@ -57,7 +57,7 @@ const MapEditor = () => {
     }
 
     fetchAllSymbologies();
-  }, []);
+  }, [symbologyId]);
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
@@ -78,7 +78,8 @@ const MapEditor = () => {
   };
 
   const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
-  const localStorageSymbology = JSON.parse(window?.localStorage?.getItem(symbologyLocalStorageKey));
+  const rawLocalSymb = window?.localStorage?.getItem(symbologyLocalStorageKey);
+  const localStorageSymbology = rawLocalSymb !== "undefined" ? JSON.parse(rawLocalSymb) : null;
   if(localStorageSymbology){
     initialSymbology = localStorageSymbology;
   }
@@ -112,7 +113,7 @@ const MapEditor = () => {
 
     if(
       (state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) || 
-      (state?.name && state?.name !== origSymbology?.name) 
+      (state?.name !== origSymbology?.name) 
     ) {
       updateData()
       //throttle(updateData,500)
@@ -126,7 +127,6 @@ const MapEditor = () => {
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
     if(!localStorageSymbology && origSymbology) {
       setState(origSymbology)
     }
