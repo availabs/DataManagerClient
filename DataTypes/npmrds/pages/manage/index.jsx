@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useContext } from "react";
+import React, { useEffect, useMemo, useContext, Fragment } from "react";
+import { useNavigate } from "react-router-dom";
+import { Dialog, Transition } from "@headlessui/react";
 import { get, uniqBy, groupBy, orderBy } from "lodash";
 import moment from "moment";
 import { DamaContext } from "~/pages/DataManager/store";
@@ -10,7 +12,7 @@ const BlankComponent = () => <></>;
 
 const checkDateRanges = (dateRanges) => {
   if (dateRanges.length === 1) {
-    return null;
+    return { msgString: null, isValidDateRage: true };
   }
   dateRanges.sort((a, b) => moment(a.start_date).diff(moment(b.start_date)));
 
@@ -27,22 +29,27 @@ const checkDateRanges = (dateRanges) => {
   }
 
   if (isContinuous && !isOverlapped) {
-    return null;
+    return { msgString: null, isValidDateRage: true };
   } else if (!isContinuous && !isOverlapped) {
-    return "Dates are not continuous";
+    return { msgString: "Dates are not continuous", isValidDateRage: false };
   } else if (!isContinuous && isOverlapped) {
-    return "Dates are not continuous and they are overlapped";
+    return {
+      msgString: "Dates are not continuous and they are overlapped",
+      isValidDateRage: false,
+    };
   } else if (isContinuous && isOverlapped) {
-    return "Dates are continuous but they are overlapped";
+    return {
+      msgString: "Dates are continuous but they are overlapped",
+      isValidDateRage: false,
+    };
   }
 
-  return "Invalid date ranges";
+  return { msgString: "Invalid date ranges", isValidDateRage: false };
 };
 
 const findMinMaxDates = (dateRanges) => {
-  console.log("Da", dateRanges);
   if (dateRanges.length === 0) {
-    throw new Error("Date ranges array is empty.");
+    return {};
   }
 
   let minDate = new Date(dateRanges[0].start_date);
@@ -117,10 +124,14 @@ export default function NpmrdsManage({
 }) {
   const { user: ctxUser, pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
+  const navigate = useNavigate();
 
-  console.log("pgEnv", pgEnv);
   const [showModal, setShowModal] = React.useState(false);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [selectedViews, setSelectedViews] = React.useState([]);
+  const [removeViewId, setRemoveViewId] = React.useState(null);
+  const [removeStateKey, setRemoveStateKey] = React.useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       const lengthPath = ["dama", "npmrds", "sources", "length"];
@@ -277,9 +288,10 @@ export default function NpmrdsManage({
       }));
   }, [selectedViews, activeView]);
 
-  const msgString = useMemo(() => {
-    return checkDateRanges(dateRanges);
+  const { msgString, isValidDateRage } = useMemo(() => {
+    return { ...(checkDateRanges(dateRanges) || {}) };
   }, [dateRanges]);
+
   const headers = [
     "State",
     "View Id",
@@ -287,11 +299,10 @@ export default function NpmrdsManage({
     "Start Date",
     "End Date",
     "Tmcs",
+    "",
   ];
 
-  console.log("selectedViews", selectedViews);
   const updateNpmrds = async () => {
-    console.log("Called");
     const publishData = {
       source_id: source?.source_id || null,
       view_id: activeView?.view_id,
@@ -303,7 +314,6 @@ export default function NpmrdsManage({
       pgEnv,
     };
 
-    console.log("publishData", publishData);
     try {
       const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/npmrds/add`, {
         method: "POST",
@@ -313,19 +323,57 @@ export default function NpmrdsManage({
         },
       });
       const publishFinalEvent = await res.json();
-      console.log("publishFinalEvent: ", publishFinalEvent);
-      const { etl_context_id, source_id } = publishFinalEvent;
+      const { source_id } = publishFinalEvent;
 
-      props.setLoading(false);
-      if (source_id && etl_context_id) {
-        navigate(`/datasources/source/${source_id}/uploads/${etl_context_id}`);
-      } else {
-        navigate(`/datasources/source/${source_id}`);
-      }
-    } catch (err) {
-      console.log("error : ", err);
-    }
+      navigate(`/datasources/source/${source_id}`);
+    } catch (err) {}
   };
+
+  const removeNpmrds = async (viewId, stateGroup) => {
+    const publishData = {
+      source_id: source?.source_id || null,
+      view_id: activeView?.view_id,
+      user_id: ctxUser?.user_id,
+      npmrds_raw_removed_view_ids: [viewId],
+      name: source?.name,
+      type: "npmrds",
+      ...findMinMaxDates(
+        groupbyState[`${stateGroup}`]
+          .filter(
+            (v) =>
+              v &&
+              v.metadata &&
+              v.metadata.start_date &&
+              v.metadata.end_date &&
+              v.view_id !== viewId
+          )
+          .map((dr) => ({
+            start_date: dr?.metadata?.start_date,
+            end_date: dr?.metadata?.end_date,
+          }))
+      ),
+      pgEnv,
+    };
+
+    try {
+      const res = await fetch(
+        `${DAMA_HOST}/dama-admin/${pgEnv}/npmrds/remove`,
+        {
+          method: "POST",
+          body: JSON.stringify(publishData),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const publishFinalEvent = await res.json();
+      const { source_id } = publishFinalEvent;
+
+      navigate(`/datasources/source/${source_id}`);
+    } catch (err) {}
+  };
+
+  console.log("selectedViews", selectedViews);
   return (
     <div className="w-full p-5">
       <div className="flex m-3">
@@ -335,7 +383,7 @@ export default function NpmrdsManage({
           </label>
         </div>
 
-        <div className="justify-end">
+        <div className="justify-right">
           <button className="cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold mr-3 py-2 px-4 rounded">
             <div style={{ display: "flex" }}>
               <span className="mr-2">Replace</span>
@@ -410,6 +458,39 @@ export default function NpmrdsManage({
                       >
                         {item?.metadata?.no_of_tmc}
                       </td>
+                      {index === 0 ||
+                      index === groupbyState[group].length - 1 ? (
+                        <>
+                          <td
+                            key={`${group}.${index}`}
+                            className="py-2 px-4 border-b"
+                          >
+                            <button
+                              className="relative align-middle select-none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs bg-red-500 text-white shadow-md shadow-red-900/10 hover:shadow-lg hover:shadow-red-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none"
+                              type="button"
+                              onClick={() => {
+                                setRemoveViewId(item?.view_id);
+                                setRemoveStateKey(group);
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+                                <i
+                                  className="fad fa-trash"
+                                  aria-hidden="true"
+                                ></i>
+                              </span>
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td
+                            key={`${group}.${index}`}
+                            className="py-2 px-4 border-b"
+                          ></td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </React.Fragment>
@@ -428,63 +509,176 @@ export default function NpmrdsManage({
         </div>
       )}
 
-      {showModal ? (
-        <>
-          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
-            <div className="relative w-auto my-6 mx-auto max-w-3xl">
-              <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
-                <div className="flex items-start justify-between p-5 border-b border-solid border-blueGray-200 rounded-t">
-                  <h3 className="text-3xl font-semibold">Add Npmrds</h3>
-                  <button
-                    className="p-1 ml-auto bg-transparent border-0 text-black opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
-                    onClick={() => setShowModal(false)}
-                  >
-                    <span className="bg-transparent text-black opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
-                      ×
-                    </span>
-                  </button>
-                </div>
+      <Transition appear show={showModal} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto"
+          onClose={() => setShowModal(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0" />
+            </Transition.Child>
 
-                <div className="relative p-6 flex-auto">
-                  {msgString ? (
-                    <>
-                      <div
-                        className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                        role="alert"
-                      >
-                        <span className="font-medium">{msgString}</span>
-                      </div>
-                    </>
-                  ) : null}
-                  <MultiSelect
-                    options={availableViewOptions}
-                    onChange={setSelectedViews}
-                    value={selectedViews}
-                  />
-                </div>
+            <span
+              className="inline-block h-screen align-middle"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-md p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-medium leading-6 text-gray-900"
+                >
+                  Add Npmrds
+                </Dialog.Title>
 
-                <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
+                {availableViewOptions && availableViewOptions.length > 0 ? (
+                  <div className="relative p-6 flex-auto">
+                    {msgString ? (
+                      <>
+                        <div
+                          className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                          role="alert"
+                        >
+                          <span className="font-medium">{msgString}</span>
+                        </div>
+                      </>
+                    ) : null}
+                    <MultiSelect
+                      options={availableViewOptions}
+                      onChange={setSelectedViews}
+                      value={selectedViews}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="p-4 m-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                      role="alert"
+                    >
+                      <span className="font-medium">
+                        {"Npmrds Data for the Addition is not available."}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                <div className="mt-4">
                   <button
-                    className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                     type="button"
+                    className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
                     onClick={() => setShowModal(false)}
                   >
                     Close
                   </button>
+                  {isValidDateRage ? (
+                    <button
+                      className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
+                      type="button"
+                      onClick={updateNpmrds}
+                    >
+                      Save Changes
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
+      <Transition appear show={showDeleteModal} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto"
+          onClose={() => setShowDeleteModal(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0" />
+            </Transition.Child>
+
+            <span
+              className="inline-block h-screen align-middle"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-md p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-medium leading-6 text-gray-900"
+                >
+                  Remove Npmrds
+                </Dialog.Title>
+
+                <div className="relative p-6 flex-auto">
+                  <div className="p-4 m-2 text-sm" role="alert">
+                    <span className="font-medium">
+                      Are you sure you want to Remove?
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-4">
                   <button
-                    className="cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     type="button"
-                    onClick={updateNpmrds}
+                    className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
+                    onClick={() => setShowDeleteModal(false)}
                   >
-                    Save Changes
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
+                    onClick={async () => {
+                      await removeNpmrds(removeViewId, removeStateKey);
+                      setShowDeleteModal(false);
+                    }}
+                  >
+                    Yes
                   </button>
                 </div>
               </div>
-            </div>
+            </Transition.Child>
           </div>
-          <div className="opacity-50 fixed inset-0 z-40 bg-black"></div>
-        </>
-      ) : null}
+        </Dialog>
+      </Transition>
     </div>
   );
 }
