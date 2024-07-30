@@ -665,7 +665,8 @@ function CategoryControl({path, params={}}) {
                 .filter((d, i) => {
                   return d !== currentCategories.length && 
                     (d < numCategories || 
-                      (i < numCatOptions.length-1 && numCategories < numCatOptions[i+1] && numCatOptions[i-1] < numCategories))  
+                      (numCatOptions[i-1] < numCategories)
+                    )  
                 })
                 .map((val,i) => (
                   <option key={i} value={val}>{val} Categories</option>
