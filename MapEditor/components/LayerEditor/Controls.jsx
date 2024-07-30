@@ -158,7 +158,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
           colorBreaks = choroplethdata;
         }
         else {
-          console.log("getting new choropleth breaks")
           setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, true)
           })
@@ -184,8 +183,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             legend.pop();
           }
         }
-
-        if(paint && !isEqual(paint,paintValue)) {
+        if(paint && !isEqual(paint, paintValue)) {
           setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
@@ -209,6 +207,16 @@ export function SelectTypeControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
+            if(!column && e.target.value === 'categories') {
+              const defaultColorColumn = metadata.filter(col => !['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
+              set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultColorColumn)
+            } else if (e.target.value === 'choropleth') {
+              const currentColumn = metadata.find(col => col.name === column);
+              if(!['integer', 'number'].includes(currentColumn?.type)) {
+                const defaultColorColumn = metadata.filter(col => ['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
+                set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultColorColumn)
+              }
+            }
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
           })}
         >
@@ -329,7 +337,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
 
   const column = useMemo(() => {
     return get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
-  },[state])
+  },[state, path])
 
   useEffect(() => {
     if(sourceId) {
@@ -337,7 +345,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
       ]);
     }
-  },[sourceId])
+  },[pgEnv, sourceId])
 
   const metadata = useMemo(() => {
     let out = get(falcorCache, [
@@ -349,9 +357,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
         ], [])
       }
     return out
-  }, [sourceId,falcorCache])
-
-  //console.log('metadata', metadata)
+  }, [pgEnv, sourceId, falcorCache])
 
   useEffect(() => {
     if(column && layerType === 'categories') {
@@ -364,7 +370,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1)::int as count']
       ])      
     }
-  },[column])
+  },[column, layerType, viewId])
 
   useEffect(() => {
     if(column && layerType === 'categories') {
@@ -381,7 +387,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       })
     }
 
-  }, [column, falcorCache])
+  }, [column, layerType, viewId, falcorCache])
 
   return (
     <label className='flex w-full'>
@@ -390,19 +396,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={column}
           onChange={(e) => setState(draft => {
-            
             let sourceTiles = get(state, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
-            // console.log('SelectViewColumnControl set column path', path, e.target.value, sourceTiles)
             
             if(sourceTiles !== 'no source tiles') {
-            // console.log('set source tiles', sourceTiles+`?cols=${e.target.value}`)
               set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, {});
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {})
+            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {});
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
-
           })}
         >
           {(metadata || [])
@@ -608,6 +610,7 @@ function CategoryControl({path, params={}}) {
   ).map((cat) => ({ label: cat, value: cat }));
 
   const isShowOtherEnabled = showOther === '#ccc'
+  const numCatOptions = [10,20,30,50,100];
   return (
    
       <div className=' w-full items-center'>
@@ -658,13 +661,15 @@ function CategoryControl({path, params={}}) {
               })}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
-              {([10,20,30,50,100] || [])
-                .filter(d => d < numCategories && d !== currentCategories.length)
-                .map((val,i) => {
-                return (
+              {numCatOptions
+                .filter((d, i) => {
+                  return d !== currentCategories.length && 
+                    (d < numCategories || 
+                      (i < numCatOptions.length-1 && numCategories < numCatOptions[i+1] && numCatOptions[i-1] < numCategories))  
+                })
+                .map((val,i) => (
                   <option key={i} value={val}>{val} Categories</option>
-                )
-              })}
+                ))}
             </select>
           </div>
         </div>
@@ -829,7 +834,6 @@ function ChoroplethControl({path, params={}}) {
    * categories[n-1] (last element) is breaks[n-1] to max
    * minimum value of non-first break, is the value of the prior break + 1
    * max value of non-last break, is the value of the next break - 1
-   * TODO -- what if lower bound is 0? can't move it 10%!
    */
   const rangeInputs = categories?.map((category, catIndex) => {
     return (
