@@ -51,7 +51,7 @@ function SaveChangesModal ({ open, setOpen })  {
   const { symbologyId } = useParams()
   const navigate = useNavigate()
 
-  const origSymbology = useMemo(() => {
+  const dbSymbology = useMemo(() => {
     return symbologies.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
@@ -115,18 +115,18 @@ function SaveChangesModal ({ open, setOpen })  {
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
 
     if(modalState.action === 'save'){
-      if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
+      if(state?.symbology?.layers && dbSymbology && !isEqual(state?.symbology, dbSymbology?.symbology)) {
         updateData()
       }
-      if(state?.name && state?.name !== origSymbology.name) {
+      if(state?.name && state?.name !== dbSymbology.name) {
         updateName()
       }
     } else if (modalState.action === 'discard') {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
-      setState(origSymbology)
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
+      setState(dbSymbology)
     }
     else if (modalState.action === "saveas") {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
       createSymbologyMap();
     }
 
@@ -137,10 +137,10 @@ function SaveChangesModal ({ open, setOpen })  {
   const isSymbologyModified = useMemo(() => {
     return (
       state?.symbology?.layers && 
-      origSymbology && 
-      !isEqual(state?.symbology?.layers, origSymbology?.symbology?.layers)
-    );
-  }, [state?.symbology, origSymbology]);
+      dbSymbology && 
+      !isEqual(state?.symbology?.layers, dbSymbology?.symbology?.layers)
+    ) || state?.name !== dbSymbology?.name;
+  }, [state, dbSymbology]);
 
   const modalButtonType = modalState.action === 'discard' ? 'danger' : 'primary';
   const modalButtonClassName = !modalState.action ? "disabled:opacity-75 " : " ";

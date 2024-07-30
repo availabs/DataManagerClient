@@ -1,14 +1,11 @@
 import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../..'
-import { DamaContext } from "../../../../store"
 
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../../icons'
+import { Transition, Dialog } from '@headlessui/react'
+import { Plus} from '../../icons'
 
 import { SelectSymbology } from '../SymbologySelector';
-import get from 'lodash/get'
-
+import set from 'lodash/set'
 import { CreateSymbologyMenu, SymbologyControlMenu, SaveChangesMenu } from './components'
 
 
@@ -79,12 +76,15 @@ function SymbologyControl () {
     <div className='p-1 flex'>
       <div className='w-full px-1 flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
         <input
-          readOnly
           type="text"
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
           value={state?.name}
-          onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+          onChange={(e) => {
+            setState(draft => {
+              set(draft, `name`, e.target.value);
+            })
+          }}
         />
         {
           state?.symbology_id && 
@@ -103,6 +103,12 @@ function SymbologyControl () {
             button={
               <Plus className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
             }
+          />
+        </div>
+        <div className='flex items-center mr-2'>
+          <i 
+            className="fad fa-folder-open cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700"
+            onClick={() => setNewMapModalState({...newMapModalState, open: true})}
           />
         </div>
         {
