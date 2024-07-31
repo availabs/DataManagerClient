@@ -354,22 +354,25 @@ function MapManager () {
             {
               state.isEdit && (
               <>
-              <div 
-                  className='p-1 rounded hover:bg-slate-100 m-1' 
+                <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
+                  onClick={() => {
+                    setState(draft => {
+                      draft.setInitialBounds = true;
+                    })
+                  }}
+                >
+                  <i 
+                    className="fa-regular fa-circle-location-arrow text-slate-500 hover:text-pink-700"
+                  />
+                </div>
+                <div 
+                  className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
                   onClick={() => setState(draft => {
-                    //draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, rows:[]})
+                    draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
                   })}
                 >
-                  <MenuDots className='fill-slate-500' />
-              </div>
-              <div 
-                className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
-                onClick={() => setState(draft => {
-                  draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
-                })}
-              >
-                <Plus className='fill-slate-500' />
-              </div>
+                  <Plus className='fill-slate-500 hover:fill-pink-700' />
+                </div>
               </>
           )}  
           </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useContext, useRef } from "react"
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
@@ -6,6 +6,7 @@ import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../store"
+import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
 
 const ViewLayerRender = ({
@@ -14,7 +15,7 @@ const ViewLayerRender = ({
   layerProps,
   allLayerProps
 }) => {
-  
+  const { state, setState } = useContext(MapContext);
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
@@ -33,10 +34,27 @@ const ViewLayerRender = ({
       })
     }
   }, [])
-  
+
+  const mapCenter = maplibreMap.getCenter();
+  const mapZoom = maplibreMap.getZoom();
+
+  useEffect(() => {
+    if(state.setInitialBounds) {
+      setState(draft => {
+        draft.setInitialBounds = false;
+        const newBounds = {
+          center: mapCenter,
+          zoom: mapZoom
+        };
+        if(!isEqual(state.initialBounds, newBounds)){
+          draft.initialBounds = newBounds;
+        }
+      })
+    }
+  }, [maplibreMap, state.setInitialBounds]);
+
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
-  
   // - On layerProps change
   useEffect(() => {
     // ------------------------------------------------------
