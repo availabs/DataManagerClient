@@ -1,6 +1,6 @@
 import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../..'
-
+import { useParams } from "react-router-dom";
 import { Transition, Dialog } from '@headlessui/react'
 import { Plus} from '../../icons'
 
@@ -61,16 +61,10 @@ export const INITIAL_NEW_MAP_MODAL_STATE = {
   symbologyId: null
 };
 
-const INITIAL_SAVE_CHANGES_MODAL_STATE = {
-
-};
-
 function SymbologyControl () {
   const { state, setState } = useContext(SymbologyContext);
-  
+  const { symbologyId } = useParams()
   const [newMapModalState, setNewMapModalState] = useState(INITIAL_NEW_MAP_MODAL_STATE);
-  const [saveChangesModalState, setSaveChangesModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
-
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   return (
     <div className='p-1 flex'>
@@ -80,6 +74,7 @@ function SymbologyControl () {
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
           value={state?.name}
+          onClick={!symbologyId ? (() => setNewMapModalState({...newMapModalState, open: true})) : undefined}
           onChange={(e) => {
             setState(draft => {
               set(draft, `name`, e.target.value);
@@ -105,12 +100,12 @@ function SymbologyControl () {
             }
           />
         </div>
-        <div className='flex items-center mr-2'>
+        {symbologyId && <div className='flex items-center mr-2'>
           <i 
-            className="fad fa-folder-open cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700"
+            className="w-[12px] h-[12px] fa-regular fa-folder-open cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700"
             onClick={() => setNewMapModalState({...newMapModalState, open: true})}
           />
-        </div>
+        </div>}
         {
           state?.symbology_id && 
           <div className='flex items-center'>
