@@ -14,6 +14,7 @@ import CollectionDelete from "./Collection/delete";
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
 import SettingsComponent from "./Source/settings";
+import DmsList from "./Source/dmsList.jsx";
 
 import { registerDataType } from './DataTypes'
 
@@ -372,6 +373,16 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: DAMA_Wrapper(SettingsComponent, DAMA_ARGS)
+    },
+    { name: "DMS List",
+      path: `${ baseUrl }/dmslist`,
+      exact: true,
+      authLevel,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(DmsList, DAMA_ARGS)
     }
   ];
 };
