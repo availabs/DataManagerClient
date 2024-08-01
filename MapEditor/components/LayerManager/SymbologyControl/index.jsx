@@ -2,7 +2,7 @@ import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../..'
 import { useParams } from "react-router-dom";
 import { Transition, Dialog } from '@headlessui/react'
-import { Plus} from '../../icons'
+import { Plus, FolderOpen, Trash, FloppyDisk } from '../../icons'
 
 import { SelectSymbology } from '../SymbologySelector';
 import set from 'lodash/set'
@@ -81,41 +81,51 @@ function SymbologyControl () {
             })
           }}
         />
-        {
-          state?.symbology_id && 
-
-          <div className='flex items-center mr-2'>
-            <SaveChangesMenu 
+        <div className='flex items-center'>
+          <div className='flex  mr-2'>
+            <CreateSymbologyMenu 
+              className="relative inline-block text-left"
               button={
-                <i className='fa-regular fa-floppy-disk cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
+                <Plus
+                  size={14}
+                  className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                />
               }
             />
           </div>
-        }
-        <div className='flex items-center mr-2'>
-          <CreateSymbologyMenu 
-            className="relative inline-block text-left"
-            button={
-              <Plus className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
-            }
-          />
+          { symbologyId && 
+            <>
+              <div className='flex  mr-2'>
+                <FolderOpen
+                  size={14}
+                  className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+                  onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+                />
+              </div>
+              <div className='flex  mr-2'>
+                <SymbologyControlMenu 
+                  button={
+                    <Trash
+                      size={14}   
+                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                    />
+                  }
+                />
+                </div>
+              <div className='flex  mr-2'>
+                <SaveChangesMenu 
+                  button={
+                    <FloppyDisk
+                      size={14}
+                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                    />
+                  }
+                />
+              </div>
+            </>
+          }
         </div>
-        {symbologyId && <div className='flex items-center mr-2'>
-          <i 
-            className="w-[12px] h-[12px] fa-regular fa-folder-open cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700"
-            onClick={() => setNewMapModalState({...newMapModalState, open: true})}
-          />
-        </div>}
-        {
-          state?.symbology_id && 
-          <div className='flex items-center'>
-            <SymbologyControlMenu 
-              button={
-                <i className='fa-regular fa-trash cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
-              }
-            />
-           </div>
-        }
+
       </div>
       <div className='flex items-center ml-1'>
         <SelectSymbology 

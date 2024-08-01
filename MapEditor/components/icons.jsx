@@ -6,8 +6,8 @@ export const Close = ({className='fill-slate-800'}) => (
 	</svg>
 )
 
-export const Plus = ({className='fill-slate-800'}) => (
-	<svg width="12" height="12" viewBox="0 0 12 12" className={className}>
+export const Plus = ({className='fill-slate-800', size="12"}) => (
+	<svg width={size} height={size} viewBox="0 0 12 12" className={className}>
 		<path d="M7 0H5V5H0V7H5V12H7V7H12V5H7V0Z" ></path>
 	</svg>
 )
@@ -86,3 +86,22 @@ export const CaretDown = ({className='fill-slate-800'}) => (
 		<path fillRule="evenodd" clipRule="evenodd" d="M2.64645 4.64645C2.84171 4.45118 3.15829 4.45118 3.35355 4.64645L6 7.29289L8.64645 4.64645C8.84171 4.45118 9.15829 4.45118 9.35355 4.64645C9.54882 4.84171 9.54882 5.15829 9.35355 5.35355L6.35355 8.35355C6.15829 8.54882 5.84171 8.54882 5.64645 8.35355L2.64645 5.35355C2.45118 5.15829 2.45118 4.84171 2.64645 4.64645Z"></path>
 	</svg>
 )
+
+export const FolderOpen = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 576 512">
+    <path d="M384 480l48 0c11.4 0 21.9-6 27.6-15.9l112-192c5.8-9.9 5.8-22.1 .1-32.1S555.5 224 544 224l-400 0c-11.4 0-21.9 6-27.6 15.9L48 357.1 48 96c0-8.8 7.2-16 16-16l117.5 0c4.2 0 8.3 1.7 11.3 4.7l26.5 26.5c21 21 49.5 32.8 79.2 32.8L416 144c8.8 0 16 7.2 16 16l0 32 48 0 0-32c0-35.3-28.7-64-64-64L298.5 96c-17 0-33.3-6.7-45.3-18.7L226.7 50.7c-12-12-28.3-18.7-45.3-18.7L64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l23.7 0L384 480z" />
+  </svg>
+);
+
+export const Trash = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" />
+  </svg>
+);
+
+export const FloppyDisk = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-242.7c0-17-6.7-33.3-18.7-45.3L352 50.7C340 38.7 323.7 32 306.7 32L64 32zm0 96c0-17.7 14.3-32 32-32l192 0c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32L96 224c-17.7 0-32-14.3-32-32l0-64zM224 288a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" />
+  </svg>
+);
+
