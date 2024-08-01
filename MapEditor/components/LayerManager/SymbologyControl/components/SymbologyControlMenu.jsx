@@ -30,6 +30,11 @@ const DeleteSymbologyModal = ({open, setOpen}) => {
       ["dama", "symbology", "symbology", "delete"],
       [pgEnv, symbologyId]
     );
+    await falcor.invalidate(
+      ["dama", pgEnv, "symbologies", "byIndex"],
+      ["dama", pgEnv, "symbologies", "byId", symbologyId],
+      ["dama", pgEnv, "symbologies", "length"]
+    )
 
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
     window.localStorage.setItem(symbologyLocalStorageKey, null);

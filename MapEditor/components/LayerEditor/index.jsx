@@ -21,16 +21,16 @@ function LayerManager (props) {
         <div className='flex justify-between items-center border-b'>
           <div className='flex text-slate-700 p-2 '>
             <input 
-            type="text"
-            className='block w-[220px] border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
-            placeholder={'Select / Create New Map'}
-            value={state?.symbology?.layers?.[state?.symbology?.activeLayer]?.name}
-            onChange={(e) => setState(draft => { 
-              if(draft.symbology.activeLayer && draft.symbology.layers[draft.symbology.activeLayer].name){
-                draft.symbology.layers[draft.symbology.activeLayer].name = e.target.value 
-              }
-            })}
-          />
+              type="text"
+              className='block w-[220px] border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+              placeholder={'Layer Name'}
+              value={state?.symbology?.layers?.[state?.symbology?.activeLayer]?.name}
+              onChange={(e) => setState(draft => { 
+                if(draft.symbology.activeLayer){
+                  draft.symbology.layers[draft.symbology.activeLayer].name = e.target.value 
+                }
+              })}
+            />
           </div>
           <div className='text-sm pt-1.5 px-1.5  hover:bg-slate-100 flex items-center'>
             <LayerMenu

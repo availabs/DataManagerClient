@@ -122,29 +122,23 @@ function CategoryLegend({layer}) {
 function StepLegend({layer}) {
   //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
-  let { choroplethdata, legenddata } = useMemo(() => {
+  let { legenddata, isLoadingColorbreaks } = useMemo(() => {
     return {
-      choroplethdata: get(layer, `['choropleth-data']`, []),
-      legenddata : get(layer, `['legend-data']`, []) 
+      legenddata : get(layer, `['legend-data']`, []),
+      isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false)
     }
-  },[state])
+  },[state]);
+  const Symbol = typeSymbols[layer.type] || typeSymbols['fill']``
 
-  const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-  const max = Math.max(...choroplethdata)
-  // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
-  if(!legenddata || legenddata.length === 0 ) {
-    legenddata = [
-      ...(paintValue || []).filter((d,i) => i > 2 )
-      .map((d,i) => {
-      
-        if(i % 2 === 1) {
-          return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
-        }
-        return null
-      })
-      .filter(d => d)
-    ]
+  if(isLoadingColorbreaks){
+    return (
+      <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
+        <div className="flex w-full justify-center overflow-hidden pb-2" >
+          Creating legend...
+          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -178,10 +172,10 @@ function LegendRow ({ index, layer, i }) {
   //console.log('legend row type', type)
 
   return (
-    <div onClick={toggleSymbology} className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
+    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div  className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
+        <div onClick={toggleSymbology} className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
         {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
         <div className='text-sm pt-1 px-0.5 flex items-center'>
           <LayerMenu 

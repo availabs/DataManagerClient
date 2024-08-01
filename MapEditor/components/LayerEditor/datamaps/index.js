@@ -2,7 +2,7 @@ import { rgb2hex, toHex, categoricalColors } from '../../LayerManager/utils'
 import ckmeans, {equalIntervalBreaks, jenksBreaks, prettyBreaks} from '~/pages/DataManager/utils/ckmeans'
 import get from 'lodash/get'
 
-export function categoryPaint(column, categoryData, colors, num=10, showOther='#ccc', metadata) {
+export function categoryPaint(column, categoryData, colors, num=10, metadata) {
 
   //console.log('categoryPaint', column, metadata)
   
@@ -14,7 +14,6 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
       ['to-string',['get', column_ref]],
   ]
   
-  
   Array.from(Array(+num).keys()).forEach((d,i) => {
     let cat = ''+categoryData?.[i]?.[column]
       if(cat && cat != '[object Object]'){
@@ -22,10 +21,6 @@ export function categoryPaint(column, categoryData, colors, num=10, showOther='#
         paint.push(toHex(colors[i % colors.length]))
       }
   })
-  paint.push(showOther)
-
-  // console.log('categoryPaint', paint, column, categoryData)
-
 
   const legend  = (paint || []).filter((d,i) => i > 2 )
       .map((d,i) => {
@@ -61,37 +56,25 @@ let methods = {
 
 let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
 
-export function choroplethPaint( column, choroplethdata, colors, num=10, method='ckmeans' ) {
+export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks, showOther  ) {
   //console.log('paint method', method)
   let paint = [
-      'step',
-      ['get', column],
-     
-      //'#51bbd6',
-      // 100,
-  ]
-  // console.log('choroplethdata', choroplethdata)
-  if(!Array.isArray(choroplethdata)) {
-    return false
-  }
-  let domain = methods[method](choroplethdata, num).map(d => round(d,2))
-  const max = Math.max(...choroplethdata)
+    'step',
+    ["to-number", ['get', column]],
+  ];
+
+  let domain = colorBreaks;
 
   if(!Array.isArray(domain) || domain.length  === 0){
     return false
   }
-  console.log('max', max)
 
-  domain
-   //.filter((d,i) => i < domain.length-1)
-    .forEach((d,i) => {
+  domain.forEach((d,i) => {
     paint.push(colors[i]);
-    paint.push(+d)
+    paint.push(Math.floor(+d))
   })
 
   paint.push(colors[num-1])
-
-
 
   const legend = [
     ...(paint || []).filter((d,i) => i > 2 )
@@ -106,23 +89,8 @@ export function choroplethPaint( column, choroplethdata, colors, num=10, method=
     .filter(d => d)
   ]
 
-  console.log('legend', legend)
-  return { paint, legend }
 
-  
-;
-
-
-  // let inerpaint = [
-  //     'interpolate',
-  //     ['linear'],
-  //     [get, 'column'],
-  //     // 274,
-  //     // ['to-color', '#f5e5f3'],
-  //     // 1551,
-  //     // ['to-color', '#8d00ac']
-  // ]
-
+  return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
 
 }
 

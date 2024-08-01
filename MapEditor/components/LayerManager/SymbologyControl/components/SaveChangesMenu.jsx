@@ -24,6 +24,25 @@ export function SaveChangesMenu({ button, className}) {
   )
 }
 
+export const generateDefaultName = (oldName) => {
+  if(oldName.includes("(") && oldName.includes(")")){
+    const openParenIndex = oldName.indexOf("(");
+    const closeParenIndex = oldName.indexOf(")");
+    const oldCopyNumber = parseInt(oldName.slice(openParenIndex+1, closeParenIndex))
+
+    if(!isNaN(oldCopyNumber)){
+      const newName = oldName.substring(0,openParenIndex+1) + (oldCopyNumber+1) + oldName.substring(closeParenIndex)
+      return newName;
+    }
+    else {
+      return oldName + " (1)";
+    }
+  }
+  else {
+    return oldName + " (1)";
+  }
+}
+
 
 function SaveChangesModal ({ open, setOpen })  {
   const cancelButtonRef = useRef(null)
@@ -32,27 +51,12 @@ function SaveChangesModal ({ open, setOpen })  {
   const { symbologyId } = useParams()
   const navigate = useNavigate()
 
-  const origSymbology = useMemo(() => {
+  const dbSymbology = useMemo(() => {
     return symbologies.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
   const initialSaveAsName = useMemo(() => {
-    if(state?.name.includes("(") && state?.name.includes(")")){
-      const openParenIndex = state?.name.indexOf("(");
-      const closeParenIndex = state?.name.indexOf(")");
-      const oldCopyNumber = parseInt(state?.name.slice(openParenIndex+1, closeParenIndex))
-
-      if(!isNaN(oldCopyNumber)){
-        const newName = state?.name.substring(0,openParenIndex+1) + (oldCopyNumber+1) + state?.name.substring(closeParenIndex)
-        return newName;
-      }
-      else {
-        return state?.name + " (1)";
-      }
-    }
-    else {
-      return state?.name + " (1)";
-    }
+    return generateDefaultName(state?.name)
   }, [state.name]);
 
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
@@ -81,14 +85,19 @@ function SaveChangesModal ({ open, setOpen })  {
   }
 
   const createSymbologyMap = async () => {
-    const newSymbology = {
+    let newSymbology = JSON.stringify({
       ...state,
       name: modalState.name
-    }
+    });
 
+    Object.keys(state.symbology.layers).forEach(oldLayerId => {
+      const newLayerId = Math.random().toString(36).replace(/[^a-z]+/g, '');
+      newSymbology = newSymbology.replaceAll(oldLayerId, newLayerId)
+    });
+    
     const resp = await falcor.call(
       ["dama", "symbology", "symbology", "create"],
-      [pgEnv, newSymbology]
+      [pgEnv, JSON.parse(newSymbology)]
     );
 
     const newSymbologyId = Object.keys(get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'], {}))?.[0] || false
@@ -106,18 +115,18 @@ function SaveChangesModal ({ open, setOpen })  {
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
 
     if(modalState.action === 'save'){
-      if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
+      if(state?.symbology?.layers && dbSymbology && !isEqual(state?.symbology, dbSymbology?.symbology)) {
         updateData()
       }
-      if(state?.name && state?.name !== origSymbology.name) {
+      if(state?.name && state?.name !== dbSymbology.name) {
         updateName()
       }
     } else if (modalState.action === 'discard') {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
-      setState(origSymbology)
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
+      setState(dbSymbology)
     }
     else if (modalState.action === "saveas") {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
       createSymbologyMap();
     }
 
@@ -128,10 +137,10 @@ function SaveChangesModal ({ open, setOpen })  {
   const isSymbologyModified = useMemo(() => {
     return (
       state?.symbology?.layers && 
-      origSymbology && 
-      !isEqual(state?.symbology?.layers, origSymbology?.symbology?.layers)
-    );
-  }, [state?.symbology, origSymbology]);
+      dbSymbology && 
+      !isEqual(state?.symbology?.layers, dbSymbology?.symbology?.layers)
+    ) || state?.name !== dbSymbology?.name;
+  }, [state, dbSymbology]);
 
   const modalButtonType = modalState.action === 'discard' ? 'danger' : 'primary';
   const modalButtonClassName = !modalState.action ? "disabled:opacity-75 " : " ";

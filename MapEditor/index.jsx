@@ -57,7 +57,7 @@ const MapEditor = () => {
     }
 
     fetchAllSymbologies();
-  }, []);
+  }, [symbologyId]);
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
@@ -65,7 +65,7 @@ const MapEditor = () => {
       .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
-  const origSymbology = useMemo(() => {
+  const dbSymbology = useMemo(() => {
     return symbologies?.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
@@ -78,12 +78,13 @@ const MapEditor = () => {
   };
 
   const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
-  const localStorageSymbology = JSON.parse(window?.localStorage?.getItem(symbologyLocalStorageKey));
+  const rawLocalSymb = window?.localStorage?.getItem(symbologyLocalStorageKey);
+  const localStorageSymbology = rawLocalSymb !== "undefined" ? JSON.parse(rawLocalSymb) : null;
   if(localStorageSymbology){
     initialSymbology = localStorageSymbology;
   }
-  else if (origSymbology) {
-    initialSymbology = origSymbology;
+  else if (dbSymbology) {
+    initialSymbology = dbSymbology;
   }
 
   // --------------------------------------------------
@@ -98,26 +99,22 @@ const MapEditor = () => {
   useEffect(() => {
     // console.log('load', +symbologyId, symbologyId, symbologies)
     if (!!state.symbology_id && (+symbologyId !== +state.symbology_id)) {
-      setState(origSymbology);
+      setState(initialSymbology);
     }
-  },[origSymbology]);
+  },[initialSymbology]);
 
   // Updates localStorage whenever state changes 
   useEffect(() => {
-    async function updateData() {
+    function updateData() {
       if(window.localStorage) { 
         window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
       }
     }
 
-    if(
-      (state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) || 
-      (state?.name && state?.name !== origSymbology?.name) 
-    ) {
+    if(state?.symbology?.layers && !isEqual(state, initialSymbology)) {
       updateData()
-      //throttle(updateData,500)
     }
-  },[state?.symbology, state?.name]);
+  },[state?.symbology,  initialSymbology]);
 
 
   // If we don't have local storage data for this symbology, use data from API
@@ -126,11 +123,10 @@ const MapEditor = () => {
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    const localStorageSymbology = JSON.parse(window.localStorage.getItem(symbologyLocalStorageKey));
-    if(!localStorageSymbology && origSymbology) {
-      setState(origSymbology)
+    if(!localStorageSymbology && dbSymbology) {
+      setState(dbSymbology)
     }
-  },[symbologies.length, origSymbology])
+  },[symbologies.length, dbSymbology])
 
   //--------------------------
   // -- Map Layers are the instantation
@@ -167,21 +163,22 @@ const MapEditor = () => {
                 ...oldLayers, 
                 // add new layers
                 ...newLayers
-            ].sort((a,b) => state.symbology.layers[b.id].order - state.symbology.layers[a.id].order)
-            // console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
+            ]
+            //.filter(d => state.symbology.layers[d.id])
+            .sort((a,b) => state.symbology.layers[b?.id]?.order - state.symbology.layers[a?.id]?.order)
+            //console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
             return out
           })
       }
     }
     updateLayers()
-  }, [state?.symbology?.layers])
+  }, [state?.symbology?.layers, state?.symbology?.zoomToFit])
   
 
-  const layerProps = useMemo(() =>  state?.symbology?.layers || {}, [state?.symbology?.layers]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
   // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
 	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
-
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
