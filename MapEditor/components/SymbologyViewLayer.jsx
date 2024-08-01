@@ -293,7 +293,7 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv = 'freight_data', falcor, falcorCache } = ctx;
+  const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 
