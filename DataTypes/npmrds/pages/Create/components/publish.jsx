@@ -11,13 +11,8 @@ const npmrdsPublish = async (props, navigate, pgEnv) => {
   const publishData = {
     source_id: props?.source_id || null,
     user_id: props?.user_id,
-    // npmrds_raw_source_id: props?.npmrds_raw_source_id,
-    // npmrds_raw_view_id: props?.npmrds_raw_view_id,
     name: props?.name,
     type: props?.type || "npmrds",
-    // startDate: props?.startDate,
-    // endDate: props?.endDate,
-    // states: props?.states,
     pgEnv,
   };
 
