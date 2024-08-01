@@ -95,11 +95,13 @@ function SymbologyControl () {
           </div>
           { symbologyId && 
             <>
-              <div className='flex  mr-2'>
+              <div
+                className='flex  mr-2'
+                onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+              >
                 <FolderOpen
                   size={14}
                   className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
-                  onClick={() => setNewMapModalState({...newMapModalState, open: true})}
                 />
               </div>
               <div className='flex  mr-2'>
