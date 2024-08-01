@@ -126,8 +126,8 @@ export function SelectTypeControl({path, datapath, params={}}) {
         }
 
         const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "Other") {
+        if(isShowOtherEnabled && legend) {
+          if(legend[legend.length-1]?.label !== "Other") {
             legend.push({color: showOther, label: "Other"});
           }
           legend[legend.length-1].color = showOther;
@@ -931,11 +931,11 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={method}
               onChange={(e) => setState(draft => {
+                set(draft, `symbology.layers[${state.symbology.activeLayer}].['choroplethdata']`, {});
                 set(draft, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, e.target.value)
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
-              <option  value={'jenks'}>Jenks</option>
               <option  value={'pretty'}>Pretty Breaks</option>
               <option  value={'equalInterval'}>Equal Interval</option>
              
