@@ -15,7 +15,8 @@ const ViewLayerRender = ({
   layerProps,
   allLayerProps
 }) => {
-  const { state, setState } = useContext(MapContext);
+  const mctx = useContext(MapContext);
+  const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
