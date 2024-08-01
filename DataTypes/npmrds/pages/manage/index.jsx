@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, Transition } from "@headlessui/react";
 import { get, uniqBy, groupBy, orderBy } from "lodash";
 import moment from "moment";
+
 import { DamaContext } from "~/pages/DataManager/store";
 import { DAMA_HOST } from "~/config";
-import { useFalcor } from "~/modules/avl-components/src";
+import { useFalcor, ScalableLoading } from "~/modules/avl-components/src";
 import MultiSelect from "../manage/components/multiselect";
-
-const BlankComponent = () => <></>;
 
 const checkDateRanges = (dateRanges) => {
   if (dateRanges.length === 1) {
@@ -131,6 +130,7 @@ export default function NpmrdsManage({
   const [selectedViews, setSelectedViews] = React.useState([]);
   const [removeViewId, setRemoveViewId] = React.useState(null);
   const [removeStateKey, setRemoveStateKey] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -313,7 +313,7 @@ export default function NpmrdsManage({
       ...findMinMaxDates(dateRanges),
       pgEnv,
     };
-
+    setLoading(true);
     try {
       const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/npmrds/add`, {
         method: "POST",
@@ -325,8 +325,11 @@ export default function NpmrdsManage({
       const publishFinalEvent = await res.json();
       const { source_id } = publishFinalEvent;
 
+      setLoading(false);
       navigate(`/datasources/source/${source_id}`);
-    } catch (err) {}
+    } catch (err) {
+      setLoading(false);
+    }
   };
 
   const removeNpmrds = async (viewId, stateGroup) => {
@@ -355,6 +358,7 @@ export default function NpmrdsManage({
       pgEnv,
     };
 
+    setLoading(true);
     try {
       const res = await fetch(
         `${DAMA_HOST}/dama-admin/${pgEnv}/npmrds/remove`,
@@ -369,8 +373,11 @@ export default function NpmrdsManage({
       const publishFinalEvent = await res.json();
       const { source_id } = publishFinalEvent;
 
+      setLoading(false);
       navigate(`/datasources/source/${source_id}`);
-    } catch (err) {}
+    } catch (err) {
+      setLoading(false);
+    }
   };
 
   console.log("selectedViews", selectedViews);
@@ -590,13 +597,20 @@ export default function NpmrdsManage({
                   >
                     Close
                   </button>
-                  {isValidDateRage ? (
+                  {selectedViews && selectedViews.length && isValidDateRage ? (
                     <button
                       className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
                       type="button"
                       onClick={updateNpmrds}
                     >
-                      Save Changes
+                      {loading ? (
+                        <div style={{ display: "flex" }}>
+                          <div className="mr-2">Saving...</div>
+                          <ScalableLoading scale={0.25} color={"#fefefe"} />
+                        </div>
+                      ) : (
+                        "Save Changes"
+                      )}
                     </button>
                   ) : null}
                 </div>
@@ -671,7 +685,14 @@ export default function NpmrdsManage({
                       setShowDeleteModal(false);
                     }}
                   >
-                    Yes
+                    {loading ? (
+                      <div style={{ display: "flex" }}>
+                        <div className="mr-2">Deleting...</div>
+                        <ScalableLoading scale={0.25} color={"#fefefe"} />
+                      </div>
+                    ) : (
+                      "Yes"
+                    )}
                   </button>
                 </div>
               </div>
