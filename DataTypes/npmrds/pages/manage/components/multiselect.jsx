@@ -11,7 +11,7 @@ const MultiSelect = ({ options, onChange, value }) => {
     );
 
     if ((selectedResult || []).length > 0) {
-      removePerson(val);
+      removeSelect(val);
     } else {
       onChange((currents) => [...currents, val]);
     }

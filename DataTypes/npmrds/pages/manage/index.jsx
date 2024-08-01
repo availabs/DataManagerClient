@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useContext, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, Transition } from "@headlessui/react";
+import {
+  Dialog,
+  Transition,
+  TransitionChild,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/react";
 import { get, uniqBy, groupBy, orderBy } from "lodash";
 import moment from "moment";
 
@@ -380,7 +386,6 @@ export default function NpmrdsManage({
     }
   };
 
-  console.log("selectedViews", selectedViews);
   return (
     <div className="w-full p-5">
       <div className="flex m-3">
@@ -516,190 +521,148 @@ export default function NpmrdsManage({
         </div>
       )}
 
-      <Transition appear show={showModal} as={Fragment}>
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-10 overflow-y-auto"
-          onClose={() => setShowModal(false)}
-        >
-          <div className="min-h-screen px-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Dialog.Overlay className="fixed inset-0" />
-            </Transition.Child>
+      <Dialog
+        as="div"
+        className="relative z-50"
+        open={showModal}
+        onClose={() => setShowModal(false)}
+      >
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <span
+            className="inline-block h-screen align-middle"
+            aria-hidden="true"
+          >
+            &#8203;
+          </span>
+          <DialogPanel>
+            <div className="inline-block w-full min-w-xl max-w-xl p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+              <DialogTitle
+                as="h3"
+                className="text-lg font-medium leading-6 text-gray-900"
+              >
+                Add Npmrds
+              </DialogTitle>
 
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="inline-block w-full max-w-md p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
-                >
-                  Add Npmrds
-                </Dialog.Title>
-
-                {availableViewOptions && availableViewOptions.length > 0 ? (
-                  <div className="relative p-6 flex-auto">
-                    {msgString ? (
-                      <>
-                        <div
-                          className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                          role="alert"
-                        >
-                          <span className="font-medium">{msgString}</span>
-                        </div>
-                      </>
-                    ) : null}
-                    <MultiSelect
-                      options={availableViewOptions}
-                      onChange={setSelectedViews}
-                      value={selectedViews}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div
-                      className="p-4 m-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                      role="alert"
-                    >
-                      <span className="font-medium">
-                        {"Npmrds Data for the Addition is not available."}
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Close
-                  </button>
-                  {selectedViews && selectedViews.length && isValidDateRage ? (
-                    <button
-                      className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
-                      type="button"
-                      onClick={updateNpmrds}
-                    >
-                      {loading ? (
-                        <div style={{ display: "flex" }}>
-                          <div className="mr-2">Saving...</div>
-                          <ScalableLoading scale={0.25} color={"#fefefe"} />
-                        </div>
-                      ) : (
-                        "Save Changes"
-                      )}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
-
-      <Transition appear show={showDeleteModal} as={Fragment}>
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-10 overflow-y-auto"
-          onClose={() => setShowDeleteModal(false)}
-        >
-          <div className="min-h-screen px-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Dialog.Overlay className="fixed inset-0" />
-            </Transition.Child>
-
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="inline-block w-full max-w-md p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
-                >
-                  Remove Npmrds
-                </Dialog.Title>
-
+              {availableViewOptions && availableViewOptions.length > 0 ? (
                 <div className="relative p-6 flex-auto">
-                  <div className="p-4 m-2 text-sm" role="alert">
+                  {msgString ? (
+                    <>
+                      <div
+                        className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                        role="alert"
+                      >
+                        <span className="font-medium">{msgString}</span>
+                      </div>
+                    </>
+                  ) : null}
+                  <MultiSelect
+                    options={availableViewOptions}
+                    onChange={setSelectedViews}
+                    value={selectedViews}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="p-4 m-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                    role="alert"
+                  >
                     <span className="font-medium">
-                      Are you sure you want to Remove?
+                      {"Npmrds Data for the Addition is not available."}
                     </span>
                   </div>
-                </div>
-                <div className="mt-4">
+                </>
+              )}
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
+                  onClick={() => setShowModal(false)}
+                >
+                  Close
+                </button>
+                {selectedViews && selectedViews.length && isValidDateRage ? (
                   <button
-                    type="button"
-                    className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
-                    onClick={() => setShowDeleteModal(false)}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
                     className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
-                    onClick={async () => {
-                      await removeNpmrds(removeViewId, removeStateKey);
-                      setShowDeleteModal(false);
-                    }}
+                    type="button"
+                    onClick={updateNpmrds}
                   >
                     {loading ? (
                       <div style={{ display: "flex" }}>
-                        <div className="mr-2">Deleting...</div>
+                        <div className="mr-2">Saving...</div>
                         <ScalableLoading scale={0.25} color={"#fefefe"} />
                       </div>
                     ) : (
-                      "Yes"
+                      "Save Changes"
                     )}
                   </button>
+                ) : null}
+              </div>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+
+      <Dialog
+        as="div"
+        className="relative z-50"
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      >
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <span
+            className="inline-block h-screen align-middle"
+            aria-hidden="true"
+          >
+            &#8203;
+          </span>
+          <DialogPanel>
+            <div className="inline-block w-full max-w-md p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+              <DialogTitle
+                as="h3"
+                className="text-lg font-medium leading-6 text-gray-900"
+              >
+                Remove Npmrds
+              </DialogTitle>
+
+              <div className="relative p-6 flex-auto">
+                <div className="p-4 m-2 text-sm" role="alert">
+                  <span className="font-medium">
+                    Are you sure you want to Remove?
+                  </span>
                 </div>
               </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
+                  onClick={async () => {
+                    await removeNpmrds(removeViewId, removeStateKey);
+                    setShowDeleteModal(false);
+                  }}
+                >
+                  {loading ? (
+                    <div style={{ display: "flex" }}>
+                      <div className="mr-2">Deleting...</div>
+                      <ScalableLoading scale={0.25} color={"#fefefe"} />
+                    </div>
+                  ) : (
+                    "Yes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </div>
   );
 }
