@@ -301,10 +301,6 @@ const HoverComp = ({ data, layer }) => {
     return layer.props['hover-columns'];
   }, [layer]);
 
-  if(!pgEnv) {
-    pgEnv = 'hazmit_dama'
-  }
-
   useEffect(() => {
     if(source_id) {
       falcor.get([
