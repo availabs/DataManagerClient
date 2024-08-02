@@ -1,4 +1,10 @@
-import { Listbox, Transition } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "@headlessui/react";
 
 const MultiSelect = ({ options, onChange, value }) => {
   function isSelected(val) {
@@ -24,7 +30,10 @@ const MultiSelect = ({ options, onChange, value }) => {
     onChange(removedSelection);
   }
   return (
-    <div className="flex items-center justify-center">
+    <div
+      className="flex items-center justify-center"
+      style={{ minWidth: "479px" }}
+    >
       <div className="w-full max-w-xl mx-auto">
         <Listbox
           as="div"
@@ -34,26 +43,23 @@ const MultiSelect = ({ options, onChange, value }) => {
         >
           {({ open }) => (
             <>
-              {/* <Listbox.Label className="block text-sm leading-5 font-medium text-gray-700">
-                Npmrds
-              </Listbox.Label> */}
               <div className="relative">
                 <span className="inline-block w-full rounded-md shadow-sm">
-                  <Listbox.Button className="cursor-default relative w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 py-2 text-left focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition ease-in-out duration-150 sm:text-sm sm:leading-5">
+                  <ListboxButton className="cursor-default relative w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 py-2 text-left focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition ease-in-out duration-150 sm:text-sm sm:leading-5">
                     {!(value || []).length && "Select npmrds from list"}
                     {(value || []).map((val) => (
                       <div
                         key={val?.value}
-                        className="inline-flex items-center px-1 mr-1 mt-1 rounded text-white bg-gray-400"
+                        className="inline-flex items-center px-1 mr-1 mt-1 rounded text-white bg-blue-400 p-2"
                       >
                         {val?.label}
                         <div
-                          className="ml-1 bg-gray-100 rounded-full cursor-pointer"
+                          className="ml-1 bg-blue-100 rounded-full cursor-pointer"
                           onClick={() => removeSelect(val)}
                         >
                           <svg
-                            width="15"
-                            height="15"
+                            width="13"
+                            height="13"
                             viewBox="0 0 20 20"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +89,7 @@ const MultiSelect = ({ options, onChange, value }) => {
                         />
                       </svg>
                     </span>
-                  </Listbox.Button>
+                  </ListboxButton>
                 </span>
 
                 <Transition
@@ -93,20 +99,20 @@ const MultiSelect = ({ options, onChange, value }) => {
                   leaveTo="opacity-0"
                   className="absolute mt-1 w-full rounded-md bg-white shadow-lg"
                 >
-                  <Listbox.Options
+                  <ListboxOptions
                     static
                     className="max-h-60 rounded-md py-1 text-base leading-6 shadow-xs overflow-auto focus:outline-none sm:text-sm sm:leading-5"
                   >
                     {(options || []).map((opt) => {
                       const selected = isSelected(opt);
                       return (
-                        <Listbox.Option key={opt?.value} value={opt}>
+                        <ListboxOption key={opt?.value} value={opt}>
                           {({ active }) => (
                             <div
                               className={`${
                                 active
                                   ? "text-white bg-blue-600"
-                                  : "text-gray-900"
+                                  : "text-black-900"
                               } cursor-default select-none relative py-2 pl-8 pr-4`}
                             >
                               <span
@@ -138,10 +144,10 @@ const MultiSelect = ({ options, onChange, value }) => {
                               )}
                             </div>
                           )}
-                        </Listbox.Option>
+                        </ListboxOption>
                       );
                     })}
-                  </Listbox.Options>
+                  </ListboxOptions>
                 </Transition>
               </div>
             </>
