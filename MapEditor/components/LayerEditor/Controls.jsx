@@ -198,7 +198,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       }
     }
     setPaint();
-  }, [value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
+  }, [categories, value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
     <label className='flex w-full'>
@@ -645,7 +645,7 @@ function CategoryControl({path, params={}}) {
                   }}
                 />
               </div>
-              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex].label} </div>
+              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex]?.label} </div>
             </label>
           </>
         }
@@ -655,10 +655,15 @@ function CategoryControl({path, params={}}) {
             <select
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={currentCategories.length}
-              onChange={(e) => setState(draft => {
-                set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{});
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
-              })}
+              onChange={(e) => {
+                if(e.target.value <= activeCatIndex){
+                  setActiveCatIndex(undefined);
+                }
+                setState(draft => {
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{});
+                  set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
+                })
+              }}
             >
               <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
               {numCatOptions
