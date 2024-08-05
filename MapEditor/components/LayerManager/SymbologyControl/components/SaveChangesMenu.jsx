@@ -104,6 +104,11 @@ function SaveChangesModal ({ open, setOpen })  {
     const newSymb = get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'],{})?.[newSymbologyId]?.attributes
     
     if(newSymbologyId) {
+      await falcor.invalidate(
+        ["dama", pgEnv, "symbologies", "byIndex"],
+        ["dama", pgEnv, "symbologies", "length"]
+      );
+
       setOpen(false);
       setModalState({ action: null, name:'' });
       setState(newSymb);
@@ -118,7 +123,7 @@ function SaveChangesModal ({ open, setOpen })  {
       if(state?.symbology?.layers && dbSymbology && !isEqual(state?.symbology, dbSymbology?.symbology)) {
         updateData()
       }
-      if(state?.name && state?.name !== dbSymbology.name) {
+      if(state?.name && state?.name !== dbSymbology?.name) {
         updateName()
       }
     } else if (modalState.action === 'discard') {
