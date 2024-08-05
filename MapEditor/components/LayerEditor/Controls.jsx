@@ -504,7 +504,29 @@ function CategoricalColorControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   // console.log('select control', params)
   let colors = categoricalColors
-  let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors['cat1'])
+  let { value, categories } = useMemo(() => {
+    return {
+      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors['cat1']),
+      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
+    }
+  }, [state]);
+
+  const replaceCategoryPaint = (oldCategories, newColors) => {
+    const newLegend = oldCategories.legend.map((row, i) => {
+      return { ...row, color: toHex(newColors[i]) };
+    });
+
+    const newPaint = oldCategories.paint.map((row, i) => {
+      if (i < 3 || i === oldCategories.paint.length - 1) {
+        return row;
+      } else if (i % 2 === 1) {
+        return toHex(newColors[((i + 1) / 2 - 2) % newColors.length]);
+      } else {
+        return row;
+      }
+    });
+    return { paint: newPaint, legend: newLegend };
+  };
 
   // console.log('value', value, path)
   return (
@@ -528,9 +550,13 @@ function CategoricalColorControl({path, params={}}) {
                     <div className='w-4 h-4' />
                     <div
                       className = {`flex-1 flex w-full p-2`}
-                      onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors[colorKey])
-                      })}
+                      onClick={() => {
+                        setState(draft => {
+                          const newCategories = replaceCategoryPaint(categories, colors[colorKey]);
+                          set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors[colorKey]);
+                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, newCategories);
+                        });
+                      }}
                     >
                       {colors[colorKey].map((d,i) => <div key={i} className='w-4 h-4' style={{backgroundColor: d}} />)}
                     </div>
