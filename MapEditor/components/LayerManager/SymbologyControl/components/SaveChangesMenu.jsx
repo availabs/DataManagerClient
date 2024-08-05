@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useMemo } from 'react'
+import { useContext, useState, useRef, useMemo, useEffect } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
 import { Button } from "~/modules/avl-components/src";
@@ -7,7 +7,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import { Modal } from '../'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
 
 export function SaveChangesMenu({ button, className}) {
@@ -55,16 +54,16 @@ function SaveChangesModal ({ open, setOpen })  {
     return symbologies.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
-  const initialSaveAsName = useMemo(() => {
-    return generateDefaultName(state?.name)
-  }, [state.name]);
-
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
     action: null,
-    name: initialSaveAsName
+    name: generateDefaultName(state?.name)
   };
 
   const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
+
+  useEffect(() => {
+    setModalState({...modalState, name: generateDefaultName(state?.name)})
+  }, [state.name])
 
   async function updateData() {
     await falcor.set({
