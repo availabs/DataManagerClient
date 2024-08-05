@@ -87,6 +87,17 @@ const MapEditor = () => {
     initialSymbology = dbSymbology;
   }
 
+  // Sets an initial `activeLayer`
+  if (
+    !!initialSymbology?.symbology?.layers &&
+    Object.keys(initialSymbology?.symbology?.layers).length > 0 &&
+    initialSymbology?.symbology?.activeLayer === ""
+  ) {
+    initialSymbology.symbology.activeLayer = Object.values(
+      initialSymbology?.symbology?.layers
+    ).find((layer) => layer.order === 0)?.id;
+  }
+
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
