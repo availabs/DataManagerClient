@@ -764,7 +764,7 @@ function ChoroplethControl({path, params={}}) {
 export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
     <>
-      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
+      <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center ml-4'>
           Add Column
       </div>
       <div className="flex-1 flex items-center mx-4">

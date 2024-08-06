@@ -375,7 +375,7 @@ const HoverComp = ({ data, layer }) => {
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
-      {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
+      {Object.keys(attrInfo).length === 0 && attributes.length !== 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .sort((a,b) =>{

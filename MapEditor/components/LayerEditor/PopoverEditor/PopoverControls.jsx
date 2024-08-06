@@ -3,7 +3,7 @@ import { SymbologyContext } from "../../../";
 import { DamaContext } from "../../../../store"
 
 import { Close } from '../../icons'
-import { DndList } from '~/modules/avl-components/src'
+import { DndList, Button } from '~/modules/avl-components/src'
 
 import {AddColumnSelectControl} from "../Controls"
 import get from 'lodash/get'
@@ -20,8 +20,7 @@ export function ColumnSelectControl({path, params={}}) {
   const selectedColumns = useMemo(() => {
     return get(
       state,
-      `symbology.layers[${state.symbology.activeLayer}].${path}`,
-      []
+      `symbology.layers[${state.symbology.activeLayer}].${path}`
     )
   }, [state, path, params]);
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
@@ -56,7 +55,7 @@ export function ColumnSelectControl({path, params={}}) {
   );
 
   useEffect(() => {
-    if(selectedColumns.length === 0) {
+    if(selectedColumns === undefined) {
       setState((draft) => {
         set(
           draft,
@@ -110,6 +109,71 @@ export function ColumnSelectControl({path, params={}}) {
 
   return (
     <div className='flex w-full flex-wrap'>
+      <div className='flex w-full flex-wrap my-2'>
+        <AddColumnSelectControl
+          setState={(newColumn) => {
+            setState((draft) => {
+              if (newColumn !== "") {
+                const newAttr = attributes.find(attr => attr.name === newColumn);
+                set(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                  selectedColumns
+                    ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                    : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                );
+              }
+            });
+          }}
+          availableColumnNames = { 
+            availableColumnNames.map(colName => {
+              const newAttr = attributes.find(attr => attr.name === colName);
+              return { value: colName, label: newAttr?.display_name || colName };
+            }) 
+          }
+        />
+      </div>
+      <div className='flex w-full flex-wrap my-2 mx-4 justify-around'>
+        <Button
+          themeOptions={{ size: "xs", color: 'primary' }}
+          className={availableColumnNames?.length === 0 ? "disabled:opacity-75 pointer-events-none	" : " "}
+          disabled={availableColumnNames?.length === 0}
+          onClick={() => {
+            setState(draft => {
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                attributes
+                  .filter((d) => !["wkb_geometry"].includes(d.name))
+                  .map((attr) => ({
+                    column_name: attr.name,
+                    display_name: attr?.display_name || attr.name,
+                  }))
+              );
+            })
+
+          }}
+        >
+          Add All Columns
+        </Button>
+        <Button
+          themeOptions={{ size: "xs", color: 'danger' }}
+          className={selectedColumnNames?.length === 0 ? "disabled:opacity-75 pointer-events-none	bgDanger" : " bgDanger"}
+          disabled={selectedColumnNames?.length === 0}
+          onClick={() => {
+            setState(draft => {
+              set(
+                draft,
+                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                []
+              );
+            })
+
+          }}
+        >
+          Remove All Columns
+        </Button>
+      </div>
       <ExistingColumnList
         selectedColumns={selectedColumns}
         sampleData={sampleData}
@@ -151,28 +215,6 @@ export function ColumnSelectControl({path, params={}}) {
             );
           })
         }}
-      />
-      <AddColumnSelectControl
-        setState={(newColumn) => {
-          setState((draft) => {
-            if (newColumn !== "") {
-              const newAttr = attributes.find(attr => attr.name === newColumn);
-              set(
-                draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                selectedColumns
-                  ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-                  : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-              );
-            }
-          });
-        }}
-        availableColumnNames = { 
-          availableColumnNames.map(colName => {
-            const newAttr = attributes.find(attr => attr.name === colName);
-            return { value: colName, label: newAttr?.display_name || colName };
-          }) 
-        }
       />
     </div>
   );
