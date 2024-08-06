@@ -146,8 +146,12 @@ function SaveChangesModal ({ open, setOpen })  {
     ) || state?.name !== dbSymbology?.name;
   }, [state, dbSymbology]);
 
-  const modalButtonType = modalState.action === 'discard' ? 'danger' : 'primary';
-  const modalButtonClassName = !modalState.action ? "disabled:opacity-75 " : " ";
+  const modalButtonType = !modalState.action
+    ? "white"
+    : modalState.action === "discard"
+    ? "danger"
+    : "primary";
+  const modalButtonClassName = !modalState.action ? "disabled:opacity-75 pointer-events-none	" : " ";
 
   return (
     <Modal
@@ -245,11 +249,11 @@ function SaveChangesModal ({ open, setOpen })  {
         <div className="px-1">
           <Button
             themeOptions={{ size: "sm", color: modalButtonType }}
-            className={modalButtonClassName + " capitalize"}
+            className={modalButtonClassName}
             disabled={!modalState.action}
             onClick={onSubmit}
           >
-            {modalState.action} changes
+            {SAVE_CHANGES_BUTTON_LABEL[modalState.action] ?? 'Save ...'}
           </Button>
         </div>
         <div className="px-1">
@@ -267,4 +271,10 @@ function SaveChangesModal ({ open, setOpen })  {
     </Modal>
   )
 
+}
+
+const SAVE_CHANGES_BUTTON_LABEL = {
+  'save': "Save Changes",
+  'saveas': "Save and Open",
+  'discard': "Discard Changes"
 }
