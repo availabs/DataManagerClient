@@ -95,14 +95,10 @@ const ViewLayerRender = ({
       }
     }
 
-    // -------------------------------
-    // Reorder Layers
-    // to do: STILL BUGGY
-    // -------------------------------
-    if(layerProps?.order < (prevLayerProps?.order || -1)) {
+    if(prevLayerProps?.order !== undefined && layerProps?.order < prevLayerProps?.order) {
       let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {
-        if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+        if(maplibreMap.getLayer(l?.id)){
           maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
         }
       })
