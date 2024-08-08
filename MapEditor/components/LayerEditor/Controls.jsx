@@ -179,7 +179,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             legend.pop();
           }
         }
-        if(paint && !isEqual(paint, paintValue)) {
+        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
           setState(draft => {
             set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
             set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
