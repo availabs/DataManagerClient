@@ -377,7 +377,7 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
       "options",
       options,
       "databyIndex",
-      { from: 0, to: 200 },
+      { from: 0, to: 500 },
       [activeColumnName, "count(1)::int as count"],
     ]);
   }, [falcor, pgEnv, viewId, activeColumnName]);
