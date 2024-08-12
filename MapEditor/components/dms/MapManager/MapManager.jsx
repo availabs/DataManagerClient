@@ -6,7 +6,8 @@ import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus} from
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
 // import LegendPanel from './LegendPanel'
-
+import cloneDeep from 'lodash/cloneDeep'
+import { getAttributes } from '~/pages/DataManager/Collection/attributes'
 const typeIcons = {
   'fill': Fill,
   'circle': Circle,
@@ -81,7 +82,7 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 
 
 function SymbologyRow ({tabIndex, row, rowIndex}) {
-  const { state, setState  } = React.useContext(MapContext);
+  const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
   const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row])
   const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {}),[symbology])
@@ -103,6 +104,12 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     })
   }, [state, setState]);
 
+
+  const symbologies = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
+
   const numRows = useMemo(() => {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
@@ -117,11 +124,11 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       /></div>
       <div 
         onClick={state.isEdit ? () => {}: toggleVisibility}
-        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 group-hover:truncate flex items-center flex-1'
+        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
       >
         { state.isEdit ? (
             <input
-              className="block w-[240px] flex flex-1 bg-transparent px-2 text-slate-800 placeholder:text-gray-400  focus:border-0"
+              className="block w-[240px] flex flex-1 bg-transparent text-slate-800 placeholder:text-gray-400  focus:border-0"
               value={symbology?.name}
               placeholder='Layer Name'
               type='text'
@@ -190,6 +197,33 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                       })
                     }}
                   >Remove</div>
+                )}
+              </Menu.Item>
+            </div>
+            <div className="px-1 py-1 ">
+              <Menu.Item >
+                {({ active }) => (
+                  <div 
+                    className={`${
+                      active ? 'bg-pink-50 ' : ''
+                    } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                    onClick={async () => {
+                      console.log("updating symbology for::", row.symbologyId);
+                      setState(draft => {
+                        let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
+                  
+                        Object.keys(newSymbology.symbology.layers).forEach(layerId => {
+                          newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
+                            const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
+                            newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
+                          })
+                        })
+                  
+                        draft.symbologies[''+row.symbologyId] = newSymbology;
+                        draft.symbologies[symbology.symbology_id].isVisible = visible;
+                      })
+                    }}
+                  >Update symbology</div>
                 )}
               </Menu.Item>
             </div>
