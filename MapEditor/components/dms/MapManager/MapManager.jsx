@@ -217,6 +217,11 @@ function TabPanel ({tabIndex, tab}) {
   const { state, setState } = React.useContext(MapContext);
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   const [addSymbologyModalState, setAddSymbologyModalState] = React.useState(INITIAL_NEW_MAP_MODAL_STATE);
+
+  const numTabs = useMemo(() => {
+    return state.tabs.length;
+  }, [state.tabs.length]);
+
   return (
     <div className='w-full'>
       {/* --- Header --- */}
@@ -269,6 +274,38 @@ function TabPanel ({tabIndex, tab}) {
                   )}
                 </Menu.Item>
               </div>
+              {tabIndex !== 0 && <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div 
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          arraymove(draft.tabs, tabIndex, tabIndex-1);
+                        })
+                      }}
+                    >Move section up</div>
+                  )}
+                </Menu.Item>
+              </div>}
+              {tabIndex !== numTabs-1 && <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div  
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          arraymove(draft.tabs, tabIndex, tabIndex+1);
+                        })
+                      }}
+                    >Move section down</div>
+                  )}
+                </Menu.Item>
+              </div>}
           </SymbologyMenu>
           <SymbologyMenu 
             button={
