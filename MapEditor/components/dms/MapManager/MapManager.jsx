@@ -117,11 +117,11 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       /></div>
       <div 
         onClick={state.isEdit ? () => {}: toggleVisibility}
-        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
+        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 group-hover:truncate flex items-center flex-1'
       >
         { state.isEdit ? (
             <input
-              className="block w-[220px] flex flex-1 bg-transparent px-2 text-slate-800 placeholder:text-gray-400  focus:border-0"
+              className="block w-[240px] flex flex-1 bg-transparent px-2 text-slate-800 placeholder:text-gray-400  focus:border-0"
               value={symbology?.name}
               placeholder='Layer Name'
               type='text'
