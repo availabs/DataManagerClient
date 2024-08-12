@@ -2,7 +2,7 @@ import React, { useContext, useMemo, Fragment, useRef} from 'react'
 import { MapContext } from '../MapComponent'
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown, Plus} from '../../icons'
+import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus} from '../../icons'
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
 // import LegendPanel from './LegendPanel'
@@ -46,6 +46,12 @@ let iconList = [
   'fad fa-layer-group',
   'fad fa-tachometer-fastest',
 ]
+
+function arraymove(arr, fromIndex, toIndex) {
+  var element = arr[fromIndex];
+  arr.splice(fromIndex, 1);
+  arr.splice(toIndex, 0, element);
+}
 
 
 function SymbologyMenu({button, location='left-0', width='w-36', children}) {
@@ -97,6 +103,10 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     })
   }, [state, setState]);
 
+  const numRows = useMemo(() => {
+    return state.tabs[tabIndex].rows.length;
+  }, [state.tabs[tabIndex].length]);
+
   return (
     <div className={`w-full  px-2 flex border-white/85 border hover:border-pink-500 group items-center`}>
       <div className='pr-2 flex items-center'><input 
@@ -132,18 +142,41 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             symbology?.name || ' no name'
         }
       </div>
+      {state.isEdit &&
+        <>
+          <div
+            className={`${rowIndex === 0 ? 'pointer-events-none' : ''}`}
+            onClick={ () => {
+              setState(draft => {
+                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex-1);
+              })
+            }}
+          >
+            <CaretUpSolid
+              className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+              size={20}
+            />
+          </div>
+          <div
+            className={`${rowIndex === numRows-1 ? 'pointer-events-none' : ''}`}
+            onClick={() => {
+              setState(draft => {
+                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex+1);
+              })
+            }}
+          >
+            <CaretDownSolid
+              className={`pb-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+              size={20}
+            />
+          </div>
+        </>
+      }
       {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
         <SymbologyMenu 
           button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
         >
           <div className="px-1 py-1 ">
-              {/*<Menu.Item className='cursor-pointer'>
-                {({ active }) => (
-                  <div className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}>Zoom to Fit</div>
-                )}
-              </Menu.Item>*/}
               <Menu.Item >
                 {({ active }) => (
                   <div 
@@ -162,27 +195,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             </div>
         </SymbologyMenu>
       </div>)}
-      {/*<div onClick={() => 
-        setState(draft => {
-          draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
-          Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
-            draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
-                let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
-                let update = val === 'visible' ? 'none' : 'visible'
-                draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
-            })
-          })
-        })}
-      >
-        {visible ? 
-          <Eye 
-            className={`fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          /> : 
-          <EyeClosed 
-            className={`fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          />
-        }
-      </div>*/}
     </div>
   )
 }
