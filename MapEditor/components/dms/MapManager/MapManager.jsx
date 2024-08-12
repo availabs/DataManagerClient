@@ -404,6 +404,7 @@ function MapManager () {
               state.isEdit && (
               <>
                 <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
+                  title="Set initial viewport"
                   onClick={() => {
                     setState(draft => {
                       draft.setInitialBounds = true;
