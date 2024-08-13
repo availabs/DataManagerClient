@@ -155,7 +155,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
-        {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
+        {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div 
           onClick={toggleSymbology}
           className='text-sm text-slate-600 font-medium truncate flex-1'

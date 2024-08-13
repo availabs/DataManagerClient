@@ -91,7 +91,9 @@ const MapEditor = () => {
   if (
     !!initialSymbology?.symbology?.layers &&
     Object.keys(initialSymbology?.symbology?.layers).length > 0 &&
-    initialSymbology?.symbology?.activeLayer === ""
+    (initialSymbology?.symbology?.activeLayer === "" || 
+      !initialSymbology?.symbology.layers[initialSymbology?.symbology?.activeLayer]
+    ) 
   ) {
     initialSymbology.symbology.activeLayer = Object.values(
       initialSymbology?.symbology?.layers

@@ -389,7 +389,7 @@ const HoverComp = ({ data, layer }) => {
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
-            return <></>;
+            return <span key={i}></span>;
           }
           else {
             return (
