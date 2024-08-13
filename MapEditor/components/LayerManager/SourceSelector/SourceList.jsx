@@ -36,7 +36,8 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
   const sourceViews = useMemo(() => {
     return Object.values(
       get(falcorCache,["dama", pgEnv, "sources", "byId", source.source_id, "views", "byIndex"], {}
-    )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes)).sort((a,b) => new Date(b?._modified_timestamp) - new Date(a?._modified_timestamp))
+    )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes))
+    .sort((a,b) => new Date(b?._created_timestamp) - new Date(a?._created_timestamp));
   }, [falcorCache, source.source_id])
 
   return (
@@ -105,12 +106,27 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
         </div>      
       </div>
       {
-        isActiveSource && <div className='bg-gray-200 shadow'>
+        isActiveSource && <>
+          <div className='bg-gray-200 shadow grid grid-cols-10 '>
+            <div className="border-bottom border-black border-b-2 pl-4 col-span-6">Name</div>
+            <div className="border-bottom border-black border-b-2 pl-[7px] col-span-2">Date uploaded</div>
+            <div className="border-bottom border-black border-b-2 pl-[3px] col-span-2">Last modified</div>
+          </div>
           {
-            sourceViews.map(view => {
-              const isActiveView = activeViewId === view.view_id
+            sourceViews.map((view, i) => {
+              const isActiveView = activeViewId === view.view_id;
+              const isDarkRow = i % 2 == 0;
+
+              const rowColorClass = isActiveView
+                ? "bg-gray-300 hover:bg-gray-400"
+                : isDarkRow
+                ? "bg-gray-200 hover:bg-gray-300"
+                : "bg-gray-100 hover:bg-gray-200";
+
               return (
                 <div
+                  key={`sourceview_row_${view.view_id}`}
+                  className={`${rowColorClass} px-4  shadow grid grid-cols-10 gap-4`}
                   onClick={() => {
                     if (!isActiveView) {
                       setSource({ ...selectedSource, viewId: view.view_id });
@@ -118,18 +134,26 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
                       setSource({ ...selectedSource, viewId: undefined });
                     }
                   }}
-                  className={`flex items-center ${isActiveView ? 'bg-gray-300 hover:bg-gray-400' : 'hover:bg-gray-300'} px-2`}
-                  key={view.view_id}
                 >
-                  <div className='mx-2'>
-                    {view.version ?? view.view_id}
+                  <div
+                    className="col-span-6"
+                  >
+                    <div>
+                      {view.version ?? view.view_id}
+                    </div>
                   </div>
-                  {isActiveView && <CheckCircleIcon className='ml-2 text-green-700 h-4 w-4'/>}
+                  <div className="flex items-center col-span-2">
+                    {new Date(view._created_timestamp).toLocaleDateString()}
+                  </div>
+                  <div className="flex items-center col-span-2">
+                    {new Date(view._modified_timestamp).toLocaleDateString()}
+                    {isActiveView && <CheckCircleIcon className='ml-2 text-green-700 h-5 w-5'/>}
+                  </div>
                 </div>
               )
             })
           }
-        </div>
+        </>
       }
     </div>
 
