@@ -21,7 +21,6 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     async function fetchData() {
 
       const resp = await falcor.get(lengthPath);
-      console.log('get sources', source.source_id)
       await falcor.get([
         "dama", pgEnv, "sources", "byId",
         source.source_id, "views", "byIndex",
