@@ -9,18 +9,30 @@ import SourceCategories from "./SourceCategories"
 import Metadata from './Metadata/basic.jsx'
 import {RenderLexical, RenderTextArea, RenderTextBox} from "./Metadata/components/Edit.jsx";
 import {dmsDataTypes} from "~/modules/dms/src"
+import {isJson} from "../../utils/macros.jsx";
 
-const Edit = ({
-                  startValue, attr, sourceId, type = 'text', cancel = () => {}
-              }) => {
-    const [value, setValue] = useState(startValue)
+export const Edit = ({
+                         metadata, setMetadata,
+                         col,
+                         startValue,
+                         attr,
+                         sourceId,
+                         type = 'text',
+                         setEditing = () => {
+                         },
+                         cancel = () => {
+                         }
+                     }) => {
+    const [value, setValue] = useState(startValue && isJson(startValue) ? JSON.parse(startValue) : startValue)
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
+    const Lexical = dmsDataTypes.lexical.EditComp;
 
     useEffect(() => {
         setValue(startValue)
     }, [startValue])
 
-    const save = (value) => {
+    const save = () => {
+        console.log('saving', value)
         if (sourceId) {
             falcor.set({
                 paths: [
@@ -32,7 +44,7 @@ const Edit = ({
                             sources: {
                                 byId: {
                                     [sourceId]: {
-                                        attributes: {[attr]: value}
+                                        attributes: {[attr]: type === 'lexical' ? JSON.stringify(value) : value}
                                     }
                                 }
                             }
@@ -44,14 +56,12 @@ const Edit = ({
             })
         }
     }
-    console.log('overview edit', type, value, startValue)
-    const Lexical = dmsDataTypes.lexical.EditComp;
-    return (
-        type === 'textarea' ?  <RenderTextArea value={value} setValue={setValue} save={save} cancel={cancel}/> :
-            type === 'lexical' ?
-                <RenderLexical Comp={Lexical} value={startValue} setValue={setValue} save={save} cancel={cancel} /> :
-                <RenderTextBox value={value} setValue={setValue} save={save} cancel={cancel}/>
-    )
+
+    return type === 'textarea' ?
+        <RenderTextArea value={value} setValue={setValue} save={save} cancel={cancel}/> :
+        type === 'lexical' ?
+            <RenderLexical Comp={Lexical} value={value} setValue={setValue} save={save} cancel={cancel} /> :
+            <RenderTextBox value={value} setValue={setValue} save={save} cancel={cancel}/>
 }
 
 const RenderPencil = ({user, editing, setEditing, attr}) => {
@@ -65,7 +75,7 @@ const RenderPencil = ({user, editing, setEditing, attr}) => {
     )
 }
 
-const makeLexicalFormat = value => value?.root?.children ? value : {
+export const makeLexicalFormat = value => (isJson(value) ? JSON.parse(value) : value)?.root?.children ? value : {
         root: {
             "children": [
                 {
@@ -123,8 +133,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     }
     const numCols = get(source, ["metadata", "columns"], get(source, "metadata", []))?.length;
 
-    const descValue = makeLexicalFormat(source.description);
-
+    const descValue = source.description // makeLexicalFormat(source.description);
     return (
         <div className='p-4'>
             <div className="flex flex-col md:flex-row">
@@ -161,12 +170,11 @@ const OverviewEdit = ({source, views, activeViewId}) => {
                                         /> :
                                     <div className='pr-8'>
                                         {
-                                            source.description ?
-                                            <Lexical value={descValue}/> :
+                                            source.description ? <Lexical value={makeLexicalFormat(descValue)}/> :
                                                 <div className={'min-h-10'}>No Description</div>
-                                           }
+                                        }
                                     </div>
-                                    }
+                                }
                             </div>
                         </div>
                         <RenderPencil attr={'description'} user={user} editing={editing} setEditing={setEditing}/>

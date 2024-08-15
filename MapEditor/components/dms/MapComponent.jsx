@@ -28,12 +28,15 @@ const getData = async () => {
 const Edit = ({value, onChange, size}) => {
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
+    console.log('pg env MapContext ', pgEnv)
     const mounted = useRef(false);
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || {},
-        isEdit: true
+        isEdit: true,
+        setInitialBounds: cachedData.setInitialBounds || false,
+        initialBounds: cachedData.initialBounds || null
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -118,19 +121,21 @@ const Edit = ({value, onChange, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
-  
-
+    const { center, zoom } = state.initialBounds ? state.initialBounds : {
+        center: [-75.17, 42.85],
+        zoom: 6.6
+    }
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
+            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 65px)'}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-75.17, 42.85],
-                    zoom: 6.6,
+                    center: center,
+                    zoom: zoom,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}
@@ -161,7 +166,8 @@ const View = ({value, size}) => {
     //console.log('cachedData', cachedData, value)
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
-        symbologies: cachedData.symbologies || [],
+        symbologies: cachedData.symbologies || {},
+        initialBounds: cachedData.initialBounds || null
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -226,7 +232,7 @@ const View = ({value, size}) => {
             }
         }
         updateLayers()
-    }, [state.symbologies])
+    }, [state?.symbologies])
 
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
@@ -239,6 +245,11 @@ const View = ({value, size}) => {
     -73.77114629819935,
           42.653137397916566
     */
+        
+    const { center, zoom } = state.initialBounds ? state.initialBounds : {
+        center: [-75.17, 42.85],
+        zoom: 6.6
+    }
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
             <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
@@ -248,8 +259,8 @@ const View = ({value, size}) => {
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-75.17, 42.85],
-                    zoom: 6.6,
+                    center: center,
+                    zoom: zoom,
                     protocols: [PMTilesProtocol],
                     styles: defaultStyles
                   }}

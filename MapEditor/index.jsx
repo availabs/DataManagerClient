@@ -20,6 +20,7 @@ import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 export const SymbologyContext = createContext(undefined);
 
+export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
 const MapEditor = () => {
   const mounted = useRef(false);
@@ -56,12 +57,48 @@ const MapEditor = () => {
     }
 
     fetchAllSymbologies();
-  }, []);
+  }, [symbologyId]);
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]))
+      .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
+
+  const dbSymbology = useMemo(() => {
+    return symbologies?.find(s => +s.symbology_id === +symbologyId);
+  }, [symbologies, symbologyId]);
+
+  let initialSymbology = {
+    name: '',
+    description: '',
+    symbology: {
+      layers: {},
+    }
+  };
+
+  const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
+  const rawLocalSymb = window?.localStorage?.getItem(symbologyLocalStorageKey);
+  const localStorageSymbology = rawLocalSymb !== "undefined" ? JSON.parse(rawLocalSymb) : null;
+  if(localStorageSymbology){
+    initialSymbology = localStorageSymbology;
+  }
+  else if (dbSymbology) {
+    initialSymbology = dbSymbology;
+  }
+
+  // Sets an initial `activeLayer`
+  if (
+    !!initialSymbology?.symbology?.layers &&
+    Object.keys(initialSymbology?.symbology?.layers).length > 0 &&
+    (initialSymbology?.symbology?.activeLayer === "" || 
+      !initialSymbology?.symbology.layers[initialSymbology?.symbology?.activeLayer]
+    ) 
+  ) {
+    initialSymbology.symbology.activeLayer = Object.values(
+      initialSymbology?.symbology?.layers
+    ).find((layer) => layer.order === 0)?.id;
+  }
 
   // --------------------------------------------------
   // Symbology Object
@@ -69,82 +106,40 @@ const MapEditor = () => {
   // once loaded this is mutable here 
   // and is written to db on change
   // ---------------------------------------------------
-  const [state,setState] = useImmer(
-    symbologies?.find(s => +s.symbology_id === +symbologyId) ||
-    {
-      name: '',
-      // collection_id: collection.collection_id,
-      description: '',
-      // symbology: {
-      //   layers: {},
-      // }
-    }
-  )
+  const [state,setState] = useImmer(initialSymbology)
 
+  // Resets state if URL param does not match symbology currently in state
   useEffect(() => {
     // console.log('load', +symbologyId, symbologyId, symbologies)
     if (!!state.symbology_id && (+symbologyId !== +state.symbology_id)) {
-      const currentData = symbologies.find(s => +s.symbology_id === +symbologyId);
-      setState(currentData);
+      setState(initialSymbology);
     }
-  },[symbologyId, symbologies, falcorCache]);
+  },[initialSymbology]);
 
+  // Updates localStorage whenever state changes 
   useEffect(() => {
-    async function updateData() {
-      //console.time('update symbology')
-      //console.log('updating symbology to:', state.symbology)
-      let resp = await falcor.set({
-        paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'symbology']],
-        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
-          [+symbologyId]: { attributes : { symbology: JSON.stringify(state.symbology) }}
-        }}}}}
-      })
-      //console.timeEnd('update symbology')
-      
-      //console.log('resp',resp)
+    function updateData() {
+      if(window.localStorage) { 
+        window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+      }
     }
 
-    async function updateName() {
-      let resp = await falcor.set({
-        paths: [['dama', pgEnv, 'symbologies', 'byId', +symbologyId, 'attributes', 'name']],
-        jsonGraph: { dama: { [pgEnv]: { symbologies: { byId: { 
-          [+symbologyId]: { attributes : { name: state.name }}
-        }}}}}
-      })
-    }
-
-    let currentData = symbologies.find(s => +s.symbology_id === +symbologyId)
-    
-    // console.log('check update', 
-    //   Object.values(state?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`), 
-    //   Object.values(currentData?.symbology?.layers || {}).map(l => `${l?.name} ${l?.order}`),
-    //   state?.symbology?.layers,
-    //   currentData?.symbology?.layers,
-    //   symbologies.find(s => +s.symbology_id === +symbologyId),
-    //   symbologyId,      
-    //   symbologies,
-    //   !isEqual(state?.symbology, currentData?.symbology), 
-    //   // state?.symbology?.layers && currentData?.symbology?.layers && !isEqual(state?.symbology, currentData?.symbology)
-    // )
-    
-    if(state?.symbology?.layers && currentData && !isEqual(state?.symbology, currentData?.symbology)) {
+    if(state?.symbology?.layers && !isEqual(state, initialSymbology)) {
       updateData()
-      //throttle(updateData,500)
     }
-    if(state?.name && state?.name !== currentData.name) {
-      updateName()
-    }
-  },[state.symbology, state.name])
-  // console.log('render', state, symbologyId, symbologies.find(s => +s.symbology_id === +symbologyId)) 
+  },[state?.symbology,  initialSymbology]);
+
+
+  // If we don't have local storage data for this symbology, use data from API
   useEffect(() => {
     // -------------------
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    if(symbologies.find(s => +s.symbology_id === +symbologyId)) {
-      setState(symbologies.find(s => +s.symbology_id === +symbologyId))
+    if(!localStorageSymbology && dbSymbology) {
+      setState(dbSymbology)
     }
-  },[symbologies.length, symbologyId])
+  },[symbologies.length, dbSymbology])
 
   //--------------------------
   // -- Map Layers are the instantation
@@ -181,21 +176,22 @@ const MapEditor = () => {
                 ...oldLayers, 
                 // add new layers
                 ...newLayers
-            ].sort((a,b) => state.symbology.layers[b.id].order - state.symbology.layers[a.id].order)
-            // console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
+            ]
+            //.filter(d => state.symbology.layers[d.id])
+            .sort((a,b) => state.symbology.layers[b?.id]?.order - state.symbology.layers[a?.id]?.order)
+            //console.log('update layers old:', oldLayers, 'new:', newLayers, 'out', out)
             return out
           })
       }
     }
     updateLayers()
-  }, [state?.symbology?.layers])
+  }, [state?.symbology?.layers, state?.symbology?.zoomToFit])
   
 
-  const layerProps = useMemo(() =>  state?.symbology?.layers || {}, [state?.symbology?.layers]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
   // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
 	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
-
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

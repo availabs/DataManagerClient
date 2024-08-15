@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useContext, useRef } from "react"
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
@@ -6,6 +6,7 @@ import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../store"
+import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
 
 const ViewLayerRender = ({
@@ -14,7 +15,8 @@ const ViewLayerRender = ({
   layerProps,
   allLayerProps
 }) => {
-  
+  const mctx = useContext(MapContext);
+  const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
@@ -28,21 +30,34 @@ const ViewLayerRender = ({
             maplibreMap.removeLayer(l.id)
           }
         } catch (e) {
-          console.log('catch', e)
+          //console.log('catch', e)
         }
       })
     }
   }, [])
-  
+
+  const mapCenter = maplibreMap.getCenter();
+  const mapZoom = maplibreMap.getZoom();
+
+  useEffect(() => {
+    if(state.setInitialBounds) {
+      setState(draft => {
+        draft.setInitialBounds = false;
+        const newBounds = {
+          center: mapCenter,
+          zoom: mapZoom
+        };
+        if(!isEqual(state.initialBounds, newBounds)){
+          draft.initialBounds = newBounds;
+        }
+      })
+    }
+  }, [maplibreMap, state.setInitialBounds]);
+
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
-  
   // - On layerProps change
   useEffect(() => {
-    // console.log('update layer props', layerProps)
-    
-
-   
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
@@ -69,7 +84,7 @@ const ViewLayerRender = ({
           console.log('cant add',maplibreMap.getSource(newSource.id))
         }
 
-        let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
+        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
             if(maplibreMap.getLayer(beneathLayer?.id)){
               maplibreMap.addLayer(l, beneathLayer?.id) 
@@ -80,14 +95,10 @@ const ViewLayerRender = ({
       }
     }
 
-    // -------------------------------
-    // Reorder Layers
-    // to do: STILL BUGGY
-    // -------------------------------
-    if(layerProps?.order < (prevLayerProps?.order || -1)) {
-      let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
+    if(prevLayerProps?.order !== undefined && layerProps?.order < prevLayerProps?.order) {
+      let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {
-        if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+        if(maplibreMap.getLayer(l?.id)){
           maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
         }
       })
@@ -173,6 +184,14 @@ const ViewLayerRender = ({
       }
     });
   }, [layerProps]);
+
+  useEffect(() => {
+    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
+      maplibreMap.fitBounds(allLayerProps.zoomToFit, {
+        duration: 400
+      });
+    }
+  }, [maplibreMap, allLayerProps?.zoomToFit]);
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {
@@ -287,6 +306,8 @@ const HoverComp = ({ data, layer }) => {
     
   }, [source_id, hoverColumns]);
 
+
+
   // useEffect(() => {
   //   if(view_id) {
   //     falcor.get([
@@ -354,7 +375,7 @@ const HoverComp = ({ data, layer }) => {
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
-      {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
+      {Object.keys(attrInfo).length === 0 && attributes.length !== 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .sort((a,b) =>{
@@ -368,7 +389,7 @@ const HoverComp = ({ data, layer }) => {
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
-            return <></>;
+            return <span key={i}></span>;
           }
           else {
             return (

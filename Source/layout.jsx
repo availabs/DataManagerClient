@@ -11,9 +11,6 @@ import get from 'lodash/get'
 
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
-  const { baseUrl } = useContext(DamaContext)
- 
-
   return (
     <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full flex flex-col`}>
       {hideBreadcrumbs ? '' :  <div className=''>

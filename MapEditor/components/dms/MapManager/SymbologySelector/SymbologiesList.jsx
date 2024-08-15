@@ -1,12 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import SourcesLayout from "../../../../Source/layout";
-import { DamaContext } from "../../../../store"
+import { useEffect, useState, useMemo, useContext } from 'react'
+import SourcesLayout from "../../../../../Source/layout";
 import get from 'lodash/get'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
-
-import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCategories";
-import { SymbologyContext } from '~/pages/DataManager/MapEditor';
-
+import { CMSContext } from '~/modules/dms/src'
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;
   const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []
@@ -74,11 +69,12 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
 
 
 
-export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) => {
-  const { falcorCache, pgEnv, baseUrl } = React.useContext(DamaContext);
-  const { symbologies } = React.useContext(SymbologyContext);
+export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId, symbologies}) => {
+  const cctx = useContext(CMSContext);
+  let { pgEnv='hazmit_dama', falcor, falcorCache } = cctx;
 
-  const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
+
+  const isListAll = window.location.pathname?.split('/')?.[0] === 'listall';
   const [layerSearch, setLayerSearch] = useState("");
   const [cat1, setCat1] = useState();
   const [cat2, setCat2] = useState();
@@ -108,12 +104,12 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
 
   const selectedSymbology = useMemo(() => {
     return symbologies.find(symb => symb.symbology_id === selectedSymbologyId) ?? {}
-  }, [pgEnv, falcorCache, selectedSymbologyId]);
+  }, [symbologies,pgEnv,  selectedSymbologyId]);
 
   const actionButtonClassName = 'bg-transparent hover:bg-blue-100 rounded-sm p-2 ml-0.5 border-2';
 
   return (
-    <SourcesLayout baseUrl={baseUrl} isListAll={isListAll} hideBreadcrumbs={true}>
+    <SourcesLayout isListAll={isListAll} hideBreadcrumbs={true}>
       <div className="py-4 flex flex-rows items-center">
         <input
             className="w-full text-lg p-2 border border-gray-300 "
@@ -138,38 +134,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
         </div>
       </div>
       <div className={'flex flex-row'}>
-        <div className={'w-1/4 flex flex-col space-y-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
-          <SourceCategories 
-            symbology={selectedSymbology}
-            editingCategories={!!selectedSymbologyId}
-            entityType={'symbologies'}
-          />
-          {(categories || [])
-              .filter(cat => cat !== sourceDataCat)
-              .sort((a,b) => a.localeCompare(b))
-              .map(cat => (
-              <div
-                  key={cat}
-                  className={`${cat1 === cat || cat2 === cat ? `bg-blue-100 hover:bg-blue-200` : `bg-white hover:bg-blue-50`}  hover:cursor-pointer p-2 rounded-md flex items-center`}
-                  onClick={() => {
-                    if (cat === cat1) {
-                      setCat1("")
-                    }
-                    else {
-                      setCat1(cat)
-                    }
-                  }}
-              >
-                <i className={'fa fa-category'} /> 
-                {cat}
-                <div className={'bg-blue-200 text-blue-600 text-xs w-5 h-5 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>
-                  {categoriesCount[cat]}
-                </div>
-              </div>
-          ))
-          }
-        </div>
-        <div className={'w-3/4 flex flex-col space-y-1.5 ml-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
+        <div className={'w-full flex flex-col space-y-1.5 ml-1.5 max-h-[65dvh] overflow-auto scrollbar-sm'}>
           {
             symbologies
                 .filter(source => {
@@ -209,7 +174,6 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId}) =
                     setCat1={setCat1}
                     key={i}
                     symbology={s}
-                    baseUrl={baseUrl}
                     selectedSymbologyId={selectedSymbologyId}
                     setSelectedSymbologyId={setSelectedSymbologyId}
                   />

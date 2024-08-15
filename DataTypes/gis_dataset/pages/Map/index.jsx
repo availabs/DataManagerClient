@@ -223,7 +223,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
 
   const mapData = useMemo(() => {
     let out = get(activeView,`metadata.tiles`,{sources:[], layers:[]})
-    out.sources.forEach(s => {
+    out?.sources?.forEach(s => {
       if(s?.source?.url) {
         s.source.url = s.source.url.replace('$HOST', TILEHOST)
         s.source.url += '?cols=ogc_fid'

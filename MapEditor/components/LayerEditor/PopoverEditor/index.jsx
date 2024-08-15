@@ -31,10 +31,6 @@ function PopoverEditor(props) {
             </StyledControl>
           </div>
         </div>
-
-        <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-          Attributes
-        </div>
         {activeLayer.hover && (
           <ColumnSelectControl
             path={`['hover-columns']`}
