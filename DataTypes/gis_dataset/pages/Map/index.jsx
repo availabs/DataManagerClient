@@ -287,7 +287,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         }
       }
 
-      console.log('sources', sources)
+      // console.log('sources', sources)
 
       if(sources?.[0]?.source?.tiles?.[0] && !sources[0].source.tiles[0].includes('?') ) {
         
