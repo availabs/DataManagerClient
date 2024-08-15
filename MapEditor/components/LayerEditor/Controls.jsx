@@ -762,10 +762,91 @@ function ChoroplethControl({path, params={}}) {
 }
 
 function InteractiveFilterControl({ path, params = {} }) {
-  return (<div className=" w-full items-center">
-    <div className="flex items-center">Hello World!!</div>
-    <div>More world</div>
-  </div>);
+  const { state, setState } = React.useContext(SymbologyContext);
+  let { value: interactiveFilters, selectedInteractiveFilterIndex, layerName } = useMemo(() => {
+    return {
+      value: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].${path}`,
+        []
+      ),
+      selectedInteractiveFilterIndex: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
+        []
+      ),
+      layerName: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['name']`,
+        ''
+      ),
+    };
+  }, [state]);
+
+  console.log("interactive filter control value::", interactiveFilters);
+  console.log("selectedInteractiveFilterIndex::", selectedInteractiveFilterIndex)
+  return (
+    <div className=" w-full items-center">
+      <Button
+        themeOptions={{ size: "xs", color: 'primary' }}
+        className={"col-span-2 capitalize mb-2"}
+        onClick={() => {
+          console.log("add new interactive filter")
+          setState(draft => {
+            const newInteractiveFilter = {
+              "label": `${layerName} simple`,
+              "layer-type": 'simple'
+            }
+
+            set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, [...interactiveFilters, newInteractiveFilter] )
+          })
+
+        }}
+      >
+        Add interactive filter
+      </Button>
+      {
+        interactiveFilters.map((iFilter,i) => {
+          return (
+            <div
+            key={`ifilter_row_${i}`}
+            className="group/title w-full text-sm grid grid-cols-12 items-center  mb-2"
+          >
+            <div
+              className="truncate col-span-1 flex justify-center items-center"
+            >
+              <input
+                type="radio"
+                checked={selectedInteractiveFilterIndex === i}
+                onChange={() => {
+                  setState(draft => {
+                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, i)
+                  })
+                }}
+              />
+            </div>  
+            <div className="truncate col-span-11">
+              <input
+                type="text"
+                className="w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                value={iFilter.label}
+                onChange={(e) => {
+                  console.log("renaming interactive filter row, row::", iFilter);
+                  setState(draft => {
+                    set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}[${i}]['label']`, e.target.value )
+                  })
+                  //renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
+                }}
+              />
+            </div>
+          </div>
+          )
+
+        })
+      }
+
+    </div>
+  );
 }
 
 

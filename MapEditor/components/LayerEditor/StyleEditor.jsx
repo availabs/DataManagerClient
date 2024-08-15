@@ -43,7 +43,6 @@ function StyleEditor (props) {
           let ControlWrapper = wrapperTypes[control.type] || wrapperTypes['inline'];
           return (
             <div className='flex flex-wrap' key={i}>
-              <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{control.label}</div>
                 <ControlWrapper
                   label={control.label}
                   controls={control.controls}

@@ -76,39 +76,45 @@ function PopoverControl ({values,title='',children}) {
   )
 }
 
-function SimpleControlWrapper ({controls}) {
+function SimpleControlWrapper ({label, controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   return (
-    <div className='flex-1 flex items-center'>
-      <StyledControl>
-        {controls
-          .map((c,i) => {
-            const Control = controlTypes[c.type] || controlTypes['simple'];
-            return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
-        })}
-      </StyledControl>
-    </div>
+    <>
+      <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className='flex-1 flex items-center'>
+        <StyledControl>
+          {controls
+            .map((c,i) => {
+              const Control = controlTypes[c.type] || controlTypes['simple'];
+              return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
+          })}
+        </StyledControl>
+      </div>
+    </>
   )
 }
 
-function FullWidthWrapper({ controls }) {
+function FullWidthWrapper({ label, controls }) {
   return (
-    <div className="flex-1 flex items-center basis-full">
-      <StyledControl>
-        {controls.map((c, i) => {
-          const Control = controlTypes[c.type] || controlTypes["simple"];
-          return (
-            <Control
-              key={i}
-              path={c.path}
-              datapath={c.datapath}
-              params={c.params}
-            />
-          );
-        })}
-      </StyledControl>
-    </div>
+    <>
+      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className="flex-1 flex items-center basis-full">
+       
+          {controls.map((c, i) => {
+            const Control = controlTypes[c.type] || controlTypes["simple"];
+            return (
+              <Control
+                key={i}
+                path={c.path}
+                datapath={c.datapath}
+                params={c.params}
+              />
+            );
+          })}
+
+      </div>
+    </>
   );
 }
 
@@ -127,17 +133,21 @@ function PopoverControlWrapper ({label, controls}) {
     })
   }, [state,controls])
   return (
-    <div className='flex-1 flex items-center'>
-      <PopoverControl
-        values={values}
-        title={label}
-      >
-        {controls.map((c,i) => {
-          const Control = controlTypes[c.type] || controlTypes['simple']
-          return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
-        })}
-      </PopoverControl>
-    </div>
+    <> 
+      <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className='flex-1 flex items-center'>
+        <PopoverControl
+          values={values}
+          title={label}
+        >
+          {controls.map((c,i) => {
+            const Control = controlTypes[c.type] || controlTypes['simple']
+            return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
+          })}
+        </PopoverControl>
+      </div>
+    </>
+   
   )
 }
 
