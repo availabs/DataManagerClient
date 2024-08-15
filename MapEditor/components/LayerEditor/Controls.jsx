@@ -98,7 +98,8 @@ export function SelectTypeControl({path, datapath, params={}}) {
     return  [
       {name:'Simple', value: 'simple'},
       hasCols ? {name:'Categories', value: 'categories'} : null,
-      hasNumber ? {name:'Color Range', value: 'choropleth'} : null
+      hasNumber ? {name:'Color Range', value: 'choropleth'} : null,
+      {name:'Interactive', value: 'interactive'}
     ].filter(d => d)
   },[metadata])
 
@@ -760,6 +761,13 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
+function InteractiveFilterControl({ path, params = {} }) {
+  return (<div className=" w-full items-center">
+    <div className="flex items-center">Hello World!!</div>
+    <div>More world</div>
+  </div>);
+}
+
 
 export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
@@ -799,6 +807,7 @@ export const controlTypes = {
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
   'choroplethControl':ChoroplethControl, 
+  'interactiveFilterControl': InteractiveFilterControl,
   'range': RangeControl,
   'simple': SimpleControl,
   'select': SelectControl,

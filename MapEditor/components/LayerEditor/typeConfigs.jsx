@@ -121,6 +121,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -141,8 +145,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -301,6 +323,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -321,8 +347,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -536,6 +580,10 @@ const typeConfigs = {
     {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -551,7 +599,21 @@ const typeConfigs = {
           }
         },
       ],
-    }
+    },
+    {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
   ]
 }
 

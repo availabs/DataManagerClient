@@ -80,16 +80,37 @@ function SimpleControlWrapper ({controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   return (
-    <StyledControl>
-      {controls
-        .map((c,i) => {
-          const Control = controlTypes[c.type] || controlTypes['simple']
-          return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
-      })}
-    </StyledControl>
+    <div className='flex-1 flex items-center'>
+      <StyledControl>
+        {controls
+          .map((c,i) => {
+            const Control = controlTypes[c.type] || controlTypes['simple'];
+            return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
+        })}
+      </StyledControl>
+    </div>
   )
 }
 
+function FullWidthWrapper({ controls }) {
+  return (
+    <div className="flex-1 flex items-center basis-full">
+      <StyledControl>
+        {controls.map((c, i) => {
+          const Control = controlTypes[c.type] || controlTypes["simple"];
+          return (
+            <Control
+              key={i}
+              path={c.path}
+              datapath={c.datapath}
+              params={c.params}
+            />
+          );
+        })}
+      </StyledControl>
+    </div>
+  );
+}
 
 function PopoverControlWrapper ({label, controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
@@ -106,19 +127,22 @@ function PopoverControlWrapper ({label, controls}) {
     })
   }, [state,controls])
   return (
-    <PopoverControl
-      values={values}
-      title={label}
-    >
-      {controls.map((c,i) => {
-        const Control = controlTypes[c.type] || controlTypes['simple']
-        return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
-      })}
-    </PopoverControl>
+    <div className='flex-1 flex items-center'>
+      <PopoverControl
+        values={values}
+        title={label}
+      >
+        {controls.map((c,i) => {
+          const Control = controlTypes[c.type] || controlTypes['simple']
+          return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
+        })}
+      </PopoverControl>
+    </div>
   )
 }
 
 export const wrapperTypes = {
   'popover': PopoverControlWrapper,
   'inline': SimpleControlWrapper,
+  'full-width': FullWidthWrapper
 }
