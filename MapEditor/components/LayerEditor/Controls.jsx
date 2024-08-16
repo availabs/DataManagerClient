@@ -203,11 +203,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
         })
       }
     }
-    if(value !== 'interactive'){
-      console.log("value of state before repaint::", state)
-      setPaint();
-    }
-
+    setPaint();
   }, [categories, value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
@@ -872,6 +868,7 @@ function InteractiveFilterControl({ path, params = {} }) {
       {
         interactiveFilters.map((iFilter,i) => {
           const isSelectedFilter = selectedInteractiveFilterIndex === i;
+          //TODO some small style changes -- if a certain filter is selected, the `hover` effect is not noticeable
           return (
             <div
               key={`ifilter_row_${i}`}
@@ -903,7 +900,7 @@ function InteractiveFilterControl({ path, params = {} }) {
                 />
               </div>
               <div
-                className="col-span-1 flex items-center cursor-pointer fill-black group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon p-0.5"
+                className="col-span-1 flex items-center cursor-pointer group-hover/title:fill-slate-700 hover:bg-slate-100 rounded group/icon p-0.5"
                 onClick={() => {
                   setState(draft => {
                     const oldInteractiveFilters = get(
@@ -917,7 +914,7 @@ function InteractiveFilterControl({ path, params = {} }) {
               >
                 <Close
                   size={20}
-                  className="m-0.5 cursor-pointer group-hover/icon:fill-slate-500 "
+                  className="m-0.5 cursor-pointer group-hover/icon:fill-slate-900 "
                 />
               </div>
             </div>
@@ -949,7 +946,7 @@ export const InteractiveFilterbuilder = () => {
   }, [state]);
   return (
     <>
-      Editing {interactiveFilters[selectedInteractiveFilterIndex]?.label}
+      Editing: <b>{interactiveFilters[selectedInteractiveFilterIndex]?.label}</b>
       <StyleEditor
         type={"interactive"}
         pathPrefix={`['interactive-filters'][${selectedInteractiveFilterIndex}]`}
