@@ -43,7 +43,7 @@ function ControlMenu({ button, children}) {
 export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  console.log('select control', {path, datapath, params})
+  //console.log('select control', {path, datapath, params})
 
   const pathBase =
     params?.version === "interactive"
@@ -243,14 +243,20 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
 function ColorControl({path,params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex'>
       <div className='flex items-center'>
         <input
           type='color' 
-          value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, '#ccc'))}
+          value={toHex(get(state, `${pathBase}.${path}`, '#ccc'))}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
       </div>
@@ -264,6 +270,11 @@ function RangeControl({path,params={}}) {
   const identity = (d) => d
   const f = params?.format || identity  
   
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <div className='flex w-full  items-center'>
       <div className='flex-1 flex w-full'>
@@ -273,16 +284,16 @@ function RangeControl({path,params={}}) {
           min={params.min || "0"}
           max={params.max || "1"}
           step={params.step || "0.01"}
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || "1")}
+          value={get(state, `${pathBase}].${path}`, params.default || "1")}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, +e.target.value)
+            set(draft, `${pathBase}].${path}`, +e.target.value)
           })}
         />
       </div>
       <div className='pl-2'>
         <input 
           className='w-14 px-2 py-1 bg-transparent'
-          value={`${f(get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || "1"))}${params.units ? params.units : ''}`} 
+          value={`${f(get(state, `${pathBase}].${path}`, params.default || "1"))}${params.units ? params.units : ''}`} 
           onChange={() => {}}
         />
       </div>
@@ -292,15 +303,21 @@ function RangeControl({path,params={}}) {
 
 function SimpleControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex'>
       <div className='flex items-center'>
         <input
           className='w-full'
           type='text' 
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params?.default ?? '#ccc')}
+          value={get(state, `${pathBase}.${path}`, params?.default ?? '#ccc')}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
       </div>
@@ -312,14 +329,19 @@ export function SelectControl({path, params={}}) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
   //console.log('select control', params)
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
         <select
           className='w-full py-2 bg-transparent'
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          value={get(state, `${pathBase}.${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
           {(params?.options || []).map((opt,i) => {
@@ -339,14 +361,19 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   const {layerType, viewId, sourceId} = useMemo(() => ({
-    layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
+    layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
   }),[state])
 
   const column = useMemo(() => {
-    return get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
+    return get(state, `${pathBase}.${path}`, null )
   },[state, path])
 
   useEffect(() => {
@@ -393,7 +420,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
            'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
       ], {})
       setState(draft => {
-        set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, data)
+        set(draft, `${pathBase}['category-data']`, data)
       })
     }
 
@@ -406,15 +433,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={column}
           onChange={(e) => setState(draft => {
-            let sourceTiles = get(state, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
+            let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
             
             if(sourceTiles !== 'no source tiles') {
-              set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+              set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, {});
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {});
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}['choroplethdata']`, {});
+            set(draft, `${pathBase}['categories']`, {});
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
           {(metadata || [])
@@ -439,10 +466,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
 function ColorRangeControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   
-  let rangeColorKey = get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`,colorbrewer.schemeGroups.sequential[0])
-  let numbins = get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9)
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let rangeColorKey = get(state, `${pathBase}['range-key']`,colorbrewer.schemeGroups.sequential[0])
+  let numbins = get(state, `${pathBase}['num-bins']`, 9)
   // console.log('select control', colorbrewer,rangeColorKey, numbins)
-  let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[rangeColorKey][numbins])
+  let value = get(state, `${pathBase}.${path}`, colorbrewer[rangeColorKey][numbins])
   
   // console.log('value', value, path, colorbrewer)
 
@@ -475,8 +507,8 @@ function ColorRangeControl({path, params={}}) {
                     <div
                       className = {`flex-1 flex w-full p-2`}
                       onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[colorKey][numbins])
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, colorKey)
+                        set(draft, `${pathBase}.${path}`, colorbrewer[colorKey][numbins])
+                        set(draft, `${pathBase}['range-key']`, colorKey)
                       })}
                     >
                       {colorbrewer[colorKey][numbins].map((d,i) => <div key={i} className='flex-1 h-4' style={{backgroundColor: d}} />)}
@@ -498,8 +530,8 @@ function ColorRangeControl({path, params={}}) {
                     <div
                       className = {`flex-1 flex w-full p-2`}
                       onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[colorKey][numbins])
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, colorKey)
+                        set(draft, `${pathBase}.${path}`, colorbrewer[colorKey][numbins])
+                        set(draft, `${pathBase}['range-key']`, colorKey)
                       })}
                     >
                       {colorbrewer[colorKey][numbins].map((d,i) => <div key={i} className='flex-1 h-4' style={{backgroundColor: d}} />)}
@@ -517,11 +549,17 @@ function ColorRangeControl({path, params={}}) {
 function CategoricalColorControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   // console.log('select control', params)
-  let colors = categoricalColors
+  let colors = categoricalColors;
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   let { value, categories } = useMemo(() => {
     return {
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors['cat1']),
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
+      value: get(state, `${pathBase}.${path}`, colors['cat1']),
+      categories: get(state, `${pathBase}['categories']`, {}),
     }
   }, [state]);
 
@@ -567,8 +605,8 @@ function CategoricalColorControl({path, params={}}) {
                       onClick={() => {
                         setState(draft => {
                           const newCategories = replaceCategoryPaint(categories, colors[colorKey]);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors[colorKey]);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, newCategories);
+                          set(draft, `${pathBase}.${path}`, colors[colorKey]);
+                          set(draft, `${pathBase}['categories']`, newCategories);
                         });
                       }}
                     >
@@ -595,15 +633,20 @@ function ChoroplethControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   let { numbins, method, colorKey, legenddata, showOther, choroplethdata, isLoadingColorbreaks } = useMemo(() => {
     return {
-      numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
-      colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, { breaks: [] }),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
-      isLoadingColorbreaks: get(state, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
+      numbins: get(state, `${pathBase}['num-bins']`, 9),
+      colorKey: get(state, `${pathBase}['range-key']`, 'seq1'),
+      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
+      legenddata: get(state, `${pathBase}['legend-data']`),
+      choroplethdata: get(state, `${pathBase}['choroplethdata']`, { breaks: [] }),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
+      isLoadingColorbreaks: get(state, `${pathBase}['is-loading-colorbreaks']`, false)
     }
   },[state])
 
@@ -646,7 +689,7 @@ function ChoroplethControl({path, params={}}) {
                         const minBreakValue = breaks[catIndex-1] + 1;
                         const newBreaks = [...breaks];
                         newBreaks[catIndex] = catIndex !== 0 ? Math.max(newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10), minBreakValue) : newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10);
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                        set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
                       })
                     }}
                   />
@@ -665,12 +708,12 @@ function ChoroplethControl({path, params={}}) {
                         if(catIndex !== categories.length-1){
                           const maxBreakValue = catIndex === categories.length-2 ? max - 1 : breaks[catIndex+2] - 1;
                           newBreaks[catIndex+1] = Math.min(newBreaks[catIndex+1] + roundToNearestTen(newBreaks[catIndex+1]/10), maxBreakValue);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                          set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
                         }
                         else {
                           //adjust max
                           const newMax = max + roundToNearestTen(max/10);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['max']`, newMax)
+                          set(draft, `${pathBase}['choroplethdata']['max']`, newMax)
                         }
                       })
                     }}
@@ -683,8 +726,6 @@ function ChoroplethControl({path, params={}}) {
     );
   });
   
-  
-  
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>
@@ -695,9 +736,9 @@ function ChoroplethControl({path, params={}}) {
               value={numbins}
               onChange={(e) => setState(draft => {
                 // console.log('SelectViewColumnControl set column path', path, e.target.value)
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-bins']`, e.target.value)
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['choroplethdata']`, {});
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['color-range']`, colorbrewer[colorKey][e.target.value])
+                set(draft, `${pathBase}.['num-bins']`, e.target.value)
+                set(draft, `${pathBase}.['choroplethdata']`, {});
+                set(draft, `${pathBase}.['color-range']`, colorbrewer[colorKey][e.target.value])
               })}
             >
               {(Object.keys(colorbrewer[colorKey]) || [])
@@ -716,8 +757,8 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={method}
               onChange={(e) => setState(draft => {
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['choroplethdata']`, {});
-                set(draft, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, e.target.value)
+                set(draft, `${pathBase}.['choroplethdata']`, {});
+                set(draft, `${pathBase}['bin-method']`, e.target.value)
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
@@ -735,7 +776,7 @@ function ChoroplethControl({path, params={}}) {
               onChange={()=>{
                 setState(draft=> {
                   const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,update)
+                  set(draft, `${pathBase}['category-show-other']`,update)
                 })
               }}
               className={`${
@@ -917,6 +958,8 @@ export const InteractiveFilterbuilder = () => {
   );
 };
 
+
+//RYAN TODO -- make sure this doesn't blow up somehow with new Interactive Filters
 export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
     <>

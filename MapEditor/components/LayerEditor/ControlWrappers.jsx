@@ -117,13 +117,19 @@ function FullWidthWrapper({ label, controls }) {
   );
 }
 
-function PopoverControlWrapper ({label, controls}) {
+function PopoverControlWrapper (props) {
+  const {label, controls} = props;
   const { state, setState } = React.useContext(SymbologyContext);
   const values = useMemo(() => {
     return controls.map(c => {
+      const pathBase =
+        c.params?.version === "interactive"
+          ? `symbology.layers[${state.symbology.activeLayer}]${c.params.pathPrefix}`
+          : `symbology.layers[${state.symbology.activeLayer}]`;
+
       const identity = d => d
       let format = c?.params?.format || identity
-      let value = format(get(state, `symbology.layers[${state.symbology.activeLayer}].${c.path}`, ''))
+      let value = format(get(state, `${pathBase}.${c.path}`, ''))
       return {
         type: c?.type,
         unit: c?.unit,
