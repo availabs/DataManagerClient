@@ -99,8 +99,7 @@ function FullWidthWrapper({ label, controls }) {
   return (
     <>
       <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
-      <div className="flex-1 flex items-center basis-full">
-       
+      <div className="flex-1 flex items-center">
           {controls.map((c, i) => {
             const Control = controlTypes[c.type] || controlTypes["simple"];
             return (

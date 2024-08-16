@@ -8,7 +8,7 @@ import { CaretDown } from '../icons'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
-import { StyledControl } from './ControlWrappers'
+import { StyledControl, wrapperTypes } from './ControlWrappers'
 import get from 'lodash/get'
 import set from 'lodash/set'
 import cloneDeep from 'lodash/cloneDeep'
@@ -764,7 +764,7 @@ function ChoroplethControl({path, params={}}) {
 
 function InteractiveFilterControl({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
-  let { value: interactiveFilters, selectedInteractiveFilterIndex, layerName } = useMemo(() => {
+  const { value: interactiveFilters, selectedInteractiveFilterIndex, layerName } = useMemo(() => {
     return {
       value: get(
         state,
@@ -786,6 +786,7 @@ function InteractiveFilterControl({ path, params = {} }) {
 
   console.log("interactive filter control value::", interactiveFilters);
   console.log("selectedInteractiveFilterIndex::", selectedInteractiveFilterIndex)
+  const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center">
       <Button
@@ -794,9 +795,14 @@ function InteractiveFilterControl({ path, params = {} }) {
         onClick={() => {
           console.log("add new interactive filter")
           setState(draft => {
+            //TODO better way of defaulting some values
             const newInteractiveFilter = {
               "label": `${layerName} simple`,
-              "layer-type": 'simple'
+              "layer-type": 'simple',
+              paint : {
+                'line-color': "#fff",
+                'line-width': 3
+              }
             }
 
             set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, [...interactiveFilters, newInteractiveFilter] )
@@ -836,7 +842,6 @@ function InteractiveFilterControl({ path, params = {} }) {
                   setState(draft => {
                     set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}[${i}]['label']`, e.target.value )
                   })
-                  //renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
                 }}
               />
             </div>
@@ -845,11 +850,52 @@ function InteractiveFilterControl({ path, params = {} }) {
 
         })
       }
-
+      {
+        shouldDisplayInteractiveBuilder && <InteractiveFilterbuilder />
+      }
     </div>
   );
 }
 
+export const InteractiveFilterbuilder = () => {
+  const PopoverControlWrapper = wrapperTypes["popover"];
+  const { state, setState } = React.useContext(SymbologyContext);
+  const { selectedInteractiveFilterIndex } = useMemo(() => {
+    return {
+      selectedInteractiveFilterIndex: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
+        []
+      )
+    };
+  }, [state]);
+  return (
+    <div className='flex flex-wrap'>
+      <PopoverControlWrapper
+        label={"Stroke"}
+        controls={[
+          {
+            type: 'color',
+            path: `['interactive-filters'][${selectedInteractiveFilterIndex}]['paint']['line-color']`,
+          },
+          {
+            type: 'range',
+            unit: 'px',
+            path: `['interactive-filters'][${selectedInteractiveFilterIndex}]['paint']['line-width']`,
+            params: {
+              min: "0",
+              max: "10",
+              step: "0.5",
+              default: "3",
+              units: "px"
+            }
+          }
+
+        ]}
+      />
+    </div>
+  );
+};
 
 export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
   return (
