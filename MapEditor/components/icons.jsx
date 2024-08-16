@@ -1,7 +1,7 @@
 import React from 'react'
 
-export const Close = ({className='fill-slate-800'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const Close = ({className='fill-slate-800', size="20"}) => (
+	<svg width={size} height={size} viewBox="0 0 24 24" className={className}>
 		<path d="M10.5858 12L4.92898 17.6569L6.3432 19.0711L12 13.4143L17.6569 19.0711L19.0711 17.6569L13.4142 12L19.0711 6.34317L17.6569 4.92896L12 10.5858L6.34317 4.92897L4.92896 6.34319L10.5858 12Z" ></path>
 	</svg>
 )

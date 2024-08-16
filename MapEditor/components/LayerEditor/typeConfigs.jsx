@@ -11,7 +11,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,

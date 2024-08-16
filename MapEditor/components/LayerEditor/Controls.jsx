@@ -4,15 +4,16 @@ import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../store"
 import { Menu, Transition, Switch } from '@headlessui/react'
 import isEqual from 'lodash/isEqual'
-import { CaretDown } from '../icons'
+import { CaretDown, Close } from '../icons'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
-import { StyledControl, wrapperTypes } from './ControlWrappers'
+import { StyledControl } from './ControlWrappers'
 import get from 'lodash/get'
 import set from 'lodash/set'
 import cloneDeep from 'lodash/cloneDeep'
 import { CategoryControl } from './CategoryControl';
+import StyleEditor from './StyleEditor';
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -42,23 +43,29 @@ function ControlMenu({ button, children}) {
 export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  // console.log('select control', params)
+  console.log('select control', {path, datapath, params})
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata } = useMemo(() => {
     return {
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
+      value: get(state, `${pathBase}.${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue : get(state, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, {}),
-      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
+      paintValue : get(state, `${pathBase}.${datapath}`, {}),
+      column: get(state, `${pathBase}['data-column']`, ''),
+      categories: get(state, `${pathBase}['categories']`, {}),
+      categorydata: get(state, `${pathBase}['category-data']`, {}),
+      choroplethdata: get(state, `${pathBase}['choroplethdata']`),
+      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
+      colorrange: get(state, `${pathBase}['color-range']`, colorbrewer['seq1'][9]),
+      numbins: get(state, `${pathBase}['num-bins']`, 9),
+      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
+      numCategories: get(state, `${pathBase}['num-categories']`, 10),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
       symbology_id: get(state, `symbology_id`),
     }
   },[state])
@@ -100,6 +107,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       {name:'Simple', value: 'simple'},
       hasCols ? {name:'Categories', value: 'categories'} : null,
       hasNumber ? {name:'Color Range', value: 'choropleth'} : null,
+      //TODO filter out interactive here, when its the sub-menu
       {name:'Interactive', value: 'interactive'}
     ].filter(d => d)
   },[metadata])
@@ -137,9 +145,9 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
         if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, { paint, legend })
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
+            set(draft, `${pathBase}['categories']`, { paint, legend })
+            set(draft, `${pathBase}.${datapath}`, paint)
+            set(draft, `${pathBase}['legend-data']`, legend)
           })
         }
       } else if(value === 'choropleth') {
@@ -157,7 +165,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
         }
         else {
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, true)
+            set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
           })
           const res = await falcor.get([
             "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
@@ -166,7 +174,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
           ])
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
+            set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
         let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
@@ -183,19 +191,23 @@ export function SelectTypeControl({path, datapath, params={}}) {
         }
         if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
           setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, colorBreaks)
+            set(draft, `${pathBase}.${datapath}`, paint)
+            set(draft, `${pathBase}['legend-data']`, legend)
+            set(draft, `${pathBase}['choroplethdata']`, colorBreaks)
           })
         }
       } else if( value === 'simple' && typeof paintValue !== 'string') {
         // console.log('switch to simple')
         setState(draft => {
-          set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, rgb2hex(null))
+          set(draft, `${pathBase}.${datapath}`, rgb2hex(null))
         })
       }
     }
-    setPaint();
+    if(value !== 'interactive'){
+      console.log("value of state before repaint::", state)
+      setPaint();
+    }
+
   }, [categories, value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
@@ -203,19 +215,19 @@ export function SelectTypeControl({path, datapath, params={}}) {
       <div className='flex w-full items-center'>
         <select
           className='w-full p-2 bg-transparent'
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          value={get(state, `${pathBase}.${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
             if(!column && e.target.value === 'categories') {
               const defaultColorColumn = metadata.filter(col => !['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
-              set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultColorColumn)
+              set(draft, `${pathBase}['data-column']`, defaultColorColumn)
             } else if (e.target.value === 'choropleth') {
               const currentColumn = metadata.find(col => col.name === column);
               if(!['integer', 'number'].includes(currentColumn?.type)) {
                 const defaultColorColumn = metadata.filter(col => ['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
-                set(draft, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, defaultColorColumn)
+                set(draft, `${pathBase}['data-column']`, defaultColorColumn)
               }
             }
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
           {(options || []).map((opt,i) => {
@@ -773,8 +785,7 @@ function InteractiveFilterControl({ path, params = {} }) {
       ),
       selectedInteractiveFilterIndex: get(
         state,
-        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
-        []
+        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
       ),
       layerName: get(
         state,
@@ -784,8 +795,14 @@ function InteractiveFilterControl({ path, params = {} }) {
     };
   }, [state]);
 
-  console.log("interactive filter control value::", interactiveFilters);
-  console.log("selectedInteractiveFilterIndex::", selectedInteractiveFilterIndex)
+  useEffect(() => {
+    if(selectedInteractiveFilterIndex !== undefined && !interactiveFilters[selectedInteractiveFilterIndex]){
+      setState(draft => {
+        set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, undefined)
+      })
+    }
+  }, [interactiveFilters])
+
   const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center">
@@ -793,7 +810,6 @@ function InteractiveFilterControl({ path, params = {} }) {
         themeOptions={{ size: "xs", color: 'primary' }}
         className={"col-span-2 capitalize mb-2"}
         onClick={() => {
-          console.log("add new interactive filter")
           setState(draft => {
             //TODO better way of defaulting some values
             const newInteractiveFilter = {
@@ -814,40 +830,57 @@ function InteractiveFilterControl({ path, params = {} }) {
       </Button>
       {
         interactiveFilters.map((iFilter,i) => {
+          const isSelectedFilter = selectedInteractiveFilterIndex === i;
           return (
             <div
-            key={`ifilter_row_${i}`}
-            className="group/title w-full text-sm grid grid-cols-12 items-center  mb-2"
-          >
-            <div
-              className="truncate col-span-1 flex justify-center items-center"
+              key={`ifilter_row_${i}`}
+              className={`group/title w-full text-sm grid grid-cols-12 items-center  mb-2 ${isSelectedFilter && 'bg-blue-100'}`}
             >
-              <input
-                type="radio"
-                checked={selectedInteractiveFilterIndex === i}
-                onChange={() => {
+              <div
+                className="truncate col-span-1 flex justify-center items-center"
+              >
+                <input
+                  type="radio"
+                  checked={isSelectedFilter}
+                  onChange={() => {
+                    setState(draft => {
+                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, i)
+                    })
+                  }}
+                />
+              </div>  
+              <div className="truncate col-span-10">
+                <input
+                  type="text"
+                  className=" px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                  value={iFilter.label}
+                  onChange={(e) => {
+                    setState(draft => {
+                      set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}[${i}]['label']`, e.target.value )
+                    })
+                  }}
+                />
+              </div>
+              <div
+                className="col-span-1 flex items-center cursor-pointer fill-black group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon p-0.5"
+                onClick={() => {
                   setState(draft => {
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, i)
+                    const oldInteractiveFilters = get(
+                      draft,
+                      `symbology.layers[${state.symbology.activeLayer}].${path}`
+                    )
+                    oldInteractiveFilters.splice(i,1);
+                    set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, oldInteractiveFilters )
                   })
                 }}
-              />
-            </div>  
-            <div className="truncate col-span-11">
-              <input
-                type="text"
-                className="w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
-                value={iFilter.label}
-                onChange={(e) => {
-                  console.log("renaming interactive filter row, row::", iFilter);
-                  setState(draft => {
-                    set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}[${i}]['label']`, e.target.value )
-                  })
-                }}
-              />
+              >
+                <Close
+                  size={20}
+                  className="m-0.5 cursor-pointer group-hover/icon:fill-slate-500 "
+                />
+              </div>
             </div>
-          </div>
           )
-
         })
       }
       {
@@ -858,42 +891,29 @@ function InteractiveFilterControl({ path, params = {} }) {
 }
 
 export const InteractiveFilterbuilder = () => {
-  const PopoverControlWrapper = wrapperTypes["popover"];
   const { state, setState } = React.useContext(SymbologyContext);
-  const { selectedInteractiveFilterIndex } = useMemo(() => {
+  const { interactiveFilters, selectedInteractiveFilterIndex } = useMemo(() => {
     return {
+      interactiveFilters: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['interactive-filters']`,
+        []
+      ),
       selectedInteractiveFilterIndex: get(
         state,
         `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
         []
-      )
+      ),
     };
   }, [state]);
   return (
-    <div className='flex flex-wrap'>
-      <PopoverControlWrapper
-        label={"Stroke"}
-        controls={[
-          {
-            type: 'color',
-            path: `['interactive-filters'][${selectedInteractiveFilterIndex}]['paint']['line-color']`,
-          },
-          {
-            type: 'range',
-            unit: 'px',
-            path: `['interactive-filters'][${selectedInteractiveFilterIndex}]['paint']['line-width']`,
-            params: {
-              min: "0",
-              max: "10",
-              step: "0.5",
-              default: "3",
-              units: "px"
-            }
-          }
-
-        ]}
+    <>
+      Editing {interactiveFilters[selectedInteractiveFilterIndex]?.label}
+      <StyleEditor
+        type={"interactive"}
+        pathPrefix={`['interactive-filters'][${selectedInteractiveFilterIndex}]`}
       />
-    </div>
+    </>
   );
 };
 

@@ -21,9 +21,23 @@ const layerTypeNames = {
 function StyleEditor (props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
-  const config = useMemo(() => typeConfigs[activeLayer.type] || []
+  let config = useMemo(() => typeConfigs[activeLayer.type] || []
     ,[activeLayer.type])
-  
+  if(props.type === 'interactive') {
+    config = config.filter(c => c.label !== 'Interactive Filters').map(c => {
+      let newControls = [...c.controls];
+      let newConditonal = c.conditional ? {...c.conditional} : undefined;
+
+      newControls = newControls.map(ic => ({...ic, params:{...ic.params, pathPrefix: props.pathPrefix, version: 'interactive'}}))
+      if(c.conditional){
+        newConditonal.path = props.pathPrefix + newConditonal['path'];
+      }
+
+
+      return {...c, controls: newControls, conditional: newConditonal}
+    })
+  }
+
   return activeLayer && (
     <div>
       <div className='p-4'>
