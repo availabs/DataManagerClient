@@ -142,6 +142,14 @@ function StepLegend({ layer, toggleSymbology }) {
 function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
+
+  let { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`, []),
+    }
+  },[state]);
+
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
@@ -150,7 +158,12 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
-  const type = layer['layer-type']
+  const type =
+    layerType === "interactive" && selectedInteractiveFilterIndex !== undefined
+      ? layer["interactive-filters"][selectedInteractiveFilterIndex][
+          "layer-type"
+        ]
+      : layerType;
 
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
