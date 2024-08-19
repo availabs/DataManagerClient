@@ -191,6 +191,40 @@ const MapEditor = () => {
   const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
   // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
+  const {activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter, interactiveFilters} = useMemo(() => {
+    const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`);
+    return {
+      activeLayerType: get(state,`symbology.layers[${state?.symbology?.activeLayer}]['layer-type']`, {}),
+      selectedInteractiveFilterIndex,
+      interactiveFilters: get(
+        state,
+        `symbology.layers[${state?.symbology?.activeLayer}]['interactive-filters']`,
+      ),
+      currentInteractiveFilter: get(
+        state,
+        `symbology.layers[${state?.symbology?.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`,
+      )
+    }
+  },[state?.symbology]);
+  useEffect(() => {
+    const updateSymbology = () => {
+
+      setState((draft) => {
+        //console.log("change detected for interactive layer, activeLayer::", JSON.parse(JSON.stringify(draft.symbology.layers[draft?.symbology?.activeLayer])) );
+        draft.symbology.layers[draft?.symbology?.activeLayer] = {
+          ...draft.symbology.layers[draft?.symbology?.activeLayer],
+          ...currentInteractiveFilter,
+          "layer-type": "interactive",
+          "interactive-filters": interactiveFilters,
+          selectedInteractiveFilterIndex: selectedInteractiveFilterIndex
+        };
+      });
+    };
+
+    if (activeLayerType === "interactive" && currentInteractiveFilter !== undefined ) {
+      updateSymbology();
+    }
+  }, [selectedInteractiveFilterIndex,activeLayerType, currentInteractiveFilter]);
 	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
 
 	return (

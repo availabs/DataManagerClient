@@ -813,7 +813,7 @@ function ChoroplethControl({path, params={}}) {
 
 function InteractiveFilterControl({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const { value: interactiveFilters, selectedInteractiveFilterIndex, layerName } = useMemo(() => {
+  const { value: interactiveFilters, selectedInteractiveFilterIndex, layerName, activeLayer } = useMemo(() => {
     return {
       value: get(
         state,
@@ -829,6 +829,7 @@ function InteractiveFilterControl({ path, params = {} }) {
         `symbology.layers[${state.symbology.activeLayer}]['name']`,
         ''
       ),
+      activeLayer: get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {})
     };
   }, [state]);
 
@@ -848,14 +849,13 @@ function InteractiveFilterControl({ path, params = {} }) {
         className={"col-span-2 capitalize mb-2"}
         onClick={() => {
           setState(draft => {
-            //TODO better way of defaulting some values
+            //TODO lookin ok here, still a little dicey
+            //TODO fix issue with default colors when adding new simple layer, its using old color data
             const newInteractiveFilter = {
-              "label": `${layerName} simple`,
+              ...activeLayer,
               "layer-type": 'simple',
-              paint : {
-                'line-color': "#fff",
-                'line-width': 3
-              }
+              "label": `${layerName}`,
+              selectedInteractiveFilterIndex: undefined
             }
 
             set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, [...interactiveFilters, newInteractiveFilter] )
