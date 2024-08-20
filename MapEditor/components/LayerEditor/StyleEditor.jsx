@@ -40,7 +40,7 @@ function StyleEditor (props) {
 
   return activeLayer && (
     <div>
-      <div className='p-4'>
+      <div className={`${props.type === 'interactive' ? 'mt-2 border-2 p-1 border-gray-100 rounded' : 'p-4'}`}>
       <div className='font-bold tracking-wider text-sm text-slate-700'>{layerTypeNames[activeLayer.type]}</div>
       {config
         .filter(c => {

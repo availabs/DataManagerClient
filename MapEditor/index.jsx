@@ -210,21 +210,25 @@ const MapEditor = () => {
     const updateSymbology = () => {
 
       setState((draft) => {
-        //console.log("change detected for interactive layer, activeLayer::", JSON.parse(JSON.stringify(draft.symbology.layers[draft?.symbology?.activeLayer])) );
-        draft.symbology.layers[draft?.symbology?.activeLayer] = {
-          ...draft.symbology.layers[draft?.symbology?.activeLayer],
-          ...currentInteractiveFilter,
-          "layer-type": "interactive",
-          "interactive-filters": interactiveFilters,
-          selectedInteractiveFilterIndex: selectedInteractiveFilterIndex
-        };
+        const draftFilters =  get(draft,`symbology.layers[${draft?.symbology?.activeLayer}]['interactive-filters']`);
+        const draftInteractiveFilter = get(draft,`symbology.layers[${draft?.symbology?.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`)
+        
+        if(draftInteractiveFilter) {
+          draft.symbology.layers[draft?.symbology?.activeLayer] = {
+            ...draft.symbology.layers[draft?.symbology?.activeLayer],
+            ...draftInteractiveFilter,
+            "layer-type": "interactive",
+            "interactive-filters": draftFilters,
+            selectedInteractiveFilterIndex: selectedInteractiveFilterIndex
+          };
+        }
       });
     };
 
-    if (activeLayerType === "interactive" && currentInteractiveFilter !== undefined ) {
+    if (activeLayerType === "interactive" && selectedInteractiveFilterIndex !== undefined ) {
       updateSymbology();
     }
-  }, [selectedInteractiveFilterIndex,activeLayerType, currentInteractiveFilter]);
+  }, [selectedInteractiveFilterIndex, activeLayerType, currentInteractiveFilter]);
 	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
 
 	return (

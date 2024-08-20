@@ -66,7 +66,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? []
+  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? [];
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
       .filter((cat) => typeof cat[column] !== "object")

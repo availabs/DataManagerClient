@@ -160,7 +160,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
   const type =
     layerType === "interactive" && selectedInteractiveFilterIndex !== undefined
-      ? layer["interactive-filters"][selectedInteractiveFilterIndex][
+      ? layer["interactive-filters"]?.[selectedInteractiveFilterIndex]?.[
           "layer-type"
         ]
       : layerType;
