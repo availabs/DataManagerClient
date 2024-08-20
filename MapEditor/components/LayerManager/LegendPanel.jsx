@@ -75,6 +75,44 @@ const typePaint = {
   }
 }
 
+function InteractiveLegend({ layer, toggleSymbology }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  let { interactiveFilters } = useMemo(() => {
+    return {
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+    };
+  }, [state]);
+
+  const selectedInteractiveFilterIndex = layer?.selectedInteractiveFilterIndex;
+  const activeFilterLayerType = layer?.['interactive-filters']?.[selectedInteractiveFilterIndex]?.['layer-type'];
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      {interactiveFilters.map((iFilter,i) => {
+        return (
+          <div
+            key={i}
+            className={`w-full flex items-center hover:bg-pink-50 ${selectedInteractiveFilterIndex === i ? "bg-pink-200":""}`}
+            onClick={() => {
+              setState(draft => {
+                draft.symbology.layers[layer.id].selectedInteractiveFilterIndex = i;
+              })
+            }}
+          >
+            <div className="flex items-center text-center px-4 flex-1 text-slate-500 h-6 text-sm truncate">
+              {iFilter.label}
+            </div>
+          </div>
+        );
+      })}
+      {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+    </div>
+  );
+}
+
 function CategoryLegend({ layer, toggleSymbology }) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let  legenddata = layer?.['legend-data'] || []
@@ -143,7 +181,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
 
-  let { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
+  let { layerType: type } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`, []),
@@ -158,15 +196,9 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
-  const type =
-    layerType === "interactive" && selectedInteractiveFilterIndex !== undefined
-      ? layer["interactive-filters"]?.[selectedInteractiveFilterIndex]?.[
-          "layer-type"
-        ]
-      : layerType;
 
   return (
-    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
+    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border `}>
       <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
         {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div 
@@ -206,6 +238,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology}/>}
     </div>
   )
 }
