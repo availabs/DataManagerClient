@@ -216,12 +216,14 @@ function LegendRow ({ index, layer, i, symbology_id }) {
   //TODO -- how to get `baseUrl` when you don't have damaContext??
   const sourceUrl = `/cenrep/source/${layer.source_id}`
 
+  const layerName = type === 'interactive' ? layer.label : layer.name;
+
   return (
     <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
       <div className={`group/title w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
-          {layer.name}
+          {layerName}
           {
           type === 'interactive' && 
             <div className='text-sm pb-1 mr-1 flex items-center'>
