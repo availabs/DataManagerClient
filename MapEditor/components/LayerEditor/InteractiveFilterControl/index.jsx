@@ -52,8 +52,9 @@ function InteractiveFilterControl({ path, params = {} }) {
               "label": `${layerName}`,
               selectedInteractiveFilterIndex: undefined
             }
-
-            set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, [...interactiveFilters, newInteractiveFilter] )
+            const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
+            set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
+            set(draft,`symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, newInteractiveFilters.length-1 )
           })
 
         }}
