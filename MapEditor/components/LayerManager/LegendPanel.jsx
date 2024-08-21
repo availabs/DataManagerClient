@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { SymbologyContext } from '../../'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid} from '../icons'
+import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
@@ -32,6 +32,39 @@ function VisibilityButton ({layer}) {
       }
     </div>
   )
+}
+
+function ToggleInteractiveFilterList({
+  layer,
+  isListVisible,
+  setIsListVisible,
+}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const { activeLayer } = state.symbology;
+
+  return (
+    <div
+      onClick={() => {
+        setIsListVisible(!isListVisible);
+      }}
+    >
+      {isListVisible ? (
+        <SquareMinusSolid
+          className={` ${
+            activeLayer == layer.id ? "fill-pink-100" : "fill-white"
+          }  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          size={16}
+        />
+      ) : (
+        <SquarePlusSolid
+          className={` ${
+            activeLayer == layer.id ? "fill-pink-100" : "fill-white"
+          }  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          size={16}
+        />
+      )}
+    </div>
+  );
 }
 
 const typeSymbols = {
@@ -75,7 +108,7 @@ const typePaint = {
   }
 }
 
-function InteractiveLegend({ layer, toggleSymbology }) {
+function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   let { interactiveFilters } = useMemo(() => {
@@ -90,18 +123,23 @@ function InteractiveLegend({ layer, toggleSymbology }) {
     <div
       className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
     >
-      {interactiveFilters.map((iFilter,i) => {
+      {isListVisible && interactiveFilters.map((iFilter,i) => {
         return (
           <div
             key={i}
-            className={`w-full flex items-center hover:bg-pink-50 ${selectedInteractiveFilterIndex === i ? "bg-pink-200":""}`}
+            className={`w-full px-2 flex items-center hover:bg-pink-50`}
             onClick={() => {
               setState(draft => {
                 draft.symbology.layers[layer.id].selectedInteractiveFilterIndex = i;
               })
             }}
           >
-            <div className="flex items-center text-center px-4 flex-1 text-slate-500 h-6 text-sm truncate">
+            <input
+              type="radio"
+              readOnly
+              checked={!isListVisible || selectedInteractiveFilterIndex === i}
+            />
+            <div className="flex px-2 items-center text-center flex-1 text-slate-500 h-6 text-sm truncate">
               {iFilter.label}
             </div>
           </div>
@@ -181,6 +219,8 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
 
+  const [isListVisible, setIsListVisible] = React.useState(true);
+
   let { layerType: type } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
@@ -207,7 +247,17 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         >
           {layer.name}
         </div>
-        <div className='text-sm pt-1 px-0.5 flex items-center'>
+        {
+          type === 'interactive' && 
+          <div className='text-sm pb-1 mr-1 flex items-center'>
+            <ToggleInteractiveFilterList 
+              isListVisible={isListVisible} 
+              setIsListVisible={setIsListVisible} 
+              layer={layer}
+            />
+          </div>
+        }
+        <div className='text-sm pt-1  flex items-center'>
           <LayerMenu 
             layer={layer}
             button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
@@ -238,7 +288,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
-      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology} isListVisible={isListVisible}/>}
     </div>
   )
 }

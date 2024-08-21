@@ -872,7 +872,7 @@ function InteractiveFilterControl({ path, params = {} }) {
           return (
             <div
               key={`ifilter_row_${i}`}
-              className={`group/title w-full text-sm grid grid-cols-12 items-center  mb-2 ${isSelectedFilter && 'bg-blue-100'}`}
+              className={`group/title w-full text-sm grid grid-cols-12 items-center rounded mb-2 ${isSelectedFilter && 'bg-blue-100'}`}
             >
               <div
                 className="truncate col-span-1 flex justify-center items-center"
