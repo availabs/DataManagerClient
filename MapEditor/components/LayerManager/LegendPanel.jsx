@@ -238,7 +238,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
 
   return (
-    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border `}>
+    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
         {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div 
@@ -249,13 +249,13 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         </div>
         {
           type === 'interactive' && 
-          <div className='text-sm pb-1 mr-1 flex items-center'>
-            <ToggleInteractiveFilterList 
-              isListVisible={isListVisible} 
-              setIsListVisible={setIsListVisible} 
-              layer={layer}
-            />
-          </div>
+            <div className='text-sm pb-1 mr-1 flex items-center'>
+              <ToggleInteractiveFilterList 
+                isListVisible={isListVisible} 
+                setIsListVisible={setIsListVisible} 
+                layer={layer}
+              />
+            </div>
         }
         <div className='text-sm pt-1  flex items-center'>
           <LayerMenu 

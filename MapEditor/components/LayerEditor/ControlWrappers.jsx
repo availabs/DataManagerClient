@@ -152,7 +152,6 @@ function PopoverControlWrapper (props) {
         </PopoverControl>
       </div>
     </>
-   
   )
 }
 
