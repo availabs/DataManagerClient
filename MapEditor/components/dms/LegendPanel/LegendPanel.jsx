@@ -160,7 +160,20 @@ function LegendRow ({ index, layer, i }) {
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
-  const type = layer['layer-type']
+
+  let { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`, []),
+    }
+  },[layer]);
+
+  const type =
+    layerType === "interactive" && selectedInteractiveFilterIndex !== undefined
+      ? layer["interactive-filters"]?.[selectedInteractiveFilterIndex]?.[
+          "layer-type"
+        ]
+      : layerType;
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
   const sourceUrl = `/cenrep/source/${layer.source_id}`
