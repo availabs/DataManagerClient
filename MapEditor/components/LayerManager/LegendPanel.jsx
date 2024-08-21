@@ -115,7 +115,7 @@ function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
     return {
       interactiveFilters: get(layer, `['interactive-filters']`, []),
     };
-  }, [state]);
+  }, [layer]);
 
   const selectedInteractiveFilterIndex = layer?.selectedInteractiveFilterIndex;
   const activeFilterLayerType = layer?.['interactive-filters']?.[selectedInteractiveFilterIndex]?.['layer-type'];
@@ -223,8 +223,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   let { layerType: type } = useMemo(() => {
     return {
-      layerType : get(layer, `['layer-type']`),
-      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`, []),
+      layerType : get(layer, `['layer-type']`)
     }
   },[state]);
 
