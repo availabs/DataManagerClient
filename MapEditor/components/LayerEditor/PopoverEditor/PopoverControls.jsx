@@ -17,10 +17,16 @@ const getDiffColumns = (baseArray, subArray) => {
 
 export function ColumnSelectControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   const selectedColumns = useMemo(() => {
     return get(
       state,
-      `symbology.layers[${state.symbology.activeLayer}].${path}`
+      `${pathBase}.${path}`
     )
   }, [state, path, params]);
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
@@ -59,7 +65,7 @@ export function ColumnSelectControl({path, params={}}) {
       setState((draft) => {
         set(
           draft,
-          `symbology.layers[${state.symbology.activeLayer}].${path}`,
+          `${pathBase}.${path}`,
           attributes
             .filter((d) => !["wkb_geometry"].includes(d.name))
             .map((attr) => ({
@@ -117,7 +123,7 @@ export function ColumnSelectControl({path, params={}}) {
                 const newAttr = attributes.find(attr => attr.name === newColumn);
                 set(
                   draft,
-                  `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                  `${pathBase}.${path}`,
                   selectedColumns
                     ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
                     : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
@@ -142,7 +148,7 @@ export function ColumnSelectControl({path, params={}}) {
             setState(draft => {
               set(
                 draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                `${pathBase}.${path}`,
                 attributes
                   .filter((d) => !["wkb_geometry"].includes(d.name))
                   .map((attr) => ({
@@ -164,7 +170,7 @@ export function ColumnSelectControl({path, params={}}) {
             setState(draft => {
               set(
                 draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
+                `${pathBase}.${path}`,
                 []
               );
             })
@@ -185,7 +191,7 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               sections
             );
           });
@@ -200,7 +206,7 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               newColumns
             );
           })
@@ -210,7 +216,7 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               selectedColumns.filter((colObj) => colObj.column_name !== columnName)
             );
           })
