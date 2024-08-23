@@ -181,15 +181,22 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
     })
   }
-
+  const shouldDisplayColorSquare =
+    type === "simple" ||
+    (type === "interactive" &&
+      interactiveFilters?.[selectedInteractiveFilterIndex]?.["layer-type"] ===
+        "simple") ||
+    !type;
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
+
   let legendTitle;
   if (type === "interactive") {
     legendTitle = (
       <div className="text-sm mr-1 flex items-center">
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div
-          className="text-slate-600 font-medium truncate flex-1 mr-2"
+          className="text-slate-600 font-medium truncate flex-1"
         >
           <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
             <select
@@ -219,22 +226,16 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     legendTitle = (
       <div
         onClick={toggleSymbology}
-        className="text-sm text-slate-600 font-medium truncate flex-1"
+        className="text-sm text-slate-600 font-medium truncate flex flex-1"
       >
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         {layer.name}
       </div>
     );
   }
-  const shouldDisplayColorSquare =
-    type === "simple" ||
-    (type === "interactive" &&
-      interactiveFilters?.[selectedInteractiveFilterIndex]?.["layer-type"] ===
-        "simple") ||
-    !type;
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" ? 'pl-1' : '' }`}>
-        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
+      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
           {legendTitle}
           <div className='flex'>
             <div className='text-sm pt-1  flex items-center'>
