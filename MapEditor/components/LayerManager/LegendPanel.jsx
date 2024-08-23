@@ -10,27 +10,29 @@ function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
   const visible = layer.isVisible
-
+  const onClick = () => {
+    setState(draft => {
+      draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
+      draft.symbology.layers[layer.id].layers.forEach((d,i) => {
+        let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
+        let update = val === 'visible' ? 'none' : 'visible'
+        draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
+      })
+    })
+  }
   return (
-    <div onClick={() => {
-        setState(draft => {
-          draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
-          draft.symbology.layers[layer.id].layers.forEach((d,i) => {
-            let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
-            let update = val === 'visible' ? 'none' : 'visible'
-            draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
-          })
-        })}}
-      >
+    <>
       {visible ? 
-        <Eye 
+        <Eye
+          onClick={onClick}
           className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         /> : 
-        <EyeClosed 
+        <EyeClosed
+          onClick={onClick}
           className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         />
       }
-    </div>
+    </>
   )
 }
 
@@ -223,11 +225,16 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
-
+  const shouldDisplayColorSquare =
+    type === "simple" ||
+    (type === "interactive" &&
+      interactiveFilters?.[selectedInteractiveFilterIndex]?.["layer-type"] ===
+        "simple") ||
+    !type;
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" ? 'pl-1' : '' }`}>
-        {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
           {legendTitle}
           <div className='flex'>
             <div className='text-sm pt-1  flex items-center'>
@@ -236,27 +243,20 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
                 button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
               />
             </div>
-            <div
-              className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px]`}
+            <CaretUpSolid
               onClick={() => {
                 onRowMove(i, i-1)
               }}
-            >
-              <CaretUpSolid
-                size={24}
-                className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} />
-            </div>
-            <div
-              className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px]`}
+              size={24}
+              className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+            />
+            <CaretDownSolid
               onClick={ () => {
                 onRowMove(i, i+1)
               }}
-            >
-              <CaretDownSolid
-                size={24}
-                className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-              />
-            </div>
+              size={24}
+              className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+            />
             <VisibilityButton layer={layer}/>
           </div>
       </div>

@@ -32,15 +32,15 @@ export const ShowOther = ({className='fill-slate-800'}) => (
 )
 
 
-export const Eye = ({className='fill-gray-900'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const Eye = ({className='fill-gray-900', onClick=() => {} }) => (
+	<svg width="20" height="20" viewBox="0 0 24 24" className={className} onClick={onClick}>
 		<path fillRule="evenodd" clipRule="evenodd" d="M15.1278 12C15.1278 13.6863 13.7274 15.0533 12 15.0533C10.2726 15.0533 8.8722 13.6863 8.8722 12C8.8722 10.3137 10.2726 8.94664 12 8.94664C13.7274 8.94664 15.1278 10.3137 15.1278 12ZM13.3717 12C13.3717 12.7395 12.7576 13.339 12 13.339C11.2424 13.339 10.6283 12.7395 10.6283 12C10.6283 11.2604 11.2424 10.6609 12 10.6609C12.7576 10.6609 13.3717 11.2604 13.3717 12Z" ></path>
 		<path fillRule="evenodd" clipRule="evenodd" d="M12 18C7.90486 18 4.40498 15.512 3 12C4.40498 8.48798 7.90475 6 11.9999 6C16.095 6 19.595 8.48798 21 12C19.595 15.512 16.0951 18 12 18ZM11.9999 7.71429C15.1026 7.71429 17.7877 9.45991 19.0808 12C17.7877 14.5401 15.1027 16.2857 12 16.2857C8.89726 16.2857 6.21206 14.5401 4.91897 12C6.21206 9.45991 8.89715 7.71429 11.9999 7.71429Z" ></path>
 	</svg>
 )
 
-export const EyeClosed = ({className='fill-slate-800'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const EyeClosed = ({className='fill-slate-800', onClick=() => {} }) => (
+	<svg width="20" height="20" viewBox="0 0 24 24" className={className} onClick={onClick}>
 		<path d="M3 12C3.34629 12.8656 3.81984 13.669 4.3982 14.3883L3.1051 15.6814L4.51932 17.0956L5.80754 15.8074C6.60111 16.4553 7.50288 16.9811 8.48252 17.3552L8.01453 19.1018L9.94638 19.6194L10.4142 17.8735C10.9301 17.9567 11.4599 18 12 18C12.5413 18 13.0722 17.9565 13.5892 17.873L14.0572 19.6194L15.989 19.1018L15.5207 17.354C16.4999 16.9796 17.4012 16.4537 18.1944 15.8058L19.4842 17.0956L20.8984 15.6814L19.6034 14.3863C20.181 13.6676 20.654 12.8648 21 12H19.0808C17.7877 14.5401 15.1027 16.2857 12 16.2857C8.89725 16.2857 6.21206 14.5401 4.91897 12H3Z" ></path>
 	</svg>
 )
@@ -82,19 +82,19 @@ export const MultiType = ({className='fill-slate-800'}) => (
 
 
 export const CaretDown = ({className='fill-slate-800'}) => (
-	<svg width="12" height="12" viewBox="0 0 12 12"  className={className}>
+	<svg width="12" height="12" viewBox="0 0 12 12" className={className}>
 		<path fillRule="evenodd" clipRule="evenodd" d="M2.64645 4.64645C2.84171 4.45118 3.15829 4.45118 3.35355 4.64645L6 7.29289L8.64645 4.64645C8.84171 4.45118 9.15829 4.45118 9.35355 4.64645C9.54882 4.84171 9.54882 5.15829 9.35355 5.35355L6.35355 8.35355C6.15829 8.54882 5.84171 8.54882 5.64645 8.35355L2.64645 5.35355C2.45118 5.15829 2.45118 4.84171 2.64645 4.64645Z"></path>
 	</svg>
 )
 
-export const CaretDownSolid = ({ className = "fill-slate-800", size = "12" }) => (
-  <svg width={size} height={size} viewBox="0 0 320 512" className={className}>
+export const CaretDownSolid = ({ className = "fill-slate-800", size = "12", onClick=() => {} }) => (
+  <svg width={size} height={size} viewBox="0 0 320 512" className={className} onClick={onClick}>
     <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
   </svg>
 );
 
-export const CaretUpSolid = ({ className = "fill-slate-800", size = "12" }) => (
-  <svg width={size} height={size} viewBox="0 0 320 512" className={className}>
+export const CaretUpSolid = ({ className = "fill-slate-800", size = "12", onClick=() => {} }) => (
+  <svg width={size} height={size} viewBox="0 0 320 512" className={className} onClick={onClick}>
     <path d="M182.6 137.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-9.2 9.2-11.9 22.9-6.9 34.9s16.6 19.8 29.6 19.8l256 0c12.9 0 24.6-7.8 29.6-19.8s2.2-25.7-6.9-34.9l-128-128z" />
   </svg>
 );
