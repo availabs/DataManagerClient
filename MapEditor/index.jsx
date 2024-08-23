@@ -119,8 +119,13 @@ const MapEditor = () => {
   // Updates localStorage whenever state changes 
   useEffect(() => {
     function updateData() {
-      if(window.localStorage) { 
-        window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+      //TODO -- after adding about 8-10 interactive filters, localstorage got too full
+      try {
+        if(window.localStorage) { 
+          window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+        }
+      } catch(e) {
+        console.error(e);
       }
     }
 

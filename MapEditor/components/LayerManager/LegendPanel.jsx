@@ -24,47 +24,14 @@ function VisibilityButton ({layer}) {
       >
       {visible ? 
         <Eye 
-          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         /> : 
         <EyeClosed 
-          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         />
       }
     </div>
   )
-}
-
-function ToggleInteractiveFilterList({
-  layer,
-  isListVisible,
-  setIsListVisible,
-}) {
-  const { state, setState } = React.useContext(SymbologyContext);
-  const { activeLayer } = state.symbology;
-
-  return (
-    <div
-      onClick={() => {
-        setIsListVisible(!isListVisible);
-      }}
-    >
-      {isListVisible ? (
-        <SquareMinusSolid
-          className={` ${
-            activeLayer == layer.id ? "fill-pink-100" : "fill-white"
-          }  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          size={16}
-        />
-      ) : (
-        <SquarePlusSolid
-          className={` ${
-            activeLayer == layer.id ? "fill-pink-100" : "fill-white"
-          }  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          size={16}
-        />
-      )}
-    </div>
-  );
 }
 
 const typeSymbols = {
@@ -123,28 +90,6 @@ function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
     <div
       className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
     >
-      {isListVisible && interactiveFilters.map((iFilter,i) => {
-        return (
-          <div
-            key={i}
-            className={`w-full px-2 flex items-center hover:bg-pink-50`}
-            onClick={() => {
-              setState(draft => {
-                draft.symbology.layers[layer.id].selectedInteractiveFilterIndex = i;
-              })
-            }}
-          >
-            <input
-              type="radio"
-              readOnly
-              checked={!isListVisible || selectedInteractiveFilterIndex === i}
-            />
-            <div className="flex px-2 items-center text-center flex-1 text-slate-500 h-6 text-sm truncate">
-              {iFilter.label}
-            </div>
-          </div>
-        );
-      })}
       {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
     </div>
@@ -221,11 +166,13 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters } = useMemo(() => {
     return {
-      layerType : get(layer, `['layer-type']`)
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
     }
-  },[state]);
+  },[state, layer]);
 
   const toggleSymbology = () => {
     setState(draft => {
@@ -235,55 +182,83 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
+  let legendTitle;
+  if (type === "interactive") {
+    legendTitle = (
+      <div className="text-sm mr-1 flex items-center">
+        <div
+          className="text-slate-600 font-medium truncate flex-1 mr-2"
+        >
+          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+            <select
+              className="w-full bg-transparent"
+              value={selectedInteractiveFilterIndex}
+              onChange={(e) => {
+                setState((draft) => {
+                  draft.symbology.layers[
+                    layer.id
+                  ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+                });
+              }}
+            >
+              {interactiveFilters.map((iFilter, i) => {
+                return (
+                  <option key={i} value={i}>
+                    {iFilter.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  } else {
+    legendTitle = (
+      <div
+        onClick={toggleSymbology}
+        className="text-sm text-slate-600 font-medium truncate flex-1"
+      >
+        {layer.name}
+      </div>
+    );
+  }
 
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
+      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" ? 'pl-1' : '' }`}>
         {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div 
-          onClick={toggleSymbology}
-          className='text-sm text-slate-600 font-medium truncate flex-1'
-        >
-          {layer.name}
-        </div>
-        {
-          type === 'interactive' && 
-            <div className='text-sm pb-1 mr-1 flex items-center'>
-              <ToggleInteractiveFilterList 
-                isListVisible={isListVisible} 
-                setIsListVisible={setIsListVisible} 
+          {legendTitle}
+          <div className='flex'>
+            <div className='text-sm pt-1  flex items-center'>
+              <LayerMenu 
                 layer={layer}
+                button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
               />
             </div>
-        }
-        <div className='text-sm pt-1  flex items-center'>
-          <LayerMenu 
-            layer={layer}
-            button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-          />
-        </div>
-        <div
-          className={`${i === 0 ? 'pointer-events-none' : ''}`}
-          onClick={() => {
-            onRowMove(i, i-1)
-          }}
-        >
-          <CaretUpSolid
-            size={24}
-            className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} />
-        </div>
-        <div
-          className={`${i === numLayers-1 ? 'pointer-events-none' : ''}`}
-          onClick={ () => {
-            onRowMove(i, i+1)
-          }}
-        >
-          <CaretDownSolid
-            size={24}
-            className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          />
-        </div>
-        <VisibilityButton layer={layer}/>
+            <div
+              className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px]`}
+              onClick={() => {
+                onRowMove(i, i-1)
+              }}
+            >
+              <CaretUpSolid
+                size={24}
+                className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} />
+            </div>
+            <div
+              className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px]`}
+              onClick={ () => {
+                onRowMove(i, i+1)
+              }}
+            >
+              <CaretDownSolid
+                size={24}
+                className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+              />
+            </div>
+            <VisibilityButton layer={layer}/>
+          </div>
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}

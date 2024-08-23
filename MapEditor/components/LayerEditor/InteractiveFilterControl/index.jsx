@@ -38,7 +38,7 @@ function InteractiveFilterControl({ path, params = {} }) {
 
   const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
-    <div className=" w-full items-center ">
+    <div className=" w-full items-center mt-2">
       <div className='w-full text-slate-500 text-[14px] flex justify-between '>
         Interactive Filters
         <Button
