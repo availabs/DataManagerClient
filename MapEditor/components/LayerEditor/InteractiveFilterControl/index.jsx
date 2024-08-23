@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect }from 'react'
 import { Button } from "~/modules/avl-components/src";
 import {SymbologyContext} from '../../../'
-import { Close } from '../../icons'
+import { Close, Plus } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/set'
 import StyleEditor from '../StyleEditor';
@@ -38,33 +38,32 @@ function InteractiveFilterControl({ path, params = {} }) {
 
   const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
-    <div className=" w-full items-center">
-      <Button
-        themeOptions={{ size: "xs", color: 'primary' }}
-        className={"col-span-2 capitalize mb-2"}
-        onClick={() => {
-          setState(draft => {
-            //TODO lookin ok here, still a little dicey
-            //TODO fix issue with default colors when adding new simple layer, its using old color data
-            const newInteractiveFilter = {
-              ...activeLayer,
-              "layer-type": 'simple',
-              "label": `${layerName}`,
-              selectedInteractiveFilterIndex: undefined
-            }
-            const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
-            set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
-            set(draft,`symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, newInteractiveFilters.length-1 )
-          })
-
-        }}
-      >
-        Add interactive filter
-      </Button>
+    <div className=" w-full items-center ">
+      <div className='w-full text-slate-500 text-[14px] flex justify-between '>
+        Interactive Filters
+        <Button
+          themeOptions={{ size: "xs", color: 'primary' }}
+          className={"col-span-2 capitalize mb-2"}
+          onClick={() => {
+            setState(draft => {
+              const newInteractiveFilter = {
+                ...activeLayer,
+                "layer-type": 'simple',
+                "label": `${layerName}`,
+                selectedInteractiveFilterIndex: undefined
+              }
+              const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
+              set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
+              set(draft,`symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, newInteractiveFilters.length-1 )
+            })
+          }}
+        >
+          <Plus className='fill-gray-200'/>
+        </Button>
+      </div>
       {
         interactiveFilters.map((iFilter,i) => {
           const isSelectedFilter = selectedInteractiveFilterIndex === i;
-          //TODO some small style changes -- if a certain filter is selected, the `hover` effect is not noticeable
           return (
             <div
               key={`ifilter_row_${i}`}
@@ -84,16 +83,7 @@ function InteractiveFilterControl({ path, params = {} }) {
                 />
               </div>  
               <div className="truncate col-span-10">
-                <input
-                  type="text"
-                  className=" px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
-                  value={iFilter.label}
-                  onChange={(e) => {
-                    setState(draft => {
-                      set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}[${i}]['label']`, e.target.value )
-                    })
-                  }}
-                />
+                {iFilter.label}
               </div>
               <div
                 className="col-span-1 flex items-center cursor-pointer group-hover/title:fill-slate-700 hover:bg-slate-100 rounded group/icon p-0.5"
@@ -142,7 +132,20 @@ export const InteractiveFilterbuilder = () => {
   }, [state]);
   return (
     <>
-      Editing: <b>{interactiveFilters[selectedInteractiveFilterIndex]?.label}</b>
+      
+      <div className="truncate col-span-10 group">
+      Editing: 
+        <input
+          type="text"
+          className=" px-2  border text-sm border-transparent group-hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+          value={interactiveFilters[selectedInteractiveFilterIndex]?.label}
+          onChange={(e) => {
+            setState(draft => {
+              set(draft,`symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}].label`, e.target.value )
+            })
+          }}
+        />
+      </div>
       <StyleEditor
         type={"interactive"}
         pathPrefix={`['interactive-filters'][${selectedInteractiveFilterIndex}]`}
