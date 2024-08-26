@@ -52,7 +52,7 @@ const typeConfigs = {
           type: 'filterGroupControl',
           path: `['filter-group']`,
           params: {
-            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+            format: (v) => `${v?.length} columns`
           }
         }
       ]
@@ -252,7 +252,7 @@ const typeConfigs = {
           type: 'filterGroupControl',
           path: `['filter-group']`,
           params: {
-            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+            format: (v) => `${v?.length} columns`
           }
         }
       ]
@@ -471,7 +471,7 @@ const typeConfigs = {
           type: 'filterGroupControl',
           path: `['filter-group']`,
           params: {
-            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+            format: (v) => `${v?.length} columns`
           }
         }
       ]

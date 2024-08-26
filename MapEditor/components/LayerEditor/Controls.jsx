@@ -362,11 +362,12 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, filterGroupEnabled } = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupEnabled, filterGroup } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
+    filterGroup: get(state,`${pathBase}['filter-group']`, []),
   }),[state])
 
   const column = useMemo(() => {
@@ -449,6 +450,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               return true
             })
             .filter(d => !['wkb_geometry'].includes(d.name))
+            .filter(d => !filterGroupEnabled || filterGroup.map(fCol => fCol.column_name).includes(d.name))
             .map((col,i) => {
             return (
               <option key={i} value={col.name}>{col.display_name || col.name}</option>

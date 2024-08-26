@@ -11,11 +11,12 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
     : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, filterGroupEnabled } = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupEnabled, filterGroup } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
+    filterGroup: get(state,`${pathBase}${path}`, []),
   }),[state])
 
   let layerPath = ``;
@@ -30,7 +31,6 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
       ]);
     }
   }, [sourceId]);
-
   return (
       <div>
       <ColumnSelectControl
