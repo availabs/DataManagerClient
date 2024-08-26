@@ -124,3 +124,8 @@ SO, how to solve that ^^^ issue.
  - In `StyleEditor`, the user makes a `label` for the group, and selects a list of `views` to include
  - In `LegendPanel`, the `label` and a `Select form control` are shown, where the user can change which `view_id` is used.
 - Make `LegendPanel` work so that all 3 of `interactive-filter`, `filter-group`, and `filter-source-views` all show up nicely :D
+
+
+**RANDO BUG TODO**
+- If `filter-group` is enabled, and user switches to `simple` or `interactive`, the `filter-group` control is still present
+ - `filterGroupEnabled` should be set to `false` (or something like that) when the layerType changes
