@@ -62,13 +62,12 @@ const ViewLayerRender = ({
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
-      //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
 
         if(tileBase){
-          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps, prevLayerProps?.['data-column'])];
         }
 
         layerProps?.layers?.forEach(l => {
@@ -194,11 +193,12 @@ const ViewLayerRender = ({
   }, [maplibreMap, allLayerProps?.zoomToFit]);
 }
 
-const getLayerTileUrl = (tileBase, layerProps) => {
+const getLayerTileUrl = (tileBase, layerProps, prevDataColumn) => {
   let newTileUrl = tileBase;
 
   const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
-  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]);
+  //RYAN TODO -- test FILTERS out, make sure they still work since adding url.includes(prevDataColumn)  
+  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]) || url.includes(prevDataColumn);
   if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
@@ -207,6 +207,12 @@ const getLayerTileUrl = (tileBase, layerProps) => {
     if (layerProps?.["data-column"] && !getUrlHasDataColumn(newTileUrl)) {
       newTileUrl += layerProps?.["data-column"];
     }
+
+    if (layerProps?.["data-column"] !== prevDataColumn && getUrlHasDataColumn(newTileUrl)) {
+      newTileUrl = newTileUrl.replace(prevDataColumn, layerProps?.["data-column"]);
+    }
+
+
 
     if (getUrlHasDataColumn(newTileUrl) && layerHasFilter) {
       newTileUrl += ",";

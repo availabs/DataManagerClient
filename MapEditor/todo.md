@@ -129,3 +129,8 @@ SO, how to solve that ^^^ issue.
 **RANDO BUG TODO**
 - If `filter-group` is enabled, and user switches to `simple` or `interactive`, the `filter-group` control is still present
  - `filterGroupEnabled` should be set to `false` (or something like that) when the layerType changes
+
+ **UI/UX TODO**
+ - Eventually, want it so the user can use all types of groups at once
+ - So, the code/functions that generate the `title`, will have to take this into account
+  - For now, just getting each to work separately. the logic for the UX is the tricky part, not the code/data 

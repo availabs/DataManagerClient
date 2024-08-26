@@ -168,11 +168,13 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       interactiveFilters: get(layer, `['interactive-filters']`, []),
+      dataColumn: get(layer, `['data-column']`, []),
+      filterGroup: get(layer, `['filter-group']`, []),
     }
   },[state, layer]);
 
@@ -222,7 +224,53 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         </div>
       </div>
     );
-  } else {
+  } 
+  else if(layer.filterGroupEnabled) {
+    legendTitle = (
+      <div className="text-sm mr-1 flex items-center">
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+        <div
+          className="text-slate-600 font-medium truncate flex-1"
+        >
+          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+            <select
+              className="w-full bg-transparent"
+              value={dataColumn}
+              onChange={(e) => {
+                setState((draft) => {
+                  let newLayerIndex = draft.symbology.layers[
+                    layer.id
+                  ].layers.findIndex(l => l.id === layer.id)
+                  let newLayer = draft.symbology.layers[
+                    layer.id
+                  ].layers[newLayerIndex]
+
+
+                  newLayer = JSON.parse(JSON.stringify(newLayer).replaceAll(dataColumn, e.target.value));
+
+                  draft.symbology.layers[
+                    layer.id
+                  ].layers[newLayerIndex] = newLayer;
+                  draft.symbology.layers[
+                    layer.id
+                  ]['data-column'] = e.target.value;
+                });
+              }}
+            >
+              {filterGroup.map((gFilter, i) => {
+                return (
+                  <option key={i} value={gFilter.column_name}>
+                    {gFilter.display_name}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  else {
     legendTitle = (
       <div
         onClick={toggleSymbology}
