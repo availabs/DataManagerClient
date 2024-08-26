@@ -41,6 +41,23 @@ const typeConfigs = {
       ]
     },
     {
+      label: 'Filter Group',
+      type: 'popover',
+      conditional: {
+        path: `['filterGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+          }
+        }
+      ]
+    },
+    {
       label: 'Categories',
       type: 'popover',
       conditional: {
@@ -220,6 +237,23 @@ const typeConfigs = {
           },
           path: `['data-column']`,
           datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: 'Filter Group',
+      type: 'popover',
+      conditional: {
+        path: `['filterGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+          }
         }
       ]
     },
@@ -425,6 +459,23 @@ const typeConfigs = {
         }
       ]
     },
+        {
+      label: 'Filter Group',
+      type: 'popover',
+      conditional: {
+        path: `['filterGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => {console.log("v inside filterGroupControl::", v);return `${v?.length}`}
+          }
+        }
+      ]
+    },
     {
       label: 'Categories',
       type: 'popover',
@@ -614,7 +665,7 @@ const typeConfigs = {
           path: `['interactive-filters']`,
         }
       ]
-    },
+    }
   ]
 }
 

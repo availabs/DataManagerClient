@@ -14,6 +14,7 @@ import set from 'lodash/set'
 import cloneDeep from 'lodash/cloneDeep'
 import { CategoryControl } from './CategoryControl';
 import { InteractiveFilterControl } from './InteractiveFilterControl';
+import { FilterGroupControl } from './FilterGroupControl';
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -361,10 +362,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const {layerType, viewId, sourceId} = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupEnabled } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
+    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+    filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
   }),[state])
 
   const column = useMemo(() => {
@@ -454,6 +456,25 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           })}
         </select>
       </div>
+      <Switch
+        checked={filterGroupEnabled}
+        onChange={()=>{
+          setState(draft=> {
+            set(draft, `${pathBase}['filterGroupEnabled']`,!filterGroupEnabled)
+            set(draft, `${pathBase}['filter-group']`, [])
+          })
+        }}
+        className={`${
+          filterGroupEnabled ? 'bg-blue-500' : 'bg-gray-200'
+        } relative inline-flex h-4 w-8 items-center rounded-full `}
+      >
+        <span>Group</span>
+        <div
+          className={`${
+            filterGroupEnabled ? 'translate-x-5' : 'translate-x-0'
+          } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+        />
+      </Switch>
     </label>
   )
 }
@@ -853,5 +874,6 @@ export const controlTypes = {
   'simple': SimpleControl,
   'select': SelectControl,
   'selectType': SelectTypeControl,
-  'selectViewColumn': SelectViewColumnControl
+  'selectViewColumn': SelectViewColumnControl,
+  'filterGroupControl': FilterGroupControl
 }
