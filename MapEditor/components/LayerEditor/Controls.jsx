@@ -15,6 +15,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { CategoryControl } from './CategoryControl';
 import { InteractiveFilterControl } from './InteractiveFilterControl';
 import { FilterGroupControl } from './FilterGroupControl';
+import { ViewGroupControl } from './ViewGroupControl'
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -408,7 +409,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
     filterGroup: get(state,`${pathBase}['filter-group']`, []),
-    filterGroupLegendColumn: get(state,`${pathBase}['filter-group-legend-column']`, [])
+    filterGroupLegendColumn: get(state,`${pathBase}['filter-group-legend-column']`, []),
   }),[state])
 
   const column = useMemo(() => {
@@ -498,7 +499,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             .filter(d => !filterGroupEnabled || filterGroup.map(fCol => fCol.column_name).includes(d.name))
             .map((col,i) => {
             return (
-              <option key={i} value={col.name}>{col.display_name || col.name} {filterGroupLegendColumn === col.name ? '**' : ''}</option>
+              <option key={i} value={col.name}>{col.display_name || col.name} {filterGroupEnabled && filterGroupLegendColumn === col.name ? '**' : ''}</option>
             )
           })}
         </select>
@@ -859,11 +860,11 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
-export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
+export const AddColumnSelectControl = ({setState, availableColumnNames, label="Add Column"}) => {
   return (
     <>
       <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center ml-4'>
-          Add Column
+          {label}
       </div>
       <div className="flex-1 flex items-center mx-4">
         <StyledControl>
@@ -904,5 +905,6 @@ export const controlTypes = {
   'selectType': SelectTypeControl,
   'selectViewColumn': SelectViewColumnControl,
   'filterGroupControl': FilterGroupControl,
+  'viewGroupControl': ViewGroupControl,
   'toggleControl': ToggleControl,
 }

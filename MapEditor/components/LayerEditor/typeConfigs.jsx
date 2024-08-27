@@ -69,6 +69,34 @@ const typeConfigs = {
       ]
     },
     {
+      label: 'Source View Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'Source View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: {
+        path: `['viewGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
+          }
+        }
+      ]
+    },
+    {
       label: 'Categories',
       type: 'popover',
       conditional: {
@@ -275,6 +303,34 @@ const typeConfigs = {
           path: `['filter-group']`,
           params: {
             format: (v) => `${v?.length} columns`
+          }
+        }
+      ]
+    },
+    {
+      label: 'Source View Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'Source View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: {
+        path: `['viewGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
           }
         }
       ]
@@ -505,6 +561,34 @@ const typeConfigs = {
           path: `['filter-group']`,
           params: {
             format: (v) => `${v?.length} columns`
+          }
+        }
+      ]
+    },
+    {
+      label: 'Source View Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'Source View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: {
+        path: `['viewGroupEnabled']`,
+        conditions: [true]
+      },
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
           }
         }
       ]
