@@ -134,6 +134,10 @@ SO, how to solve that ^^^ issue.
 
 
  **UI/UX TODO**
+ - Need an indicator  for which `view` generated the legend
+  - Just reuse what you did for the filter-group-legend thing
+ - PERHAPS also need a place to store the original `view_id`, if the user toggles off the view-group, we want to revert to original
+  - COULD just use `filter-source-views[0]`, but, that will get confusing because the user will remember which view they originally added
  - Eventually, want it so the user can use all types of groups at once
  - So, the code/functions that generate the `title`, will have to take this into account
   - For now, just getting each to work separately. the logic for the UX is the tricky part, not the code/data 

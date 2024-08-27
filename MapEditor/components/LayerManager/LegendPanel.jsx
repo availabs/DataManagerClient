@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useContext } from 'react'
 import { SymbologyContext } from '../../'
+import { DamaContext } from "../../../store"
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
-
+import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -164,12 +165,14 @@ function StepLegend({ layer, toggleSymbology }) {
 
 function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
+  const { falcor, falcorCache, pgEnv } = useContext(DamaContext);
   const { activeLayer } = state.symbology;
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId } = useMemo(() => {
     return {
+      sourceId: get(layer,`source_id`),
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       interactiveFilters: get(layer, `['interactive-filters']`, []),
@@ -177,6 +180,8 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       filterGroup: get(layer, `['filter-group']`, []),
       filterGroupName: get(layer, `['filter-group-name']`, ''),
       filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
+      viewGroup: get(layer, `['filter-source-views']`, []),
+      viewGroupName: get(layer, `['filter-group-name']`, ''),
     }
   },[state, layer]);
 
@@ -195,6 +200,31 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
 
   let legendTitle;
+
+  //----------------------------------
+  // -- get selected source views
+  // ---------------------------------
+  React.useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      return await falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(ViewAttributes)
+      ]);
+    }
+    if(sourceId) {
+      fetchData();
+    }
+  }, [sourceId, falcor, pgEnv]);
+
+  const views = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, sourceId, pgEnv]);
+
   if (type === "interactive") {
     legendTitle = (
       <div className="text-sm mr-1 flex items-center">
@@ -232,7 +262,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
         <div className='' onClick={toggleSymbology} >
           {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-          {filterGroupName}
+          {layer.name ?? filterGroupName}
         </div>
         <div
           className="text-slate-600 font-medium truncate"
@@ -267,6 +297,49 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
                 return (
                   <option key={i} value={gFilter.column_name}>
                     {gFilter.display_name} {itemSuffix} 
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  else if(layer.viewGroupEnabled) {
+    legendTitle = (
+      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
+        <div className='' onClick={toggleSymbology} >
+          {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+          {layer.name ?? viewGroupName}
+        </div>
+        <div
+          className="text-slate-600 font-medium truncate"
+        >
+          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+            <select
+              className="w-full bg-transparent"
+              value={layer.view_id}
+              onChange={(e) => {
+                setState((draft) => {
+                  const newLayer = JSON.parse(JSON.stringify(
+                    draft.symbology.layers[layer.id]
+                  ).replaceAll(layer.view_id, e.target.value))
+
+                  newLayer['filter-source-views'] = layer['filter-source-views']
+
+                  draft.symbology.layers[
+                    layer.id
+                  ] = newLayer;
+                });
+              }}
+            >
+              {viewGroup.map((view_id, i) => {
+                //const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
+                const curView = views.find(v => v.view_id === view_id)
+                return (
+                  <option key={i} value={view_id}>
+                    {curView?.version ?? curView?.view_id}
                   </option>
                 );
               })}

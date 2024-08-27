@@ -94,6 +94,40 @@ const ViewLayerRender = ({
       }
     }
 
+    if(layerProps.view_id !== prevLayerProps?.view_id) {
+      if(maplibreMap.getSource(prevLayerProps?.sources?.[0]?.id)){
+        const oldSource = cloneDeep(prevLayerProps.sources?.[0])
+        let newSource = cloneDeep(layerProps.sources?.[0])
+        let tileBase = newSource.source.tiles?.[0];
+
+        if(tileBase){
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps, prevLayerProps?.['data-column'])];
+        }
+
+        layerProps?.layers?.forEach(l => {
+          if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+            maplibreMap.removeLayer(l?.id) 
+          }
+        })
+
+        maplibreMap.removeSource(oldSource.id)
+        if(!maplibreMap.getSource(newSource.id)){
+          maplibreMap.addSource(newSource.id, newSource.source)
+        } else {
+          console.log('cant add',maplibreMap.getSource(newSource.id))
+        }
+
+        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
+        layerProps?.layers?.forEach(l => {
+            if(maplibreMap.getLayer(beneathLayer?.id)){
+              maplibreMap.addLayer(l, beneathLayer?.id) 
+            } else {
+              maplibreMap.addLayer(l) 
+            }
+        })
+      }
+    }
+
     if(prevLayerProps?.order !== undefined && layerProps?.order < prevLayerProps?.order) {
       let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {

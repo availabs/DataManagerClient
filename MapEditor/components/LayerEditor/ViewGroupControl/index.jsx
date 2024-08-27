@@ -55,17 +55,11 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, sourceId, pgEnv]);
-  console.log("views inside viewgroupcontrol::", views)
 
   const viewIds = views.map(v => v.view_id);
-  console.log("viewGroup::", viewGroup)
   const availableViewIds = getDiffColumns(viewIds, viewGroup);
-  console.log("availableViewIds::",availableViewIds)
-
   const availableViews = views.filter(v => availableViewIds.includes(v.view_id));
   const selectedViews = views.filter(v => viewGroup.includes(v.view_id));
-  console.log("availableViews::",availableViews)
-  console.log("selectedViews::", selectedViews)
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
       <div className="group w-full flex px-2">
