@@ -321,6 +321,46 @@ function SimpleControl({path, params={}}) {
   )
 }
 
+function ToggleControl({path, params={title:""}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  const { value } = useMemo(() => {
+    return {
+      value: get(state, `${pathBase}.${path}`, {}),
+    }
+  },[state])
+
+  return (
+    <label className='flex'>
+      <div className='flex items-center'>
+        <Switch
+          checked={value}
+          onChange={()=>{
+            setState(draft=> {
+              set(draft, `${pathBase}${path}`,!value)
+            })
+          }}
+          className={`${
+            value ? 'bg-blue-500' : 'bg-gray-200'
+          } relative inline-flex h-4 w-8 items-center rounded-full `}
+        >
+          <span className="sr-only">{params.title}</span>
+          <div
+            className={`${
+              value ? 'translate-x-5' : 'translate-x-0'
+            } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+          />
+        </Switch>
+      </div>
+    </label>
+  )
+}
+
 export function SelectControl({path, params={}}) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
@@ -463,25 +503,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           })}
         </select>
       </div>
-      <Switch
-        checked={filterGroupEnabled}
-        onChange={()=>{
-          setState(draft=> {
-            set(draft, `${pathBase}['filterGroupEnabled']`,!filterGroupEnabled)
-            set(draft, `${pathBase}['filter-group']`, [])
-          })
-        }}
-        className={`${
-          filterGroupEnabled ? 'bg-blue-500' : 'bg-gray-200'
-        } relative inline-flex h-4 w-8 items-center rounded-full `}
-      >
-        <span>Group</span>
-        <div
-          className={`${
-            filterGroupEnabled ? 'translate-x-5' : 'translate-x-0'
-          } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
-        />
-      </Switch>
     </label>
   )
 }
@@ -882,5 +903,6 @@ export const controlTypes = {
   'select': SelectControl,
   'selectType': SelectTypeControl,
   'selectViewColumn': SelectViewColumnControl,
-  'filterGroupControl': FilterGroupControl
+  'filterGroupControl': FilterGroupControl,
+  'toggleControl': ToggleControl,
 }

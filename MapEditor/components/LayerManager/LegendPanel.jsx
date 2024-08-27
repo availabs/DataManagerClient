@@ -168,14 +168,15 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       interactiveFilters: get(layer, `['interactive-filters']`, []),
       dataColumn: get(layer, `['data-column']`, []),
       filterGroup: get(layer, `['filter-group']`, []),
-      filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, []),
+      filterGroupName: get(layer, `['filter-group-name']`, ''),
+      filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
     }
   },[state, layer]);
 
@@ -228,10 +229,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   } 
   else if(layer.filterGroupEnabled) {
     legendTitle = (
-      <div className="text-sm mr-1 flex items-center flex-col justify-start align-start content-start flex-wrap">
+      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
         <div className='' onClick={toggleSymbology} >
           {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-          {layer.name}
+          {filterGroupName}
         </div>
         <div
           className="text-slate-600 font-medium truncate"

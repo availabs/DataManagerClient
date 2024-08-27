@@ -42,6 +42,17 @@ const typeConfigs = {
     },
     {
       label: 'Filter Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group'
+        }
+      ]
+    },
+    {
+      label: '',
       type: 'popover',
       conditional: {
         path: `['filterGroupEnabled']`,
@@ -242,6 +253,17 @@ const typeConfigs = {
     },
     {
       label: 'Filter Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group',
+        }
+      ]
+    },
+    {
+      label: '',
       type: 'popover',
       conditional: {
         path: `['filterGroupEnabled']`,
@@ -459,8 +481,19 @@ const typeConfigs = {
         }
       ]
     },
-        {
+    {
       label: 'Filter Group',
+      type: 'inline',
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group'
+        }
+      ]
+    },
+    {
+      label: '',
       type: 'popover',
       conditional: {
         path: `['filterGroupEnabled']`,
