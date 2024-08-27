@@ -129,6 +129,9 @@ SO, how to solve that ^^^ issue.
 **RANDO BUG TODO**
 - If `filter-group` is enabled, and user switches to `simple` or `interactive`, the `filter-group` control is still present
  - `filterGroupEnabled` should be set to `false` (or something like that) when the layerType changes
+- if the current `data-column` of a `filter-group` is changed via the `LegendPanel`, it will change the displayed value in the `StyleEditor`, but the legend is still BASED off of something else
+ - Maybe just some text or indicator of what column was used to generate the legend. Maybe a star or something?
+
 
  **UI/UX TODO**
  - Eventually, want it so the user can use all types of groups at once

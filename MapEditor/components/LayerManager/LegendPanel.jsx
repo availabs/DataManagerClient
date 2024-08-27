@@ -168,13 +168,14 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       interactiveFilters: get(layer, `['interactive-filters']`, []),
       dataColumn: get(layer, `['data-column']`, []),
       filterGroup: get(layer, `['filter-group']`, []),
+      filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, []),
     }
   },[state, layer]);
 
@@ -258,9 +259,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
               }}
             >
               {filterGroup.map((gFilter, i) => {
+                const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
                 return (
                   <option key={i} value={gFilter.column_name}>
-                    {gFilter.display_name}
+                    {gFilter.display_name} {itemSuffix} 
                   </option>
                 );
               })}

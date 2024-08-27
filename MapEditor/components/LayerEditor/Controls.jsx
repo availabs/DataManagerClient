@@ -362,12 +362,13 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, filterGroupEnabled, filterGroup } = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupEnabled, filterGroup, filterGroupLegendColumn } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
     filterGroup: get(state,`${pathBase}['filter-group']`, []),
+    filterGroupLegendColumn: get(state,`${pathBase}['filter-group-legend-column']`, [])
   }),[state])
 
   const column = useMemo(() => {
@@ -437,6 +438,10 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
+            if(filterGroupEnabled) {
+              set(draft, `${pathBase}['filter-group-legend-column']`, e.target.value)
+            }
+
             set(draft, `${pathBase}['choroplethdata']`, {});
             set(draft, `${pathBase}['categories']`, {});
             set(draft, `${pathBase}.${path}`, e.target.value)
@@ -453,7 +458,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             .filter(d => !filterGroupEnabled || filterGroup.map(fCol => fCol.column_name).includes(d.name))
             .map((col,i) => {
             return (
-              <option key={i} value={col.name}>{col.display_name || col.name}</option>
+              <option key={i} value={col.name}>{col.display_name || col.name} {filterGroupLegendColumn === col.name ? '**' : ''}</option>
             )
           })}
         </select>
