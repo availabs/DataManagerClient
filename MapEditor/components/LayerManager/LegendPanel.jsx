@@ -228,10 +228,13 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   } 
   else if(layer.filterGroupEnabled) {
     legendTitle = (
-      <div className="text-sm mr-1 flex items-center">
-        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+      <div className="text-sm mr-1 flex items-center flex-col justify-start align-start content-start flex-wrap">
+        <div className='' onClick={toggleSymbology} >
+          {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+          {layer.name}
+        </div>
         <div
-          className="text-slate-600 font-medium truncate flex-1"
+          className="text-slate-600 font-medium truncate"
         >
           <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
             <select
