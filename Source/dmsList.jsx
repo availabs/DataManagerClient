@@ -112,48 +112,57 @@ const DmsList = () => {
                     formats.map(f => <option key={f} value={JSON.stringify(f)}>{JSON.stringify(f)}</option>)
                 }
             </select>
-            <div className={'max-h-[calc(100vh-150px)] overflow-auto scrollbar-sm'}>
+            <div className={'font-bold max-h-[calc(100vh-150px)] grid grid-cols-2 divide-x divide-y overflow-auto scrollbar-sm'}
+                 style={{gridTemplateColumns: '1fr 3fr'}}>
+                <>
+                    <div>Page</div>
+                    <div>Sections</div>
+                </>
+            </div>
+            <div className={'max-h-[calc(100vh-150px)] grid grid-cols-2 divide-x divide-y overflow-auto scrollbar-sm'}
+                 style={{gridTemplateColumns: '1fr 3fr'}}>
                 {
                     pages
-                        .filter((p, pI) => pI >= currentPage*pageSize && pI < currentPage*pageSize + pageSize)
+                        .filter((p, pI) => pI >= currentPage * pageSize && pI < currentPage * pageSize + pageSize)
                         .map((page, pageI) => {
-                        const currSections = get(page, ['data', 'value', 'sections'], [])
-                            .filter(section => sections[section.id])
-                            .map(section => {
-                                const element_data = parseIfJson(sections[section.id]?.element?.['element-data']);
-                                const src = stringifyIfObj(element_data?.dataSource || element_data?.ealSourceId);
-                                const version = stringifyIfObj(element_data?.version || element_data?.ealViewId);
-                                return (
-                                    <div className={'p-2 hover:bg-blue-300'}>
-                                        <div>{sections[section.id]?.title}</div>
-                                        <div>type: {sections[section.id]?.element?.['element-type']}</div>
-                                        <div className={'font-bold text-gray-900'}>source: {src}</div>
-                                        <div className={'font-bold text-gray-900'}>version: {version}</div>
-                                        {/*<div className={'h-12 overflow-auto scrollbar-sm'}>{JSON.stringify(sections[section.id], null, 2)}</div>*/}
-                                    </div>)
-                            });
+                            const currSections = get(page, ['data', 'value', 'sections'], [])
+                                .filter(section => sections[section.id])
+                                .map(section => {
+                                    const element_data = parseIfJson(sections[section.id]?.element?.['element-data']);
+                                    const src = stringifyIfObj(element_data?.dataSource || element_data?.ealSourceId);
+                                    const version = stringifyIfObj(element_data?.version || element_data?.ealViewId);
+                                    return (
+                                        <div className={'p-2 hover:bg-blue-300'}>
+                                            <Link className={'w-full justify-between'}
+                                                  to={`${req.baseUrl}/${get(page, ['data', 'value', 'url_slug'])}#${section.id}`}>
+                                                {sections[section.id]?.title}
+                                                <span
+                                                    className={'px-4 italic text-blue-300 hover: text-blue-600 text-sm'}>view</span>
+                                            </Link>
+                                            <div>type: {sections[section.id]?.element?.['element-type']}</div>
+                                            <div className={'font-bold text-gray-900'}>source: {src}</div>
+                                            <div className={'font-bold text-gray-900'}>version: {version}</div>
+                                            {/*<div className={'h-12 overflow-auto scrollbar-sm'}>{JSON.stringify(sections[section.id], null, 2)}</div>*/}
+                                        </div>)
+                                });
 
-                        return (
-                            <div className={'p-1 border-2 m-1'}>
-                                <div className={'w-full flex justify-between'}>
-                                    <Link to={`${req.baseUrl}/${get(page, ['data', 'value', 'url_slug'])}`}>
-                                        {get(page, ['data', 'value', 'title'])}
-                                        <span
-                                            className={'px-4 italic text-sm'}>{get(page, ['data', 'value', 'url_slug'])}</span>
-                                    </Link>
-
-                                    <div className={'cursor-pointer text-blue-300 hover:text-blue-600'}
-                                         onClick={() => setShowSections(showSections === pageI ? undefined : pageI)}>{
-                                        loading ? 'loading' :
-                                            currSections.length ? showSections === pageI ? 'hide' : 'expand' : 'No Sections available'}</div>
-                                </div>
-                                <div className={showSections === pageI ? 'block p-4 h-[250px] overflow-auto scrollbar-sm' : 'hidden'}>{currSections}</div>
-                            </div>
-                        )
-                    })
+                            return (
+                                <React.Fragment>
+                                    <div className={'p-2 w-full'}>
+                                        <Link to={`${req.baseUrl}/${get(page, ['data', 'value', 'url_slug'])}`}>
+                                            {get(page, ['data', 'value', 'title'])}
+                                            <span
+                                                className={'px-4 italic text-sm'}>{get(page, ['data', 'value', 'url_slug'])}</span>
+                                        </Link>
+                                    </div>
+                                    <div className={'p-2 h-[250px] overflow-auto scrollbar-sm'}>{currSections}</div>
+                                </React.Fragment>
+                            )
+                        })
                 }
             </div>
-            <RenderPagination pageSize={pageSize} totalPages={pages.length} currentPage={currentPage} setVCurrentPage={setCurrentPage} />
+            <RenderPagination pageSize={pageSize} totalPages={pages.length} currentPage={currentPage}
+                              setVCurrentPage={setCurrentPage}/>
 
         </SourcesLayout>
 
