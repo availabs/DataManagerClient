@@ -95,28 +95,30 @@ function SymbologyControl () {
           </div>
           { symbologyId && 
             <>
-              <div className='flex  mr-2'>
+              <div
+                className='flex  mr-2'
+                onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+              >
                 <FolderOpen
                   size={14}
                   className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
-                  onClick={() => setNewMapModalState({...newMapModalState, open: true})}
                 />
               </div>
-              <div className='flex  mr-2'>
-                <SymbologyControlMenu 
-                  button={
-                    <Trash
-                      size={14}   
-                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-                    />
-                  }
-                />
-                </div>
               <div className='flex  mr-2'>
                 <SaveChangesMenu 
                   button={
                     <FloppyDisk
                       size={14}
+                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                    />
+                  }
+                />
+              </div>
+              <div className='flex'>
+                <SymbologyControlMenu 
+                  button={
+                    <Trash
+                      size={14}   
                       className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
                     />
                   }

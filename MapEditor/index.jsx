@@ -5,7 +5,7 @@ import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
 import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
-
+import { usePrevious } from './components/LayerManager/utils'
 import {PMTilesProtocol} from '../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
 // import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
@@ -87,6 +87,19 @@ const MapEditor = () => {
     initialSymbology = dbSymbology;
   }
 
+  // Sets an initial `activeLayer`
+  if (
+    !!initialSymbology?.symbology?.layers &&
+    Object.keys(initialSymbology?.symbology?.layers).length > 0 &&
+    (initialSymbology?.symbology?.activeLayer === "" || 
+      !initialSymbology?.symbology.layers[initialSymbology?.symbology?.activeLayer]
+    ) 
+  ) {
+    initialSymbology.symbology.activeLayer = Object.values(
+      initialSymbology?.symbology?.layers
+    ).find((layer) => layer.order === 0)?.id;
+  }
+
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
@@ -106,8 +119,13 @@ const MapEditor = () => {
   // Updates localStorage whenever state changes 
   useEffect(() => {
     function updateData() {
-      if(window.localStorage) { 
-        window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+      //TODO -- after adding about 8-10 interactive filters, localstorage got too full
+      try {
+        if(window.localStorage) { 
+          window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
+        }
+      } catch(e) {
+        console.error(e);
       }
     }
 
@@ -177,8 +195,75 @@ const MapEditor = () => {
 
   const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
-  // console.log('render', mapLayers.map(l => `${l?.props?.name} ${l?.props?.order}`))  
-	// console.log('state activeLayer', get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {}))
+  const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
+    const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`);
+    return {
+      selectedInteractiveFilterIndex,
+      activeLayerType: get(state,`symbology.layers[${state?.symbology?.activeLayer}]['layer-type']`, {}),
+      currentInteractiveFilter: get(
+        state,
+        `symbology.layers[${state?.symbology?.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`,
+      )
+    }
+  },[state?.symbology.layers]);
+
+  //Handles updates for Interactive Filters for the ACTIVE LAYER
+  useEffect(() => {
+    const updateSymbology = () => {
+      setState((draft) => {
+        const draftActiveLayer = draft.symbology.layers[draft?.symbology?.activeLayer];
+        const draftFilters =  get(draft,`symbology.layers[${draft?.symbology?.activeLayer}]['interactive-filters']`);
+        const draftInteractiveFilter = get(draft,`symbology.layers[${draft?.symbology?.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`)
+        if(draftInteractiveFilter) {
+          draft.symbology.layers[draft?.symbology?.activeLayer] = {
+            ...draftActiveLayer,
+            ...draftInteractiveFilter,
+            order: draftActiveLayer.order,
+            "layer-type": "interactive",
+            "interactive-filters": draftFilters,
+            selectedInteractiveFilterIndex: selectedInteractiveFilterIndex
+          };
+        }
+      });
+    };
+
+    if (activeLayerType === "interactive" && selectedInteractiveFilterIndex !== undefined ) {
+      updateSymbology();
+    }
+  }, [selectedInteractiveFilterIndex, activeLayerType, currentInteractiveFilter]);
+
+  const interactiveFilterIndicies = useMemo(
+    () =>
+      Object.values(state.symbology.layers).map(
+        (l) => l.selectedInteractiveFilterIndex
+      ),
+    [state.symbology.layers]
+  );
+  const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
+
+  // Handles all non-active layers. We only need to listen for index changes.
+  useEffect(() => {
+    setState((draft) => {
+      Object.values(draft.symbology.layers)
+        .filter(l => l['layer-type'] === 'interactive' && l.id !== draft.symbology.activeLayer)
+        .forEach(l => {
+          const draftFilters =  get(l,`['interactive-filters']`);
+          const draftFilterIndex = l.selectedInteractiveFilterIndex;
+          const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+
+          if(draftInteractiveFilter) {
+            draft.symbology.layers[l.id] = {
+              ...l,
+              ...draftInteractiveFilter,
+              order: l.order,
+              "layer-type": "interactive",
+              "interactive-filters": draftFilters,
+              selectedInteractiveFilterIndex: draftFilterIndex
+            };
+          }
+        })
+    });
+  }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

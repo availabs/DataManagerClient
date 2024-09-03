@@ -1,45 +1,38 @@
-import React, { useContext , useMemo, useCallback, Fragment, useRef} from 'react'
+import React, { useMemo } from 'react'
 import { SymbologyContext } from '../../'
-import SourceSelector from './SourceSelector'
-import { DndList } from '~/modules/avl-components/src'
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
+import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
-
 
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
   const visible = layer.isVisible
-
+  const onClick = () => {
+    setState(draft => {
+      draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
+      draft.symbology.layers[layer.id].layers.forEach((d,i) => {
+        let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
+        let update = val === 'visible' ? 'none' : 'visible'
+        draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
+      })
+    })
+  }
   return (
-    <div onClick={() => {
-        setState(draft => {
-          draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
-          draft.symbology.layers[layer.id].layers.forEach((d,i) => {
-              let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
-              let update = val === 'visible' ? 'none' : 'visible'
-              // console.log('update?', update, val)
-              // set(draft,`symbology.layers[${layer.id}].layers[${i}].layout` , { "visible": update}) 
-              draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
-          })
-        })}}
-      >
+    <>
       {visible ? 
-        <Eye 
-          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-            
+        <Eye
+          onClick={onClick}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         /> : 
-        <EyeClosed 
-        className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          
+        <EyeClosed
+          onClick={onClick}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         />
       }
-    </div>
+    </>
   )
 }
 
@@ -84,42 +77,52 @@ const typePaint = {
   }
 }
 
-function CategoryLegend({layer}) {
+function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  let { interactiveFilters } = useMemo(() => {
+    return {
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+    };
+  }, [layer]);
+
+  const selectedInteractiveFilterIndex = layer?.selectedInteractiveFilterIndex;
+  const activeFilterLayerType = layer?.['interactive-filters']?.[selectedInteractiveFilterIndex]?.['layer-type'];
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+    </div>
+  );
+}
+
+function CategoryLegend({ layer, toggleSymbology }) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let  legenddata = layer?.['legend-data'] || []
-  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
-
-  
-  
   if(!legenddata || legenddata.length === 0 ) {
     legenddata = []
-    // (paintValue || []).filter((d,i) => i > 2 )
-    //   .map((d,i) => {
-    //     if(i%2 === 0) {
-    //       return {color: d, label: paintValue[i+2]}
-    //     }
-    //     return null
-    //   })
-    //   .filter(d => d)
   }
-
   
   return (
-    <div className='w-full max-h-[250px] overflow-x-auto'>
-        {legenddata.map((d,i) => (
-          <div key={i} className='w-full flex items-center hover:bg-pink-50'>
-            <div className='flex items-center h-6 w-10 justify-center  '>
-              {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
-              <Symbol color={d.color} />
-            </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-          </div> 
-        ))}
+    <div
+      className='w-full max-h-[250px] overflow-x-auto'
+      onClick={toggleSymbology}
+    >
+      {legenddata.map((d,i) => (
+        <div key={i} className='w-full flex items-center hover:bg-pink-50'>
+          <div className='flex items-center h-6 w-10 justify-center  '>
+            <Symbol color={d.color} />
+          </div>
+          <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
+        </div> 
+      ))}
     </div>
   )
 }
 
-function StepLegend({layer}) {
+function StepLegend({ layer, toggleSymbology }) {
   //console.log('StepLegend', layer)
   const { state, setState  } = React.useContext(SymbologyContext);
   let { legenddata, isLoadingColorbreaks } = useMemo(() => {
@@ -142,51 +145,125 @@ function StepLegend({layer}) {
   }
 
   return (
-    <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
-        {legenddata.map((d,i) => (
-          <div key={i} className='w-full flex items-center hover:bg-pink-50'>
-            <div className='flex items-center h-6 w-10 justify-center  '>
-              {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
-              <Symbol color={d.color} />
-            </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-          </div> 
-        ))}
+    <div
+      className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'
+      onClick={toggleSymbology}
+    >
+      {legenddata.map((d,i) => (
+        <div key={i} className='w-full flex items-center hover:bg-pink-50'>
+          <div className='flex items-center h-6 w-10 justify-center  '>
+            <Symbol color={d.color} />
+          </div>
+          <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
+        </div> 
+      ))}
     </div>
   )
 }
 
 
-function LegendRow ({ index, layer, i }) {
+function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
+
+  const [isListVisible, setIsListVisible] = React.useState(true);
+
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+    }
+  },[state, layer]);
+
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
     })
   }
-
+  const shouldDisplayColorSquare =
+    type === "simple" ||
+    (type === "interactive" &&
+      interactiveFilters?.[selectedInteractiveFilterIndex]?.["layer-type"] ===
+        "simple") ||
+    !type;
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
-  const type = layer['layer-type']
-  //console.log('legend row type', type)
 
+  let legendTitle;
+  if (type === "interactive") {
+    legendTitle = (
+      <div className="text-sm mr-1 flex items-center">
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+        <div
+          className="text-slate-600 font-medium truncate flex-1"
+        >
+          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+            <select
+              className="w-full bg-transparent"
+              value={selectedInteractiveFilterIndex}
+              onChange={(e) => {
+                setState((draft) => {
+                  draft.symbology.layers[
+                    layer.id
+                  ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+                });
+              }}
+            >
+              {interactiveFilters.map((iFilter, i) => {
+                return (
+                  <option key={i} value={i}>
+                    {iFilter.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  } else {
+    legendTitle = (
+      <div
+        onClick={toggleSymbology}
+        className="text-sm text-slate-600 font-medium truncate flex flex-1"
+      >
+        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
+        {layer.name}
+      </div>
+    );
+  }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
-        {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div onClick={toggleSymbology} className='text-sm text-slate-600 font-medium truncate flex-1'>{layer.name}</div>
-        {/*<div className='flex items-center text-xs text-slate-400'>{layer.order}</div>*/}
-        <div className='text-sm pt-1 px-0.5 flex items-center'>
-          <LayerMenu 
-            layer={layer}
-            button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-          />
-        </div>
-        <VisibilityButton layer={layer}/>
+      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
+          {legendTitle}
+          <div className='flex'>
+            <div className='text-sm pt-1  flex items-center'>
+              <LayerMenu 
+                layer={layer}
+                button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
+              />
+            </div>
+            <CaretUpSolid
+              onClick={() => {
+                onRowMove(i, i-1)
+              }}
+              size={24}
+              className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+            />
+            <CaretDownSolid
+              onClick={ () => {
+                onRowMove(i, i+1)
+              }}
+              size={24}
+              className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+            />
+            <VisibilityButton layer={layer}/>
+          </div>
       </div>
-      {type === 'categories' && <CategoryLegend layer={layer} />}
-      {type === 'choropleth' && <StepLegend layer={layer} />}
+      {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology} isListVisible={isListVisible}/>}
     </div>
   )
 }
@@ -198,36 +275,31 @@ function LegendPanel (props) {
   
   const droppedSection = React.useCallback((start, end) => {
     setState(draft => {
-    const sections = Object.values(draft.symbology.layers)
-        
-    let listLen = Object.values(draft.symbology.layers).length - 1
-    let orderStart =  listLen - start
-    let orderEnd = listLen - end 
-
-    const [item] = sections.splice(orderStart, 1);
-    sections.splice(orderEnd, 0, item);
-
-    sections.forEach((item, i) => {
+      const sections = Object.values(draft.symbology.layers);
+      sections.sort((a,b) => b.order - a.order)
+      const [item] = sections.splice(start, 1);
+      sections.splice(end, 0, item);
+      sections.reverse().forEach((item, i) => {
         item.order = i
-    })
-    
-    draft.symbology.layers = sections
+      })
+      draft.symbology.layers = sections.reverse()
         .reduce((out,sec) => {
           out[sec.id] = sec;
           return out 
         },{})
-    })
-  }, [])
+    });
+  }, []);
 
+  const numLayers = useMemo(() => {
+    return Object.values(layers).length;
+  }, [layers]);
   return (
     <>     
       {/* ------ Legend Pane ----------- */}
       <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] scrollbar-sm '>
-        <DndList onDrop={droppedSection} offset={{x:16, y: 45}}>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)
-          .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
-        </DndList>
+          .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} numLayers={numLayers} onRowMove={droppedSection}/>)}
       </div>
     </>
   )

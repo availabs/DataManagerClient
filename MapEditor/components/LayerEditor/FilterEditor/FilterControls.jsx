@@ -180,7 +180,7 @@ export function FilterBuilder({ path, params = {} }) {
     </StyledControl>
   );
 
-  const valueLabel = isEqualityOperator ? "Search values" : "Value:";
+  const valueLabel = isEqualityOperator ? "Search:" : "Value:";
   const valueLabelComponent = isBetweenOperator ? null : (
     <div className="p-1">{valueLabel}</div>
   );
@@ -364,28 +364,38 @@ function EqualityFilterValueList({params, path, filterSearchValue}) {
     }
   }, [sourceId]);
 
+  const options = JSON.stringify({
+    groupBy: [(activeColumnName).split('AS ')[0]],
+    exclude: {[(activeColumnName).split('AS ')[0]]: ['null']}
+  })
   useEffect(() => {
     falcor.get([
       "dama",
       pgEnv,
       "viewsbyId",
       viewId,
+      "options",
+      options,
       "databyIndex",
-      { from: 0, to: 2000 },
-      [activeColumnName],
+      { from: 0, to: 500 },
+      [activeColumnName, "count(1)::int as count"],
     ]);
   }, [falcor, pgEnv, viewId, activeColumnName]);
 
   const sampleData = useMemo(() => {
     return Object.values(
-      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) =>  v?.value ? get(falcorCache, v.value, "") : "");
+      get(
+        falcorCache,
+        ["dama", pgEnv, "viewsbyId", viewId, "options", options, "databyIndex"],
+        {}
+      )
+    );
   }, [pgEnv, falcorCache]);
 
   const sampleRows = useMemo(() => {
     return sampleData
-      ?.map((row) => row[activeColumnName])
-      ?.filter((item) => item !== "null")
+      ?.map(row => row[activeColumnName])
+      ?.filter((item) => typeof item === 'string' && item !== "null")
       ?.filter(onlyUnique);
   }, [sampleData, activeColumnName]);
   sampleRows.sort();

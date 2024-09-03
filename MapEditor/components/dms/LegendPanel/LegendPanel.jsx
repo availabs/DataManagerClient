@@ -5,7 +5,7 @@ import { MapContext } from '../MapComponent'
 import { DndList } from '~/modules/avl-components/src'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../../icons'
+import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 //import {LayerMenu} from './LayerPanel'
@@ -154,23 +154,86 @@ function StepLegend({layer}) {
 }
 
 
-function LegendRow ({ index, layer, i }) {
+function InteractiveLegend({ layer, isListVisible, symbology_id }) {
+  const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
+
+  let { interactiveFilters } = useMemo(() => {
+    return {
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+    };
+  }, [layer]);
+
+  const selectedInteractiveFilterIndex = layer?.selectedInteractiveFilterIndex;
+  const activeFilterLayerType = layer?.['interactive-filters']?.[selectedInteractiveFilterIndex]?.['layer-type'];
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      {isListVisible && interactiveFilters.map((iFilter,i) => {
+        return (
+          <div
+            key={i}
+            className={`w-full px-2 flex items-center hover:bg-pink-50`}
+            onClick={() => {
+              setState(draft => {
+                console.log("setting new active fgor interactive layer.id::", layer.id)
+                draft.symbologies[symbology_id].symbology.layers[layer.id].selectedInteractiveFilterIndex = i;
+              })
+            }}
+          >
+            <input
+              type="radio"
+              readOnly
+              checked={!isListVisible || selectedInteractiveFilterIndex === i}
+            />
+            <div className="flex px-2 items-center text-center flex-1 text-slate-500 h-6 text-sm truncate">
+              {iFilter.label}
+            </div>
+          </div>
+        );
+      })}
+      {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer}/>}
+      {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer}/>}
+    </div>
+  );
+}
+
+function LegendRow ({ index, layer, i, symbology_id }) {
   const navigate = useNavigate();
   const  activeLayer  = null
-
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
-  const type = layer['layer-type']
+
+  const [isListVisible, setIsListVisible] = React.useState(true);
+
+  let { layerType: type } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+    }
+  },[layer]);
+
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
   const sourceUrl = `/cenrep/source/${layer.source_id}`
+
+  const layerName = type === 'interactive' ? layer.label : layer.name;
 
   return (
     <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
       <div className={`group/title w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
-          {layer.name}
+          {layerName}
+          {
+          type === 'interactive' && 
+            <div className='text-sm pb-1 mr-1 flex items-center'>
+              <ToggleInteractiveFilterList 
+                isListVisible={isListVisible} 
+                setIsListVisible={setIsListVisible} 
+                layer={layer}
+              />
+            </div>
+        }
           <div 
             className="cursor-pointer text-white group-hover/title:text-black group/icon "
             onClick={(e) => {
@@ -188,8 +251,35 @@ function LegendRow ({ index, layer, i }) {
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} />}
       {type === 'choropleth' && <StepLegend layer={layer} />}
+      {type === 'interactive' && <InteractiveLegend layer={layer} isListVisible={isListVisible} symbology_id={symbology_id}/>}
     </div>
   )
+}
+
+function ToggleInteractiveFilterList({
+  layer,
+  isListVisible,
+  setIsListVisible,
+}) {
+  return (
+    <div
+      onClick={() => {
+        setIsListVisible(!isListVisible);
+      }}
+    >
+      {isListVisible ? (
+        <SquareMinusSolid
+          className={` fill-black  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          size={16}
+        />
+      ) : (
+        <SquarePlusSolid
+          className={` fill-black  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          size={16}
+        />
+      )}
+    </div>
+  );
 }
 
 function LegendPanel (props) {
@@ -240,7 +330,7 @@ function LegendPanel (props) {
               <div className="font-normal">{symb.name}</div>
               {Object.values(symb.layers)
                 .sort((a,b) => b.order - a.order)
-                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
+                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} symbology_id={symb.symbology_id}/>)}
             </div>
           ))}
         </div>

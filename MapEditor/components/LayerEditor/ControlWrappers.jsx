@@ -76,28 +76,59 @@ function PopoverControl ({values,title='',children}) {
   )
 }
 
-function SimpleControlWrapper ({controls}) {
+function SimpleControlWrapper ({label, controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   return (
-    <StyledControl>
-      {controls
-        .map((c,i) => {
-          const Control = controlTypes[c.type] || controlTypes['simple']
-          return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
-      })}
-    </StyledControl>
+    <>
+      <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className='flex-1 flex items-center'>
+        <StyledControl>
+          {controls
+            .map((c,i) => {
+              const Control = controlTypes[c.type] || controlTypes['simple'];
+              return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
+          })}
+        </StyledControl>
+      </div>
+    </>
   )
 }
 
+function FullWidthWrapper({ label, controls }) {
+  return (
+    <>
+      <div className="flex-1 flex items-center">
+          {controls.map((c, i) => {
+            const Control = controlTypes[c.type] || controlTypes["simple"];
+            return (
+              <Control
+                key={i}
+                path={c.path}
+                datapath={c.datapath}
+                params={c.params}
+              />
+            );
+          })}
 
-function PopoverControlWrapper ({label, controls}) {
+      </div>
+    </>
+  );
+}
+
+function PopoverControlWrapper (props) {
+  const {label, controls} = props;
   const { state, setState } = React.useContext(SymbologyContext);
   const values = useMemo(() => {
     return controls.map(c => {
+      const pathBase =
+        c.params?.version === "interactive"
+          ? `symbology.layers[${state.symbology.activeLayer}]${c.params.pathPrefix}`
+          : `symbology.layers[${state.symbology.activeLayer}]`;
+
       const identity = d => d
       let format = c?.params?.format || identity
-      let value = format(get(state, `symbology.layers[${state.symbology.activeLayer}].${c.path}`, ''))
+      let value = format(get(state, `${pathBase}.${c.path}`, ''))
       return {
         type: c?.type,
         unit: c?.unit,
@@ -106,19 +137,25 @@ function PopoverControlWrapper ({label, controls}) {
     })
   }, [state,controls])
   return (
-    <PopoverControl
-      values={values}
-      title={label}
-    >
-      {controls.map((c,i) => {
-        const Control = controlTypes[c.type] || controlTypes['simple']
-        return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
-      })}
-    </PopoverControl>
+    <> 
+      <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className='flex-1 flex items-center'>
+        <PopoverControl
+          values={values}
+          title={label}
+        >
+          {controls.map((c,i) => {
+            const Control = controlTypes[c.type] || controlTypes['simple']
+            return <Control key={i} path={c.path} datapath={c.datapath}  params={c.params}/>
+          })}
+        </PopoverControl>
+      </div>
+    </>
   )
 }
 
 export const wrapperTypes = {
   'popover': PopoverControlWrapper,
   'inline': SimpleControlWrapper,
+  'full-width': FullWidthWrapper
 }

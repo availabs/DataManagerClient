@@ -3,12 +3,35 @@ import { SymbologyContext } from "../../../";
 import { SelectControl } from "../Controls";
 import {ColumnSelectControl} from "./PopoverControls";
 import { StyledControl } from "../ControlWrappers";
+import get from 'lodash/get'
 
 function PopoverEditor(props) {
   const { state, setState } = useContext(SymbologyContext);
-  const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null,
-    [state]
-  );
+
+  const { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
+    return {
+      selectedInteractiveFilterIndex: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
+      ),
+      layerType: get(state, `symbology.layers[${state.symbology.activeLayer}]['layer-type']`, 'fill'),
+    }
+  },[state])
+
+  let layerPath = ``;
+  if (layerType === "interactive") {
+    layerPath = `['interactive-filters'][${selectedInteractiveFilterIndex}]`;
+  }
+
+  const { activeLayer } = useMemo(() => {
+    const path =
+      layerPath !== ""
+        ? `symbology.layers[${state.symbology.activeLayer}].${layerPath}`
+        : `symbology.layers[${state.symbology.activeLayer}]`;
+    return {
+      activeLayer: get(state, path),
+    };
+  }, [state]);
 
   return (
     activeLayer && (
@@ -22,6 +45,8 @@ function PopoverEditor(props) {
               <SelectControl
                 path={`['hover']`}
                 params={{
+                  version: layerType === 'interactive' ? 'interactive' : undefined,
+                  pathPrefix: layerPath,
                   options: [
                     { value: '', name: 'None' },
                     { value: 'hover', name: 'Hover' },
@@ -31,14 +56,13 @@ function PopoverEditor(props) {
             </StyledControl>
           </div>
         </div>
-
-        <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-          Attributes
-        </div>
         {activeLayer.hover && (
           <ColumnSelectControl
             path={`['hover-columns']`}
-            params={{}}
+            params={{
+              version: layerType === 'interactive' ? 'interactive' : undefined,
+              pathPrefix: layerPath
+            }}
           />
         )}
       </div>

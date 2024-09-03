@@ -8,7 +8,8 @@ export const DuplicateLayerItem = ({ layer }) => {
   const duplicateLayer = () => { 
     let newLayer = JSON.stringify({
       ...layer,
-      name: generateDefaultName(layer.name)
+      name: generateDefaultName(layer.name),
+      order: Object.values(state.symbology.layers).length
     });
 
     const newLayerId = Math.random().toString(36).replace(/[^a-z]+/g, '');

@@ -11,7 +11,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -53,7 +54,7 @@ const typeConfigs = {
             options: [
               {name:'Column Select', value: 'simple'},
             ],
-            format: (v) => {return `${((v?.length-3 || 0)/2) || '10'} Categories`}
+            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
           },
           path: `layers[1].paint['fill-color']`
         }
@@ -121,6 +122,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -141,8 +146,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -215,7 +238,7 @@ const typeConfigs = {
               {name:'Column Select', value: 'simple'},
               
             ],
-            format: (v) => `${((v?.length || 0)/2) || '10'} Categories`
+            format: (v) => `${((v?.length-3 || 0)/2) || '10'} Categories`
           },
           path: `layers[0].paint['circle-color']`
         }
@@ -301,6 +324,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -321,8 +348,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -536,6 +581,10 @@ const typeConfigs = {
     {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -551,7 +600,21 @@ const typeConfigs = {
           }
         },
       ],
-    }
+    },
+    {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
   ]
 }
 

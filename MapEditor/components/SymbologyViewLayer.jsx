@@ -95,14 +95,10 @@ const ViewLayerRender = ({
       }
     }
 
-    // -------------------------------
-    // Reorder Layers
-    // to do: STILL BUGGY
-    // -------------------------------
-    if(layerProps?.order < (prevLayerProps?.order || -1)) {
+    if(prevLayerProps?.order !== undefined && layerProps?.order < prevLayerProps?.order) {
       let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {
-        if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+        if(maplibreMap.getLayer(l?.id)){
           maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
         }
       })
@@ -293,7 +289,7 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv = 'freight_data', falcor, falcorCache } = ctx;
+  const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 
@@ -379,7 +375,7 @@ const HoverComp = ({ data, layer }) => {
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
-      {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
+      {Object.keys(attrInfo).length === 0 && attributes.length !== 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .sort((a,b) =>{
@@ -393,7 +389,7 @@ const HoverComp = ({ data, layer }) => {
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
-            return <></>;
+            return <span key={i}></span>;
           }
           else {
             return (

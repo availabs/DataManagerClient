@@ -2,11 +2,12 @@ import React, { useContext, useMemo, Fragment, useRef} from 'react'
 import { MapContext } from '../MapComponent'
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown, Plus} from '../../icons'
+import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus} from '../../icons'
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
 // import LegendPanel from './LegendPanel'
-
+import cloneDeep from 'lodash/cloneDeep'
+import { getAttributes } from '~/pages/DataManager/Collection/attributes'
 const typeIcons = {
   'fill': Fill,
   'circle': Circle,
@@ -47,6 +48,12 @@ let iconList = [
   'fad fa-tachometer-fastest',
 ]
 
+function arraymove(arr, fromIndex, toIndex) {
+  var element = arr[fromIndex];
+  arr.splice(fromIndex, 1);
+  arr.splice(toIndex, 0, element);
+}
+
 
 function SymbologyMenu({button, location='left-0', width='w-36', children}) {
   
@@ -75,7 +82,7 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 
 
 function SymbologyRow ({tabIndex, row, rowIndex}) {
-  const { state, setState  } = React.useContext(MapContext);
+  const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
   const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row])
   const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {}),[symbology])
@@ -97,6 +104,16 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     })
   }, [state, setState]);
 
+
+  const symbologies = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, pgEnv]);
+
+  const numRows = useMemo(() => {
+    return state.tabs[tabIndex].rows.length;
+  }, [state.tabs[tabIndex].length]);
+
   return (
     <div className={`w-full  px-2 flex border-white/85 border hover:border-pink-500 group items-center`}>
       <div className='pr-2 flex items-center'><input 
@@ -111,7 +128,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       >
         { state.isEdit ? (
             <input
-              className="block w-[220px] flex flex-1 bg-transparent px-2 text-slate-800 placeholder:text-gray-400  focus:border-0"
+              className="block w-[240px] flex flex-1 bg-transparent text-slate-800 placeholder:text-gray-400  focus:border-0"
               value={symbology?.name}
               placeholder='Layer Name'
               type='text'
@@ -132,18 +149,41 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             symbology?.name || ' no name'
         }
       </div>
+      {state.isEdit &&
+        <>
+          <div
+            className={`${rowIndex === 0 ? 'pointer-events-none' : ''}`}
+            onClick={ () => {
+              setState(draft => {
+                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex-1);
+              })
+            }}
+          >
+            <CaretUpSolid
+              className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+              size={20}
+            />
+          </div>
+          <div
+            className={`${rowIndex === numRows-1 ? 'pointer-events-none' : ''}`}
+            onClick={() => {
+              setState(draft => {
+                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex+1);
+              })
+            }}
+          >
+            <CaretDownSolid
+              className={`pb-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+              size={20}
+            />
+          </div>
+        </>
+      }
       {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
         <SymbologyMenu 
           button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
         >
           <div className="px-1 py-1 ">
-              {/*<Menu.Item className='cursor-pointer'>
-                {({ active }) => (
-                  <div className={`${
-                      active ? 'bg-blue-50 ' : ''
-                    } group flex w-full items-center text-slate-600 rounded-md px-2 py-2 text-sm`}>Zoom to Fit</div>
-                )}
-              </Menu.Item>*/}
               <Menu.Item >
                 {({ active }) => (
                   <div 
@@ -160,29 +200,35 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                 )}
               </Menu.Item>
             </div>
+            <div className="px-1 py-1 ">
+              <Menu.Item >
+                {({ active }) => (
+                  <div 
+                    className={`${
+                      active ? 'bg-pink-50 ' : ''
+                    } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                    onClick={async () => {
+                      console.log("updating symbology for::", row.symbologyId);
+                      setState(draft => {
+                        let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
+                  
+                        Object.keys(newSymbology.symbology.layers).forEach(layerId => {
+                          newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
+                            const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
+                            newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
+                          })
+                        })
+                  
+                        draft.symbologies[''+row.symbologyId] = newSymbology;
+                        draft.symbologies[symbology.symbology_id].isVisible = visible;
+                      })
+                    }}
+                  >Update symbology</div>
+                )}
+              </Menu.Item>
+            </div>
         </SymbologyMenu>
       </div>)}
-      {/*<div onClick={() => 
-        setState(draft => {
-          draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
-          Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
-            draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
-                let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
-                let update = val === 'visible' ? 'none' : 'visible'
-                draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
-            })
-          })
-        })}
-      >
-        {visible ? 
-          <Eye 
-            className={`fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          /> : 
-          <EyeClosed 
-            className={`fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          />
-        }
-      </div>*/}
     </div>
   )
 }
@@ -205,6 +251,11 @@ function TabPanel ({tabIndex, tab}) {
   const { state, setState } = React.useContext(MapContext);
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   const [addSymbologyModalState, setAddSymbologyModalState] = React.useState(INITIAL_NEW_MAP_MODAL_STATE);
+
+  const numTabs = useMemo(() => {
+    return state.tabs.length;
+  }, [state.tabs.length]);
+
   return (
     <div className='w-full'>
       {/* --- Header --- */}
@@ -257,6 +308,38 @@ function TabPanel ({tabIndex, tab}) {
                   )}
                 </Menu.Item>
               </div>
+              {tabIndex !== 0 && <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div 
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          arraymove(draft.tabs, tabIndex, tabIndex-1);
+                        })
+                      }}
+                    >Move section up</div>
+                  )}
+                </Menu.Item>
+              </div>}
+              {tabIndex !== numTabs-1 && <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div  
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          arraymove(draft.tabs, tabIndex, tabIndex+1);
+                        })
+                      }}
+                    >Move section down</div>
+                  )}
+                </Menu.Item>
+              </div>}
           </SymbologyMenu>
           <SymbologyMenu 
             button={
@@ -355,6 +438,7 @@ function MapManager () {
               state.isEdit && (
               <>
                 <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
+                  title="Set initial viewport"
                   onClick={() => {
                     setState(draft => {
                       draft.setInitialBounds = true;
