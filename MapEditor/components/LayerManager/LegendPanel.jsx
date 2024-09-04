@@ -201,7 +201,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const legendTitle = (
     
-      <div className='flex justify-between' onClick={toggleSymbology} >
+      <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
         {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
         {layer.name ?? filterGroupName}
         <div className='flex'>
@@ -373,7 +373,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
-        <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
+        <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap w-full">
           {legendTitle}
           {groupSelectorElements}
         </div>
