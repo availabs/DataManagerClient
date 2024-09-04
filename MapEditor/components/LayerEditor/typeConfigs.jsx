@@ -43,6 +43,10 @@ const typeConfigs = {
     {
       label: 'Filter Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
@@ -69,13 +73,17 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'Source View Group',
+      label: 'View Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
           path: `['viewGroupEnabled']`,
-          title: 'Source View Group'
+          title: 'View Group'
         }
       ]
     },
@@ -282,6 +290,10 @@ const typeConfigs = {
     {
       label: 'Filter Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
@@ -308,13 +320,17 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'Source View Group',
+      label: 'View Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
           path: `['viewGroupEnabled']`,
-          title: 'Source View Group'
+          title: 'View Group'
         }
       ]
     },
@@ -540,6 +556,10 @@ const typeConfigs = {
     {
       label: 'Filter Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
@@ -566,13 +586,17 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'Source View Group',
+      label: 'View Group',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
       controls: [
         {
           type: 'toggleControl',
           path: `['viewGroupEnabled']`,
-          title: 'Source View Group'
+          title: 'View Group'
         }
       ]
     },

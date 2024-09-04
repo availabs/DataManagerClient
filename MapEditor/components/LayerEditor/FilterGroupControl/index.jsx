@@ -12,7 +12,8 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
     : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, filterGroupName } = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupName, filterGroup, dataColumn } = useMemo(() => ({
+    dataColumn:get(state,`${pathBase}['data-column']`),
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
@@ -33,6 +34,17 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
       ]);
     }
   }, [sourceId]);
+
+  useEffect(() => {
+    if(filterGroup.length === 0) {
+      setState(draft => {
+        set(draft,`${pathBase}['filter-group-name']`, dataColumn)
+        set(draft, `${pathBase}['filter-group-legend-column']`, dataColumn)
+      })
+    }
+  }, [])
+
+
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
       <div className="group w-full flex px-2">
@@ -52,7 +64,8 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         path={`['filter-group']`}
         params={{
           version: layerType === 'interactive' ? 'interactive' : undefined,
-          pathPrefix: layerPath
+          pathPrefix: layerPath,
+          default: dataColumn
         }}
       />
     </div>

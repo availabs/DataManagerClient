@@ -293,7 +293,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
               }}
             >
               {filterGroup.map((gFilter, i) => {
-                const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
+                const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : !!filterGroupLegendColumn ? ` (${filterGroupLegendColumn})` : '';
                 return (
                   <option key={i} value={gFilter.column_name}>
                     {gFilter.display_name} {itemSuffix} 

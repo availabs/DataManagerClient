@@ -62,18 +62,40 @@ export function ColumnSelectControl({path, params={}}) {
 
   useEffect(() => {
     if(selectedColumns === undefined) {
-      setState((draft) => {
-        set(
-          draft,
-          `${pathBase}.${path}`,
-          attributes
-            .filter((d) => !["wkb_geometry"].includes(d.name))
+      if(!params.default){
+        setState((draft) => {
+          set(
+            draft,
+            `${pathBase}.${path}`,
+            attributes
+              .filter((d) => !["wkb_geometry"].includes(d.name))
+              .map((attr) => ({
+                column_name: attr.name,
+                display_name: attr?.display_name || attr.name,
+              }))
+          );
+        });
+      } else {
+        setState((draft) => {
+          console.log(            attributes
+            .filter(attr => attr.name === params.default)
             .map((attr) => ({
               column_name: attr.name,
               display_name: attr?.display_name || attr.name,
-            }))
-        );
-      });
+            })))
+
+          set(
+            draft,
+            `${pathBase}.${path}`,
+            attributes
+              .filter(attr => attr.name === params.default)
+              .map((attr) => ({
+                column_name: attr.name,
+                display_name: attr?.display_name || attr.name,
+              }))
+          );
+        });
+      }
     }
   }, [attributes]);
 
@@ -82,7 +104,7 @@ export function ColumnSelectControl({path, params={}}) {
       ? selectedColumns
       : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
   }, [selectedColumns]);
-
+console.log({selectedColumnNames})
   const availableColumnNames = useMemo(() => {
     return (
       selectedColumnNames
@@ -227,6 +249,7 @@ export function ColumnSelectControl({path, params={}}) {
 }
 
 const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
+  console.log({selectedColumns})
   return (
     <DndList
       onDrop={reorderAttrs}

@@ -94,11 +94,11 @@ const ViewLayerRender = ({
       }
     }
 
-    if(layerProps.view_id !== prevLayerProps?.view_id) {
+    if(Object.keys(layerProps)?.length && layerProps.view_id !== prevLayerProps?.view_id) {
       if(maplibreMap.getSource(prevLayerProps?.sources?.[0]?.id)){
         const oldSource = cloneDeep(prevLayerProps.sources?.[0])
         let newSource = cloneDeep(layerProps.sources?.[0])
-        let tileBase = newSource.source.tiles?.[0];
+        let tileBase = newSource?.source.tiles?.[0];
 
         if(tileBase){
           newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps, prevLayerProps?.['data-column'])];
