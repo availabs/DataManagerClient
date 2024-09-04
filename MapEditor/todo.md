@@ -131,13 +131,15 @@ SO, how to solve that ^^^ issue.
  - `filterGroupEnabled` should be set to `false` (or something like that) when the layerType changes
 - if the current `data-column` of a `filter-group` is changed via the `LegendPanel`, it will change the displayed value in the `StyleEditor`, but the legend is still BASED off of something else
  - Maybe just some text or indicator of what column was used to generate the legend. Maybe a star or something?
-
+- FIX `colorSquare` for simple layer types. its all squished and small now
 
  **UI/UX TODO**
  - Need an indicator  for which `view` generated the legend
   - Just reuse what you did for the filter-group-legend thing
- - PERHAPS also need a place to store the original `view_id`, if the user toggles off the view-group, we want to revert to original
+ - PERHAPS also need a place to store the original `view_id`, if the **user toggles off the view-group**, we want to revert to original
   - COULD just use `filter-source-views[0]`, but, that will get confusing because the user will remember which view they originally added
  - Eventually, want it so the user can use all types of groups at once
  - So, the code/functions that generate the `title`, will have to take this into account
   - For now, just getting each to work separately. the logic for the UX is the tricky part, not the code/data 
+ - Need a separate button to `recompute-legend`
+  - currently, it is "tied" to the controls in the StyleEditor. This is a little clunky when both groups are added

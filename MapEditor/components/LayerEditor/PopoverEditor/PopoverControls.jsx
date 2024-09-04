@@ -23,12 +23,13 @@ export function ColumnSelectControl({path, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const selectedColumns = useMemo(() => {
-    return get(
-      state,
-      `${pathBase}.${path}`
-    )
+  const { selectedColumns, layerType } = useMemo(() => {
+    return {
+      selectedColumns: get(state, `${pathBase}.${path}`),
+      layerType: get(state, `${pathBase}['layer-type']`),
+    };
   }, [state, path, params]);
+
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
   const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
@@ -50,6 +51,16 @@ export function ColumnSelectControl({path, params={}}) {
         "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
       ], []);
     }
+
+    if(params.onlyTypedAttributes) {
+      columns = columns.filter(d => {
+        if(layerType === 'choropleth' && !['integer', 'number'].includes(d.type)){
+          return false
+        }
+        return true
+      })
+    }
+
     return columns;
   }, [sourceId, falcorCache]); 
   
@@ -77,13 +88,6 @@ export function ColumnSelectControl({path, params={}}) {
         });
       } else {
         setState((draft) => {
-          console.log(            attributes
-            .filter(attr => attr.name === params.default)
-            .map((attr) => ({
-              column_name: attr.name,
-              display_name: attr?.display_name || attr.name,
-            })))
-
           set(
             draft,
             `${pathBase}.${path}`,
@@ -104,7 +108,6 @@ export function ColumnSelectControl({path, params={}}) {
       ? selectedColumns
       : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
   }, [selectedColumns]);
-console.log({selectedColumnNames})
   const availableColumnNames = useMemo(() => {
     return (
       selectedColumnNames
@@ -249,7 +252,6 @@ console.log({selectedColumnNames})
 }
 
 const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
-  console.log({selectedColumns})
   return (
     <DndList
       onDrop={reorderAttrs}

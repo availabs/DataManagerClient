@@ -181,7 +181,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       filterGroupName: get(layer, `['filter-group-name']`, ''),
       filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
       viewGroup: get(layer, `['filter-source-views']`, []),
-      viewGroupName: get(layer, `['filter-group-name']`, ''),
+      viewGroupName: get(layer, `['view-group-name']`, ''),
     }
   },[state, layer]);
 
@@ -199,7 +199,37 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
 
-  let legendTitle;
+  const legendTitle = (
+    
+      <div className='flex justify-between' onClick={toggleSymbology} >
+        {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+        {layer.name ?? filterGroupName}
+        <div className='flex'>
+          <div className='text-sm pt-1  flex items-center'>
+            <LayerMenu 
+              layer={layer}
+              button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
+            />
+          </div>
+          <CaretUpSolid
+            onClick={() => {
+              onRowMove(i, i-1)
+            }}
+            size={24}
+            className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+          />
+          <CaretDownSolid
+            onClick={ () => {
+              onRowMove(i, i+1)
+            }}
+            size={24}
+            className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          />
+          <VisibilityButton layer={layer}/>
+        </div>
+      </div>
+
+  );
 
   //----------------------------------
   // -- get selected source views
@@ -225,168 +255,128 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, sourceId, pgEnv]);
 
+  const groupSelectorElements = [];
   if (type === "interactive") {
-    legendTitle = (
-      <div className="text-sm mr-1 flex items-center">
-        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div
-          className="text-slate-600 font-medium truncate flex-1"
-        >
-          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
-            <select
-              className="w-full bg-transparent"
-              value={selectedInteractiveFilterIndex}
-              onChange={(e) => {
-                setState((draft) => {
-                  draft.symbology.layers[
-                    layer.id
-                  ].selectedInteractiveFilterIndex = parseInt(e.target.value);
-                });
-              }}
-            >
-              {interactiveFilters.map((iFilter, i) => {
-                return (
-                  <option key={i} value={i}>
-                    {iFilter.label}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  } 
-  else if(layer.filterGroupEnabled) {
-    legendTitle = (
-      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
-        <div className='' onClick={toggleSymbology} >
-          {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-          {layer.name ?? filterGroupName}
-        </div>
-        <div
-          className="text-slate-600 font-medium truncate"
-        >
-          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
-            <select
-              className="w-full bg-transparent"
-              value={dataColumn}
-              onChange={(e) => {
-                setState((draft) => {
-                  let newLayerIndex = draft.symbology.layers[
-                    layer.id
-                  ].layers.findIndex(l => l.id === layer.id)
-                  let newLayer = draft.symbology.layers[
-                    layer.id
-                  ].layers[newLayerIndex]
-
-
-                  newLayer = JSON.parse(JSON.stringify(newLayer).replaceAll(dataColumn, e.target.value));
-
-                  draft.symbology.layers[
-                    layer.id
-                  ].layers[newLayerIndex] = newLayer;
-                  draft.symbology.layers[
-                    layer.id
-                  ]['data-column'] = e.target.value;
-                });
-              }}
-            >
-              {filterGroup.map((gFilter, i) => {
-                const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : !!filterGroupLegendColumn ? ` (${filterGroupLegendColumn})` : '';
-                return (
-                  <option key={i} value={gFilter.column_name}>
-                    {gFilter.display_name} {itemSuffix} 
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  else if(layer.viewGroupEnabled) {
-    legendTitle = (
-      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
-        <div className='' onClick={toggleSymbology} >
-          {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-          {layer.name ?? viewGroupName}
-        </div>
-        <div
-          className="text-slate-600 font-medium truncate"
-        >
-          <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
-            <select
-              className="w-full bg-transparent"
-              value={layer.view_id}
-              onChange={(e) => {
-                setState((draft) => {
-                  const newLayer = JSON.parse(JSON.stringify(
-                    draft.symbology.layers[layer.id]
-                  ).replaceAll(layer.view_id, e.target.value))
-
-                  newLayer['filter-source-views'] = layer['filter-source-views']
-
-                  draft.symbology.layers[
-                    layer.id
-                  ] = newLayer;
-                });
-              }}
-            >
-              {viewGroup.map((view_id, i) => {
-                //const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
-                const curView = views.find(v => v.view_id === view_id)
-                return (
-                  <option key={i} value={view_id}>
-                    {curView?.version ?? curView?.view_id}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  else {
-    legendTitle = (
+    groupSelectorElements.push(
       <div
-        onClick={toggleSymbology}
-        className="text-sm text-slate-600 font-medium truncate flex flex-1"
-      >
-        {shouldDisplayColorSquare && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        {layer.name}
+      className="text-slate-600 font-medium truncate flex-1"
+    >
+      <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+        <select
+          className="w-full bg-transparent"
+          value={selectedInteractiveFilterIndex}
+          onChange={(e) => {
+            setState((draft) => {
+              draft.symbology.layers[
+                layer.id
+              ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+            });
+          }}
+        >
+          {interactiveFilters.map((iFilter, i) => {
+            return (
+              <option key={i} value={i}>
+                {iFilter.label}
+              </option>
+            );
+          })}
+        </select>
+      </div>
+    </div>
+    )
+  } 
+  if(layer.filterGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium truncate flex items-center">
+        {filterGroupName}:
+        <div className="rounded-md h-[36px] ml-2 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={dataColumn}
+            onChange={(e) => {
+              setState((draft) => {
+                let newLayerIndex = draft.symbology.layers[
+                  layer.id
+                ].layers.findIndex((l) => l.id === layer.id);
+                let newLayer =
+                  draft.symbology.layers[layer.id].layers[newLayerIndex];
+
+                newLayer = JSON.parse(
+                  JSON.stringify(newLayer).replaceAll(
+                    dataColumn,
+                    e.target.value
+                  )
+                );
+
+                draft.symbology.layers[layer.id].layers[newLayerIndex] =
+                  newLayer;
+                draft.symbology.layers[layer.id]["data-column"] =
+                  e.target.value;
+              });
+            }}
+          >
+            {filterGroup.map((gFilter, i) => {
+              const itemSuffix =
+                filterGroupLegendColumn === gFilter.column_name
+                  ? "**"
+                  : !!filterGroupLegendColumn
+                  ? ` (${filterGroupLegendColumn})`
+                  : "";
+              return (
+                <option key={i} value={gFilter.column_name}>
+                  {gFilter.display_name} {itemSuffix}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+    );
+  }
+  if(layer.viewGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium truncate flex items-center">
+        {viewGroupName}: 
+        <div className="rounded-md h-[36px] ml-2 flex w-full w-[216px]  items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={layer.view_id}
+            onChange={(e) => {
+              setState((draft) => {
+                const newLayer = JSON.parse(
+                  JSON.stringify(draft.symbology.layers[layer.id]).replaceAll(
+                    layer.view_id,
+                    e.target.value
+                  )
+                );
+
+                newLayer["filter-source-views"] = layer["filter-source-views"];
+
+                draft.symbology.layers[layer.id] = newLayer;
+              });
+            }}
+          >
+            {viewGroup.map((view_id, i) => {
+              //const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
+              const curView = views.find((v) => v.view_id === view_id);
+              return (
+                <option key={i} value={view_id}>
+                  {curView?.version ?? curView?.view_id}
+                </option>
+              );
+            })}
+          </select>
+        </div>
       </div>
     );
   }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
+        <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap">
           {legendTitle}
-          <div className='flex'>
-            <div className='text-sm pt-1  flex items-center'>
-              <LayerMenu 
-                layer={layer}
-                button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-              />
-            </div>
-            <CaretUpSolid
-              onClick={() => {
-                onRowMove(i, i-1)
-              }}
-              size={24}
-              className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
-            />
-            <CaretDownSolid
-              onClick={ () => {
-                onRowMove(i, i+1)
-              }}
-              size={24}
-              className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-            />
-            <VisibilityButton layer={layer}/>
-          </div>
+          {groupSelectorElements}
+        </div>
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}

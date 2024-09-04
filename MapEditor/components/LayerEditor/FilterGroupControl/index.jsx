@@ -65,7 +65,8 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         params={{
           version: layerType === 'interactive' ? 'interactive' : undefined,
           pathPrefix: layerPath,
-          default: dataColumn
+          default: dataColumn,
+          onlyTypedAttributes: true
         }}
       />
     </div>
