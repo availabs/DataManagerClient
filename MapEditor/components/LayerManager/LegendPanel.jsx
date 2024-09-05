@@ -185,7 +185,6 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       viewGroupName: get(layer, `['view-group-name']`, ''),
     }
   },[state, layer]);
-
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id

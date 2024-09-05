@@ -23,10 +23,13 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
+      conditional: [{
         path: `['layer-type']`,
         conditions: ['categories', 'choropleth']
-      },
+      },{
+        path: `['filterGroupEnabled']`,
+        conditions: [false]
+      }],
       controls: [
         {
           type: 'selectViewColumn',
@@ -275,10 +278,13 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
+      conditional: [{
         path: `['layer-type']`,
         conditions: ['categories', 'choropleth']
-      },
+      },{
+        path: `['filterGroupEnabled']`,
+        conditions: [false]
+      }],
       controls: [
         {
           type: 'selectViewColumn',
@@ -547,10 +553,13 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
+      conditional: [{
         path: `['layer-type']`,
         conditions: ['categories', 'choropleth']
-      },
+      },{
+        path: `['filterGroupEnabled']`,
+        conditions: [false]
+      }],
       controls: [
         {
           type: 'selectViewColumn',
@@ -770,7 +779,7 @@ const typeConfigs = {
             min: "0",
             max: "20",
             step: "0.5",
-            default: "3",
+            default: "0",
             units: "px"
           }
         },

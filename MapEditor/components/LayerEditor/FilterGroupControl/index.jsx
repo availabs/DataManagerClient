@@ -1,6 +1,6 @@
 
 import { useContext, useMemo, useEffect } from "react";
-import {ColumnSelectControl} from "../PopoverEditor/PopoverControls";
+import {ColumnSelectControl} from "./ColumnSelectControl";
 import {SymbologyContext} from '../../../'
 import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
@@ -12,20 +12,22 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
     : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, filterGroupName, filterGroup, dataColumn } = useMemo(() => ({
+  const { layerType, viewId, sourceId, filterGroupName, filterGroup, dataColumn, selectedInteractiveFilterIndex,legendViewId, filterGroupLegendColumn } = useMemo(() => ({
     dataColumn:get(state,`${pathBase}['data-column']`),
+    legendViewId:get(state,`${pathBase}['legend-view-id']`),
+    filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
     filterGroup: get(state,`${pathBase}${path}`, []),
     filterGroupName: get(state,`${pathBase}['filter-group-name']`, ''),//TODO BETTER DEFAULT GROUP NAME
+    selectedInteractiveFilterIndex: get(
+      state,
+      `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
+      []
+    ),
   }),[state])
-
-  let layerPath = ``;
-  if (layerType === "interactive") {
-    layerPath = `['interactive-filters'][${selectedInteractiveFilterIndex}]`;
-  }
 
   useEffect(() => {
     if (sourceId) {
@@ -43,7 +45,8 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
       })
     }
   }, [])
-
+  //Need property that stores the EXTRA params for legend
+  //viewId, column, 
 
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
@@ -64,10 +67,29 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         path={`['filter-group']`}
         params={{
           version: layerType === 'interactive' ? 'interactive' : undefined,
-          pathPrefix: layerPath,
           default: dataColumn,
           onlyTypedAttributes: true
         }}
+        setFilterGroupLegendColumn={
+          (columnName) => {
+            console.log("in parent, setting filter-group-legend-column::", columnName)
+            setState(draft => {
+              let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
+            
+              if(sourceTiles !== 'no source tiles') {
+                console.log("setting source tiles")
+                //set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+              }
+        
+              console.log("removing choropleth and categories for pathbase::", pathBase)
+              set(draft, `${pathBase}['choroplethdata']`, {});
+              set(draft, `${pathBase}['data-column']`, columnName) //TODO i dont htink this will work long term, but tryna get ANYTHIGN to work rn
+              // set(draft, `${pathBase}['categories']`, {});
+              // set(draft, `${pathBase}['legend-data']`, []);
+              set(draft, `${pathBase}['filter-group-legend-column']`, columnName)
+            })
+          }
+        }
       />
     </div>
 

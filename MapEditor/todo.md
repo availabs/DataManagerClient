@@ -132,14 +132,19 @@ SO, how to solve that ^^^ issue.
 - if the current `data-column` of a `filter-group` is changed via the `LegendPanel`, it will change the displayed value in the `StyleEditor`, but the legend is still BASED off of something else
  - Maybe just some text or indicator of what column was used to generate the legend. Maybe a star or something?
 - FIX `colorSquare` for simple layer types. its all squished and small now
+- MAYBE BUG -- for `interactive` filter group, the column select does not "typecheck" 
 
  **UI/UX TODO**
  - Need an indicator  for which `view` generated the legend
-  - Just reuse what you did for the filter-group-legend thing
- - PERHAPS also need a place to store the original `view_id`, if the **user toggles off the view-group**, we want to revert to original
-  - COULD just use `filter-source-views[0]`, but, that will get confusing because the user will remember which view they originally added
- - Eventually, want it so the user can use all types of groups at once
- - So, the code/functions that generate the `title`, will have to take this into account
-  - For now, just getting each to work separately. the logic for the UX is the tricky part, not the code/data 
+  - Just reuse what you did for the filter-group-legend thing 
  - Need a separate button to `recompute-legend`
   - currently, it is "tied" to the controls in the StyleEditor. This is a little clunky when both groups are added
+ - Need a method to recompute legend based on the selected `view`
+ - Whenever we recompute the legend (column select change, num of breaks, etc.), MUST update the state properties that track what computed the legend
+
+
+- Bigger Q/Feedback:
+ - How to recompute legend? How to indicate to user what is creating the legend?
+   - Functionally, this is a little tricky -- things like changing the number of breaks in a scale will recompute based on the current data-view and column.
+ - Should there be a separate control (from the legend) for changing the data that is displayed on the map?
+ -  
