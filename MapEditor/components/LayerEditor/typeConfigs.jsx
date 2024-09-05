@@ -58,10 +58,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['filterGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'filterGroupControl',
@@ -90,10 +93,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['viewGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'viewGroupControl',
@@ -305,10 +311,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['filterGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'filterGroupControl',
@@ -337,10 +346,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['viewGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'viewGroupControl',
@@ -571,10 +583,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['filterGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'filterGroupControl',
@@ -603,10 +618,13 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: {
+      conditional: [{
         path: `['viewGroupEnabled']`,
         conditions: [true]
-      },
+      },{
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      }],
       controls: [
         {
           type: 'viewGroupControl',

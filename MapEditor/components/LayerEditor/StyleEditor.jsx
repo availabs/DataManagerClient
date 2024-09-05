@@ -22,17 +22,23 @@ function StyleEditor (props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
   let config = useMemo(() => typeConfigs[activeLayer.type] || []
-    ,[activeLayer.type])
+    ,[activeLayer.type]);
+
   if(props.type === 'interactive') {
     config = config.filter(c => c.label !== 'Interactive Filters').map(c => {
       let newControls = [...c.controls];
-      let newConditonal = c.conditional ? {...c.conditional} : undefined;
+      let newConditonal;
 
       newControls = newControls.map(ic => ({...ic, params:{...ic.params, pathPrefix: props.pathPrefix, version: 'interactive'}}))
       if(c.conditional){
-        newConditonal.path = props.pathPrefix + newConditonal['path'];
-      }
+        if(Array.isArray(c.conditional)){
+          newConditonal = c.conditional.map(cond => ({...cond, path: props.pathPrefix + cond.path}))
+        }
+        else {
+          newConditonal = {...c.conditional, path: props.pathPrefix + c.conditional['path']} ;
+        }
 
+      }
 
       return {...c, controls: newControls, conditional: newConditonal}
     })
@@ -47,10 +53,18 @@ function StyleEditor (props) {
           if(!c.conditional) {
             return true
           } else {
-            // console.log('has conditional')
-            const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${c.conditional.path}`, '-999')
-            // console.log('has conditional',c.conditional, condValue)
-            return c.conditional.conditions.includes(condValue)
+            if(Array.isArray(c.conditional)){
+              return c.conditional.every(cond => {
+                const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${cond.path}`, '-999')
+                return cond.conditions.includes(condValue)
+              });
+            }
+            else {
+              // console.log('has conditional')
+              const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${c.conditional.path}`, '-999')
+              // console.log('has conditional',c.conditional, condValue)
+              return c.conditional.conditions.includes(condValue)
+            }
           }
         })
         .map((control,i) => {

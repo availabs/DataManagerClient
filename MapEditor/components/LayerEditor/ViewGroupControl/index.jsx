@@ -19,18 +19,27 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
     ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
     : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, viewGroupName, viewGroup } = useMemo(() => ({
+  const { layerType, viewId, sourceId, viewGroupName, viewGroup, initialViewId } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     viewGroup: get(state,`${pathBase}['filter-source-views']`, []),//TODO BETTER DEFAULT GROUP NAME
     viewGroupName: get(state,`${pathBase}['view-group-name']`, ''),//TODO BETTER DEFAULT GROUP NAME
+    initialViewId: get(state,`${pathBase}['initial-view-id']`, '')
   }),[state])
 
   let layerPath = ``;
   if (layerType === "interactive") {
     layerPath = `['interactive-filters'][${selectedInteractiveFilterIndex}]`;
   }
+
+  useEffect(() => {
+    if(!initialViewId){
+      setState(draft => {
+        set(draft,`${pathBase}['initial-view-id']`, viewId);
+      })
+    }
+  }, [])
 
   //----------------------------------
   // -- get selected source views
@@ -60,6 +69,19 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
   const availableViewIds = getDiffColumns(viewIds, viewGroup);
   const availableViews = views.filter(v => availableViewIds.includes(v.view_id));
   const selectedViews = views.filter(v => viewGroup.includes(v.view_id));
+
+  useEffect(() => {
+    if(viewGroup.length === 0) {
+      setState(draft => {
+        const defaultView = views.find(v => v.view_id === viewId);
+        const defaultGroupName = (defaultView.version ?? defaultView.view_id + " group");
+
+        set(draft,`${pathBase}['filter-source-views']`, [viewId]);
+        set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
+      })
+    }
+  }, [])
+
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
       <div className="group w-full flex px-2">
@@ -77,7 +99,7 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
       </div>
       <div className="pb-2">
         <AddColumnSelectControl
-          label={"Select View"}
+          label={"Add Data View"}
           setState={(newViewId) => {
             setState((draft) => {
               console.log("adding new viewId to group::", newViewId)
@@ -136,13 +158,13 @@ export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr}) =>
         return (
           <div
             key={i}
-            className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
+            className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-200 p-2"
           >
-            <div className="truncate border-t col-span-8 px-2 py-1">
+            <div className="truncate  col-span-8 px-2 py-1">
               {selectedView.display_name}
             </div>
             <div
-              className="border-t flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
+              className="flex items-center  cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
               onClick={() => {
                 removeAttr(selectedView.view_id)
               }}
