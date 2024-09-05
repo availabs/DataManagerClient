@@ -170,8 +170,9 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, initialViewId } = useMemo(() => {
     return {
+      initialViewId: get(layer,`initial-view-id`),
       sourceId: get(layer,`source_id`),
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
@@ -261,6 +262,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       <div
       className="text-slate-600 font-medium truncate flex-1"
     >
+      <div className='text-xs text-black'>Filters:</div>
       <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
         <select
           className="w-full bg-transparent"
@@ -287,9 +289,9 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   } 
   if(layer.filterGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex items-center">
-        {filterGroupName}:
-        <div className="rounded-md h-[36px] ml-2 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+        <div className='text-xs text-black'>{filterGroupName}:</div>
+        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={dataColumn}
@@ -335,9 +337,9 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   }
   if(layer.viewGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex items-center">
-        {viewGroupName}: 
-        <div className="rounded-md h-[36px] ml-2 flex w-full w-[216px]  items-center border border-transparent cursor-pointer hover:border-slate-300">
+      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+        <div className='text-xs text-black'>{viewGroupName}: </div>
+        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={layer.view_id}
@@ -357,8 +359,11 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
             }}
           >
             {viewGroup.map((view_id, i) => {
-              //const itemSuffix = filterGroupLegendColumn === gFilter.column_name ? "**" : ` (${filterGroupLegendColumn})`
               const curView = views.find((v) => v.view_id === view_id);
+              // const itemSuffix =
+              //   view_id === initialViewId
+              //     ? " **"
+              //     : ''
               return (
                 <option key={i} value={view_id}>
                   {curView?.version ?? curView?.view_id}
