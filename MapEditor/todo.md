@@ -141,7 +141,7 @@ SO, how to solve that ^^^ issue.
   - currently, it is "tied" to the controls in the StyleEditor. This is a little clunky when both groups are added
  - Need a method to recompute legend based on the selected `view`
  - Whenever we recompute the legend (column select change, num of breaks, etc.), MUST update the state properties that track what computed the legend
-
+  - Otherwise, when the user takes an action such as changing the number of breaks in a color-range, it will recompute legend using whatever is being displayed on the map
 
 - Bigger Q/Feedback:
  - How to recompute legend? How to indicate to user what is creating the legend?
