@@ -52,7 +52,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata } = useMemo(() => {
+  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled } = useMemo(() => {
     return {
       value: get(state, `${pathBase}.${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -69,6 +69,9 @@ export function SelectTypeControl({path, datapath, params={}}) {
       numCategories: get(state, `${pathBase}['num-categories']`, 10),
       showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
       symbology_id: get(state, `symbology_id`),
+      filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
+      filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
+      viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
     }
   },[state])
 
@@ -114,7 +117,15 @@ export function SelectTypeControl({path, datapath, params={}}) {
   },[metadata])
 
   React.useEffect(() => {
+    //Generally only updates state after the upstream "event" manually sets categories/choroplethdata to null
     const setPaint = async () => {
+      console.log("updating paint, using column::", column)
+
+      if(viewGroupEnabled) {
+        //I THINK this will end up recomputing some paint 
+      }
+
+      //TODO find a datset that makes sense to  do filter gorup with categories
       if (value === 'categories') {
         let { paint, legend } = categories?.paint && categories?.legend
           ? cloneDeep(categories)
@@ -161,10 +172,19 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
         let colorBreaks; 
 
+        //Most places, if we want to hit API, we clear out all data
+        //In those cases, if we have `filterGroupEnabled`, use filterGroupLegendColumn
+
+        //If we already have `breaks` and `max` from server, do not make API call
         if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
           colorBreaks = choroplethdata;
         }
         else {
+          if(filterGroupEnabled) {
+            domainOptions[column] = filterGroupLegendColumn;
+          }
+          // TODO conditional for viewGroupEnabled here
+          // Override the `viewId` that is passed to generate breaks 
           setState(draft => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
           })
