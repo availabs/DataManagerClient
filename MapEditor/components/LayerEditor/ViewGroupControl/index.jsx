@@ -5,7 +5,7 @@ import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
 import set from 'lodash/set'
 import {AddColumnSelectControl} from '../Controls'
-import { Close } from '../../icons'
+import { Close, StarSolid } from '../../icons'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../Source/attributes"
 import { DndList } from '~/modules/avl-components/src'
 import { v1 } from "uuid";
@@ -19,13 +19,15 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
     ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
     : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId, viewGroupName, viewGroup, initialViewId } = useMemo(() => ({
+  const { layerType, viewId, sourceId, viewGroupName, viewGroup, initialViewId, viewGroupId } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     viewGroup: get(state,`${pathBase}['filter-source-views']`, []),//TODO BETTER DEFAULT GROUP NAME
     viewGroupName: get(state,`${pathBase}['view-group-name']`, ''),//TODO BETTER DEFAULT GROUP NAME
-    initialViewId: get(state,`${pathBase}['initial-view-id']`, '')
+    initialViewId: get(state,`${pathBase}['initial-view-id']`, ''),
+    filterGroupLegendColumn: get(state, `${pathBase}['filter-group-legend-column']`),
+    viewGroupId:get(state,`${pathBase}['view-group-id']`),
   }),[state])
 
   let layerPath = ``;
@@ -78,6 +80,7 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
 
         set(draft,`${pathBase}['filter-source-views']`, [viewId]);
         set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
+        set(draft, `${pathBase}['view-group-id']`, viewId);
       })
     }
   }, [])
@@ -119,6 +122,33 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
       </div>
 
       <ExistingColumnList
+        setViewGroupId={
+          (viewId) => {
+            console.log("in parent, setViewGroupId::", viewId)
+            setState(draft => {
+              // let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
+            
+              // if(sourceTiles !== 'no source tiles') {
+              //   console.log("setting source tiles")
+              //   //set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+              // }
+        
+              // console.log("removing choropleth and categories for pathbase::", pathBase)
+              // set(draft, `${pathBase}['choroplethdata']`, {});
+              //set(draft, `${pathBase}['data-column']`, columnName) //TODO i dont htink this will work long term, but tryna get ANYTHIGN to work rn
+              // set(draft, `${pathBase}['categories']`, {});
+              //set(draft, `${pathBase}['legend-data']`, []);
+             
+
+              set(draft, `${pathBase}['view-group-id']`, viewId)
+
+
+
+
+            })
+          }
+        }
+        viewGroupId={viewGroupId}
         selectedViews={selectedViews.map(v => ({...v, display_name: v.version ?? v.view_id}))}
         reorderAttrs={(start, end) => {
           const sections = [...viewGroup];
@@ -149,7 +179,7 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
   )
 }
 
-export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr}) => {
+export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr, viewGroupId, setViewGroupId}) => {
   return (
     <DndList
       onDrop={reorderAttrs}
@@ -158,8 +188,20 @@ export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr}) =>
         return (
           <div
             key={i}
-            className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-200 p-2"
+            className="group/title w-full text-sm grid grid-cols-10 cursor-grab border-t border-slate-200 p-2"
           >
+            <div
+              className="flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
+              onClick={() => {
+                console.log("legend prop change, setting viewId::",selectedView)
+                setViewGroupId(selectedView.view_id)
+              }}
+            >
+              <StarSolid
+                size={18}
+                className={`${viewGroupId === selectedView.view_id ? 'fill-pink-400 ': ''} cursor-pointer group-hover/icon:fill-slate-500 `}
+              />
+            </div>
             <div className="truncate  col-span-8 px-2 py-1">
               {selectedView.display_name}
             </div>

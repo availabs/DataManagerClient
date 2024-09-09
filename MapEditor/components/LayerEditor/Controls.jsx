@@ -52,7 +52,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled } = useMemo(() => {
+  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,viewGroupId } = useMemo(() => {
     return {
       value: get(state, `${pathBase}.${path}`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
@@ -72,6 +72,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
       filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
       filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
       viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
+      viewGroupId:get(state,`${pathBase}['view-group-id']`),
     }
   },[state])
 
@@ -180,11 +181,16 @@ export function SelectTypeControl({path, datapath, params={}}) {
           colorBreaks = choroplethdata;
         }
         else {
+          console.log("choro data::", choroplethdata)
+
           if(filterGroupEnabled) {
             domainOptions[column] = filterGroupLegendColumn;
           }
-          // TODO conditional for viewGroupEnabled here
-          // Override the `viewId` that is passed to generate breaks 
+          // if(viewGroupEnabled) {
+          //   console.log("no choro data.","active view ID::", viewId, "creating domain with::", viewGroupId)
+          //   domainOptions[viewId] = viewGroupId;
+          // }
+
           setState(draft => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
           })
