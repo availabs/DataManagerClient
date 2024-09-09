@@ -72,20 +72,10 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         }}
         setFilterGroupLegendColumn={
           (columnName) => {
-            console.log("in parent, setting filter-group-legend-column::", columnName)
-            setState(draft => {
-              let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
+            setState(draft => {      
             
-              if(sourceTiles !== 'no source tiles') {
-                console.log("setting source tiles")
-                //set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
-              }
-        
-              console.log("removing choropleth and categories for pathbase::", pathBase)
               set(draft, `${pathBase}['choroplethdata']`, {});
               set(draft, `${pathBase}['data-column']`, columnName) //TODO i dont htink this will work long term, but tryna get ANYTHIGN to work rn
-              // set(draft, `${pathBase}['categories']`, {});
-              // set(draft, `${pathBase}['legend-data']`, []);
               set(draft, `${pathBase}['filter-group-legend-column']`, columnName)
             })
           }

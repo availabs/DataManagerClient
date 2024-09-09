@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, createContext, useRef } from "reac
 import { useImmer } from 'use-immer';
 import { useSearchParams, Link, useNavigate, useParams } from "react-router-dom";
 import get from "lodash/get"
+import set from "lodash/set"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
 import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
@@ -9,6 +10,11 @@ import { usePrevious } from './components/LayerManager/utils'
 import {PMTilesProtocol} from '../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
 // import { PMTilesProtocol } from '~/pages/DataManager/utils/pmtiles/index.ts'
+import { rgb2hex, toHex, categoricalColors, rangeColors } from './components/LayerManager/utils'
+import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './components/LayerEditor/datamaps'
+import cloneDeep from 'lodash/cloneDeep'
+import colorbrewer from './components/LayerManager/colors'//"colorbrewer"
+
 
 import { DamaContext } from "../store"
 
@@ -264,6 +270,181 @@ const MapEditor = () => {
         })
     });
   }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
+  const isInteractiveLayer = state?.symbology?.layers?.[state?.symbology?.activeLayer]?.layerType === 'interactive';
+
+
+
+  const pathBase = isInteractiveLayer
+      ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId } = useMemo(() => {
+    const polygonLayerType = get(state, `${pathBase}['type']`, {});
+    const paintPaths = {
+      'fill':"layers[1].paint['fill-color']",
+      'circle':"layers[0].paint['circle-color']",
+      'line':"layers[1].paint['line-color']"
+    }
+
+    const layerPaintPath = paintPaths[polygonLayerType];
+   
+    return {
+      layerPaintPath,
+      layerType: get(state, `${pathBase}['layer-type']`, {}),
+      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
+      sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+      paintValue : get(state, `${pathBase}.${layerPaintPath}`, {}),
+      column: get(state, `${pathBase}['data-column']`, ''),
+      categories: get(state, `${pathBase}['categories']`, {}),
+      categorydata: get(state, `${pathBase}['category-data']`, {}),
+      choroplethdata: get(state, `${pathBase}['choroplethdata']`),
+      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
+      colorrange: get(state, `${pathBase}['color-range']`, colorbrewer['seq1'][9]),
+      numbins: get(state, `${pathBase}['num-bins']`, 9),
+      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
+      numCategories: get(state, `${pathBase}['num-categories']`, 10),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
+      symbology_id: get(state, `symbology_id`),
+      filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
+      filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
+      viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
+      viewGroupId:get(state,`${pathBase}['view-group-id']`),
+    }
+  },[state])
+
+  useEffect(() => {
+    //console.log('getmetadat', sourceId)
+    if(sourceId) {
+      falcor.get([
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
+      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
+    }
+  },[sourceId])
+
+  const metadata = useMemo(() => {
+    //console.log('getmetadata', falcorCache)
+      let out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
+      ], [])
+      if(out.length === 0) {
+        out = get(falcorCache, [
+          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
+        ], [])
+      }
+      return out
+
+  }, [sourceId,falcorCache])
+
+  const prevViewGroupId = usePrevious(viewGroupId)
+
+  useEffect(() => {
+    const setPaint = async () => {
+      //TODO find a datset that makes sense to  do filter gorup with categories
+      if (layerType === 'categories') {
+        console.log("type cat, categories::", categories)
+        let { paint, legend } = categories?.paint && categories?.legend
+          ? cloneDeep(categories)
+          : categoryPaint(
+            column,
+            categorydata,
+            colors,
+            numCategories,
+            metadata
+          );
+
+        if (!(paint.length % 2)) {
+          paint.push(showOther);
+        } else {
+          paint[paint.length-1] = showOther;
+        }
+
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled && legend) {
+          if(legend[legend.length-1]?.label !== "Other") {
+            legend.push({color: showOther, label: "Other"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "Other") {
+            legend.pop();
+          }
+        }
+
+        if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
+          console.log("legit setting paint", {layerPaintPath, paint})
+          setState(draft => {
+            set(draft, `${pathBase}['categories']`, { paint, legend })
+            set(draft, `${pathBase}.${layerPaintPath}`, paint)
+            set(draft, `${pathBase}['legend-data']`, legend)
+          })
+        }
+      } else if(layerType === 'choropleth') {
+        const domainOptions = {
+          column,
+          viewId,
+          numbins,
+          method
+        }
+
+        let colorBreaks; 
+
+        //Most places, if we want to hit API, we clear out all data
+        //In those cases, if we have `filterGroupEnabled`, use filterGroupLegendColumn
+
+        //If we already have `breaks` and `max` from server, do not make API call
+        if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
+          colorBreaks = choroplethdata;
+        }
+        else {
+          if(filterGroupEnabled) {
+            domainOptions['column'] = filterGroupLegendColumn;
+          }
+          if(viewGroupEnabled ) {
+            domainOptions['viewId'] = viewGroupId;
+          }
+          console.log({domainOptions})
+          setState(draft => {
+            set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
+          })
+          const res = await falcor.get([
+            "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
+          ]);
+          colorBreaks = get(res, [
+            "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
+          ])
+          setState(draft => {
+            set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
+          })
+        }
+        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled) {
+          if(legend[legend.length-1].label !== "No data") {
+            legend.push({color: showOther, label: "No data"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "No data") {
+            legend.pop();
+          }
+        }
+        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
+          setState(draft => {
+            set(draft, `${pathBase}.${layerPaintPath}`, paint)
+            set(draft, `${pathBase}['legend-data']`, legend)
+            set(draft, `${pathBase}['choroplethdata']`, colorBreaks)
+          })
+        }
+      } else if( layerType === 'simple' && typeof paintValue !== 'string') {
+        // console.log('switch to simple')
+        setState(draft => {
+          set(draft, `${pathBase}.${layerPaintPath}`, rgb2hex(null))
+        })
+      }
+    }
+    setPaint();
+  }, [categories, layerType, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId])
+
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

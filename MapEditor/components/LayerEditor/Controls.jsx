@@ -52,27 +52,12 @@ export function SelectTypeControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,viewGroupId } = useMemo(() => {
+  let { sourceId, column, } = useMemo(() => {
     return {
-      value: get(state, `${pathBase}.${path}`, {}),
-      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
+
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue : get(state, `${pathBase}.${datapath}`, {}),
       column: get(state, `${pathBase}['data-column']`, ''),
-      categories: get(state, `${pathBase}['categories']`, {}),
-      categorydata: get(state, `${pathBase}['category-data']`, {}),
-      choroplethdata: get(state, `${pathBase}['choroplethdata']`),
-      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `${pathBase}['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `${pathBase}['num-bins']`, 9),
-      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
-      numCategories: get(state, `${pathBase}['num-categories']`, 10),
-      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
-      symbology_id: get(state, `symbology_id`),
-      filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
-      filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
-      viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
-      viewGroupId:get(state,`${pathBase}['view-group-id']`),
+
     }
   },[state])
 
@@ -99,139 +84,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  const options = useMemo(() => {
-    //console.log('metadata',metadata)
-    const hasCols = metadata?.length > 0 
-    const hasNumber = metadata?.reduce((out,curr) => {
-      if(['integer', 'number'].includes(curr.type)){
-        out = true
-      }
-      return out
-    },false)
-
-    return  [
-      {name:'Simple', value: 'simple'},
-      hasCols ? {name:'Categories', value: 'categories'} : null,
-      hasNumber ? {name:'Color Range', value: 'choropleth'} : null,
-      params?.version !== "interactive" ? {name:'Interactive', value: 'interactive'} : null
-    ].filter(d => d)
-  },[metadata])
-
-  React.useEffect(() => {
-    //Generally only updates state after the upstream "event" manually sets categories/choroplethdata to null
-    const setPaint = async () => {
-      console.log("updating paint, using column::", column)
-
-      if(viewGroupEnabled) {
-        //I THINK this will end up recomputing some paint 
-      }
-
-      //TODO find a datset that makes sense to  do filter gorup with categories
-      if (value === 'categories') {
-        let { paint, legend } = categories?.paint && categories?.legend
-          ? cloneDeep(categories)
-          : categoryPaint(
-            column,
-            categorydata,
-            colors,
-            numCategories,
-            metadata
-          );
-
-        if (!(paint.length % 2)) {
-          paint.push(showOther);
-        } else {
-          paint[paint.length-1] = showOther;
-        }
-
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled && legend) {
-          if(legend[legend.length-1]?.label !== "Other") {
-            legend.push({color: showOther, label: "Other"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "Other") {
-            legend.pop();
-          }
-        }
-
-        if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          setState(draft => {
-            set(draft, `${pathBase}['categories']`, { paint, legend })
-            set(draft, `${pathBase}.${datapath}`, paint)
-            set(draft, `${pathBase}['legend-data']`, legend)
-          })
-        }
-      } else if(value === 'choropleth') {
-        const domainOptions = {
-          column,
-          viewId,
-          numbins,
-          method
-        }
-
-        let colorBreaks; 
-
-        //Most places, if we want to hit API, we clear out all data
-        //In those cases, if we have `filterGroupEnabled`, use filterGroupLegendColumn
-
-        //If we already have `breaks` and `max` from server, do not make API call
-        if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
-          colorBreaks = choroplethdata;
-        }
-        else {
-          console.log("choro data::", choroplethdata)
-
-          if(filterGroupEnabled) {
-            domainOptions[column] = filterGroupLegendColumn;
-          }
-          // if(viewGroupEnabled) {
-          //   console.log("no choro data.","active view ID::", viewId, "creating domain with::", viewGroupId)
-          //   domainOptions[viewId] = viewGroupId;
-          // }
-
-          setState(draft => {
-            set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
-          })
-          const res = await falcor.get([
-            "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ]);
-          colorBreaks = get(res, [
-            "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ])
-          setState(draft => {
-            set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
-          })
-        }
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "No data") {
-            legend.push({color: showOther, label: "No data"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "No data") {
-            legend.pop();
-          }
-        }
-        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
-          setState(draft => {
-            set(draft, `${pathBase}.${datapath}`, paint)
-            set(draft, `${pathBase}['legend-data']`, legend)
-            set(draft, `${pathBase}['choroplethdata']`, colorBreaks)
-          })
-        }
-      } else if( value === 'simple' && typeof paintValue !== 'string') {
-        // console.log('switch to simple')
-        setState(draft => {
-          set(draft, `${pathBase}.${datapath}`, rgb2hex(null))
-        })
-      }
-    }
-    setPaint();
-  }, [categories, value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
     <label className='flex w-full'>
@@ -253,7 +105,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
-          {(options || []).map((opt,i) => {
+          {(params.options || []).map((opt,i) => {
             return (
               <option key={i} value={opt.value}>{opt.name}</option>
             )

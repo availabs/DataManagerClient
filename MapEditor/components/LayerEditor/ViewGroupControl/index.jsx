@@ -126,25 +126,7 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
           (viewId) => {
             console.log("in parent, setViewGroupId::", viewId)
             setState(draft => {
-              // let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
-            
-              // if(sourceTiles !== 'no source tiles') {
-              //   console.log("setting source tiles")
-              //   //set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
-              // }
-        
-              // console.log("removing choropleth and categories for pathbase::", pathBase)
-              // set(draft, `${pathBase}['choroplethdata']`, {});
-              //set(draft, `${pathBase}['data-column']`, columnName) //TODO i dont htink this will work long term, but tryna get ANYTHIGN to work rn
-              // set(draft, `${pathBase}['categories']`, {});
-              //set(draft, `${pathBase}['legend-data']`, []);
-             
-
               set(draft, `${pathBase}['view-group-id']`, viewId)
-
-
-
-
             })
           }
         }
