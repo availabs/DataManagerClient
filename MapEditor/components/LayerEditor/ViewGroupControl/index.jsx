@@ -72,21 +72,8 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
   const availableViews = views.filter(v => availableViewIds.includes(v.view_id));
   const selectedViews = views.filter(v => viewGroup.includes(v.view_id));
 
-  useEffect(() => {
-    if(viewGroup.length === 0) {
-      setState(draft => {
-        const defaultView = views.find(v => v.view_id === viewId);
-        const defaultGroupName = (defaultView.version ?? defaultView.view_id + " group");
-
-        set(draft,`${pathBase}['filter-source-views']`, [viewId]);
-        set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
-        set(draft, `${pathBase}['view-group-id']`, viewId);
-      })
-    }
-  }, [])
-
   return (
-    <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
+    <div className="pb-2 max-h-[calc(80vh_-_220px)] overflow-auto">
       <div className="group w-full flex px-2">
         Name: 
         <input
@@ -170,7 +157,7 @@ export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr, vie
         return (
           <div
             key={i}
-            className="group/title w-full text-sm grid grid-cols-10 cursor-grab border-t border-slate-200 p-2"
+            className="group/title w-full text-sm grid grid-cols-10 cursor-grab border-t border-slate-20"
           >
             <div
               className="flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
@@ -184,8 +171,17 @@ export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr, vie
                 className={`${viewGroupId === selectedView.view_id ? 'fill-pink-400 ': ''} cursor-pointer group-hover/icon:fill-slate-500 `}
               />
             </div>
-            <div className="truncate  col-span-8 px-2 py-1">
+            <div 
+            className="truncate  col-span-8 px-2 py-1"
+            >
+              <div
+                
+                className='w-full p-1 text-sm     text-slate-700s'
+
+              >
               {selectedView.display_name}
+              </div>
+              
             </div>
             <div
               className="flex items-center  cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
@@ -194,7 +190,7 @@ export const ExistingColumnList = ({selectedViews, reorderAttrs, removeAttr, vie
               }}
             >
               <Close
-                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
+                className="cursor-pointer group-hover/icon:fill-slate-500 "
               />
             </div>
           </div>

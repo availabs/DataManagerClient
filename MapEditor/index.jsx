@@ -14,7 +14,7 @@ import { rgb2hex, toHex, categoricalColors, rangeColors } from './components/Lay
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './components/LayerEditor/datamaps'
 import cloneDeep from 'lodash/cloneDeep'
 import colorbrewer from './components/LayerManager/colors'//"colorbrewer"
-
+import { ViewAttributes } from "../Source/attributes"
 
 import { DamaContext } from "../store"
 
@@ -278,7 +278,7 @@ const MapEditor = () => {
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId } = useMemo(() => {
+  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId, initialViewId } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
       'fill':"layers[1].paint['fill-color']",
@@ -309,6 +309,7 @@ const MapEditor = () => {
       filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
       viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
       viewGroupId:get(state,`${pathBase}['view-group-id']`),
+      initialViewId:get(state,`${pathBase}['initial-view-id']`),
     }
   },[state])
 
@@ -335,13 +336,37 @@ const MapEditor = () => {
 
   }, [sourceId,falcorCache])
 
+
+  //----------------------------------
+  // -- get selected source views
+  // ---------------------------------
+  useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      return await falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(ViewAttributes)
+      ]);
+    }
+    if(sourceId) {
+      fetchData();
+    }
+  }, [sourceId, falcor, pgEnv]);
+
+  const views = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, sourceId, pgEnv]);
+
   const prevViewGroupId = usePrevious(viewGroupId)
 
   useEffect(() => {
     const setPaint = async () => {
       //TODO find a datset that makes sense to  do filter gorup with categories
       if (layerType === 'categories') {
-        console.log("type cat, categories::", categories)
         let { paint, legend } = categories?.paint && categories?.legend
           ? cloneDeep(categories)
           : categoryPaint(
@@ -371,7 +396,6 @@ const MapEditor = () => {
         }
 
         if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          console.log("legit setting paint", {layerPaintPath, paint})
           setState(draft => {
             set(draft, `${pathBase}['categories']`, { paint, legend })
             set(draft, `${pathBase}.${layerPaintPath}`, paint)
@@ -399,7 +423,7 @@ const MapEditor = () => {
           if(filterGroupEnabled) {
             domainOptions['column'] = filterGroupLegendColumn;
           }
-          if(viewGroupEnabled ) {
+          if(viewGroupEnabled) {
             domainOptions['viewId'] = viewGroupId;
           }
           console.log({domainOptions})
@@ -443,8 +467,47 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId])
+  }, [categories, layerType, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
+
+  useEffect(() => {
+    if(filterGroupEnabled && !filterGroupLegendColumn) {
+      setState(draft => {
+        const fullColumn = metadata.find(attr => attr.name === column)
+        set(draft,`${pathBase}['filter-group-name']`, column)
+        set(draft, `${pathBase}['filter-group-legend-column']`, column)
+        set(draft, `${pathBase}['filter-group']`,[{display_name: fullColumn?.display_name || fullColumn.name, column_name: fullColumn.name}])
+      })
+    } else if (!filterGroupEnabled) {
+      setState(draft => {
+        console.log("RESERT initial filter group state")
+        set(draft,`${pathBase}['filter-group-name']`, '');
+        set(draft, `${pathBase}['filter-group-legend-column']`, '');
+        set(draft, `${pathBase}['filter-group']`,[]);
+      })
+    }
+
+  }, [filterGroupEnabled])
+
+  useEffect(() => {
+    if(viewGroupEnabled && !viewGroupId) {
+      setState(draft => {
+        const defaultView = views.find(v => v.view_id === viewId);
+        const defaultGroupName = (defaultView.version ?? defaultView.view_id + " group");
+        set(draft,`${pathBase}['filter-source-views']`, [viewId]);
+        set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
+        set(draft, `${pathBase}['view-group-id']`, viewId);
+      })
+    } else if (!viewGroupEnabled) {
+      setState(draft => {
+        set(draft,`${pathBase}['filter-source-views']`, []);
+        set(draft, `${pathBase}['view-group-name']`, '');
+        set(draft, `${pathBase}['view-group-id']`, undefined);
+
+        set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
+      })
+    }
+  }, [viewGroupEnabled])
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

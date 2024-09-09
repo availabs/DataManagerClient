@@ -137,14 +137,6 @@ SO, how to solve that ^^^ issue.
  **UI/UX TODO**
  - Need an indicator  for which `view` generated the legend
   - Just reuse what you did for the filter-group-legend thing 
- - Need a separate button to `recompute-legend`
-  - currently, it is "tied" to the controls in the StyleEditor. This is a little clunky when both groups are added
  - Need a method to recompute legend based on the selected `view`
  - Whenever we recompute the legend (column select change, num of breaks, etc.), MUST update the state properties that track what computed the legend
   - Otherwise, when the user takes an action such as changing the number of breaks in a color-range, it will recompute legend using whatever is being displayed on the map
-
-- Bigger Q/Feedback:
- - How to recompute legend? How to indicate to user what is creating the legend?
-   - Functionally, this is a little tricky -- things like changing the number of breaks in a scale will recompute based on the current data-view and column.
- - Should there be a separate control (from the legend) for changing the data that is displayed on the map?
- -  

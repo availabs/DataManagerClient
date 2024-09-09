@@ -37,16 +37,6 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     }
   }, [sourceId]);
 
-  useEffect(() => {
-    if(filterGroup.length === 0) {
-      setState(draft => {
-        set(draft,`${pathBase}['filter-group-name']`, dataColumn)
-        set(draft, `${pathBase}['filter-group-legend-column']`, dataColumn)
-      })
-    }
-  }, [])
-  //Need property that stores the EXTRA params for legend
-  //viewId, column, 
 
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
