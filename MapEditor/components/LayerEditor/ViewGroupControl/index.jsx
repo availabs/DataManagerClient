@@ -107,11 +107,9 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
           }
         />
       </div>
-
       <ExistingColumnList
         setViewGroupId={
           (viewId) => {
-            console.log("in parent, setViewGroupId::", viewId)
             setState(draft => {
               set(draft, `${pathBase}['view-group-id']`, viewId)
             })

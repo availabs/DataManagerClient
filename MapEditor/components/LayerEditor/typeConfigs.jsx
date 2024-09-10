@@ -79,21 +79,6 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'View Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
-        }
-      ]
-    },
-    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -110,6 +95,21 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
         }
       ]
     },
@@ -267,7 +267,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -335,21 +336,6 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'View Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
-        }
-      ]
-    },
-    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -366,6 +352,21 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
         }
       ]
     },
@@ -542,7 +543,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -575,21 +577,6 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'Filter Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['filterGroupEnabled']`,
-          title: 'filter group'
-        }
-      ]
-    },
-    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -610,7 +597,7 @@ const typeConfigs = {
       ]
     },
     {
-      label: 'View Group',
+      label: 'Filter Group',
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
@@ -619,8 +606,8 @@ const typeConfigs = {
       controls: [
         {
           type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
+          path: `['filterGroupEnabled']`,
+          title: 'filter group'
         }
       ]
     },
@@ -641,6 +628,21 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
         }
       ]
     },

@@ -132,7 +132,8 @@ SO, how to solve that ^^^ issue.
 - if the current `data-column` of a `filter-group` is changed via the `LegendPanel`, it will change the displayed value in the `StyleEditor`, but the legend is still BASED off of something else
  - Maybe just some text or indicator of what column was used to generate the legend. Maybe a star or something?
 - FIX `colorSquare` for simple layer types. its all squished and small now
-- MAYBE BUG -- for `interactive` filter group, the column select does not "typecheck" 
+- MAYBE BUG -- for `interactive` filter group, the column select does not "typecheck"
+- Do not allow user to have an interactive layer within an interactive layer...
 
  **UI/UX TODO**
  - Need an indicator  for which `view` generated the legend

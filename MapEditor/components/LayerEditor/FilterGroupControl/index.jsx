@@ -37,7 +37,6 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     }
   }, [sourceId]);
 
-
   return (
     <div className="pb-4 max-h-[calc(80vh_-_220px)] overflow-auto">
       <div className="group w-full flex px-2">
@@ -58,7 +57,9 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         params={{
           version: layerType === 'interactive' ? 'interactive' : undefined,
           default: dataColumn,
-          onlyTypedAttributes: true
+          onlyTypedAttributes: true,
+          pathPrefix: params.pathPrefix,
+          version: params?.version
         }}
         setFilterGroupLegendColumn={
           (columnName) => {

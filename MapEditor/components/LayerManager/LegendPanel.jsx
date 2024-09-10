@@ -296,16 +296,11 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
             value={dataColumn}
             onChange={(e) => {
               setState((draft) => {
-                //TODO should these controls matter for importing to DMS? Like, should they be able to change parts of the symbology that we care about?
-                //selectedInteractiveFilterIndex
-
-                let sourceTiles = get(state, `symbology.layers[${layer.id}].sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
-                
-                if(sourceTiles !== 'no source tiles') {
-                  set(draft, `symbology.layers[${layer.id}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+                if(type === 'interactive'){
+                  draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]["data-column"] = e.target.value
+                } else {
+                  draft.symbology.layers[layer.id]["data-column"] = e.target.value
                 }
-    
-                draft.symbology.layers[layer.id]["data-column"] = e.target.value
               });
             }}
           >
@@ -337,7 +332,6 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
             value={layer.view_id}
             onChange={(e) => {
               setState((draft) => {
-                console.log("viewgroup select change",JSON.parse(JSON.stringify(draft.symbology.layers[layer.id])))
                 //draft.symbology.layers[layer.id].layers[0].source
                 //draft.symbology.layers[layer.id].layers[0].source-layer
                 //draft.symbology.layers[layer.id].layers[1].source

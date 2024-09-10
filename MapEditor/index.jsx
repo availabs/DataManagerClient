@@ -270,15 +270,13 @@ const MapEditor = () => {
         })
     });
   }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
-  const isInteractiveLayer = state?.symbology?.layers?.[state?.symbology?.activeLayer]?.layerType === 'interactive';
-
-
+  const isInteractiveLayer = state?.symbology?.layers?.[state?.symbology?.activeLayer]?.['layer-type'] === 'interactive';
 
   const pathBase = isInteractiveLayer
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId, initialViewId } = useMemo(() => {
+  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId, initialViewId, baseDataColumn } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
       'fill':"layers[1].paint['fill-color']",
@@ -293,7 +291,8 @@ const MapEditor = () => {
       layerType: get(state, `${pathBase}['layer-type']`, {}),
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue : get(state, `${pathBase}.${layerPaintPath}`, {}),
+      paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
+      baseDataColumn: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
       column: get(state, `${pathBase}['data-column']`, ''),
       categories: get(state, `${pathBase}['categories']`, {}),
       categorydata: get(state, `${pathBase}['category-data']`, {}),
@@ -403,8 +402,9 @@ const MapEditor = () => {
           })
         }
       } else if(layerType === 'choropleth') {
+
         const domainOptions = {
-          column,
+          column: baseDataColumn,
           viewId,
           numbins,
           method
@@ -414,7 +414,6 @@ const MapEditor = () => {
 
         //Most places, if we want to hit API, we clear out all data
         //In those cases, if we have `filterGroupEnabled`, use filterGroupLegendColumn
-
         //If we already have `breaks` and `max` from server, do not make API call
         if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
           colorBreaks = choroplethdata;
@@ -440,7 +439,7 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
+        let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
         const isShowOtherEnabled = showOther === '#ccc';
         if(isShowOtherEnabled) {
           if(legend[legend.length-1].label !== "No data") {
@@ -467,7 +466,8 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+    //TODO I think we can remove `column` from here -- it accounts for `interactive-layer` which we DONT  want to do
+  }, [categories, layerType, column, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
 
   useEffect(() => {
@@ -480,7 +480,6 @@ const MapEditor = () => {
       })
     } else if (!filterGroupEnabled) {
       setState(draft => {
-        console.log("RESERT initial filter group state")
         set(draft,`${pathBase}['filter-group-name']`, '');
         set(draft, `${pathBase}['filter-group-legend-column']`, '');
         set(draft, `${pathBase}['filter-group']`,[]);
