@@ -271,7 +271,6 @@ const MapEditor = () => {
     });
   }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
   const isInteractiveLayer = state?.symbology?.layers?.[state?.symbology?.activeLayer]?.['layer-type'] === 'interactive';
-
   const pathBase = isInteractiveLayer
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
@@ -469,43 +468,50 @@ const MapEditor = () => {
     //TODO I think we can remove `column` from here -- it accounts for `interactive-layer` which we DONT  want to do
   }, [categories, layerType, column, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
+  const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 
   useEffect(() => {
-    if(filterGroupEnabled && !filterGroupLegendColumn) {
-      setState(draft => {
-        const fullColumn = metadata.find(attr => attr.name === column)
-        set(draft,`${pathBase}['filter-group-name']`, column)
-        set(draft, `${pathBase}['filter-group-legend-column']`, column)
-        set(draft, `${pathBase}['filter-group']`,[{display_name: fullColumn?.display_name || fullColumn.name, column_name: fullColumn.name}])
-      })
-    } else if (!filterGroupEnabled) {
-      setState(draft => {
-        set(draft,`${pathBase}['filter-group-name']`, '');
-        set(draft, `${pathBase}['filter-group-legend-column']`, '');
-        set(draft, `${pathBase}['filter-group']`,[]);
-      })
+    if(!!activeLayer){
+      if(filterGroupEnabled && !filterGroupLegendColumn) {
+        setState(draft => {
+          const fullColumn = metadata.find(attr => attr.name === column)
+          set(draft,`${pathBase}['filter-group-name']`, column)
+          set(draft, `${pathBase}['filter-group-legend-column']`, column)
+          set(draft, `${pathBase}['filter-group']`,[{display_name: fullColumn?.display_name || fullColumn.name, column_name: fullColumn.name}])
+        })
+      } else if (!filterGroupEnabled) {
+        console.log("checkign state before settign filterGroupEnabled", state)
+        setState(draft => {
+          set(draft,`${pathBase}['filter-group-name']`, '');
+          set(draft, `${pathBase}['filter-group-legend-column']`, '');
+          set(draft, `${pathBase}['filter-group']`,[]);
+        })
+      }
     }
-
   }, [filterGroupEnabled])
 
   useEffect(() => {
-    if(viewGroupEnabled && !viewGroupId) {
-      setState(draft => {
-        const defaultView = views.find(v => v.view_id === viewId);
-        const defaultGroupName = (defaultView.version ?? defaultView.view_id + " group");
-        set(draft,`${pathBase}['filter-source-views']`, [viewId]);
-        set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
-        set(draft, `${pathBase}['view-group-id']`, viewId);
-      })
-    } else if (!viewGroupEnabled) {
-      setState(draft => {
-        set(draft,`${pathBase}['filter-source-views']`, []);
-        set(draft, `${pathBase}['view-group-name']`, '');
-        set(draft, `${pathBase}['view-group-id']`, undefined);
-
-        set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
-      })
+    if(!!activeLayer){
+      if(viewGroupEnabled && !viewGroupId && !!activeLayer) {
+        setState(draft => {
+          const defaultView = views.find(v => v.view_id === viewId);
+          const defaultGroupName = (defaultView?.version ?? defaultView?.view_id + " group");
+          set(draft,`${pathBase}['filter-source-views']`, [viewId]);
+          set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
+          set(draft, `${pathBase}['view-group-id']`, viewId);
+        })
+      } else if (!viewGroupEnabled) {
+        console.log("checkign state before settign viewGroupEnabled", state)
+        setState(draft => {
+          set(draft,`${pathBase}['filter-source-views']`, []);
+          set(draft, `${pathBase}['view-group-name']`, '');
+          set(draft, `${pathBase}['view-group-id']`, undefined);
+  
+          set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
+        })
+      }
     }
+
   }, [viewGroupEnabled])
 
 	return (
