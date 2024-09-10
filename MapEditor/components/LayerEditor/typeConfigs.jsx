@@ -79,6 +79,21 @@ const typeConfigs = {
       ]
     },
     {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -95,21 +110,6 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
-        }
-      ]
-    },
-    {
-      label: 'View Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
         }
       ]
     },
@@ -336,6 +336,21 @@ const typeConfigs = {
       ]
     },
     {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -352,21 +367,6 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
-        }
-      ]
-    },
-    {
-      label: 'View Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
         }
       ]
     },
@@ -612,6 +612,21 @@ const typeConfigs = {
       ]
     },
     {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
       label: '',
       type: 'popover',
       conditional: [{
@@ -628,21 +643,6 @@ const typeConfigs = {
           params: {
             format: (v) => `${v?.length} views`
           }
-        }
-      ]
-    },
-    {
-      label: 'View Group',
-      type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
-      controls: [
-        {
-          type: 'toggleControl',
-          path: `['viewGroupEnabled']`,
-          title: 'View Group'
         }
       ]
     },
