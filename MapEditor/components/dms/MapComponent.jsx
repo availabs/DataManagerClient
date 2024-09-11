@@ -148,7 +148,7 @@ const Edit = ({value, onChange, size}) => {
                     const draftInteractiveFilter = draftFilters[draftFilterIndex] 
 
                     if(draftInteractiveFilter) {
-                      draft.symbologies[topSymbKey].symbology.layers[lKey] = {
+                      const newSymbology = {
                         ...layer,
                         ...draftInteractiveFilter,
                         order: layer.order,
@@ -156,6 +156,11 @@ const Edit = ({value, onChange, size}) => {
                         "interactive-filters": draftFilters,
                         selectedInteractiveFilterIndex: draftFilterIndex
                       };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
                     }
                   });
             })
@@ -310,9 +315,8 @@ const View = ({value, size}) => {
                     const draftFilters = layer['interactive-filters'];
                     const draftFilterIndex = layer.selectedInteractiveFilterIndex;
                     const draftInteractiveFilter = draftFilters[draftFilterIndex] 
-
                     if(draftInteractiveFilter) {
-                      draft.symbologies[topSymbKey].symbology.layers[lKey] = {
+                      const newSymbology = {
                         ...layer,
                         ...draftInteractiveFilter,
                         order: layer.order,
@@ -320,6 +324,11 @@ const View = ({value, size}) => {
                         "interactive-filters": draftFilters,
                         selectedInteractiveFilterIndex: draftFilterIndex
                       };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
                     }
                   });
             })

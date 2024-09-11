@@ -100,12 +100,12 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   //const Icon = typeIcons?.[layer?.type] || typeIcons['Line']
   const visible = state?.symbologies?.[symbology.symbology_id]?.isVisible
 
-  // console.log('testing', visible)
   const toggleVisibility = useMemo(() => {
     return () => setState(draft => {
       draft.symbologies[symbology.symbology_id].isVisible  = !draft.symbologies[symbology.symbology_id].isVisible
       Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
-        draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers.forEach((d,i) => {
+        const curLayer = draft.symbologies[symbology.symbology_id].symbology.layers[layerId];
+        curLayer.layers.forEach((d,i) => {
           let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
           let update = val === 'visible' ? 'none' : 'visible'
           draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
@@ -152,12 +152,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
         </div>
       </div>
     );
-  }
-
-  if(tabIndex === 0) {
-    console.log(state)
-
-    console.log({numRows, rowIndex})
   }
 
   return (
