@@ -84,8 +84,18 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 function SymbologyRow ({tabIndex, row, rowIndex}) {
   const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
-  const symbology = useMemo(() => get(state, `symbologies[${row.symbologyId}]`, {}), [row])
-  const layer = useMemo(()=> get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {}),[symbology])
+
+  const { symbology, layer, selectedInteractiveFilterIndex, layerType, interactiveFilters } = useMemo(() => {
+    const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
+    const layer = get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {});
+    return {
+      symbology,
+      layer,
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      layerType:get(layer, `['layer-type']`, 'simple'),
+      interactiveFilters: get(layer, `['interactive-filters']`, [])
+    }
+  },[row, state])
 
   //const Icon = typeIcons?.[layer?.type] || typeIcons['Line']
   const visible = state?.symbologies?.[symbology.symbology_id]?.isVisible
@@ -114,121 +124,160 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
 
+  let interactiveElement = <></>;
+  if (layerType === "interactive") {
+    interactiveElement = (
+      <div className="text-slate-600 font-medium truncate flex-1 pl-3 pr-1 pb-1">
+        <div className="text-xs text-black">Filters:</div>
+        <div className="rounded-md h-[36px] text-xs pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={selectedInteractiveFilterIndex}
+            onChange={(e) => {
+              setState((draft) => {
+                draft.symbologies[row.symbologyId].symbology.layers[
+                  layer.id
+                ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+              });
+            }}
+          >
+            {interactiveFilters.map((iFilter, i) => {
+              return (
+                <option key={i} value={i}>
+                  {iFilter.label}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+    );
+  }
+
+  if(tabIndex === 0) {
+    console.log(state)
+
+    console.log({numRows, rowIndex})
+  }
+
   return (
-    <div className={`w-full  px-2 flex border-white/85 border hover:border-pink-500 group items-center`}>
-      <div className='pr-2 flex items-center'><input 
-        type='checkbox'
-        checked={visible}
-        className='h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-600'
-        onChange={toggleVisibility}
-      /></div>
-      <div 
-        onClick={state.isEdit ? () => {}: toggleVisibility}
-        className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
-      >
-        { state.isEdit ? (
-            <input
-              className="block w-[240px] flex flex-1 bg-transparent text-slate-800 placeholder:text-gray-400  focus:border-0"
-              value={symbology?.name}
-              placeholder='Layer Name'
-              type='text'
-              onChange={(e) => {
-                const layerName = e.target.value;
+    <div className='border-white/85 border hover:border-pink-500 group'>
+      <div className={`w-full  px-2 flex  items-center`}>
+        <div className='pr-2 flex items-center'><input 
+          type='checkbox'
+          checked={visible}
+          className='h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-600'
+          onChange={toggleVisibility}
+        /></div>
+        <div 
+          onClick={state.isEdit ? () => {}: toggleVisibility}
+          className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
+        >
+          { state.isEdit ? (
+              <input
+                className="block w-[240px] flex flex-1 bg-transparent text-slate-800 placeholder:text-gray-400  focus:border-0"
+                value={symbology?.name}
+                placeholder='Layer Name'
+                type='text'
+                onChange={(e) => {
+                  const layerName = e.target.value;
+                  setState(draft => {
+                    const newLayers = Object.keys(draft.symbologies[row.symbologyId].symbology.layers).reduce((acc, layerKey) => {
+                      acc[layerKey] = {...draft.symbologies[row.symbologyId].symbology.layers[layerKey], name: layerName}
+                      return acc;
+                    }, {})
+                    draft.symbologies[row.symbologyId].symbology.layers = newLayers;
+                    draft.symbologies[row.symbologyId].name = layerName;
+                    draft.tabs[tabIndex].rows[rowIndex].name =  layerName;
+                  })
+                }}
+              />
+            ) : 
+              symbology?.name || ' no name'
+          }
+        </div>
+        {state.isEdit &&
+          <>
+            <div
+              className={`${rowIndex === 0 ? 'pointer-events-none' : ''}`}
+              onClick={ () => {
                 setState(draft => {
-                  const newLayers = Object.keys(draft.symbologies[row.symbologyId].symbology.layers).reduce((acc, layerKey) => {
-                    acc[layerKey] = {...draft.symbologies[row.symbologyId].symbology.layers[layerKey], name: layerName}
-                    return acc;
-                  }, {})
-                  draft.symbologies[row.symbologyId].symbology.layers = newLayers;
-                  draft.symbologies[row.symbologyId].name = layerName;
-                  draft.tabs[tabIndex].rows[rowIndex].name =  layerName;
+                  arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex-1);
                 })
               }}
-            />
-          ) : 
-            symbology?.name || ' no name'
+            >
+              <CaretUpSolid
+                className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+                size={20}
+              />
+            </div>
+            <div
+              className={`${rowIndex === numRows-1 ? 'pointer-events-none' : ''}`}
+              onClick={() => {
+                setState(draft => {
+                  arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex+1);
+                })
+              }}
+            >
+              <CaretDownSolid
+                className={`pb-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                size={20}
+              />
+            </div>
+          </>
         }
-      </div>
-      {state.isEdit &&
-        <>
-          <div
-            className={`${rowIndex === 0 ? 'pointer-events-none' : ''}`}
-            onClick={ () => {
-              setState(draft => {
-                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex-1);
-              })
-            }}
+        {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
+          <SymbologyMenu 
+            button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
           >
-            <CaretUpSolid
-              className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
-              size={20}
-            />
-          </div>
-          <div
-            className={`${rowIndex === numRows-1 ? 'pointer-events-none' : ''}`}
-            onClick={() => {
-              setState(draft => {
-                arraymove(draft.tabs[tabIndex].rows, rowIndex, rowIndex+1);
-              })
-            }}
-          >
-            <CaretDownSolid
-              className={`pb-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-              size={20}
-            />
-          </div>
-        </>
-      }
-      {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
-        <SymbologyMenu 
-          button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-        >
-          <div className="px-1 py-1 ">
-              <Menu.Item >
-                {({ active }) => (
-                  <div 
-                    className={`${
-                      active ? 'bg-pink-50 ' : ''
-                    } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
-                    onClick={() => {
-                      setState(draft => {
-                        delete draft.symbologies[symbology.symbology_id]
-                        draft.tabs[tabIndex].rows.splice(rowIndex, 1)
-                      })
-                    }}
-                  >Remove</div>
-                )}
-              </Menu.Item>
-            </div>
             <div className="px-1 py-1 ">
-              <Menu.Item >
-                {({ active }) => (
-                  <div 
-                    className={`${
-                      active ? 'bg-pink-50 ' : ''
-                    } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                    onClick={async () => {
-                      console.log("updating symbology for::", row.symbologyId);
-                      setState(draft => {
-                        let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
-                  
-                        Object.keys(newSymbology.symbology.layers).forEach(layerId => {
-                          newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
-                            const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
-                            newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
-                          })
+                <Menu.Item >
+                  {({ active }) => (
+                    <div 
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+                      onClick={() => {
+                        setState(draft => {
+                          delete draft.symbologies[symbology.symbology_id]
+                          draft.tabs[tabIndex].rows.splice(rowIndex, 1)
                         })
-                  
-                        draft.symbologies[''+row.symbologyId] = newSymbology;
-                        draft.symbologies[symbology.symbology_id].isVisible = visible;
-                      })
-                    }}
-                  >Update symbology</div>
-                )}
-              </Menu.Item>
-            </div>
-        </SymbologyMenu>
-      </div>)}
+                      }}
+                    >Remove</div>
+                  )}
+                </Menu.Item>
+              </div>
+              <div className="px-1 py-1 ">
+                <Menu.Item >
+                  {({ active }) => (
+                    <div 
+                      className={`${
+                        active ? 'bg-pink-50 ' : ''
+                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                      onClick={async () => {
+                        console.log("updating symbology for::", row.symbologyId);
+                        setState(draft => {
+                          let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
+                    
+                          Object.keys(newSymbology.symbology.layers).forEach(layerId => {
+                            newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
+                              const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
+                              newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
+                            })
+                          })
+                    
+                          draft.symbologies[''+row.symbologyId] = newSymbology;
+                          draft.symbologies[symbology.symbology_id].isVisible = visible;
+                        })
+                      }}
+                    >Update symbology</div>
+                  )}
+                </Menu.Item>
+              </div>
+          </SymbologyMenu>
+        </div>)}
+      </div>
+      {interactiveElement}
     </div>
   )
 }

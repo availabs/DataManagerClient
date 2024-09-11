@@ -137,15 +137,14 @@ const Edit = ({value, onChange, size}) => {
           Object.keys(draft.symbologies)
             .forEach(topSymbKey => {
                 const curTopSymb = draft.symbologies[topSymbKey];
-  
                 Object.keys(curTopSymb.symbology.layers)
                   .filter((lKey) => {
                     return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
                   })
                   .forEach((lKey) => {
                     const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
-                    const draftFilters = curTopSymb.symbology.layers[lKey]['interactive-filters'];
-                    const draftFilterIndex = curTopSymb.symbology.layers[lKey].selectedInteractiveFilterIndex;
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
                     const draftInteractiveFilter = draftFilters[draftFilterIndex] 
 
                     if(draftInteractiveFilter) {
@@ -307,8 +306,9 @@ const View = ({value, size}) => {
                   })
                   .forEach((lKey) => {
                     const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
-                    const draftFilters = curTopSymb.symbology.layers[lKey]['interactive-filters'];
-                    const draftFilterIndex = curTopSymb.symbology.layers[lKey].selectedInteractiveFilterIndex;
+                
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
                     const draftInteractiveFilter = draftFilters[draftFilterIndex] 
 
                     if(draftInteractiveFilter) {
