@@ -62,7 +62,6 @@ const ViewLayerRender = ({
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
     if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
-      //console.log('data-column update')
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
@@ -78,6 +77,40 @@ const ViewLayerRender = ({
         })
         // consol
         maplibreMap.removeSource(newSource.id)
+        if(!maplibreMap.getSource(newSource.id)){
+          maplibreMap.addSource(newSource.id, newSource.source)
+        } else {
+          console.log('cant add',maplibreMap.getSource(newSource.id))
+        }
+
+        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
+        layerProps?.layers?.forEach(l => {
+            if(maplibreMap.getLayer(beneathLayer?.id)){
+              maplibreMap.addLayer(l, beneathLayer?.id) 
+            } else {
+              maplibreMap.addLayer(l) 
+            }
+        })
+      }
+    }
+
+    if(Object.keys(layerProps)?.length && layerProps.view_id !== prevLayerProps?.view_id) {
+      if(maplibreMap.getSource(prevLayerProps?.sources?.[0]?.id)){
+        const oldSource = cloneDeep(prevLayerProps.sources?.[0])
+        let newSource = cloneDeep(layerProps.sources?.[0])
+        let tileBase = newSource?.source.tiles?.[0];
+
+        if(tileBase){
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+        }
+
+        layerProps?.layers?.forEach(l => {
+          if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+            maplibreMap.removeLayer(l?.id) 
+          }
+        })
+
+        maplibreMap.removeSource(oldSource.id)
         if(!maplibreMap.getSource(newSource.id)){
           maplibreMap.addSource(newSource.id, newSource.source)
         } else {
@@ -198,17 +231,23 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
   const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
-  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]);
   if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
     }
 
-    if (layerProps?.["data-column"] && !getUrlHasDataColumn(newTileUrl)) {
+    const splitUrl = newTileUrl.split("?cols=");
+    //If we have a data column, and the URL has nothing after the ?cols=, append data column
+    if (layerProps?.["data-column"] && splitUrl[1].length === 0) {
       newTileUrl += layerProps?.["data-column"];
     }
 
-    if (getUrlHasDataColumn(newTileUrl) && layerHasFilter) {
+    //If we have a data column, and the URL already has something after the ?cols=, replace it with data column
+    if (layerProps?.["data-column"] && splitUrl[1].length > 0) {
+      newTileUrl = newTileUrl.replace(splitUrl[1], layerProps?.["data-column"]);
+    }
+
+    if (newTileUrl.includes(layerProps?.["data-column"]) && layerHasFilter) {
       newTileUrl += ",";
     }
 

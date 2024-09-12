@@ -35,4 +35,4 @@ controls
  -->
  	- remove symbology
  	- remove tab
- 	- tab icons
+ 	- tab icons 

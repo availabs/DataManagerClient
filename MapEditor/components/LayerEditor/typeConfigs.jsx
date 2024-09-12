@@ -11,7 +11,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -22,10 +23,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -36,6 +43,82 @@ const typeConfigs = {
             ]
           },
           path: `['data-column']`
+        }
+      ]
+    },
+    {
+      label: 'Filter Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => `${v?.length} columns`
+          }
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
+          }
         }
       ]
     },
@@ -121,6 +204,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -141,8 +228,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -171,7 +276,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -182,10 +288,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -197,6 +309,82 @@ const typeConfigs = {
           },
           path: `['data-column']`,
           datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: 'Filter Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group',
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => `${v?.length} columns`
+          }
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
+          }
         }
       ]
     },
@@ -301,6 +489,10 @@ const typeConfigs = {
     {
       label: 'Stroke',
       type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'color',
@@ -321,8 +513,26 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
+    },
+    {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -351,7 +561,8 @@ const typeConfigs = {
             options: [
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
-              {name:'Color Range', value: 'choropleth'}
+              {name:'Color Range', value: 'choropleth'},
+              {name:'Interactive', value: 'interactive'}
             ]
           },
           path: `['layer-type']`,
@@ -362,10 +573,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: {
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -377,6 +594,82 @@ const typeConfigs = {
           },
           path: `['data-column']`,
           datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'filterGroupControl',
+          path: `['filter-group']`,
+          params: {
+            format: (v) => `${v?.length} columns`
+          }
+        }
+      ]
+    },
+    {
+      label: 'Filter Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['filterGroupEnabled']`,
+          title: 'filter group'
+        }
+      ]
+    },
+    {
+      label: 'View Group',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth']
+      },
+      controls: [
+        {
+          type: 'toggleControl',
+          path: `['viewGroupEnabled']`,
+          title: 'View Group'
+        }
+      ]
+    },
+    {
+      label: '',
+      type: 'popover',
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
+      controls: [
+        {
+          type: 'viewGroupControl',
+          path: `['filter-source-views']`,
+          params: {
+            format: (v) => `${v?.length} views`
+          }
         }
       ]
     },
@@ -515,7 +808,7 @@ const typeConfigs = {
             min: "0",
             max: "20",
             step: "0.5",
-            default: "3",
+            default: "0",
             units: "px"
           }
         },
@@ -536,6 +829,10 @@ const typeConfigs = {
     {
       label: 'Opacity',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -551,6 +848,20 @@ const typeConfigs = {
           }
         },
       ],
+    },
+    {
+      label: 'Interactive Filters',
+      type: 'full-width',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['interactive']
+      },
+      controls: [
+        {
+          type: 'interactiveFilterControl',
+          path: `['interactive-filters']`,
+        }
+      ]
     }
   ]
 }

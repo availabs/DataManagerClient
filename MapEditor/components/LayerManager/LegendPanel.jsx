@@ -1,36 +1,39 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useContext } from 'react'
 import { SymbologyContext } from '../../'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid} from '../icons'
+import { DamaContext } from "../../../store"
+import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
-
+import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
   const visible = layer.isVisible
-
+  const onClick = () => {
+    setState(draft => {
+      draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
+      draft.symbology.layers[layer.id].layers.forEach((d,i) => {
+        let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
+        let update = val === 'visible' ? 'none' : 'visible'
+        draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
+      })
+    })
+  }
   return (
-    <div onClick={() => {
-        setState(draft => {
-          draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
-          draft.symbology.layers[layer.id].layers.forEach((d,i) => {
-            let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
-            let update = val === 'visible' ? 'none' : 'visible'
-            draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
-          })
-        })}}
-      >
+    <>
       {visible ? 
-        <Eye 
-          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+        <Eye
+          onClick={onClick}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         /> : 
-        <EyeClosed 
-          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+        <EyeClosed
+          onClick={onClick}
+          className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         />
       }
-    </div>
+    </>
   )
 }
 
@@ -73,6 +76,27 @@ const typePaint = {
   'line': (layer) => {
     return get(layer, `layers[1].paint['line-color']`, '#ccc')
   }
+}
+
+function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  let { interactiveFilters } = useMemo(() => {
+    return {
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+    };
+  }, [layer]);
+
+  const selectedInteractiveFilterIndex = layer?.selectedInteractiveFilterIndex;
+  const activeFilterLayerType = layer?.['interactive-filters']?.[selectedInteractiveFilterIndex]?.['layer-type'];
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+    </div>
+  );
 }
 
 function CategoryLegend({ layer, toggleSymbology }) {
@@ -141,58 +165,230 @@ function StepLegend({ layer, toggleSymbology }) {
 
 function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
+  const { falcor, falcorCache, pgEnv } = useContext(DamaContext);
   const { activeLayer } = state.symbology;
+
+  const [isListVisible, setIsListVisible] = React.useState(true);
+
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, initialViewId } = useMemo(() => {
+    return {
+      initialViewId: get(layer,`initial-view-id`),
+      sourceId: get(layer,`source_id`),
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+      dataColumn: get(layer, `['data-column']`, []),
+      filterGroup: get(layer, `['filter-group']`, []),
+      filterGroupName: get(layer, `['filter-group-name']`, ''),
+      filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
+      viewGroup: get(layer, `['filter-source-views']`, []),
+      viewGroupName: get(layer, `['view-group-name']`, ''),
+    }
+  },[state, layer]);
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
     })
   }
-
+  const shouldDisplayColorSquare =
+    type === "simple" ||
+    (type === "interactive" &&
+      interactiveFilters?.[selectedInteractiveFilterIndex]?.["layer-type"] ===
+        "simple") ||
+    !type;
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
-  const type = layer['layer-type']
 
+  const legendTitle = (
+    
+      <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
+        {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
+        {layer.name ?? filterGroupName}
+        <div className='flex'>
+          <div className='text-sm pt-1  flex items-center'>
+            <LayerMenu 
+              layer={layer}
+              button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
+            />
+          </div>
+          <CaretUpSolid
+            onClick={() => {
+              onRowMove(i, i-1)
+            }}
+            size={24}
+            className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+          />
+          <CaretDownSolid
+            onClick={ () => {
+              onRowMove(i, i+1)
+            }}
+            size={24}
+            className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+          />
+          <VisibilityButton layer={layer}/>
+        </div>
+      </div>
+
+  );
+
+  //----------------------------------
+  // -- get selected source views
+  // ---------------------------------
+  React.useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      return await falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(ViewAttributes)
+      ]);
+    }
+    if(sourceId) {
+      fetchData();
+    }
+  }, [sourceId, falcor, pgEnv]);
+
+  const views = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, sourceId, pgEnv]);
+
+  const groupSelectorElements = [];
+  if (type === "interactive") {
+    groupSelectorElements.push(
+      <div
+      className="text-slate-600 font-medium truncate flex-1"
+    >
+      <div className='text-xs text-black'>Filters:</div>
+      <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+        <select
+          className="w-full bg-transparent"
+          value={selectedInteractiveFilterIndex}
+          onChange={(e) => {
+            setState((draft) => {
+              draft.symbology.layers[
+                layer.id
+              ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+            });
+          }}
+        >
+          {interactiveFilters.map((iFilter, i) => {
+            return (
+              <option key={i} value={i}>
+                {iFilter.label}
+              </option>
+            );
+          })}
+        </select>
+      </div>
+    </div>
+    )
+  } 
+  if(layer.filterGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+        <div className='text-xs text-black'>{filterGroupName}:</div>
+        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={dataColumn}
+            onChange={(e) => {
+              setState((draft) => {
+                if(type === 'interactive'){
+                  draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]["data-column"] = e.target.value
+
+                  if(draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]['layer-type'] === 'categories') {
+                    draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]['categories'] = {};
+                  }
+                } else {
+                  draft.symbology.layers[layer.id]["data-column"] = e.target.value
+
+                  if(type === 'categories') {
+                    draft.symbology.layers[layer.id]['categories'] = {};
+                  }
+                }
+              });
+            }}
+          >
+            {filterGroup.map((gFilter, i) => {
+              const itemSuffix =
+                filterGroupLegendColumn === gFilter.column_name
+                  ? "**"
+                  : !!filterGroupLegendColumn
+                  ? ` (${filterGroupLegendColumn})`
+                  : "";
+              return (
+                <option key={i} value={gFilter.column_name}>
+                  {gFilter.display_name} {itemSuffix}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+    );
+  }
+  if(layer.viewGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+        <div className='text-xs text-black'>{viewGroupName}: </div>
+        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={layer.view_id}
+            onChange={(e) => {
+              setState((draft) => {
+                //draft.symbology.layers[layer.id].layers[0].source
+                //draft.symbology.layers[layer.id].layers[0].source-layer
+                //draft.symbology.layers[layer.id].layers[1].source
+                //draft.symbology.layers[layer.id].layers[1].source-layer
+                const newLayer = JSON.parse(
+                  JSON.stringify(draft.symbology.layers[layer.id].layers).replaceAll(
+                    layer.view_id,
+                    e.target.value
+                  )
+                );
+                draft.symbology.layers[layer.id].layers = newLayer;
+
+                //sources[0].id
+                //sources[0].source.tiles
+                const newSources = JSON.parse(
+                  JSON.stringify(
+                    draft.symbology.layers[layer.id].sources
+                  ).replaceAll(layer.view_id, e.target.value)
+                );
+                draft.symbology.layers[layer.id].sources = newSources;
+
+                draft.symbology.layers[layer.id].view_id = e.target.value
+              });
+            }}
+          >
+            {viewGroup.map((view_id, i) => {
+              const curView = views.find((v) => v.view_id === view_id);
+              return (
+                <option key={i} value={view_id}>
+                  {curView?.version ?? curView?.view_id}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+    );
+  }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full  p-2 py-1 flex border-blue-50/50 border  items-center`}>
-        {(type === 'simple' || !type) && <div onClick={toggleSymbology} className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
-        <div 
-          onClick={toggleSymbology}
-          className='text-sm text-slate-600 font-medium truncate flex-1'
-        >
-          {layer.name}
+      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
+        <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap w-full">
+          {legendTitle}
+          {groupSelectorElements}
         </div>
-        <div className='text-sm pt-1 px-0.5 flex items-center'>
-          <LayerMenu 
-            layer={layer}
-            button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-          />
-        </div>
-        <div
-          className={`${i === 0 ? 'pointer-events-none' : ''}`}
-          onClick={() => {
-            onRowMove(i, i-1)
-          }}
-        >
-          <CaretUpSolid
-            size={24}
-            className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} />
-        </div>
-        <div
-          className={`${i === numLayers-1 ? 'pointer-events-none' : ''}`}
-          onClick={ () => {
-            onRowMove(i, i+1)
-          }}
-        >
-          <CaretDownSolid
-            size={24}
-            className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          />
-        </div>
-        <VisibilityButton layer={layer}/>
       </div>
       {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology} isListVisible={isListVisible}/>}
     </div>
   )
 }

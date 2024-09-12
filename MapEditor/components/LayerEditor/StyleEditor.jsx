@@ -21,35 +21,60 @@ const layerTypeNames = {
 function StyleEditor (props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const activeLayer = useMemo(() => state.symbology?.layers?.[state.symbology.activeLayer] || null, [state])
-  const config = useMemo(() => typeConfigs[activeLayer.type] || []
-    ,[activeLayer.type])
-  
+  let config = useMemo(() => typeConfigs[activeLayer.type] || []
+    ,[activeLayer.type]);
+
+  if(props.type === 'interactive') {
+    config = config.filter(c => c.label !== 'Interactive Filters').map(c => {
+      let newControls = [...c.controls];
+      let newConditonal;
+
+      newControls = newControls.map(ic => ({...ic, params:{...ic.params, pathPrefix: props.pathPrefix, version: 'interactive'}}))
+      if(c.conditional){
+        if(Array.isArray(c.conditional)){
+          newConditonal = c.conditional.map(cond => ({...cond, path: props.pathPrefix + cond.path}))
+        }
+        else {
+          newConditonal = {...c.conditional, path: props.pathPrefix + c.conditional['path']} ;
+        }
+
+      }
+
+      return {...c, controls: newControls, conditional: newConditonal}
+    })
+  }
+
   return activeLayer && (
     <div>
-      <div className='p-4'>
+      <div className={`${props.type === 'interactive' ? 'mt-2 border-2 p-1 border-gray-100 rounded' : 'p-4'}`}>
       <div className='font-bold tracking-wider text-sm text-slate-700'>{layerTypeNames[activeLayer.type]}</div>
       {config
         .filter(c => {
           if(!c.conditional) {
             return true
           } else {
-            // console.log('has conditional')
-            const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${c.conditional.path}`, '-999')
-            // console.log('has conditional',c.conditional, condValue)
-            return c.conditional.conditions.includes(condValue)
+            if(Array.isArray(c.conditional)){
+              return c.conditional.every(cond => {
+                const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${cond.path}`, '-999')
+                return cond.conditions.includes(condValue)
+              });
+            }
+            else {
+              // console.log('has conditional')
+              const condValue = get(state, `symbology.layers[${state.symbology.activeLayer}].${c.conditional.path}`, '-999')
+              // console.log('has conditional',c.conditional, condValue)
+              return c.conditional.conditions.includes(condValue)
+            }
           }
         })
         .map((control,i) => {
-          let ControlWrapper = wrapperTypes[control.type] || wrapperTypes['inline']
+          let ControlWrapper = wrapperTypes[control.type] || wrapperTypes['inline'];
           return (
-            <div className='flex ' key={i}>
-              <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{control.label}</div>
-              <div className='flex-1 flex items-center'>
+            <div className='flex flex-wrap' key={i}>
                 <ControlWrapper
                   label={control.label}
                   controls={control.controls}
                 />
-              </div>
             </div>
         )
       })}

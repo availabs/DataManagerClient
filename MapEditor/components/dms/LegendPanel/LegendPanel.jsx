@@ -5,7 +5,7 @@ import { MapContext } from '../MapComponent'
 import { DndList } from '~/modules/avl-components/src'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../../icons'
+import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 //import {LayerMenu} from './LayerPanel'
@@ -153,24 +153,34 @@ function StepLegend({layer}) {
   )
 }
 
-
-function LegendRow ({ index, layer, i }) {
+function LegendRow ({ index, layer, i, symbology_id }) {
   const navigate = useNavigate();
   const  activeLayer  = null
-
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
-  const type = layer['layer-type']
+
+
+  let { layerType: type, selectedInteractiveFilterIndex } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`)
+    }
+  },[layer]);
+
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
   const sourceUrl = `/cenrep/source/${layer.source_id}`
+
+  const layerName = type === 'interactive' ? layer.label : layer.name;
+
+  type = type === 'interactive' ? get(layer, `['interactive-filters'][${selectedInteractiveFilterIndex}]['layer-type']`) : type;
 
   return (
     <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
       <div className={`group/title w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
-          {layer.name}
+          {layerName}
           <div 
             className="cursor-pointer text-white group-hover/title:text-black group/icon "
             onClick={(e) => {
@@ -240,7 +250,7 @@ function LegendPanel (props) {
               <div className="font-normal">{symb.name}</div>
               {Object.values(symb.layers)
                 .sort((a,b) => b.order - a.order)
-                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
+                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} symbology_id={symb.symbology_id}/>)}
             </div>
           ))}
         </div>

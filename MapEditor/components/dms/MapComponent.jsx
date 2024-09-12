@@ -7,7 +7,7 @@ import { useImmer } from 'use-immer';
 import MapManager from './MapManager/MapManager'
 import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
-
+import { usePrevious } from '../../components/LayerManager/utils'
 import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
 
 const isJson = (str)  => {
@@ -120,6 +120,53 @@ const Edit = ({value, onChange, size}) => {
             return {...out, ...(curr?.symbology?.layers || {})}
         },{}) 
     }, [state?.symbologies]);
+
+    const interactiveFilterIndicies = useMemo(
+        () =>
+          Object.values(state.symbologies).map(
+            (topSymb) => {
+                return Object.values(topSymb.symbology.layers).map(l => l.selectedInteractiveFilterIndex)
+            }
+          ),
+        [state.symbologies]
+      );
+      const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
+    
+      useEffect(() => {
+        setState((draft) => {
+          Object.keys(draft.symbologies)
+            .forEach(topSymbKey => {
+                const curTopSymb = draft.symbologies[topSymbKey];
+                Object.keys(curTopSymb.symbology.layers)
+                  .filter((lKey) => {
+                    return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
+                  })
+                  .forEach((lKey) => {
+                    const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+
+                    if(draftInteractiveFilter) {
+                      const newSymbology = {
+                        ...layer,
+                        ...draftInteractiveFilter,
+                        order: layer.order,
+                        "layer-type": "interactive",
+                        "interactive-filters": draftFilters,
+                        selectedInteractiveFilterIndex: draftFilterIndex
+                      };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
+                    }
+                  });
+            })
+        });
+      }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
+
 
     const { center, zoom } = state.initialBounds ? state.initialBounds : {
         center: [-75.17, 42.85],
@@ -239,6 +286,54 @@ const View = ({value, size}) => {
             return {...out, ...(curr?.symbology?.layers || {})}
         },{}) 
     }, [state?.symbologies]);
+
+
+    const interactiveFilterIndicies = useMemo(
+        () =>
+          Object.values(state.symbologies).map(
+            (topSymb) => {
+                return Object.values(topSymb.symbology.layers).map(l => l.selectedInteractiveFilterIndex)
+            }
+          ),
+        [state.symbologies]
+      );
+      const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
+    
+      useEffect(() => {
+        setState((draft) => {
+          Object.keys(draft.symbologies)
+            .forEach(topSymbKey => {
+                const curTopSymb = draft.symbologies[topSymbKey];
+  
+                Object.keys(curTopSymb.symbology.layers)
+                  .filter((lKey) => {
+                    return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
+                  })
+                  .forEach((lKey) => {
+                    const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
+                
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+                    if(draftInteractiveFilter) {
+                      const newSymbology = {
+                        ...layer,
+                        ...draftInteractiveFilter,
+                        order: layer.order,
+                        "layer-type": "interactive",
+                        "interactive-filters": draftFilters,
+                        selectedInteractiveFilterIndex: draftFilterIndex
+                      };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
+                    }
+                  });
+            })
+        });
+      }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
 
     /*
 

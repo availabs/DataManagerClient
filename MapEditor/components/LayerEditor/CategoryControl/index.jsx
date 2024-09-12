@@ -16,16 +16,21 @@ function CategoryControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   let { value: mapPaint, column, categorydata, colors, sourceId, categories, showOther, legenddata } = useMemo(() => {
     return {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
-      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
-      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []),
+      value: get(state, `${pathBase}.${path}`, {}),
+      column: get(state, `${pathBase}['data-column']`, ''),
+      categorydata: get(state, `${pathBase}['category-data']`, {}),
+      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
+      categories: get(state, `${pathBase}['categories']`, {}),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
+      legenddata : get(state, `${pathBase}['legend-data']`, []),
     }
   },[state])
 
@@ -61,7 +66,7 @@ function CategoryControl({path, params={}}) {
         },0)
    }, [categorydata])
 
-  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? []
+  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? [];
   const availableCategories = getDiffColumns(
     Object.values(categorydata)
       .filter((cat) => typeof cat[column] !== "object")
@@ -81,7 +86,7 @@ function CategoryControl({path, params={}}) {
               <div className='flex items-center'>
                 <input
                   type='color' 
-                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}]['categories'].legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
+                  value={toHex(get(state, `${pathBase}['categories'].legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
                   onChange={(e) => {
                     const updatedCategoryPaint = [...mapPaint];
                     const indexOfLabel = updatedCategoryPaint.indexOf(currentCategories[activeCatIndex].label);
@@ -97,8 +102,8 @@ function CategoryControl({path, params={}}) {
                         }
                       })
 
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, newLegend)
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
+                      set(draft, `${pathBase}['legend-data']`, newLegend)
+                      set(draft, `${pathBase}['categories']`,{
                         paint: updatedCategoryPaint, legend: newLegend
                       });
                     })
@@ -120,8 +125,8 @@ function CategoryControl({path, params={}}) {
                   setActiveCatIndex(undefined);
                 }
                 setState(draft => {
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{});
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
+                  set(draft, `${pathBase}['categories']`,{});
+                  set(draft, `${pathBase}.['num-categories']`, e.target.value);
                 })
               }}
             >
@@ -147,7 +152,7 @@ function CategoryControl({path, params={}}) {
               onChange={()=>{
                 setState(draft=> {
                   const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, update) 
+                  set(draft, `${pathBase}['category-show-other']`, update) 
                 })
               }}
               className={`${
@@ -172,7 +177,7 @@ function CategoryControl({path, params={}}) {
                 newCategoryLegend.splice(end, 0, catItem);
                 set(
                   draft,
-                  `symbology.layers[${state.symbology.activeLayer}]['categories']['legend']`,
+                  `${pathBase}['categories']['legend']`,
                   newCategoryLegend
                 );
 
@@ -181,7 +186,7 @@ function CategoryControl({path, params={}}) {
                 newLegendData.splice(end, 0, legendItem);
                 set(
                   draft,
-                  `symbology.layers[${state.symbology.activeLayer}]['legend-data']`,
+                  `${pathBase}['legend-data']`,
                   newLegendData
                 );                
               });
@@ -212,9 +217,9 @@ function CategoryControl({path, params={}}) {
                     //In filter array, the `label` preceeds its paint `value`
                     updatedCategoryPaint.splice(indexOfLabel, 2);
                     setState(draft=> {
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
+                      set(draft, `${pathBase}['legend-data']`, updatedCategoryLegend)
+                      set(draft, `${pathBase}.['num-categories']`, updatedCategoryLegend.length);
+                      set(draft, `${pathBase}['categories']`,{
                         paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                           return {color: d.color, label: get(metadataLookup, d.label, d.label )}
                         })
@@ -260,13 +265,13 @@ function CategoryControl({path, params={}}) {
                           updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
                           
                           setState(draft=> {
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
+                            set(draft, `${pathBase}['categories']`,{
                               paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
                                 return {color: d.color, label: get(metadataLookup, d.label, d.label )}
                               })
                             });
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend) 
+                            set(draft, `${pathBase}.['num-categories']`, updatedCategoryLegend.length);
+                            set(draft, `${pathBase}['legend-data']`, updatedCategoryLegend) 
                           });
                         }
                       }

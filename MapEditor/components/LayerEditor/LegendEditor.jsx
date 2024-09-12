@@ -43,20 +43,33 @@ const typeSymbols = {
 function LegendEditor() {
   const { state, setState  } = React.useContext(SymbologyContext);
   
-  let { legenddata, layertype } = useMemo(() => {
+  const { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
     return {
-      legenddata : get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, []),
-      layertype : get(state, `symbology.layers[${state.symbology.activeLayer}]['type']`, 'fill') 
+      selectedInteractiveFilterIndex: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
+      ),
+      layerType: get(state, `symbology.layers[${state.symbology.activeLayer}]['layer-type']`, 'fill'),
     }
   },[state])
 
-  const Symbol = typeSymbols[layertype] || typeSymbols['fill']
+  let pathBase = `symbology.layers[${state.symbology.activeLayer}]`;
+  if (layerType === "interactive") {
+    pathBase = `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`;
+  }
+  
+  const { type, legenddata } = useMemo(() => {
+    return {
+      legenddata : get(state, `${pathBase}['legend-data']`, []),
+      type : get(state, `${pathBase}['type']`, 'fill'),
+    }
+  },[state])
 
   if(!legenddata || legenddata.length === 0 ) {
     return <div> No Legend Data </div>
   }
 
-  
+  const Symbol = typeSymbols[type] || typeSymbols['fill']
   return (
     <div className='w-full max-h-[550px] pb-4 overflow-auto'>
         {legenddata.map((d,i) => (
@@ -72,9 +85,7 @@ function LegendEditor() {
                 placeholder={'Select / Create New Map'}
                 value={legenddata[i].label}
                 onChange={(e) => setState(draft => { 
-                  //if(draft.symbology.activeLayer && draft.symbology.layers[draft.symbology.activeLayer].name){
-                    draft.symbology.layers[draft.symbology.activeLayer]['legend-data'][i].label = e.target.value 
-                  //}
+                  set(draft, `${pathBase}['legend-data'][${i}].label`, e.target.value);
                 })}
               />
             </div>
