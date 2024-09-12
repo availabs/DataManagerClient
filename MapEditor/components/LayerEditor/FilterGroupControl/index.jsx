@@ -21,7 +21,7 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
     filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
     filterGroup: get(state,`${pathBase}${path}`, []),
-    filterGroupName: get(state,`${pathBase}['filter-group-name']`, ''),//TODO BETTER DEFAULT GROUP NAME
+    filterGroupName: get(state,`${pathBase}['filter-group-name']`, ''),
     selectedInteractiveFilterIndex: get(
       state,
       `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`,
