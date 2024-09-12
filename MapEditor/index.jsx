@@ -359,7 +359,7 @@ const MapEditor = () => {
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, sourceId, pgEnv]);
 
-  const prevViewGroupId = usePrevious(viewGroupId)
+  const prevViewGroupId = usePrevious(viewGroupId);
 
   useEffect(() => {
     const setPaint = async () => {
@@ -368,7 +368,7 @@ const MapEditor = () => {
         let { paint, legend } = categories?.paint && categories?.legend
           ? cloneDeep(categories)
           : categoryPaint(
-            column,
+            baseDataColumn,
             categorydata,
             colors,
             numCategories,
@@ -480,7 +480,6 @@ const MapEditor = () => {
           set(draft, `${pathBase}['filter-group']`,[{display_name: fullColumn?.display_name || fullColumn.name, column_name: fullColumn.name}])
         })
       } else if (!filterGroupEnabled) {
-        console.log("checkign state before settign filterGroupEnabled", state)
         setState(draft => {
           set(draft,`${pathBase}['filter-group-name']`, '');
           set(draft, `${pathBase}['filter-group-legend-column']`, '');
@@ -501,7 +500,6 @@ const MapEditor = () => {
           set(draft, `${pathBase}['view-group-id']`, viewId);
         })
       } else if (!viewGroupEnabled) {
-        console.log("checkign state before settign viewGroupEnabled", state)
         setState(draft => {
           set(draft,`${pathBase}['filter-source-views']`, []);
           set(draft, `${pathBase}['view-group-name']`, '');
@@ -513,6 +511,38 @@ const MapEditor = () => {
     }
 
   }, [viewGroupEnabled])
+
+  useEffect(() => {
+    if(baseDataColumn && layerType === 'categories') {
+      const options = JSON.stringify({
+        groupBy: [(baseDataColumn).split('AS ')[0]],
+        exclude: {[(baseDataColumn).split('AS ')[0]]: ['null']},
+        orderBy: {"2": 'desc'}
+      })
+      falcor.get([
+        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[baseDataColumn, 'count(1)::int as count']
+      ])      
+    }
+  },[baseDataColumn, layerType, viewId])
+
+  useEffect(() => {
+    if(baseDataColumn && layerType === 'categories') {
+      const options = JSON.stringify({
+        groupBy: [(baseDataColumn).split('AS ')[0]],
+        exclude: {[(baseDataColumn).split('AS ')[0]]: ['null']},
+        orderBy: {"2": 'desc'}
+      })
+      let data = get(falcorCache, [
+           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
+      ], {})
+      setState(draft => {
+        set(draft, `${pathBase}['category-data']`, data)
+      })
+    }
+
+  }, [baseDataColumn, layerType, viewId, falcorCache])
+
+
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>

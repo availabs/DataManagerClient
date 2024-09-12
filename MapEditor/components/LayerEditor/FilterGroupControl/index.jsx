@@ -63,17 +63,17 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
         }}
         setFilterGroupLegendColumn={
           (columnName) => {
-            setState(draft => {      
-            
+            setState(draft => {
               set(draft, `${pathBase}['choroplethdata']`, {});
-              set(draft, `${pathBase}['data-column']`, columnName) //TODO i dont htink this will work long term, but tryna get ANYTHIGN to work rn
+              set(draft, `${pathBase}['category-data']`, {});
+              set(draft, `${pathBase}['categories']`, {});
+              set(draft, `${pathBase}['data-column']`, columnName);
               set(draft, `${pathBase}['filter-group-legend-column']`, columnName)
             })
           }
         }
       />
     </div>
-
   )
 }
 

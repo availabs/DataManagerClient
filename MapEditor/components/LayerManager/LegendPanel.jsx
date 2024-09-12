@@ -298,8 +298,16 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
               setState((draft) => {
                 if(type === 'interactive'){
                   draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]["data-column"] = e.target.value
+
+                  if(draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]['layer-type'] === 'categories') {
+                    draft.symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]['categories'] = {};
+                  }
                 } else {
                   draft.symbology.layers[layer.id]["data-column"] = e.target.value
+
+                  if(type === 'categories') {
+                    draft.symbology.layers[layer.id]['categories'] = {};
+                  }
                 }
               });
             }}

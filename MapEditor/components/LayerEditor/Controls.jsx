@@ -311,35 +311,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [pgEnv, sourceId, falcorCache])
 
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      falcor.get([
-        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1)::int as count']
-      ])      
-    }
-  },[column, layerType, viewId])
-
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      let data = get(falcorCache, [
-           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
-      ], {})
-      setState(draft => {
-        set(draft, `${pathBase}['category-data']`, data)
-      })
-    }
-
-  }, [column, layerType, viewId, falcorCache])
 
   return (
     <label className='flex w-full'>
