@@ -23,14 +23,13 @@ const ViewGroupControl = ({path, datapath, params={}}) => {
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-    viewGroup: get(state,`${pathBase}['filter-source-views']`, []),//TODO BETTER DEFAULT GROUP NAME
-    viewGroupName: get(state,`${pathBase}['view-group-name']`, ''),//TODO BETTER DEFAULT GROUP NAME
+    viewGroup: get(state,`${pathBase}['filter-source-views']`, []),
+    viewGroupName: get(state,`${pathBase}['view-group-name']`, ''),
     initialViewId: get(state,`${pathBase}['initial-view-id']`, ''),
     filterGroupLegendColumn: get(state, `${pathBase}['filter-group-legend-column']`),
     viewGroupId:get(state,`${pathBase}['view-group-id']`),
   }),[state])
 
-  let layerPath = ``;
   if (layerType === "interactive") {
     layerPath = `['interactive-filters'][${selectedInteractiveFilterIndex}]`;
   }

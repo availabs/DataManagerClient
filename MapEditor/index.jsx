@@ -363,7 +363,6 @@ const MapEditor = () => {
 
   useEffect(() => {
     const setPaint = async () => {
-      //TODO find a datset that makes sense to  do filter gorup with categories
       if (layerType === 'categories') {
         let { paint, legend } = categories?.paint && categories?.legend
           ? cloneDeep(categories)
@@ -401,7 +400,6 @@ const MapEditor = () => {
           })
         }
       } else if(layerType === 'choropleth') {
-
         const domainOptions = {
           column: baseDataColumn,
           viewId,
@@ -411,9 +409,6 @@ const MapEditor = () => {
 
         let colorBreaks; 
 
-        //Most places, if we want to hit API, we clear out all data
-        //In those cases, if we have `filterGroupEnabled`, use filterGroupLegendColumn
-        //If we already have `breaks` and `max` from server, do not make API call
         if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
           colorBreaks = choroplethdata;
         }
@@ -465,8 +460,7 @@ const MapEditor = () => {
       }
     }
     setPaint();
-    //TODO I think we can remove `column` from here -- it accounts for `interactive-layer` which we DONT  want to do
-  }, [categories, layerType, column, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 

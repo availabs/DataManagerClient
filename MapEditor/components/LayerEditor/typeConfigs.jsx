@@ -23,13 +23,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: [{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },{
-        path: `['filterGroupEnabled']`,
-        conditions: [false]
-      }],
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -61,13 +64,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['filterGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'filterGroupControl',
@@ -96,13 +102,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['viewGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'viewGroupControl',
@@ -279,13 +288,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: [{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },{
-        path: `['filterGroupEnabled']`,
-        conditions: [false]
-      }],
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -318,13 +330,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['filterGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'filterGroupControl',
@@ -353,13 +368,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['viewGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'viewGroupControl',
@@ -555,13 +573,16 @@ const typeConfigs = {
     {
       label: 'Color By',
       type: 'inline',
-      conditional: [{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      },{
-        path: `['filterGroupEnabled']`,
-        conditions: [false]
-      }],
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
       controls: [
         {
           type: 'selectViewColumn',
@@ -579,13 +600,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['filterGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'filterGroupControl',
@@ -629,13 +653,16 @@ const typeConfigs = {
     {
       label: '',
       type: 'popover',
-      conditional: [{
-        path: `['viewGroupEnabled']`,
-        conditions: [true]
-      },{
-        path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
-      }],
+      conditional: [
+        {
+          path: `['viewGroupEnabled']`,
+          conditions: [true]
+        },
+        {
+          path: `['layer-type']`,
+          conditions: ['categories', 'choropleth']
+        }
+      ],
       controls: [
         {
           type: 'viewGroupControl',

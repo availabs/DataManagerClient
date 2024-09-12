@@ -67,7 +67,7 @@ const ViewLayerRender = ({
         let tileBase = newSource.source.tiles?.[0];
 
         if(tileBase){
-          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps, prevLayerProps?.['data-column'])];
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
         }
 
         layerProps?.layers?.forEach(l => {
@@ -101,7 +101,7 @@ const ViewLayerRender = ({
         let tileBase = newSource?.source.tiles?.[0];
 
         if(tileBase){
-          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps, prevLayerProps?.['data-column'])];
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
         }
 
         layerProps?.layers?.forEach(l => {
@@ -227,7 +227,7 @@ const ViewLayerRender = ({
   }, [maplibreMap, allLayerProps?.zoomToFit]);
 }
 
-const getLayerTileUrl = (tileBase, layerProps, prevDataColumn) => {
+const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
   const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;

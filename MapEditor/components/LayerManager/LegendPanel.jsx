@@ -367,10 +367,6 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
           >
             {viewGroup.map((view_id, i) => {
               const curView = views.find((v) => v.view_id === view_id);
-              // const itemSuffix =
-              //   view_id === initialViewId
-              //     ? " **"
-              //     : ''
               return (
                 <option key={i} value={view_id}>
                   {curView?.version ?? curView?.view_id}
