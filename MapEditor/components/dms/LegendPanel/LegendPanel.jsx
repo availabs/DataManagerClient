@@ -169,7 +169,7 @@ function LegendRow ({ index, layer, i, symbology_id }) {
 
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
-  const sourceUrl = `/cenrep/source/${layer.source_id}`
+  const sourceUrl = `/datasources/source/${layer.source_id}`
 
   const layerName = type === 'interactive' ? layer.label : layer.name;
 

@@ -69,9 +69,11 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     return false
   }
 
+
+
   domain.forEach((d,i) => {
     paint.push(colors[i]);
-    paint.push(Math.floor(+d))
+    paint.push(+d)
   })
 
   paint.push(colors[num-1])
@@ -82,13 +84,15 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
       
       if(i % 2 === 1) {
         //console.log('test', fnumIndex(paint[i+4] || max))
-        return {color: paint[i+1], label: `${fnumIndex(paint[i+2])} - ${fnumIndex(paint[i+4] || max)}`}
+        return {color: paint[i+1], 
+          label: `${paint[i+2] > 1000 ? fnumIndex(paint[i+2]) : paint[i+2]} - ${paint[i+4] > 1000 ?  fnumIndex(paint[i+4] || max) : (paint[i+4] || max)  }`}
       }
       return null
     })
     .filter(d => d)
   ]
 
+  console.log('choroplethPaint', paint)
 
   return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
 
