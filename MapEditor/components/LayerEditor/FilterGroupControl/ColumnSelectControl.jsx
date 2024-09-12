@@ -2,7 +2,7 @@ import React, { useContext , useMemo, useEffect }from 'react'
 import { SymbologyContext } from "../../../";
 import { DamaContext } from "../../../../store"
 
-import { Close } from '../../icons'
+import { Close, StarSolid } from '../../icons'
 import { DndList, Button } from '~/modules/avl-components/src'
 
 import {AddColumnSelectControl} from "../Controls"
@@ -15,7 +15,7 @@ const getDiffColumns = (baseArray, subArray) => {
   return baseArray.filter(baseItem => !subArray.includes(baseItem))
 }
 
-export function ColumnSelectControl({path, params={}}) {
+export function ColumnSelectControl({path, params={}, setFilterGroupLegendColumn}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   const pathBase =
@@ -23,10 +23,11 @@ export function ColumnSelectControl({path, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { selectedColumns, layerType } = useMemo(() => {
+  const { selectedColumns, layerType,filterGroupLegendColumn } = useMemo(() => {
     return {
       selectedColumns: get(state, `${pathBase}.${path}`),
       layerType: get(state, `${pathBase}['layer-type']`),
+      filterGroupLegendColumn: get(state, `${pathBase}['filter-group-legend-column']`)
     };
   }, [state, path, params]);
 
@@ -128,15 +129,6 @@ export function ColumnSelectControl({path, params={}}) {
     ])
   }, [falcor, pgEnv, viewId, selectedColumnNames]);
 
-  const sampleData = useMemo(() => {
-    return Object.values(
-      get(falcorCache, ["dama", pgEnv, "viewsbyId", viewId, "databyIndex"], [])
-    ).map((v) =>  {
-      // console.log('what', v)
-
-      return v?.value ? get(falcorCache, v.value, "") : ""
-    });
-  }, [pgEnv, falcorCache]);
 
   return (
     <div className='flex w-full flex-wrap'>
@@ -206,8 +198,9 @@ export function ColumnSelectControl({path, params={}}) {
         </Button>
       </div>
       <ExistingColumnList
+      filterGroupLegendColumn={filterGroupLegendColumn}
+        setFilterGroupLegendColumn={setFilterGroupLegendColumn}
         selectedColumns={selectedColumns}
-        sampleData={sampleData}
         reorderAttrs={(start, end) => {
           const sections = [...selectedColumns];
           const [item] = sections.splice(start, 1);
@@ -251,7 +244,7 @@ export function ColumnSelectControl({path, params={}}) {
   );
 }
 
-const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr}) => {
+const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, removeAttr, renameAttr, filterGroupLegendColumn, setFilterGroupLegendColumn}) => {
   return (
     <DndList
       onDrop={reorderAttrs}
@@ -260,34 +253,38 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
         return (
           <div
             key={i}
-            className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
+            className="group/title w-full text-sm grid grid-cols-8 cursor-grab border-t border-slate-200"
           >
-            <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
+            <div
+              className="flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
+              onClick={() => {
+                console.log("legend prop change::",selectedCol.column_name)
+                setFilterGroupLegendColumn(selectedCol.column_name)
+              }}
+            >
+              <StarSolid
+                size={18}
+                className={`${filterGroupLegendColumn === selectedCol.column_name ? 'fill-pink-400 ': ''} cursor-pointer group-hover/icon:fill-slate-500 `}
+              />
+            </div>
+            <div className="truncate  col-span-6  pl-0 py-1">
               <input 
                   type="text"
-                  className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+                  className='w-full p-1 border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
                   value={selectedCol.display_name}
                   onChange={(e) => {
                     renameAttr({columnName:selectedCol.column_name , displayName:e.target.value})
                   }}
                 />
             </div>
-            <div className="truncate flex items-center text-[13px] border-t border-slate-200 col-span-4 text-slate-300 px-4 py-1">
-              {sampleData
-                .map((row) => row[selectedCol.column_name])
-                .filter(item => item !== 'null')
-                .filter(onlyUnique)
-                .slice(0,2)
-                .join(", ")}
-            </div>
             <div
-              className="border-t flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
+              className="flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
               onClick={() => {
                 removeAttr(selectedCol.column_name)
               }}
             >
               <Close
-                className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
+                className=" cursor-pointer group-hover/icon:fill-slate-500 "
               />
             </div>
           </div>

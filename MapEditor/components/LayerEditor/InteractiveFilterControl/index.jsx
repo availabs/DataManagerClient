@@ -50,7 +50,13 @@ function InteractiveFilterControl({ path, params = {} }) {
                 ...activeLayer,
                 "layer-type": 'simple',
                 "label": `${layerName}`,
-                selectedInteractiveFilterIndex: undefined
+                selectedInteractiveFilterIndex: undefined,
+                filterGroupEnabled: false,
+                viewGroupEnabled: false,
+                'filter-group': [],
+                'filter-group-name': '',
+                'view-group-name': '',
+                'filter-source-views': []
               }
               const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
               set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )

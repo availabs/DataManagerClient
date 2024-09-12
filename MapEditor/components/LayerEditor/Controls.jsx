@@ -14,6 +14,8 @@ import set from 'lodash/set'
 import cloneDeep from 'lodash/cloneDeep'
 import { CategoryControl } from './CategoryControl';
 import { InteractiveFilterControl } from './InteractiveFilterControl';
+import { FilterGroupControl } from './FilterGroupControl';
+import { ViewGroupControl } from './ViewGroupControl'
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -50,23 +52,12 @@ export function SelectTypeControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata } = useMemo(() => {
+  let { sourceId, column, } = useMemo(() => {
     return {
-      value: get(state, `${pathBase}.${path}`, {}),
-      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
+
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue : get(state, `${pathBase}.${datapath}`, {}),
       column: get(state, `${pathBase}['data-column']`, ''),
-      categories: get(state, `${pathBase}['categories']`, {}),
-      categorydata: get(state, `${pathBase}['category-data']`, {}),
-      choroplethdata: get(state, `${pathBase}['choroplethdata']`),
-      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `${pathBase}['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `${pathBase}['num-bins']`, 9),
-      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
-      numCategories: get(state, `${pathBase}['num-categories']`, 10),
-      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
-      symbology_id: get(state, `symbology_id`),
+
     }
   },[state])
 
@@ -93,117 +84,6 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  const options = useMemo(() => {
-    //console.log('metadata',metadata)
-    const hasCols = metadata?.length > 0 
-    const hasNumber = metadata?.reduce((out,curr) => {
-      if(['integer', 'number'].includes(curr.type)){
-        out = true
-      }
-      return out
-    },false)
-
-    return  [
-      {name:'Simple', value: 'simple'},
-      hasCols ? {name:'Categories', value: 'categories'} : null,
-      hasNumber ? {name:'Color Range', value: 'choropleth'} : null,
-      params?.version !== "interactive" ? {name:'Interactive', value: 'interactive'} : null
-    ].filter(d => d)
-  },[metadata])
-
-  React.useEffect(() => {
-    const setPaint = async () => {
-      if (value === 'categories') {
-        let { paint, legend } = categories?.paint && categories?.legend
-          ? cloneDeep(categories)
-          : categoryPaint(
-            column,
-            categorydata,
-            colors,
-            numCategories,
-            metadata
-          );
-
-        if (!(paint.length % 2)) {
-          paint.push(showOther);
-        } else {
-          paint[paint.length-1] = showOther;
-        }
-
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled && legend) {
-          if(legend[legend.length-1]?.label !== "Other") {
-            legend.push({color: showOther, label: "Other"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "Other") {
-            legend.pop();
-          }
-        }
-
-        if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          setState(draft => {
-            set(draft, `${pathBase}['categories']`, { paint, legend })
-            set(draft, `${pathBase}.${datapath}`, paint)
-            set(draft, `${pathBase}['legend-data']`, legend)
-          })
-        }
-      } else if(value === 'choropleth') {
-        const domainOptions = {
-          column,
-          viewId,
-          numbins,
-          method
-        }
-
-        let colorBreaks; 
-
-        if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
-          colorBreaks = choroplethdata;
-        }
-        else {
-          setState(draft => {
-            set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
-          })
-          const res = await falcor.get([
-            "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ]);
-          colorBreaks = get(res, [
-            "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ])
-          setState(draft => {
-            set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
-          })
-        }
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "No data") {
-            legend.push({color: showOther, label: "No data"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "No data") {
-            legend.pop();
-          }
-        }
-        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
-          setState(draft => {
-            set(draft, `${pathBase}.${datapath}`, paint)
-            set(draft, `${pathBase}['legend-data']`, legend)
-            set(draft, `${pathBase}['choroplethdata']`, colorBreaks)
-          })
-        }
-      } else if( value === 'simple' && typeof paintValue !== 'string') {
-        // console.log('switch to simple')
-        setState(draft => {
-          set(draft, `${pathBase}.${datapath}`, rgb2hex(null))
-        })
-      }
-    }
-    setPaint();
-  }, [categories, value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
     <label className='flex w-full'>
@@ -225,7 +105,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
-          {(options || []).map((opt,i) => {
+          {(params.options || []).map((opt,i) => {
             return (
               <option key={i} value={opt.value}>{opt.name}</option>
             )
@@ -320,6 +200,46 @@ function SimpleControl({path, params={}}) {
   )
 }
 
+function ToggleControl({path, params={title:""}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  const { value } = useMemo(() => {
+    return {
+      value: get(state, `${pathBase}.${path}`, {}),
+    }
+  },[state])
+
+  return (
+    <label className='flex'>
+      <div className='flex items-center'>
+        <Switch
+          checked={value}
+          onChange={()=>{
+            setState(draft=> {
+              set(draft, `${pathBase}${path}`,!value)
+            })
+          }}
+          className={`${
+            value ? 'bg-blue-500' : 'bg-gray-200'
+          } relative inline-flex h-4 w-8 items-center rounded-full `}
+        >
+          <span className="sr-only">{params.title}</span>
+          <div
+            className={`${
+              value ? 'translate-x-5' : 'translate-x-0'
+            } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+          />
+        </Switch>
+      </div>
+    </label>
+  )
+}
+
 export function SelectControl({path, params={}}) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
@@ -361,7 +281,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const {layerType, viewId, sourceId} = useMemo(() => ({
+  const { layerType, viewId, sourceId } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
     sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
@@ -391,35 +311,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [pgEnv, sourceId, falcorCache])
 
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      falcor.get([
-        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1)::int as count']
-      ])      
-    }
-  },[column, layerType, viewId])
-
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      let data = get(falcorCache, [
-           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
-      ], {})
-      setState(draft => {
-        set(draft, `${pathBase}['category-data']`, data)
-      })
-    }
-
-  }, [column, layerType, viewId, falcorCache])
 
   return (
     <label className='flex w-full'>
@@ -810,11 +701,11 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
-export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
+export const AddColumnSelectControl = ({setState, availableColumnNames, label="Add Column"}) => {
   return (
     <>
       <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center ml-4'>
-          Add Column
+          {label}
       </div>
       <div className="flex-1 flex items-center mx-4">
         <StyledControl>
@@ -853,5 +744,8 @@ export const controlTypes = {
   'simple': SimpleControl,
   'select': SelectControl,
   'selectType': SelectTypeControl,
-  'selectViewColumn': SelectViewColumnControl
+  'selectViewColumn': SelectViewColumnControl,
+  'filterGroupControl': FilterGroupControl,
+  'viewGroupControl': ViewGroupControl,
+  'toggleControl': ToggleControl,
 }

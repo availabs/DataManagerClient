@@ -103,7 +103,9 @@ function SourceSelector () {
       // state data about the layer on the map
       isVisible: true,
       hover: "hover",
-      order: Object.keys(state?.symbology?.layers || {})?.length || 0
+      order: Object.keys(state?.symbology?.layers || {})?.length || 0,
+      filterGroupEnabled: false,
+      viewGroupEnabled: false,
     }
 
     //console.log('newLayer', newLayer)
