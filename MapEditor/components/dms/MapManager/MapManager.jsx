@@ -12,6 +12,7 @@ import colorbrewer from '../../LayerManager/colors'
 // import LegendPanel from './LegendPanel'
 import cloneDeep from 'lodash/cloneDeep'
 import { getAttributes } from '~/pages/DataManager/Collection/attributes'
+import { ViewAttributes } from "~/pages/DataManager/Source/attributes"
 const typeIcons = {
   'fill': Fill,
   'circle': Circle,
@@ -86,15 +87,16 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 
 
 function SymbologyRow ({tabIndex, row, rowIndex}) {
-  const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
+  const { state, setState, falcor, falcorCache, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
 
-  const { symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, } = useMemo(() => {
+  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, } = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
     const layer = get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {});
     return {
       symbology,
       layer,
+      sourceId: get(layer, `['source_id']`),
       dataColumn: get(layer, `['data-column']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       layerType:get(layer, `['layer-type']`, 'simple'),
@@ -136,13 +138,33 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
 
+  React.useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      return await falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(ViewAttributes)
+      ]);
+    }
+    if(sourceId) {
+      fetchData();
+    }
+  }, [sourceId, falcor, pgEnv]);
+
+  const views = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, sourceId, pgEnv]);
 
   const groupSelectorElements = [];
   if (layerType === "interactive") {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex-1 pl-3 pr-1 pb-1">
-        <div className="text-xs text-black">Filters:</div>
-        <div className="rounded-md h-[36px] text-xs pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+        <div className="text-black">Filters:</div>
+        <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={selectedInteractiveFilterIndex}
@@ -169,9 +191,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
 
   if(filterGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex-1 items-center">
-        <div className='text-xs text-black'>{filterGroupName}:</div>
-        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+        <div className='text-black'>{filterGroupName}:</div>
+        <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={dataColumn}
@@ -212,9 +234,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   }
   if(layer.viewGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex-1 items-center flex">
-        <div className='text-xs text-black'>{viewGroupName}: </div>
-        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full ">
+        <div className=' text-black'>{viewGroupName}: </div>
+        <div className="rounded-md h-[36px]  pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={layer.view_id}
@@ -224,24 +246,25 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                 //draft.symbology.layers[layer.id].layers[0].source-layer
                 //draft.symbology.layers[layer.id].layers[1].source
                 //draft.symbology.layers[layer.id].layers[1].source-layer
+                
                 const newLayer = JSON.parse(
-                  JSON.stringify(draft.symbology.layers[layer.id].layers).replaceAll(
+                  JSON.stringify(draft.symbologies[row.symbologyId].symbology.layers[layer.id].layers).replaceAll(
                     layer.view_id,
                     e.target.value
                   )
                 );
-                draft.symbology.layers[layer.id].layers = newLayer;
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].layers = newLayer;
 
                 //sources[0].id
                 //sources[0].source.tiles
                 const newSources = JSON.parse(
                   JSON.stringify(
-                    draft.symbology.layers[layer.id].sources
+                    draft.symbologies[row.symbologyId].symbology.layers[layer.id].sources
                   ).replaceAll(layer.view_id, e.target.value)
                 );
-                draft.symbology.layers[layer.id].sources = newSources;
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].sources = newSources;
 
-                draft.symbology.layers[layer.id].view_id = e.target.value
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].view_id = e.target.value
               });
             }}
           >
@@ -411,8 +434,8 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           </SymbologyMenu>
         </div>)}
       </div>
-      <div className='flex'>
-      {groupSelectorElements}
+      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap w-full">
+        {groupSelectorElements}
       </div>
 
     </div>
