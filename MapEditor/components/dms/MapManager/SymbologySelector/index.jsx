@@ -46,7 +46,7 @@ export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
           newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
         })
 
-        newSymbology.symbology.layers[layerId]["interactive-filters"].forEach(
+        newSymbology.symbology.layers[layerId]["interactive-filters"]?.forEach(
           (iFilter, filterIndex) => {
             iFilter.layers.forEach((d, i) => {
               newSymbology.symbology.layers[layerId]["interactive-filters"][
