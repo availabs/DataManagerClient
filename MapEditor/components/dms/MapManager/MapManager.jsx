@@ -198,7 +198,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             className="w-full bg-transparent"
             value={dataColumn}
             onChange={(e) => {
-              console.log("state when switching filter group", state)
               setState((draft) => {
                 draft.symbologies[row.symbologyId].symbology.layers[layer.id]["data-column"] = e.target.value
                 if(layerType === 'categories') {

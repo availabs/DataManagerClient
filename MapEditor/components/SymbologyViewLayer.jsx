@@ -61,7 +61,17 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
+    const didFilterGroupColumnsChange =
+      layerProps.filterGroupEnabled &&
+      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+
+    const didDataColumnChange =
+      !layerProps.filterGroupEnabled &&
+      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+
+    const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+
+    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
@@ -75,7 +85,7 @@ const ViewLayerRender = ({
             maplibreMap.removeLayer(l?.id) 
           }
         })
-        // consol
+
         maplibreMap.removeSource(newSource.id)
         if(!maplibreMap.getSource(newSource.id)){
           maplibreMap.addSource(newSource.id, newSource.source)
@@ -85,11 +95,11 @@ const ViewLayerRender = ({
 
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
-            } else {
-              maplibreMap.addLayer(l) 
-            }
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
         })
       }
     }
@@ -119,11 +129,11 @@ const ViewLayerRender = ({
 
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
-            } else {
-              maplibreMap.addLayer(l) 
-            }
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
         })
       }
     }
@@ -231,23 +241,31 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
   const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
-  if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
+
+  const colsToAppend =
+    layerProps?.filterGroupEnabled && layerProps?.["filter-group"]?.length > 0
+      ? layerProps?.["filter-group"]
+          ?.map((filterObj) => filterObj.column_name)
+          .join(",")
+      : layerProps?.["data-column"];
+  
+  if (newTileUrl && (colsToAppend || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
     }
 
     const splitUrl = newTileUrl.split("?cols=");
-    //If we have a data column, and the URL has nothing after the ?cols=, append data column
-    if (layerProps?.["data-column"] && splitUrl[1].length === 0) {
-      newTileUrl += layerProps?.["data-column"];
+    //If layerProps has a data column, and the URL has nothing after the ?cols=, append data column
+    if (colsToAppend && splitUrl[1].length === 0) {
+      newTileUrl += colsToAppend;
     }
 
-    //If we have a data column, and the URL already has something after the ?cols=, replace it with data column
-    if (layerProps?.["data-column"] && splitUrl[1].length > 0) {
-      newTileUrl = newTileUrl.replace(splitUrl[1], layerProps?.["data-column"]);
+    //If layerProps has a data column, and the URL already has something after the ?cols=, replace it with data column
+    if (colsToAppend && splitUrl[1].length > 0) {
+      newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
     }
 
-    if (newTileUrl.includes(layerProps?.["data-column"]) && layerHasFilter) {
+    if (newTileUrl.includes(colsToAppend) && layerHasFilter) {
       newTileUrl += ",";
     }
 
