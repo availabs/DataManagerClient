@@ -35,7 +35,6 @@ function InteractiveFilterControl({ path, params = {} }) {
       })
     }
   }, [interactiveFilters])
-
   const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center mt-2">

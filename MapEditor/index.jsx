@@ -202,7 +202,7 @@ const MapEditor = () => {
   const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
   const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
-    const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`);
+    const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`, 0);
     return {
       selectedInteractiveFilterIndex,
       activeLayerType: get(state,`symbology.layers[${state?.symbology?.activeLayer}]['layer-type']`, {}),
@@ -473,7 +473,7 @@ const MapEditor = () => {
           set(draft, `${pathBase}['filter-group-legend-column']`, column)
           set(draft, `${pathBase}['filter-group']`,[{display_name: fullColumn?.display_name || fullColumn.name, column_name: fullColumn.name}])
         })
-      } else if (!filterGroupEnabled) {
+      } else if (!filterGroupEnabled && !!activeLayer) {
         setState(draft => {
           set(draft,`${pathBase}['filter-group-name']`, '');
           set(draft, `${pathBase}['filter-group-legend-column']`, '');
@@ -493,7 +493,7 @@ const MapEditor = () => {
           set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
           set(draft, `${pathBase}['view-group-id']`, viewId);
         })
-      } else if (!viewGroupEnabled) {
+      } else if (!viewGroupEnabled && !!activeLayer) {
         setState(draft => {
           set(draft,`${pathBase}['filter-source-views']`, []);
           set(draft, `${pathBase}['view-group-name']`, '');

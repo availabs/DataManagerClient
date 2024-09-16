@@ -200,16 +200,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             onChange={(e) => {
               console.log("state when switching filter group", state)
               setState((draft) => {
-                if(layerType === 'interactive'){
-                  draft.symbologies[row.symbologyId].symbology.layers[layer.id]['interactive-filters'][selectedInteractiveFilterIndex]["data-column"] = e.target.value
-                  //draft.symbologies[row.symbologyId].symbology.layers[layer.id]["data-column"] = e.target.value
-                  
-                } else {
-                  draft.symbologies[row.symbologyId].symbology.layers[layer.id]["data-column"] = e.target.value
-
-                  if(layerType === 'categories') {
-                    draft.symbologies[row.symbologyId].symbology.layers[layer.id]['categories'] = {};
-                  }
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id]["data-column"] = e.target.value
+                if(layerType === 'categories') {
+                  draft.symbologies[row.symbologyId].symbology.layers[layer.id]['categories'] = {};
                 }
               });
             }}
@@ -263,7 +256,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                   ).replaceAll(layer.view_id, e.target.value)
                 );
                 draft.symbologies[row.symbologyId].symbology.layers[layer.id].sources = newSources;
-
                 draft.symbologies[row.symbologyId].symbology.layers[layer.id].view_id = e.target.value
               });
             }}
@@ -283,7 +275,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   }
 
   useEffect(() => {
-    if(layer && layer.filterGroupEnabled) {
+    if(layer) {
       setState((draft => {
         const polygonLayerType = layer.type
         const paintPaths = {
@@ -294,27 +286,20 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     
         const layerPaintPath = paintPaths[polygonLayerType];
         const {
-          choroplethdata,
+          choroplethdata = {},
           colorrange = colorbrewer["seq1"][9],
           numbins=9,
           method,
-          selectedInteractiveFilterIndex,
           ["category-show-other"]: showOther = "#ccc",
         } = layer;
         const { breaks, max } = choroplethdata;
     
-        console.log({colorrange, numbins})
         let { paint } = choroplethPaint(dataColumn, max, colorrange, numbins, method, breaks, showOther);
         if(isValidCategoryPaint(paint)) {    
-          const pathBase = layerType === 'interactive'
-            ? `symbologies[${[row.symbologyId]}].symbology.layers[${layer.id}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
-            : `symbologies[${[row.symbologyId]}].symbology.layers[${layer.id}]`;
-    
-          set(draft, `${pathBase}.${layerPaintPath}`, paint)
+          set(draft, `symbologies[${[row.symbologyId]}].symbology.layers[${layer.id}].${layerPaintPath}`, paint)
         }
       }))
     }
-
   }, [dataColumn])
 
   return (
