@@ -36,7 +36,8 @@ const Edit = ({value, onChange, size}) => {
         symbologies: cachedData.symbologies || {},
         isEdit: true,
         setInitialBounds: cachedData.setInitialBounds || false,
-        initialBounds: cachedData.initialBounds || null
+        initialBounds: cachedData.initialBounds || null,
+        hideControls: cachedData.hideControls || false
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -214,7 +215,8 @@ const View = ({value, size}) => {
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || {},
-        initialBounds: cachedData.initialBounds || null
+        initialBounds: cachedData.initialBounds || null,
+        hideControls: cachedData.hideControls || false
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -363,7 +365,7 @@ const View = ({value, size}) => {
                   rightSidebar={ false }
                 />
                 <div className={'absolute inset-0 flex pointer-events-none'}>
-                    <div className=''><MapManager /></div>
+                    {!state.hideControls && <div className=''><MapManager /></div>}
                     <div className='flex-1'/>
                     <div className=''><LegendPanel /></div>
                 </div>

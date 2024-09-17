@@ -3,7 +3,7 @@ import { MapContext } from '../MapComponent'
 import isEqual from "lodash/isEqual"
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus} from '../../icons'
+import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus, Eye, EyeSlashed,EyeClosed} from '../../icons'
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
 import set from 'lodash/set'
@@ -641,6 +641,16 @@ function MapManager () {
                   <i 
                     className="fa-regular fa-circle-location-arrow text-slate-500 hover:text-pink-700"
                   />
+                </div>
+                <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
+                  title={state.hideControls ? "Map Controls will be hidden" : "Map Controls will be visible"}
+                  onClick={() => {
+                    setState(draft => {
+                      draft.hideControls = !draft.hideControls;
+                    })
+                  }}
+                >
+                  {state.hideControls ? <EyeSlashed size={16}/> : <Eye /> }
                 </div>
                 <div 
                   className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
