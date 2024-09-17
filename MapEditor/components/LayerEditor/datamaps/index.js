@@ -92,7 +92,6 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     .filter(d => d)
   ]
 
-  console.log('choroplethPaint', paint)
 
   return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
 

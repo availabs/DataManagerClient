@@ -1,13 +1,18 @@
-import React, { useContext, useMemo, Fragment, useRef} from 'react'
+import React, { useContext, useMemo, Fragment, useRef, useEffect} from 'react'
 import { MapContext } from '../MapComponent'
+import isEqual from "lodash/isEqual"
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus} from '../../icons'
+import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus, Eye, EyeSlashed,EyeClosed} from '../../icons'
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
+import set from 'lodash/set'
+import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from '../../LayerEditor/datamaps'
+import colorbrewer from '../../LayerManager/colors'
 // import LegendPanel from './LegendPanel'
 import cloneDeep from 'lodash/cloneDeep'
 import { getAttributes } from '~/pages/DataManager/Collection/attributes'
+import { ViewAttributes } from "~/pages/DataManager/Source/attributes"
 const typeIcons = {
   'fill': Fill,
   'circle': Circle,
@@ -82,18 +87,27 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 
 
 function SymbologyRow ({tabIndex, row, rowIndex}) {
-  const { state, setState, falcorCache, pgEnv  } = React.useContext(MapContext);
+  const { state, setState, falcor, falcorCache, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
 
-  const { symbology, layer, selectedInteractiveFilterIndex, layerType, interactiveFilters } = useMemo(() => {
+  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, } = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
     const layer = get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {});
     return {
       symbology,
       layer,
+      sourceId: get(layer, `['source_id']`),
+      dataColumn: get(layer, `['data-column']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       layerType:get(layer, `['layer-type']`, 'simple'),
-      interactiveFilters: get(layer, `['interactive-filters']`, [])
+      interactiveFilters: get(layer, `['interactive-filters']`, []),
+      filterGroupEnabled: get(layer, `['filterGroupEnabled']`),
+      filterGroup: get(layer, `['filter-group']`, []),
+      filterGroupName: get(layer, `['filter-group-name']`, ''),
+      filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
+      viewGroupEnabled: get(layer, `['viewGroupEnabled']`),
+      viewGroup: get(layer, `['filter-source-views']`, []),
+      viewGroupName: get(layer, `['view-group-name']`, ''),
     }
   },[row, state])
 
@@ -124,12 +138,33 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
 
-  let interactiveElement = <></>;
+  React.useEffect(() => {
+    async function fetchData() {
+      //console.time("fetch data");
+      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+      const resp = await falcor.get(lengthPath);
+      return await falcor.get([
+        "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+        { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+        "attributes", Object.values(ViewAttributes)
+      ]);
+    }
+    if(sourceId) {
+      fetchData();
+    }
+  }, [sourceId, falcor, pgEnv]);
+
+  const views = useMemo(() => {
+    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache, sourceId, pgEnv]);
+
+  const groupSelectorElements = [];
   if (layerType === "interactive") {
-    interactiveElement = (
-      <div className="text-slate-600 font-medium truncate flex-1 pl-3 pr-1 pb-1">
-        <div className="text-xs text-black">Filters:</div>
-        <div className="rounded-md h-[36px] text-xs pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+        <div className="text-black">Filters:</div>
+        <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={selectedInteractiveFilterIndex}
@@ -151,8 +186,120 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           </select>
         </div>
       </div>
+    )
+  }
+
+  if(filterGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+        <div className='text-black'>{filterGroupName}:</div>
+        <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={dataColumn}
+            onChange={(e) => {
+              setState((draft) => {
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id]["data-column"] = e.target.value
+                if(layerType === 'categories') {
+                  draft.symbologies[row.symbologyId].symbology.layers[layer.id]['categories'] = {};
+                }
+              });
+            }}
+          >
+            {filterGroup.map((gFilter, i) => {
+              const itemSuffix =
+                filterGroupLegendColumn === gFilter.column_name
+                  ? "**"
+                  : !!filterGroupLegendColumn
+                  ? ` (${filterGroupLegendColumn})`
+                  : "";
+              return (
+                <option key={i} value={gFilter.column_name}>
+                  {gFilter.display_name} {itemSuffix}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
     );
   }
+  if(layer.viewGroupEnabled) {
+    groupSelectorElements.push(
+      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full ">
+        <div className=' text-black'>{viewGroupName}: </div>
+        <div className="rounded-md h-[36px]  pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={layer.view_id}
+            onChange={(e) => {
+              setState((draft) => {
+                //draft.symbology.layers[layer.id].layers[0].source
+                //draft.symbology.layers[layer.id].layers[0].source-layer
+                //draft.symbology.layers[layer.id].layers[1].source
+                //draft.symbology.layers[layer.id].layers[1].source-layer
+                
+                const newLayer = JSON.parse(
+                  JSON.stringify(draft.symbologies[row.symbologyId].symbology.layers[layer.id].layers).replaceAll(
+                    layer.view_id,
+                    e.target.value
+                  )
+                );
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].layers = newLayer;
+
+                //sources[0].id
+                //sources[0].source.tiles
+                const newSources = JSON.parse(
+                  JSON.stringify(
+                    draft.symbologies[row.symbologyId].symbology.layers[layer.id].sources
+                  ).replaceAll(layer.view_id, e.target.value)
+                );
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].sources = newSources;
+                draft.symbologies[row.symbologyId].symbology.layers[layer.id].view_id = e.target.value
+              });
+            }}
+          >
+            {viewGroup.map((view_id, i) => {
+              const curView = views.find((v) => v.view_id === view_id);
+              return (
+                <option key={i} value={view_id}>
+                  {curView?.version ?? curView?.view_id}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+    );
+  }
+
+  useEffect(() => {
+    if(layer) {
+      setState((draft => {
+        const polygonLayerType = layer.type
+        const paintPaths = {
+          'fill':"layers[1].paint['fill-color']",
+          'circle':"layers[0].paint['circle-color']",
+          'line':"layers[1].paint['line-color']"
+        }
+    
+        const layerPaintPath = paintPaths[polygonLayerType];
+        const {
+          choroplethdata = {},
+          colorrange = colorbrewer["seq1"][9],
+          numbins=9,
+          method,
+          ["category-show-other"]: showOther = "#ccc",
+        } = layer;
+        const { breaks, max } = choroplethdata;
+    
+        let { paint } = choroplethPaint(dataColumn, max, colorrange, numbins, method, breaks, showOther);
+        if(isValidCategoryPaint(paint)) {    
+          set(draft, `symbologies[${[row.symbologyId]}].symbology.layers[${layer.id}].${layerPaintPath}`, paint)
+        }
+      }))
+    }
+  }, [dataColumn])
 
   return (
     <div className='border-white/85 border hover:border-pink-500 group'>
@@ -271,7 +418,10 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           </SymbologyMenu>
         </div>)}
       </div>
-      {interactiveElement}
+      <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap w-full">
+        {groupSelectorElements}
+      </div>
+
     </div>
   )
 }
@@ -480,18 +630,77 @@ function MapManager () {
             {
               state.isEdit && (
               <>
-                <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
-                  title="Set initial viewport"
-                  onClick={() => {
-                    setState(draft => {
-                      draft.setInitialBounds = true;
-                    })
-                  }}
+                <SymbologyMenu 
+                  button={
+                    <div 
+                      className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+                    >
+                      <MenuDots className='fill-slate-500 hover:fill-pink-300' />
+                    </div>
+                  }
                 >
-                  <i 
-                    className="fa-regular fa-circle-location-arrow text-slate-500 hover:text-pink-700"
-                  />
-                </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                          onClick={() => {
+                            setState(draft => {
+                              draft.hideControls = !draft.hideControls;
+                            })
+                          }}
+                        >
+                          {state.hideControls ? "Display Map Controls" : "Hide Map Controls"}
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+
+                          onClick={() => {
+                            setState(draft => {
+                              draft.setInitialBounds = true;
+                            })
+                          }}
+                        >
+                          Set Initial Viewport
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  {
+                    state.initialBounds && (                  
+                      <div className="px-1 py-1">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <div 
+                              className={`${
+                                active ? 'bg-pink-50 ' : ''
+                              } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+    
+                              onClick={() => {
+                                setState(draft => {
+                                  draft.setInitialBounds = false;
+                                  draft.initialBounds = null;
+                                })
+                              }}
+                            >
+                              Remove Initial Viewport
+                            </div>
+                          )}
+                        </Menu.Item>
+                      </div>
+                    )
+                  }
+                </SymbologyMenu>
                 <div 
                   className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
                   onClick={() => setState(draft => {

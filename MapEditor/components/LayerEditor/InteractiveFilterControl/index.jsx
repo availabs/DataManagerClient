@@ -35,7 +35,6 @@ function InteractiveFilterControl({ path, params = {} }) {
       })
     }
   }, [interactiveFilters])
-
   const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center mt-2">
@@ -56,7 +55,8 @@ function InteractiveFilterControl({ path, params = {} }) {
                 'filter-group': [],
                 'filter-group-name': '',
                 'view-group-name': '',
-                'filter-source-views': []
+                'filter-source-views': [],
+                'interactive-filters': null
               }
               const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
               set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
