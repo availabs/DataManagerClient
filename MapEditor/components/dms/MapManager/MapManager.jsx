@@ -630,28 +630,77 @@ function MapManager () {
             {
               state.isEdit && (
               <>
-                <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
-                  title="Set initial viewport"
-                  onClick={() => {
-                    setState(draft => {
-                      draft.setInitialBounds = true;
-                    })
-                  }}
+                <SymbologyMenu 
+                  button={
+                    <div 
+                      className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+                    >
+                      <MenuDots className='fill-slate-500 hover:fill-pink-300' />
+                    </div>
+                  }
                 >
-                  <i 
-                    className="fa-regular fa-circle-location-arrow text-slate-500 hover:text-pink-700"
-                  />
-                </div>
-                <div className='w-[28px] h-[28px] cursor-pointer justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
-                  title={state.hideControls ? "Map Controls will be hidden" : "Map Controls will be visible"}
-                  onClick={() => {
-                    setState(draft => {
-                      draft.hideControls = !draft.hideControls;
-                    })
-                  }}
-                >
-                  {state.hideControls ? <EyeSlashed size={16}/> : <Eye /> }
-                </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                          onClick={() => {
+                            setState(draft => {
+                              draft.hideControls = !draft.hideControls;
+                            })
+                          }}
+                        >
+                          {state.hideControls ? "Display Map Controls" : "Hide Map Controls"}
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+
+                          onClick={() => {
+                            setState(draft => {
+                              draft.setInitialBounds = true;
+                            })
+                          }}
+                        >
+                          Set Initial Viewport
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  {
+                    state.initialBounds && (                  
+                      <div className="px-1 py-1">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <div 
+                              className={`${
+                                active ? 'bg-pink-50 ' : ''
+                              } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+    
+                              onClick={() => {
+                                setState(draft => {
+                                  draft.setInitialBounds = false;
+                                  draft.initialBounds = null;
+                                })
+                              }}
+                            >
+                              Remove Initial Viewport
+                            </div>
+                          )}
+                        </Menu.Item>
+                      </div>
+                    )
+                  }
+                </SymbologyMenu>
                 <div 
                   className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
                   onClick={() => setState(draft => {
