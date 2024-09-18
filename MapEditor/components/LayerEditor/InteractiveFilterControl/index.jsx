@@ -91,7 +91,7 @@ function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
               <div className="truncate col-span-10">
                 {iFilter.label}
               </div>
-              <div
+              {enableBuilder && <div
                 className="col-span-1 flex items-center cursor-pointer group-hover/title:fill-slate-700 hover:bg-slate-100 rounded group/icon p-0.5"
                 onClick={() => {
                   setState(draft => {
@@ -108,7 +108,7 @@ function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
                   size={20}
                   className="m-0.5 cursor-pointer group-hover/icon:fill-slate-900 "
                 />
-              </div>
+              </div>}
             </div>
           )
         })
