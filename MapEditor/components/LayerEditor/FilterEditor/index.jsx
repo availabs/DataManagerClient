@@ -2,6 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { Button } from "~/modules/avl-components/src";
 import { SymbologyContext } from "../../../";
 import { ExistingFilterList, FilterBuilder } from "./FilterControls";
+import { InteractiveFilterControl } from "../InteractiveFilterControl";
 import get from "lodash/get";
 import set from "lodash/set";
 
@@ -9,9 +10,24 @@ function FilterEditor(props) {
   const { state, setState } = useContext(SymbologyContext);
   const [displayBuilder, setDisplayBuilder] = useState(false);
   const [activeColumn, setActiveColumn] = useState();
+  const layerType = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}]['layer-type']`
+  );
+
+  const selectedInteractiveFilterIndex = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
+  );
+
+  const pathBase =
+    layerType === "interactive"
+        ? `['interactive-filters'][${selectedInteractiveFilterIndex}]`
+        : ``;
+
   const existingFilter = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`
+    `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filter`
   );
 
   return (
@@ -19,23 +35,38 @@ function FilterEditor(props) {
       <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
         Filters
       </div>
+      {
+        layerType === "interactive" && <div className='px-2'>
+          <InteractiveFilterControl path={"['interactive-filters']"} params={{enableBuilder: false}}/>
+        </div>
+      }
       <div className="mx-4">
         <ExistingFilterList
           removeFilter={(columnName) => {
             setActiveColumn(null);
             setDisplayBuilder(false);
             setState((draft) => {
-              const newFilter = Object.keys(existingFilter).reduce((a, c) => {
-                if (c !== columnName) {
-                  a[c] = existingFilter[c];
-                }
-                return a;
-              }, {});
-              set(
-                draft,
-                `symbology.layers[${state.symbology.activeLayer}].filter`,
-                newFilter
-              );
+              if(existingFilter) {
+                const newFilter = Object.keys(existingFilter).reduce((a, c) => {
+                  if (c !== columnName) {
+                    a[c] = existingFilter[c];
+                  }
+                  return a;
+                }, {});
+                set(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filter`,
+                  newFilter
+                );
+              }
+              else {
+                set(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filter`,
+                  {}
+                );
+              }
+
             });
           }}
           activeColumn={activeColumn}
@@ -56,7 +87,7 @@ function FilterEditor(props) {
       </div>
       {(activeColumn || displayBuilder) && (
         <FilterBuilder
-          path={`['filter']`}
+          path={`${pathBase}['filter']`}
           params={{ activeColumn, setActiveColumn }}
         />
       )}

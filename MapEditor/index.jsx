@@ -224,6 +224,7 @@ const MapEditor = () => {
           draft.symbology.layers[draft?.symbology?.activeLayer] = {
             ...draftActiveLayer,
             ...draftInteractiveFilter,
+            filter: draftInteractiveFilter.filter ?? {},
             order: draftActiveLayer.order,
             "layer-type": "interactive",
             "interactive-filters": draftFilters,
@@ -535,8 +536,6 @@ const MapEditor = () => {
     }
 
   }, [baseDataColumn, layerType, viewId, falcorCache])
-
-
 
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
