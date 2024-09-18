@@ -6,7 +6,8 @@ import get from 'lodash/get'
 import set from 'lodash/set'
 import StyleEditor from '../StyleEditor';
 
-function InteractiveFilterControl({ path, params = {} }) {
+function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
+  const { enableBuilder } = params;
   const { state, setState } = React.useContext(SymbologyContext);
   const { value: interactiveFilters, selectedInteractiveFilterIndex, layerName, activeLayer } = useMemo(() => {
     return {
@@ -27,7 +28,6 @@ function InteractiveFilterControl({ path, params = {} }) {
       activeLayer: get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {})
     };
   }, [state]);
-
   useEffect(() => {
     if(selectedInteractiveFilterIndex !== undefined && !interactiveFilters[selectedInteractiveFilterIndex]){
       setState(draft => {
@@ -35,12 +35,12 @@ function InteractiveFilterControl({ path, params = {} }) {
       })
     }
   }, [interactiveFilters])
-  const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
+  const shouldDisplayInteractiveBuilder = enableBuilder && selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center mt-2">
       <div className='w-full text-slate-500 text-[14px] flex justify-between '>
         Interactive Filters
-        <Button
+        {enableBuilder && <Button
           themeOptions={{ size: "xs", color: 'primary' }}
           className={"col-span-2 capitalize mb-2"}
           onClick={() => {
@@ -65,7 +65,7 @@ function InteractiveFilterControl({ path, params = {} }) {
           }}
         >
           <Plus className='fill-gray-200'/>
-        </Button>
+        </Button>}
       </div>
       {
         interactiveFilters.map((iFilter,i) => {
