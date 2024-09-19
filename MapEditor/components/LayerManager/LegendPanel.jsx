@@ -378,7 +378,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     );
   }
   if(dynamicFilters.length > 0) {
-    groupSelectorElements.push(<DynamicFilter layer={layer}/>)
+    //groupSelectorElements.push(<DynamicFilter layer={layer}/>)
   }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
