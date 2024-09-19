@@ -166,49 +166,62 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
   )
 }
 
-export const ExistingColumnList = ({selectedColumns, reorderAttrs, removeAttr, renameAttr}) => {
+export const ExistingColumnList = ({
+  selectedColumns,
+  reorderAttrs,
+  removeAttr,
+  renameAttr,
+}) => {
   return (
-    <DndList
-      onDrop={reorderAttrs}
-    >
-      {selectedColumns?.map((selectedColumn, i) => {
-        return (
-          <div
-            key={i}
-            className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-20"
-          >
-            <div 
-              className="truncate  col-span-8 px-2 py-1"
-            >
-              <div
-                className='w-full p-1 text-sm text-slate-700s'
-              >
-              <input 
-                  type="text"
-                  className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
-                  value={selectedColumn.display_name}
-                  onChange={(e) => {
-                    renameAttr({columnName:selectedColumn.column_name , displayName:e.target.value})
-                  }}
-                />
-
-
-              </div>
-              
-            </div>
+    <>
+      <div className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-20">
+        <div className="truncate  col-span-4 px-2 py-1 border-r">
+          <div className=" p-1 text-sm text-slate-700 font-bold">Column name</div>
+        </div>
+        <div className="truncate  col-span-4 px-2 py-1">
+          <div className=" p-1 text-sm text-slate-700 font-bold">Display name</div>
+        </div>
+      </div>
+      <DndList onDrop={reorderAttrs}>
+        {selectedColumns?.map((selectedColumn, i) => {
+          return (
             <div
-              className="flex items-center  cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
-              onClick={() => {
-                removeAttr(selectedColumn.column_name)
-              }}
+              key={i}
+              className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-20"
             >
-              <Close
-                className="cursor-pointer group-hover/icon:fill-slate-500 "
-              />
+              <div className="truncate  col-span-4 px-2 py-1 border-r">
+                <div className=" p-1 text-sm text-slate-700">
+                  {selectedColumn.column_name}
+                </div>
+              </div>
+              <div className="truncate  col-span-4 py-1">
+                <div className=" p-1 text-sm text-slate-700">
+                  <input
+                    type="text"
+                    className="w-full px-2 border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                    value={selectedColumn.display_name}
+                    onChange={(e) => {
+                      renameAttr({
+                        columnName: selectedColumn.column_name,
+                        displayName: e.target.value,
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                className="flex items-center  cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
+                onClick={() => {
+                  removeAttr(selectedColumn.column_name);
+                }}
+              >
+                <Close className="cursor-pointer group-hover/icon:fill-slate-500 " />
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </DndList>
+          );
+        })}
+      </DndList>
+    </>
   );
 };

@@ -112,24 +112,9 @@ function FilterEditor(props) {
       <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
         Dynamic Filters
       </div>
-      <div className="m-4 mt-2">
-        <Button
-          className="p-1"
-          themeOptions={{ size: "sm", color: "transparent" }}
-          onClick={() => {
-            setDisplayDynamicBuilder(true);
-            setDisplayFilterBuilder(false);
-            setActiveFilterColumn(null);
-          }}
-        >
-          Add Dynamic Filter
-        </Button>
-      </div>
-      {(existingDynamicFilter?.length > 0 || displayDynamicBuilder) && (
-        <DynamicFilterBuilder 
-          path={`${pathBase}['dynamic-filters']`}
-        />
-      )}
+      <DynamicFilterBuilder 
+        path={`${pathBase}['dynamic-filters']`}
+      />
     </div>
   );
 }
