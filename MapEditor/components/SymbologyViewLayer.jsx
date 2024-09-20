@@ -186,39 +186,56 @@ const ViewLayerRender = ({
           const mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
-              const filterOperator = layerFilter[filterColumnName].operator;
-              const filterValue = layerFilter[filterColumnName].value;
-              const filterColumnClause = ["get", filterColumnName];
+              //TODO actually handle calculated columns
+              if(filterColumnName.includes("rpad(substring(prop_class, 1, 1), 3, '0')")) {
+                const filterColumnClause = ["slice", ["get", "prop_class"], 0, 1];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValues = layerFilter?.[filterColumnName]?.value.map(fVal => fVal?.substring(0,1))
 
-              if(filterOperator === 'between') {
                 mapFilter = [
-                  "all",
-                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
-                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  "in",
+                  filterColumnClause,
+                  ["literal", filterValues]
                 ];
+
+                if(filterOperator === "!="){
+                  mapFilter = ["!", mapFilter];
+                }
               }
               else {
-                if (["==", "!="].includes(filterOperator)) {
-                  //Allows for `or`, i.e. ogc_fid = 123 or 456
-                  mapFilter = [
-                    "in",
-                    filterColumnClause,
-                    ["literal", filterValue]
-                  ];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValue = layerFilter[filterColumnName].value;
+                const filterColumnClause = ["get", filterColumnName];
 
-                  if(filterOperator === "!="){
-                    mapFilter = ["!", mapFilter];
-                  }
+                if(filterOperator === 'between') {
+                  mapFilter = [
+                    "all",
+                    [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                    ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  ];
                 }
                 else {
-                  mapFilter = [
-                    filterOperator,
-                    ["to-string", filterColumnClause],
-                    ["to-string", filterValue]
-                  ];
+                  if (["==", "!="].includes(filterOperator)) {
+                    //Allows for `or`, i.e. ogc_fid = 123 or 456
+                    mapFilter = [
+                      "in",
+                      filterColumnClause,
+                      ["literal", filterValue]
+                    ];
+  
+                    if(filterOperator === "!="){
+                      mapFilter = ["!", mapFilter];
+                    }
+                  }
+                  else {
+                    mapFilter = [
+                      filterOperator,
+                      ["to-string", filterColumnClause],
+                      ["to-string", filterValue]
+                    ];
+                  }
                 }
               }
-
               return mapFilter;
             }
           );
@@ -271,7 +288,13 @@ const getLayerTileUrl = (tileBase, layerProps) => {
 
     if (layerHasFilter) {
       Object.keys(layerProps.filter).forEach((filterCol, i) => {
-        newTileUrl += `${filterCol}`;
+        //TODO actually handle calculated columns
+        if(filterCol.includes("rpad(substring(prop_class, 1, 1), 3, '0')")){
+          newTileUrl += `prop_class`;
+        }
+        else {
+          newTileUrl += `${filterCol}`;
+        }
 
         if (i < Object.keys(layerProps.filter).length - 1) {
           newTileUrl += ",";

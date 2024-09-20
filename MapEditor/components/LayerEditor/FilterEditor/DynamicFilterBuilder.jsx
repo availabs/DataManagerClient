@@ -119,7 +119,7 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
             availableColumnNames={availableFilterColumns}
           />
         </div>
-        <div className='mb-2 w-full'>
+        {existingDynamicFilter.length > 0 && <div className='mb-2 w-full'>
           <ExistingColumnList 
             selectedColumns={existingDynamicFilter}  
             reorderAttrs={(start, end) => {
@@ -159,7 +159,7 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
               })
             }}
           />
-        </div>
+        </div>}
       </div>
     </div>
 
