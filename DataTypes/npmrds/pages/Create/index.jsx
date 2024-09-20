@@ -17,7 +17,7 @@ export default function NpmrdsCreate({
   CustomAttributes = BlankComponent,
 }) {
   const { name: damaSourceName, source_id: sourceId, type } = source;
-  const { baseUrl, user: ctxUser } = useContext(DamaContext);
+  const { pgEnv, user: ctxUser } = useContext(DamaContext);
 
   const [loading, setLoading] = useState(false);
   const [state, dispatch] = useReducer(reducer, {
@@ -51,11 +51,9 @@ export default function NpmrdsCreate({
           setLoading={setLoading}
           source_id={sourceId}
           user_id={user?.id ?? ctxUser.id}
-          // npmrds_raw_view_id={selectedView?.id}
           name={source?.name}
           type={source?.type}
-          // startDate={selectedView?.metadata?.start_date}
-          // endDate={selectedView?.metadata?.end_date}
+          pgEnv={pgEnv}
         />
       </div>
     </div>
