@@ -449,7 +449,6 @@ const DynamicFilter = ({layer}) => {
   React.useEffect(() => {
     if(selectedColumnNames.length > 0) {
       selectedColumnNames.forEach(colName => {
-        console.log("fetching data for col::", colName)
         const options = JSON.stringify({
           groupBy: [(colName).split('AS ')[0]],
           exclude: {[(colName).split('AS ')[0]]: ['null']},
@@ -465,7 +464,8 @@ const DynamicFilter = ({layer}) => {
     <div className="flex p-2 flex-col">
       Dynamic Filters:
       {
-        selectedColumnNames.map((colName, i) => {
+        dynamicFilters.map((dFilter, i) => {
+          const colName  = dFilter.column_name;
           const options = JSON.stringify({
             groupBy: [(colName).split('AS ')[0]],
             exclude: {[(colName).split('AS ')[0]]: ['null']},
@@ -483,7 +483,7 @@ const DynamicFilter = ({layer}) => {
                 filterIndex={i}
                 sampleData={sampleData}
                 button={
-                  <div>{colName}</div>
+                  <div>{dFilter.display_name}</div>
                 } 
               />
             </div> 

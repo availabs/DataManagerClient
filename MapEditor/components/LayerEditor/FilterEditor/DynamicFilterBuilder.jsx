@@ -102,6 +102,7 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
       <div className='flex w-full flex-wrap my-2'>
         <div className='mb-2 w-full'>
           <AddColumnSelectControl
+            label="Add Dynamic Column"
             setState={(newColumn) => {
               setState((draft) => {
                 if (newColumn !== "") {

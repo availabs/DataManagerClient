@@ -420,7 +420,7 @@ const MapEditor = () => {
           if(viewGroupEnabled) {
             domainOptions['viewId'] = viewGroupId;
           }
-          console.log({domainOptions})
+
           setState(draft => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
           })

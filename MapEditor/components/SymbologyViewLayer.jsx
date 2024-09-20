@@ -8,7 +8,9 @@ import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../store"
 import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
-
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
 const ViewLayerRender = ({
   maplibreMap,
   layer,
@@ -70,8 +72,9 @@ const ViewLayerRender = ({
       layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
 
     const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+    const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
 
-    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange) {
+    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
@@ -179,11 +182,12 @@ const ViewLayerRender = ({
     // -------------------------------
     // Apply filters
     // -------------------------------
-    const { filter: layerFilter } = layerProps;
+    const { filter: layerFilter, ["dynamic-filters"]:dynamicFilter } = layerProps;
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
+        let mapLayerFilter = [];
         if(layerFilter){
-          const mapLayerFilter = Object.keys(layerFilter).map(
+          mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
               //TODO actually handle calculated columns
@@ -216,7 +220,7 @@ const ViewLayerRender = ({
                 }
                 else {
                   if (["==", "!="].includes(filterOperator)) {
-                    //Allows for `or`, i.e. ogc_fid = 123 or 456
+                    // "in"Allows for `or`, i.e. ogc_fid = 123 or 456
                     mapFilter = [
                       "in",
                       filterColumnClause,
@@ -239,8 +243,26 @@ const ViewLayerRender = ({
               return mapFilter;
             }
           );
-          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
         }
+        const layerHasDynamicFilter =
+          dynamicFilter &&
+          dynamicFilter?.length > 0 &&
+          dynamicFilter.some((dFilter) => dFilter?.values?.length > 0);
+        let dynamicMapLayerFilters = [];
+        if (layerHasDynamicFilter) {
+          dynamicMapLayerFilters = dynamicFilter
+            ?.filter((dFilter) => dFilter?.values?.length > 0)
+            .map((dFilter) => {
+              let mapFilter = [];
+
+              const filterValue = dFilter.values;
+              const filterColumnClause = ["get", dFilter.column_name];
+              //"in" Allows for `or`, i.e. ogc_fid = 123 or 456
+              mapFilter = ["in", filterColumnClause, ["literal", filterValue]];
+              return mapFilter;
+            });
+        }
+        maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
   }, [layerProps]);
@@ -257,15 +279,20 @@ const ViewLayerRender = ({
 const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
-  const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
 
-  const colsToAppend =
+  const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0) 
+
+  const dataFilterCols =
     layerProps?.filterGroupEnabled && layerProps?.["filter-group"]?.length > 0
       ? layerProps?.["filter-group"]
           ?.map((filterObj) => filterObj.column_name)
-          .join(",")
-      : layerProps?.["data-column"];
+      : [layerProps?.["data-column"]];
   
+  const dynamicCols = layerProps?.["dynamic-filters"]
+    ?.filter((dFilter) => dFilter?.values?.length > 0)
+    .map((dFilter) => dFilter.column_name); 
+  const colsToAppend = dataFilterCols.concat(dynamicCols).filter(onlyUnique).filter(col => !!col).join(",")
+
   if (newTileUrl && (colsToAppend || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
@@ -282,7 +309,7 @@ const getLayerTileUrl = (tileBase, layerProps) => {
       newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
     }
 
-    if (newTileUrl.includes(colsToAppend) && layerHasFilter) {
+    if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
       newTileUrl += ",";
     }
 
