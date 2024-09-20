@@ -1,7 +1,7 @@
 import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
@@ -379,7 +379,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     );
   }
   if(dynamicFilters.length > 0) {
-    //groupSelectorElements.push(<DynamicFilter layer={layer}/>)
+    //groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer}/>)
   }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
@@ -455,14 +455,14 @@ const DynamicFilter = ({layer}) => {
           orderBy: {"2": 'desc'}
         })
         falcor.get([
-          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 100},[colName, 'count(1)::int as count']
+          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 200},[colName, 'count(1)::int as count']
         ]) 
       })
     }
   },[selectedColumnNames, layerType, viewId]);
   return (
-    <div className="flex p-2 flex-col">
-      Dynamic Filters:
+    <div className="flex my-2 flex-col">
+      <b>Dynamic Filters:</b>
       {
         dynamicFilters.map((dFilter, i) => {
           const colName  = dFilter.column_name;
@@ -476,6 +476,7 @@ const DynamicFilter = ({layer}) => {
               'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'], [])
           ).map(v =>  v?.[colName]).filter(val => typeof val !== "object");
 
+          sampleData.sort();
           return (
             <div key={`${colName}_${i}_legend_filter_option_row`} className='w-full'>
               <DynamicFilterControl
@@ -483,7 +484,7 @@ const DynamicFilter = ({layer}) => {
                 filterIndex={i}
                 sampleData={sampleData}
                 button={
-                  <div>{dFilter.display_name}</div>
+                  <div className='flex w-full p-1 pl-0 rounded items-center justify-between border-transparent border hover:border-gray-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
                 } 
               />
             </div> 
@@ -505,62 +506,78 @@ function DynamicFilterControl({button, layer, sampleData, filterIndex}) {
     }
   }, [state, filterIndex])
   return (
-      <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button>
-          {button}
-        </Menu.Button>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
+    <Menu as="div" className="relative inline-block text-left w-full">
+      <Menu.Button as="div">{button}</Menu.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items
+          anchor="right"
+          className="absolute w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
         >
-          <Menu.Items className='absolute left-20 w-36 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
-            <div className=" py-1 max-h-[150px] overflow-auto ">
-              {sampleData.map(datum => {
-                return (<Menu.Item>
+          <div className=" p-2 max-h-[250px] overflow-auto ">
+            {sampleData.map((datum) => {
+              return (
+                <Menu.Item key={`menu_item_${datum}`}>
                   {({ active }) => (
-
-
-                    <div className="flex">
+                    <div
+                      className={`${
+                        active ? "bg-pink-50 " : ""
+                      } group flex w-full items-center rounded-md px-1 py-1 text-sm`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={filterValues.includes(datum)}
-                        onChange={() => {
+                        onChange={(e) => {
                           if (filterValues.includes(datum)) {
-                            setState(draft => {
-                              draft.symbology.layers[layer.id]['dynamic-filters'][filterIndex].values = filterValues.filter(val => val !== datum);
-                            })
+                            setState((draft) => {
+                              draft.symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = filterValues.filter(
+                                (val) => val !== datum
+                              );
+                            });
                           } else {
                             const newValues = [...filterValues];
                             newValues.push(datum);
 
-                            setState(draft => {
-                              console.log(JSON.parse(JSON.stringify(draft.symbology.layers[layer.id])))
-                              draft.symbology.layers[layer.id]['dynamic-filters'][filterIndex].values = newValues
-                            })
-
+                            setState((draft) => {
+                              console.log(
+                                JSON.parse(
+                                  JSON.stringify(
+                                    draft.symbology.layers[layer.id]
+                                  )
+                                )
+                              );
+                              draft.symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = newValues;
+                            });
                           }
                         }}
                       />
-                      <div className="truncate flex items-center text-[13px] px-4 py-1">
+                      <div className="truncate flex items-center text-[15px] px-4 py-1">
                         {datum}
                       </div>
                     </div>
-
-
-
                   )}
-                </Menu.Item>)
-              })}
-
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
-  )
+                </Menu.Item>
+              );
+            })}
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
 } 
 export default LegendPanel
