@@ -1,11 +1,12 @@
-import React, { useMemo, useContext } from 'react'
+import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
+import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -461,9 +462,10 @@ const DynamicFilter = ({layer}) => {
     }
   },[selectedColumnNames, layerType, viewId]);
   return (
-    <div className="flex p-2">
+    <div className="flex p-2 flex-col">
+      Dynamic Filters:
       {
-        selectedColumnNames.map((colName,i) => {
+        selectedColumnNames.map((colName, i) => {
           const options = JSON.stringify({
             groupBy: [(colName).split('AS ')[0]],
             exclude: {[(colName).split('AS ')[0]]: ['null']},
@@ -474,10 +476,16 @@ const DynamicFilter = ({layer}) => {
               'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'], [])
           ).map(v =>  v?.[colName]).filter(val => typeof val !== "object");
 
-          console.log("sampleData::", sampleData)
           return (
             <div key={`${colName}_${i}_legend_filter_option_row`} className='w-full'>
-
+              <DynamicFilterControl
+                layer={layer}
+                filterIndex={i}
+                sampleData={sampleData}
+                button={
+                  <div>{colName}</div>
+                } 
+              />
             </div> 
           )
         })
@@ -487,4 +495,72 @@ const DynamicFilter = ({layer}) => {
 }
 
 
+
+function DynamicFilterControl({button, layer, sampleData, filterIndex}) {
+  const { state, setState  } = React.useContext(SymbologyContext);
+
+  const {filterValues} = useMemo(() => {
+    return {
+      filterValues:get(layer, `['dynamic-filters'][${filterIndex}].values`, []),
+    }
+  }, [state, filterIndex])
+  return (
+      <Menu as="div" className="relative inline-block text-left">
+        <Menu.Button>
+          {button}
+        </Menu.Button>
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-100"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
+        >
+          <Menu.Items className='absolute left-20 w-36 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
+            <div className=" py-1 max-h-[150px] overflow-auto ">
+              {sampleData.map(datum => {
+                return (<Menu.Item>
+                  {({ active }) => (
+
+
+                    <div className="flex">
+                      <input
+                        type="checkbox"
+                        checked={filterValues.includes(datum)}
+                        onChange={() => {
+                          if (filterValues.includes(datum)) {
+                            setState(draft => {
+                              draft.symbology.layers[layer.id]['dynamic-filters'][filterIndex].values = filterValues.filter(val => val !== datum);
+                            })
+                          } else {
+                            const newValues = [...filterValues];
+                            newValues.push(datum);
+
+                            setState(draft => {
+                              console.log(JSON.parse(JSON.stringify(draft.symbology.layers[layer.id])))
+                              draft.symbology.layers[layer.id]['dynamic-filters'][filterIndex].values = newValues
+                            })
+
+                          }
+                        }}
+                      />
+                      <div className="truncate flex items-center text-[13px] px-4 py-1">
+                        {datum}
+                      </div>
+                    </div>
+
+
+
+                  )}
+                </Menu.Item>)
+              })}
+
+            </div>
+          </Menu.Items>
+        </Transition>
+      </Menu>
+  )
+} 
 export default LegendPanel
