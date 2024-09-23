@@ -14,7 +14,7 @@ function onlyUnique(value, index, array) {
 }
 
 const DateCell = ({ value, ...props }) => {
-  const myDate = new Date(value);
+  const myDate = new Date(value.replace(/"/g, ''));
 
   return (
     <div>{ myDate.toLocaleString() }</div>
