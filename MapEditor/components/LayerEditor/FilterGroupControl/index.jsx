@@ -55,7 +55,6 @@ const FilterGroupControl = ({path, datapath, params={}}) => {
       <ColumnSelectControl
         path={`['filter-group']`}
         params={{
-          version: layerType === 'interactive' ? 'interactive' : undefined,
           default: dataColumn,
           onlyTypedAttributes: true,
           pathPrefix: params.pathPrefix,

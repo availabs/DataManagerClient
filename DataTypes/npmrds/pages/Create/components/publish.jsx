@@ -5,7 +5,6 @@ import { ScalableLoading } from "~/modules/avl-components/src";
 import { DAMA_HOST } from "~/config";
 
 const npmrdsPublish = async (props, navigate, pgEnv) => {
-  console.log("called");
   props.setLoading(true);
   
   const publishData = {
@@ -13,7 +12,7 @@ const npmrdsPublish = async (props, navigate, pgEnv) => {
     user_id: props?.user_id,
     name: props?.name,
     type: props?.type || "npmrds",
-    pgEnv,
+    pgEnv: pgEnv || props?.pgEnv,
   };
 
   try {
@@ -44,10 +43,10 @@ const npmrdsPublish = async (props, navigate, pgEnv) => {
 
 export default function PublishNpmrds(props) {
   const navigate = useNavigate();
-  const { loading, setLoading, ...restProps } = props;
+  const { loading, setLoading, pgEnv, ...restProps } = props;
   
   const handlePublishClick = useCallback(() => {
-    npmrdsPublish({ ...restProps, setLoading }, navigate, "npmrds");
+    npmrdsPublish({ ...restProps, setLoading }, navigate, pgEnv);
   }, [restProps, navigate, setLoading]);
 
   return (

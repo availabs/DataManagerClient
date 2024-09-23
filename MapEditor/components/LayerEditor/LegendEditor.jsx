@@ -1,15 +1,11 @@
-import React, { useContext , useMemo, Fragment}from 'react'
+import React, { useMemo}from 'react'
 import {SymbologyContext} from '../../'
-import { Plus, Close, MenuDots, CaretDown } from '../icons'
-import { Menu, Popover, Transition, Tab, Dialog } from '@headlessui/react'
-import { toHex } from '../LayerManager/utils'
 import get from 'lodash/get'
 import set from 'lodash/set'
 
-import { LayerMenu } from '../LayerManager/LayerPanel'
+import { InteractiveFilterControl } from './InteractiveFilterControl'
 import typeConfigs from './typeConfigs'
-import { wrapperTypes } from './ControlWrappers'
-import { SelectControl } from './Controls'
+
 
 const typeSymbols = {
   'fill': ({layer,color}) => {
@@ -102,10 +98,15 @@ function LegendEditorContainer (props) {
   const config = useMemo(() => typeConfigs[activeLayer.type] || []
     ,[activeLayer.type])
   
+  const layerType = activeLayer['layer-type'];
+
   return activeLayer && (
     <div>
       <div className=''>
-      <div className='font-bold tracking-wider text-sm text-slate-700 p-4'>Legend</div>
+        <div className='font-bold tracking-wider text-sm text-slate-700 p-4 pb-2'>Legend</div>
+        {layerType === "interactive" && <div className='px-2'>
+          <InteractiveFilterControl path={"['interactive-filters']"} params={{enableBuilder: false}}/>
+        </div>}
         <LegendEditor />
       </div>
     </div>

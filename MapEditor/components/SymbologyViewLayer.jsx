@@ -8,7 +8,9 @@ import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../store"
 import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
-
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
 const ViewLayerRender = ({
   maplibreMap,
   layer,
@@ -61,7 +63,18 @@ const ViewLayerRender = ({
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
+    const didFilterGroupColumnsChange =
+      layerProps.filterGroupEnabled &&
+      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+
+    const didDataColumnChange =
+      !layerProps.filterGroupEnabled &&
+      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+
+    const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+    const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
+
+    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
@@ -75,7 +88,7 @@ const ViewLayerRender = ({
             maplibreMap.removeLayer(l?.id) 
           }
         })
-        // consol
+
         maplibreMap.removeSource(newSource.id)
         if(!maplibreMap.getSource(newSource.id)){
           maplibreMap.addSource(newSource.id, newSource.source)
@@ -85,11 +98,11 @@ const ViewLayerRender = ({
 
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
-            } else {
-              maplibreMap.addLayer(l) 
-            }
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
         })
       }
     }
@@ -119,11 +132,11 @@ const ViewLayerRender = ({
 
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
-            } else {
-              maplibreMap.addLayer(l) 
-            }
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
         })
       }
     }
@@ -169,51 +182,87 @@ const ViewLayerRender = ({
     // -------------------------------
     // Apply filters
     // -------------------------------
-    const { filter: layerFilter } = layerProps;
+    const { filter: layerFilter, ["dynamic-filters"]:dynamicFilter } = layerProps;
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
+        let mapLayerFilter = [];
         if(layerFilter){
-          const mapLayerFilter = Object.keys(layerFilter).map(
+          mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
-              const filterOperator = layerFilter[filterColumnName].operator;
-              const filterValue = layerFilter[filterColumnName].value;
-              const filterColumnClause = ["get", filterColumnName];
+              //TODO actually handle calculated columns
+              if(filterColumnName.includes("rpad(substring(prop_class, 1, 1), 3, '0')")) {
+                const filterColumnClause = ["slice", ["get", "prop_class"], 0, 1];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValues = layerFilter?.[filterColumnName]?.value.map(fVal => fVal?.substring(0,1))
 
-              if(filterOperator === 'between') {
                 mapFilter = [
-                  "all",
-                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
-                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  "in",
+                  filterColumnClause,
+                  ["literal", filterValues]
                 ];
+
+                if(filterOperator === "!="){
+                  mapFilter = ["!", mapFilter];
+                }
               }
               else {
-                if (["==", "!="].includes(filterOperator)) {
-                  //Allows for `or`, i.e. ogc_fid = 123 or 456
-                  mapFilter = [
-                    "in",
-                    filterColumnClause,
-                    ["literal", filterValue]
-                  ];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValue = layerFilter[filterColumnName].value;
+                const filterColumnClause = ["get", filterColumnName];
 
-                  if(filterOperator === "!="){
-                    mapFilter = ["!", mapFilter];
-                  }
+                if(filterOperator === 'between') {
+                  mapFilter = [
+                    "all",
+                    [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                    ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  ];
                 }
                 else {
-                  mapFilter = [
-                    filterOperator,
-                    ["to-string", filterColumnClause],
-                    ["to-string", filterValue]
-                  ];
+                  if (["==", "!="].includes(filterOperator)) {
+                    // "in"Allows for `or`, i.e. ogc_fid = 123 or 456
+                    mapFilter = [
+                      "in",
+                      filterColumnClause,
+                      ["literal", filterValue]
+                    ];
+  
+                    if(filterOperator === "!="){
+                      mapFilter = ["!", mapFilter];
+                    }
+                  }
+                  else {
+                    mapFilter = [
+                      filterOperator,
+                      ["to-string", filterColumnClause],
+                      ["to-string", filterValue]
+                    ];
+                  }
                 }
               }
-
               return mapFilter;
             }
           );
-          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
         }
+        const layerHasDynamicFilter =
+          dynamicFilter &&
+          dynamicFilter?.length > 0 &&
+          dynamicFilter.some((dFilter) => dFilter?.values?.length > 0);
+        let dynamicMapLayerFilters = [];
+        if (layerHasDynamicFilter) {
+          dynamicMapLayerFilters = dynamicFilter
+            ?.filter((dFilter) => dFilter?.values?.length > 0)
+            .map((dFilter) => {
+              let mapFilter = [];
+
+              const filterValue = dFilter.values;
+              const filterColumnClause = ["get", dFilter.column_name];
+              //"in" Allows for `or`, i.e. ogc_fid = 123 or 456
+              mapFilter = ["in", filterColumnClause, ["literal", filterValue]];
+              return mapFilter;
+            });
+        }
+        maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
   }, [layerProps]);
@@ -230,30 +279,49 @@ const ViewLayerRender = ({
 const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
-  const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
-  if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
+
+  const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0) 
+
+  const dataFilterCols =
+    layerProps?.filterGroupEnabled && layerProps?.["filter-group"]?.length > 0
+      ? layerProps?.["filter-group"]
+          ?.map((filterObj) => filterObj.column_name)
+      : [layerProps?.["data-column"]];
+  
+  const dynamicCols = layerProps?.["dynamic-filters"]
+    ?.filter((dFilter) => dFilter?.values?.length > 0)
+    .map((dFilter) => dFilter.column_name); 
+  const colsToAppend = dataFilterCols.concat(dynamicCols).filter(onlyUnique).filter(col => !!col).join(",")
+
+  if (newTileUrl && (colsToAppend || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
     }
 
     const splitUrl = newTileUrl.split("?cols=");
-    //If we have a data column, and the URL has nothing after the ?cols=, append data column
-    if (layerProps?.["data-column"] && splitUrl[1].length === 0) {
-      newTileUrl += layerProps?.["data-column"];
+    //If layerProps has a data column, and the URL has nothing after the ?cols=, append data column
+    if (colsToAppend && splitUrl[1].length === 0) {
+      newTileUrl += colsToAppend;
     }
 
-    //If we have a data column, and the URL already has something after the ?cols=, replace it with data column
-    if (layerProps?.["data-column"] && splitUrl[1].length > 0) {
-      newTileUrl = newTileUrl.replace(splitUrl[1], layerProps?.["data-column"]);
+    //If layerProps has a data column, and the URL already has something after the ?cols=, replace it with data column
+    if (colsToAppend && splitUrl[1].length > 0) {
+      newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
     }
 
-    if (newTileUrl.includes(layerProps?.["data-column"]) && layerHasFilter) {
+    if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
       newTileUrl += ",";
     }
 
     if (layerHasFilter) {
       Object.keys(layerProps.filter).forEach((filterCol, i) => {
-        newTileUrl += `${filterCol}`;
+        //TODO actually handle calculated columns
+        if(filterCol.includes("rpad(substring(prop_class, 1, 1), 3, '0')")){
+          newTileUrl += `prop_class`;
+        }
+        else {
+          newTileUrl += `${filterCol}`;
+        }
 
         if (i < Object.keys(layerProps.filter).length - 1) {
           newTileUrl += ",";

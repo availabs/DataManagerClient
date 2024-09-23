@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useContext, Fragment } from "react";
+import React, { useEffect, useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
-  Transition,
-  TransitionChild,
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
@@ -124,8 +122,7 @@ const getAttributes = (data) =>
 export default function NpmrdsManage({
   source,
   views,
-  activeViewId,
-  ...props
+  activeViewId
 }) {
   const { user: ctxUser, pgEnv } = useContext(DamaContext);
   const { falcor, falcorCache } = useFalcor();
@@ -140,11 +137,11 @@ export default function NpmrdsManage({
 
   useEffect(() => {
     const fetchData = async () => {
-      const lengthPath = ["dama", "npmrds", "sources", "length"];
+      const lengthPath = ["dama", pgEnv, "sources", "length"];
       const resp = await falcor.get(lengthPath);
       await falcor.get([
         "dama",
-        "npmrds",
+        pgEnv,
         "sources",
         "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
@@ -158,7 +155,7 @@ export default function NpmrdsManage({
 
   const npmrdsRawSourcesId = useMemo(() => {
     return Object.values(
-      get(falcorCache, ["dama", "npmrds", "sources", "byIndex"], {})
+      get(falcorCache, ["dama", pgEnv, "sources", "byIndex"], {})
     )
       .map((v) =>
         getAttributes(
@@ -173,7 +170,7 @@ export default function NpmrdsManage({
     const getData = async () => {
       const lengthPath = [
         "dama",
-        "npmrds",
+        pgEnv,
         "sources",
         "byId",
         npmrdsRawSourcesId,
@@ -185,7 +182,7 @@ export default function NpmrdsManage({
 
       const requests = npmrdsRawSourcesId.map((s_id) => [
         "dama",
-        "npmrds",
+        pgEnv,
         "sources",
         "byId",
         s_id,
@@ -196,7 +193,7 @@ export default function NpmrdsManage({
           to:
             get(
               resp.json,
-              ["dama", "npmrds", "sources", "byId", s_id, "views", "length"],
+              ["dama", pgEnv, "sources", "byId", s_id, "views", "length"],
               0
             ) - 1,
         },
@@ -217,7 +214,7 @@ export default function NpmrdsManage({
             falcorCache,
             [
               "dama",
-              "npmrds",
+              pgEnv,
               "sources",
               "byId",
               source_id,

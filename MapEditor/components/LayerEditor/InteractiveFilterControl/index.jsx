@@ -6,7 +6,8 @@ import get from 'lodash/get'
 import set from 'lodash/set'
 import StyleEditor from '../StyleEditor';
 
-function InteractiveFilterControl({ path, params = {} }) {
+function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
+  const { enableBuilder } = params;
   const { state, setState } = React.useContext(SymbologyContext);
   const { value: interactiveFilters, selectedInteractiveFilterIndex, layerName, activeLayer } = useMemo(() => {
     return {
@@ -27,7 +28,6 @@ function InteractiveFilterControl({ path, params = {} }) {
       activeLayer: get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, {})
     };
   }, [state]);
-
   useEffect(() => {
     if(selectedInteractiveFilterIndex !== undefined && !interactiveFilters[selectedInteractiveFilterIndex]){
       setState(draft => {
@@ -35,13 +35,12 @@ function InteractiveFilterControl({ path, params = {} }) {
       })
     }
   }, [interactiveFilters])
-
-  const shouldDisplayInteractiveBuilder = selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
+  const shouldDisplayInteractiveBuilder = enableBuilder && selectedInteractiveFilterIndex !== undefined && selectedInteractiveFilterIndex !== null;
   return (
     <div className=" w-full items-center mt-2">
       <div className='w-full text-slate-500 text-[14px] flex justify-between '>
         Interactive Filters
-        <Button
+        {enableBuilder && <Button
           themeOptions={{ size: "xs", color: 'primary' }}
           className={"col-span-2 capitalize mb-2"}
           onClick={() => {
@@ -56,7 +55,8 @@ function InteractiveFilterControl({ path, params = {} }) {
                 'filter-group': [],
                 'filter-group-name': '',
                 'view-group-name': '',
-                'filter-source-views': []
+                'filter-source-views': [],
+                'interactive-filters': null
               }
               const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
               set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
@@ -65,7 +65,7 @@ function InteractiveFilterControl({ path, params = {} }) {
           }}
         >
           <Plus className='fill-gray-200'/>
-        </Button>
+        </Button>}
       </div>
       {
         interactiveFilters.map((iFilter,i) => {
@@ -91,7 +91,7 @@ function InteractiveFilterControl({ path, params = {} }) {
               <div className="truncate col-span-10">
                 {iFilter.label}
               </div>
-              <div
+              {enableBuilder && <div
                 className="col-span-1 flex items-center cursor-pointer group-hover/title:fill-slate-700 hover:bg-slate-100 rounded group/icon p-0.5"
                 onClick={() => {
                   setState(draft => {
@@ -108,7 +108,7 @@ function InteractiveFilterControl({ path, params = {} }) {
                   size={20}
                   className="m-0.5 cursor-pointer group-hover/icon:fill-slate-900 "
                 />
-              </div>
+              </div>}
             </div>
           )
         })
