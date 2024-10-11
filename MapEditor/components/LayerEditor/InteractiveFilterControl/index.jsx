@@ -40,79 +40,72 @@ function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
     <div className=" w-full items-center mt-2">
       <div className='w-full text-slate-500 text-[14px] flex justify-between '>
         Interactive Filters
-        {enableBuilder && <Button
-          themeOptions={{ size: "xs", color: 'primary' }}
-          className={"col-span-2 capitalize mb-2"}
-          onClick={() => {
+        {enableBuilder && <div className="flex justify-end">
+          <Button
+            themeOptions={{ size: "xs", color: 'danger' }}
+            className={"col-span-2 capitalize mb-2 mr-6"}
+            onClick={() => {
+              setState(draft => {
+                const oldInteractiveFilters = get(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}].${path}`
+                )
+                oldInteractiveFilters.splice(selectedInteractiveFilterIndex,1);
+                set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, oldInteractiveFilters )
+              })
+            }}
+          >
+            <Close size={12} className='fill-gray-200'/>
+          </Button>
+          <Button
+            themeOptions={{ size: "xs", color: 'primary' }}
+            className={"col-span-2 capitalize mb-2"}
+            onClick={() => {
+              setState(draft => {
+                const newInteractiveFilter = {
+                  ...activeLayer,
+                  "layer-type": 'simple',
+                  "label": `${layerName}`,
+                  selectedInteractiveFilterIndex: undefined,
+                  filterGroupEnabled: false,
+                  viewGroupEnabled: false,
+                  'filter-group': [],
+                  'filter-group-name': '',
+                  'view-group-name': '',
+                  'filter-source-views': [],
+                  'interactive-filters': null
+                }
+                const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
+                set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
+                set(draft,`symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, newInteractiveFilters.length-1 )
+              })
+            }}
+          >
+            <Plus className='fill-gray-200 p-0.5'/>
+          </Button>
+        </div>
+      }
+      </div>
+      <div 
+        className='w-full p-2 bg-blue-100 text-slate-700 text-sm mb-2 rounded'>
+        <select
+          className='bg-blue-100 w-full'
+          value={selectedInteractiveFilterIndex}
+          onChange={(e) => {
             setState(draft => {
-              const newInteractiveFilter = {
-                ...activeLayer,
-                "layer-type": 'simple',
-                "label": `${layerName}`,
-                selectedInteractiveFilterIndex: undefined,
-                filterGroupEnabled: false,
-                viewGroupEnabled: false,
-                'filter-group': [],
-                'filter-group-name': '',
-                'view-group-name': '',
-                'filter-source-views': [],
-                'interactive-filters': null
-              }
-              const newInteractiveFilters = [...interactiveFilters, newInteractiveFilter];
-              set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, newInteractiveFilters )
-              set(draft,`symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, newInteractiveFilters.length-1 )
+              set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, e.target.value)
             })
           }}
         >
-          <Plus className='fill-gray-200'/>
-        </Button>}
+          {(interactiveFilters || [])
+            .map((iFilter, i) => {
+              return (
+                <option key={i} value={i}>{iFilter.label}</option>
+              )
+          })}
+        </select>
       </div>
-      {
-        interactiveFilters.map((iFilter,i) => {
-          const isSelectedFilter = selectedInteractiveFilterIndex === i;
-          return (
-            <div
-              key={`ifilter_row_${i}`}
-              className={`group/title w-full text-sm grid grid-cols-12 items-center rounded mb-2 ${isSelectedFilter && 'bg-blue-100'}`}
-            >
-              <div
-                className="truncate col-span-1 flex justify-center items-center"
-              >
-                <input
-                  type="radio"
-                  checked={isSelectedFilter}
-                  onChange={() => {
-                    setState(draft => {
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`, i)
-                    })
-                  }}
-                />
-              </div>  
-              <div className="truncate col-span-10">
-                {iFilter.label}
-              </div>
-              {enableBuilder && <div
-                className="col-span-1 flex items-center cursor-pointer group-hover/title:fill-slate-700 hover:bg-slate-100 rounded group/icon p-0.5"
-                onClick={() => {
-                  setState(draft => {
-                    const oldInteractiveFilters = get(
-                      draft,
-                      `symbology.layers[${state.symbology.activeLayer}].${path}`
-                    )
-                    oldInteractiveFilters.splice(i,1);
-                    set(draft,`symbology.layers[${state.symbology.activeLayer}].${path}`, oldInteractiveFilters )
-                  })
-                }}
-              >
-                <Close
-                  size={20}
-                  className="m-0.5 cursor-pointer group-hover/icon:fill-slate-900 "
-                />
-              </div>}
-            </div>
-          )
-        })
-      }
+
       {
         shouldDisplayInteractiveBuilder && <InteractiveFilterbuilder />
       }
