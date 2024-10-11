@@ -29,6 +29,7 @@ function FilterEditor(props) {
 
     return {
       pathBase,
+      layerType,
       existingFilter: get(
         state,
         `symbology.layers[${state.symbology.activeLayer}]${pathBase}['filter']`,
@@ -108,12 +109,12 @@ function FilterEditor(props) {
           params={{ activeColumn: activeFilterColumn, setActiveColumn: setActiveFilterColumn }}
         />
       )}
-      {/* <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
+      <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
         Dynamic Filters
       </div>
       <DynamicFilterBuilder 
         path={`${pathBase}['dynamic-filters']`}
-      /> */}
+      />
     </div>
   );
 }
