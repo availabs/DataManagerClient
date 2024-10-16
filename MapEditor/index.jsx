@@ -224,6 +224,7 @@ const MapEditor = () => {
           draft.symbology.layers[draft?.symbology?.activeLayer] = {
             ...draftActiveLayer,
             ...draftInteractiveFilter,
+            name: draftActiveLayer.name,
             filter: draftInteractiveFilter.filter ?? {},
             order: draftActiveLayer.order,
             "layer-type": "interactive",

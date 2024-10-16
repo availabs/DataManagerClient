@@ -201,10 +201,11 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
 
+  const layerTitle = layer.name ?? filterGroupName
   const legendTitle = (
     <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
-      {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-      {layer.name ?? filterGroupName}
+      {shouldDisplayColorSquare && <div className='pl-1 flex'><Symbol layer={layer} color={paintValue}/>{layerTitle}</div>}
+      {!shouldDisplayColorSquare && layerTitle}
       <div className='flex'>
         <div className='text-sm pt-1  flex items-center'>
           <LayerMenu 
