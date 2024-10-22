@@ -111,7 +111,7 @@ export default function PublishButton({ state, dispatch }) {
     <div>
       <div>
         <button
-          className={`cursor-pointer py-4 px-8 ${publishButtonBgColor} border-none`}
+          className={`cursor-pointer py-4 px-8 ${publishButtonBgColor} border-none my-2`}
           //disabled={publishStatus'AWAITING'}
           onClick={() => {
             console.log('onClick publush', publishStatus)
