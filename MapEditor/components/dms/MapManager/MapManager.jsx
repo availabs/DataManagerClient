@@ -454,7 +454,7 @@ function TabPanel ({tabIndex, tab}) {
       {/* --- Header --- */}
       <div className='flex'>
         <div className='flex-1 items-center'>
-         <input 
+         {state.isEdit && <input 
             type="text"
             className='border w-[180px] font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
             value={tab.name}
@@ -462,7 +462,10 @@ function TabPanel ({tabIndex, tab}) {
                
                 draft.tabs[tabIndex].name = e.target.value                           
             })}
-          />
+          />}
+          {
+            !state.isEdit && <div className='font-medium py-1 px-2 text-slate-800'>{tab.name}</div>
+          }
         </div>
         {state.isEdit && (
           <div className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center flex'
