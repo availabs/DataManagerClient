@@ -602,9 +602,10 @@ function MapManager () {
   
   // console.log('MapManager', state)
 
+  const containerOverflow = state.isEdit ? 'overflow-x-auto overflow-x-visible' : 'overflow-y-auto';
   return(
     <div className='p-4'>
-      <div className='bg-white/95 w-[340px] overflow-x-auto overflow-x-visible rounded-lg drop-shadow-lg pointer-events-auto  min-h-[400px] max-h-[calc(100vh_-_111px)] scrollbar-sm '>
+      <div className={`bg-white/95 w-[340px] ${containerOverflow} rounded-lg drop-shadow-lg pointer-events-auto  min-h-[400px] max-h-[calc(100vh_-_111px)] scrollbar-sm `}>
         <Tab.Group className='flex'>
           <div className='flex flex-col justify-between items-center border-r'>
             <Tab.List className='flex w-[40px] flex-1 flex-col '>
