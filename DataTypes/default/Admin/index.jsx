@@ -39,7 +39,6 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const { falcor, pgEnv } = useContext(DamaContext);
 
   const { auth } = source?.statistics ?? {};
-  const currentSourceUserIds = auth?.users ? Object.keys(auth?.users) : [];
 
   const updateAuth = useMemo(() => {
     return async (newAuth) => {
@@ -73,7 +72,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   }, [falcor, pgEnv, source.source_id]);
 
   const addUserAuth = useMemo(() => {
-    return async ({ userId }) => {
+    return async ({ rowKey: userId }) => {
       const newAuth = { auth: { ...auth } };
       newAuth.auth["users"][userId] = -1;
       console.log("newAuth, addUserAuth::", newAuth);
@@ -82,7 +81,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   }, [auth, updateAuth]);
 
   const removeUserAuth = useMemo(() => {
-    return async ({ userId }) => {
+    return async ({ rowKey: userId }) => {
       const newAuth = { auth: { ...auth } };
       delete newAuth.auth["users"][userId];
       console.log("newAuth, removeUserAuth::", newAuth);
@@ -91,7 +90,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   }, [auth, updateAuth]);
 
   const setUserAuth = useMemo(() => {
-    return async ({ userId, authLevel }) => {
+    return async ({ rowKey: userId, authLevel }) => {
       const newAuth = { auth: { ...auth } };
       newAuth.auth["users"][userId] = authLevel;
       console.log("newAuth,setUserAuth::", newAuth);
@@ -99,10 +98,44 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
     };
   }, [auth, updateAuth]);
 
+  const addGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName }) => {
+      const newAuth = { auth: { ...auth } };
+      newAuth.auth["groups"][groupName] = -1;
+      console.log("newAuth, addGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [auth, updateAuth]);
+
+  const removeGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName }) => {
+      const newAuth = { auth: { ...auth } };
+      delete newAuth.auth["groups"][groupName];
+      console.log("newAuth, removeGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [auth, updateAuth]);
+
+  const setGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName, authLevel }) => {
+      const newAuth = { auth: { ...auth } };
+      newAuth.auth["groups"][groupName] = authLevel;
+      console.log("newAuth,setGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [auth, updateAuth]);
+
+  const currentSourceUserIds = auth?.users ? Object.keys(auth?.users) : [];
   const otherUsers = users.filter(
     (allUser) => !currentSourceUserIds.includes(JSON.stringify(allUser.id))
   );
+  const currentGroupNames = auth?.groups ? Object.keys(auth?.groups) : [];
+  const otherGroups = groups.filter(
+    (allGroup) => !currentGroupNames.includes(JSON.stringify(allGroup.name))
+  );
 
+  const groupRows = [...groups];
+  groupRows.push({ name: "public" });
   return (
     <div
       className={`${
@@ -153,13 +186,34 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
         )}
       </AdminPageTile>
       <AdminPageTile title="Group Access Controls" tileWidth="sm:max-w-lg">
-        Groups...
+        {currentGroupNames.length > 0 && (
+          <>
+            <div className="grid grid-cols-6 gap-2">
+              <div className="col-span-2 font-bold">Name</div>
+              <div className="col-span-2">Authority Level</div>
+            </div>
+            <div className="grid grid-cols-6 gap-2 items-center">
+              {currentGroupNames.map((groupName, i) => (
+                <UserRow
+                  removeUserAuth={removeGroupAuth}
+                  setUserAuth={setGroupAuth}
+                  key={groupName}
+                  user={
+                    groupRows?.find((group) => group.name === groupName) ?? {}
+                  }
+                  authLevel={auth.groups[groupName]}
+                  loggedInUser={loggedInUser}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </AdminPageTile>
     </div>
   );
 };
-//TODO -- when makiung group component, can prob reuse a lot of it, just need to make some things a little more agnostic
 const UserRow = (props) => {
+
   const {
     user,
     loggedInUser,
@@ -169,10 +223,13 @@ const UserRow = (props) => {
   } = props;
 
   const [authLevel, setAuthLevel] = useState(initialAuthLevel);
+  const displayName =
+    user.name ?? user?.preferences?.display_name ?? user.email;
 
-  //Get user metadata from list of users (name/display_name)
-  //get auth level for user from list of users -- statistics.auth["users"][userId]
-  const displayName = user?.preferences?.display_name ?? user.email;
+  //users have ids
+  //groups have names
+  const rowKey = user.id ? "id" : "name";
+
   return (
     <>
       <div className="col-span-2">{displayName}</div>
@@ -192,7 +249,7 @@ const UserRow = (props) => {
           type="submit"
           disabled={initialAuthLevel === authLevel}
           onClick={async () => {
-            setUserAuth({ userId: user.id, authLevel });
+            setUserAuth({ rowKey: user[rowKey], authLevel });
           }}
         >
           confirm
@@ -203,7 +260,7 @@ const UserRow = (props) => {
           themeOptions={{ size: "sm", color: "cancel" }}
           type="submit"
           onClick={async () => {
-            removeUserAuth({ userId: user.id });
+            removeUserAuth({ rowKey: user[rowKey] });
           }}
         >
           remove
