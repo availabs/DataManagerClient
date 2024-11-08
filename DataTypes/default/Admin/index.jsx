@@ -145,19 +145,16 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
       <div className="w-full">
         <h2 className="text-xl font-medium text-gray-900">Admin</h2>
       </div>
-      <AdminPageTile title="User Access Controls" tileWidth="sm:max-w-lg">
+      <AdminPageTile title="User Access Controls" tileWidth="w-full">
         <div className="mb-4">
           <Select
             searchable={true}
             domain={otherUsers}
             accessor={(g) => g.id}
             listAccessor={(g) => g.email}
-            displayAccessor={(g) => g?.preferences?.display_name ?? g.email}
             placeholder="Add user access..."
             onChange={async (v) => {
-              const newAuth = { auth: { ...auth } };
-              newAuth.auth["users"][v.id] = -1;
-              addUserAuth({ userId: v.id });
+              addUserAuth({ rowKey: v.id });
             }}
           />
         </div>
@@ -185,7 +182,20 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
           </>
         )}
       </AdminPageTile>
-      <AdminPageTile title="Group Access Controls" tileWidth="sm:max-w-lg">
+      <AdminPageTile title="Group Access Controls" tileWidth="w-full">
+        <div className="mb-4">
+          <Select
+            searchable={true}
+            domain={otherGroups}
+            accessor={(g) => g.name}
+            listAccessor={(g) => g.name}
+            displayAccessor={(g) => g.name}
+            placeholder="Add group access..."
+            onChange={async (v) => {
+              addGroupAuth({ rowKey: v.name });
+            }}
+          />
+        </div>
         {currentGroupNames.length > 0 && (
           <>
             <div className="grid grid-cols-6 gap-2">
@@ -213,7 +223,6 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   );
 };
 const UserRow = (props) => {
-
   const {
     user,
     loggedInUser,
@@ -280,7 +289,7 @@ const AdminPageTile = ({ children, title = "", tileWidth = "sm:max-w-md" }) => {
           myTheme.tile ?? "bg-white py-8 px-4 shadow-lg sm:rounded-md sm:px-10"
         }  min-height-[400px]`}
       >
-        <div className="sm:w-full sm:max-w-md  border-gray-200">
+        <div className="sm:w-full border-gray-200">
           <h2 className="text-xl font-medium text-gray-900 mb-2">{title}</h2>
           {children}
         </div>
