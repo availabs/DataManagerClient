@@ -3,6 +3,8 @@ import { ThemeContext, Input, Button } from "~/modules/avl-components/src";
 import Select from "~/modules/avl-components/src/components/Inputs/select";
 import { DamaContext } from "~/pages/DataManager/store";
 import { wrappers } from "~/modules/ams/src";
+import { Link } from "react-router-dom";
+import TaskList from "~/pages/DataManager/Tasks/TaskList";
 const amsReduxWrapper = wrappers["ams-redux"];
 
 const ReduxedAdminPage = amsReduxWrapper((props) => {
@@ -36,7 +38,7 @@ const ReduxedAdminPage = amsReduxWrapper((props) => {
 
 const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const myTheme = useContext(ThemeContext);
-  const { falcor, pgEnv } = useContext(DamaContext);
+  const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
 
   const { auth } = source?.statistics ?? {};
 
@@ -145,7 +147,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
       <div className="w-full">
         <h2 className="text-xl font-medium text-gray-900">Admin</h2>
       </div>
-      <AdminPageTile title="User Access Controls" tileWidth="w-full">
+      <AdminPageTile title="User Access Controls" tileWidth="w-2/3">
         <div className="mb-4">
           <Select
             searchable={true}
@@ -182,7 +184,39 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
           </>
         )}
       </AdminPageTile>
-      <AdminPageTile title="Group Access Controls" tileWidth="w-full">
+      <AdminPageTile title="Admin Actions" tileWidth="w-[30%]">
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"
+            }
+            to={`${baseUrl}/source/${source.source_id}/meta_advanced`}
+          >
+            Advanced Metadata <i className="fa fa-circle-info" />
+          </Link>
+        </div>
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"
+            }
+            to={`${baseUrl}/source/${source.source_id}/add_version`}
+          >
+            Add Version <i className="fad fa-upload" />
+          </Link>
+        </div>
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"
+            }
+            to={`${baseUrl}/delete/source/${source.source_id}`}
+          >
+            Delete <i className="fad fa-trash" />
+          </Link>
+        </div>
+      </AdminPageTile>
+      <AdminPageTile title="Group Access Controls" tileWidth="w-2/3">
         <div className="mb-4">
           <Select
             searchable={true}
@@ -218,6 +252,11 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
             </div>
           </>
         )}
+      </AdminPageTile>
+
+
+      <AdminPageTile title="Events" tileWidth="w-full">
+        <TaskList sourceId={source.source_id} />
       </AdminPageTile>
     </div>
   );
@@ -283,11 +322,11 @@ const AdminPageTile = ({ children, title = "", tileWidth = "sm:max-w-md" }) => {
   const myTheme = useContext(ThemeContext);
 
   return (
-    <div className={`mt-8 sm:w-full ${tileWidth}`}>
+    <div className={`mt-8 ${tileWidth}`}>
       <div
         className={`${
           myTheme.tile ?? "bg-white py-8 px-4 shadow-lg sm:rounded-md sm:px-10"
-        }  min-height-[400px]`}
+        } h-full min-height-[400px]`}
       >
         <div className="sm:w-full border-gray-200">
           <h2 className="text-xl font-medium text-gray-900 mb-2">{title}</h2>
