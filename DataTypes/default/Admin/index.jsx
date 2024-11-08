@@ -113,15 +113,14 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
         <h2 className="text-xl font-medium text-gray-900">Admin</h2>
       </div>
       <AdminPageTile title="User Access Controls" tileWidth="sm:max-w-lg">
-        <div>
-          <div>Add User:</div>
+        <div className="mb-4">
           <Select
             searchable={true}
             domain={otherUsers}
             accessor={(g) => g.id}
             listAccessor={(g) => g.email}
             displayAccessor={(g) => g?.preferences?.display_name ?? g.email}
-            placeholder="Add access for user..."
+            placeholder="Add user access..."
             onChange={async (v) => {
               const newAuth = { auth: { ...auth } };
               newAuth.auth["users"][v.id] = -1;
@@ -131,11 +130,11 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
         </div>
         {currentSourceUserIds.length > 0 && (
           <>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-6 gap-2">
               <div className="col-span-2 font-bold">Name</div>
-              <div className="col-span-1">Authority Level</div>
+              <div className="col-span-2">Authority Level</div>
             </div>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-6 gap-2 items-center">
               {currentSourceUserIds.map((sourceUserId, i) => (
                 <UserRow
                   removeUserAuth={removeUserAuth}
@@ -177,7 +176,7 @@ const UserRow = (props) => {
   return (
     <>
       <div className="col-span-2">{displayName}</div>
-      <div className="col-span-1 grid">
+      <div className="col-span-2 grid">
         <Input
           type="number"
           min="-1" //-1 means no access
