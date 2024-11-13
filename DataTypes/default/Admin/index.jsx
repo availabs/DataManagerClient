@@ -103,7 +103,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const addGroupAuth = useMemo(() => {
     return async ({ rowKey: groupName }) => {
       const newAuth = { auth: { ...auth } };
-      newAuth.auth["groups"][groupName] = -1;
+      newAuth.auth["groups"][groupName] = "-1";
       console.log("newAuth, addGroupAuth::", newAuth);
       await updateAuth(newAuth);
     };
