@@ -22,12 +22,6 @@ const Source = ({}) => {
   // console.log('source page: ');
   const userAuthLevel = user.authLevel;
 
-  const Page = useMemo(() => {
-    return page
-      ? get(pages, `[${page}].component`, pages["overview"].component)
-      : pages["overview"].component;
-  }, [page, pages]);
-
   useEffect(() => {
     async function fetchData() {
       //console.time("fetch data");
@@ -102,7 +96,6 @@ const Source = ({}) => {
 
   const sourceAuthLevel = baseUserViewAccess(source?.statistics?.access || {});
   const sourceAuth = source?.statistics?.auth;
-
   const [searchParams, setSearchParams] = useSearchParams();
 
   const makeUrl = React.useCallback(d => {
@@ -114,20 +107,37 @@ const Source = ({}) => {
   }, [baseUrl, sourceId, activeViewId, searchParams])
 
   const hasAuthData = React.useMemo(() => {
-    return user.id && sourceAuth
-  }, [sourceAuth, user])
+    return !user.isAuthenticating && sourceAuth;
+  }, [sourceAuth, user]);
 
   const { authUsers, authGroups } = React.useMemo(() => {
-    return {authUsers: get(sourceAuth, ['users'], {}), authGroups:get(sourceAuth, ['users'], {})}
-  }, [sourceAuth])
+    return {
+      authUsers: get(sourceAuth, ["users"], {}),
+      authGroups: get(sourceAuth, ["users"], {}),
+    };
+  }, [sourceAuth]);
 
-  const doesUserPassSourceAuth =
+  const Page = useMemo(() => {
+    return page
+      ? get(pages, `[${page}].component`, pages["overview"].component)
+      : pages["overview"].component;
+  }, [page, pages, Pages, sourceAuth]);
+
+  const doesUserHaveViewPermission =
     hasAuthData &&
-    (Object.keys(authUsers).includes(user.id.toString()) ||
-      Object.keys(authGroups).includes(user.group));
+    (Object.keys(authUsers).includes(user?.id?.toString()) ||
+      Object.keys(authGroups).some((authGroupName) =>
+        user?.groups.includes(authGroupName)
+      ));
+
+  const userSourceAuth = authUsers[user.id];
+  const doesUserPassPagePermission =
+    hasAuthData && Pages[page].authLevel <= userSourceAuth;
 
   if (
-    sourceAuthLevel > userAuthLevel || (hasAuthData && !doesUserPassSourceAuth)
+    sourceAuthLevel > userAuthLevel ||
+    (hasAuthData &&
+      (!doesUserHaveViewPermission || !doesUserPassPagePermission))
   ) {
     return <NoMatch />;
   } 
@@ -139,7 +149,6 @@ const Source = ({}) => {
               .filter(d => {
                 const authLevel = d?.authLevel || -1
                 const userAuth = user.authLevel || -1
-                const userSourceAuth = authUsers[user.id];
 
                 return !d.hidden && (authLevel <= userAuth) && (authLevel <= userSourceAuth)
               })
