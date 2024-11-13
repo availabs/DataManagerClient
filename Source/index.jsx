@@ -101,6 +101,7 @@ const Source = ({}) => {
   }, [falcorCache, sourceId, pgEnv]);
 
   const sourceAuthLevel = baseUserViewAccess(source?.statistics?.access || {});
+  const sourceAuth = source?.statistics?.auth;
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -111,35 +112,36 @@ const Source = ({}) => {
     })
     return `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
   }, [baseUrl, sourceId, activeViewId, searchParams])
- 
-  if(sourceAuthLevel > userAuthLevel) {
-    return  <NoMatch />
-  } 
 
+  const hasAuthData = React.useMemo(() => {
+    return user.id && sourceAuth
+  }, [sourceAuth, user])
+
+  const { authUsers, authGroups } = React.useMemo(() => {
+    return {authUsers: get(sourceAuth, ['users'], {}), authGroups:get(sourceAuth, ['users'], {})}
+  }, [sourceAuth])
+
+  const doesUserPassSourceAuth =
+    hasAuthData &&
+    (Object.keys(authUsers).includes(user.id.toString()) ||
+      Object.keys(authGroups).includes(user.group));
+
+  if (
+    sourceAuthLevel > userAuthLevel || (hasAuthData && !doesUserPassSourceAuth)
+  ) {
+    return <NoMatch />;
+  } 
   return (
      
         <SourcesLayout baseUrl={baseUrl}>
-          {/*<div className='flex w-full p-2 border-b items-center'>
-            <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
-              {source.display_name || source.name}
-            </div>
-            <div className='flex-1'></div>
-            <div className='py-2'>
-              { user && user.authLevel >= 10 ?
-                <Link
-                  className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
-                  to={`${baseUrl}/delete/source/${source.source_id}/`}>
-                    <i className='fad fa-trash' />
-                </Link> : ''
-              }
-            </div>
-          </div>*/}
           <TopNav
             menuItems={Object.values(pages)
               .filter(d => {
                 const authLevel = d?.authLevel || -1
                 const userAuth = user.authLevel || -1
-                return !d.hidden && (authLevel <= userAuth)
+                const userSourceAuth = authUsers[user.id];
+
+                return !d.hidden && (authLevel <= userAuth) && (authLevel <= userSourceAuth)
               })
               .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
               .map(d => {
