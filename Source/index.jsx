@@ -150,12 +150,12 @@ const Source = ({}) => {
   const doesUserPassPagePermission =
     hasAuthData && (Pages[page]?.authLevel ?? 0) <= userHighestAuth;
 
-  if (
-    (hasAuthData &&
-      (!doesUserPassPagePermission))
-  ) {
-    return <NoMatch />;
-  } 
+  // if (
+  //   (hasAuthData &&
+  //     (!doesUserPassPagePermission))
+  // ) {
+  //   return <NoMatch />;
+  // } 
   return (
      
         <SourcesLayout baseUrl={baseUrl}>
