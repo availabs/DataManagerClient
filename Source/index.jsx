@@ -13,6 +13,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 import baseUserViewAccess  from "../utils/authLevel";
 import { NoMatch } from "../utils/404";
 
+const PUBLIC_GROUP = 'Public';
 
 const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
@@ -94,7 +95,6 @@ const Source = ({}) => {
     return attributes;
   }, [falcorCache, sourceId, pgEnv]);
 
-  const sourceAuthLevel = baseUserViewAccess(source?.statistics?.access || {});
   const sourceAuth = source?.statistics?.auth;
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -113,7 +113,7 @@ const Source = ({}) => {
   const { authUsers, authGroups } = React.useMemo(() => {
     return {
       authUsers: get(sourceAuth, ["users"], {}),
-      authGroups: get(sourceAuth, ["users"], {}),
+      authGroups: get(sourceAuth, ["groups"], {}),
     };
   }, [sourceAuth]);
 
@@ -123,21 +123,36 @@ const Source = ({}) => {
       : pages["overview"].component;
   }, [page, pages, Pages, sourceAuth]);
 
-  const doesUserHaveViewPermission =
-    hasAuthData &&
-    (Object.keys(authUsers).includes(user?.id?.toString()) ||
-      Object.keys(authGroups).some((authGroupName) =>
-        user?.groups.includes(authGroupName)
-      ));
+  // const doesUserHaveViewPermission =
+  //   authGroups?.[PUBLIC_GROUP] > 0 ||
+  //   (hasAuthData &&
+  //     (Object.keys(authUsers).includes(user?.id?.toString()) ||
+  //       Object.keys(authGroups).some((authGroupName) =>
+  //         user?.groups.includes(authGroupName)
+  //       )));
 
-  const userSourceAuth = authUsers[user.id];
+  //Look at all groups in `authGroups`, get max value for all groups user is a member of
+  const userGroupAuth = Object.keys(authGroups).reduce((a,curGroupName) => {
+    let max = a;
+
+    if(user.groups.includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
+      //user is a member. take this authLevel if it is higher
+      if(parseInt(authGroups[curGroupName]) > max) {
+        max = parseInt(authGroups[curGroupName]);
+      }
+    }
+    return max;
+  }, -1);
+
+  const userSourceAuth = authUsers[user.id] ?? -1;
+  const userHighestAuth = Math.max(userGroupAuth, userSourceAuth)
+
   const doesUserPassPagePermission =
-    hasAuthData && Pages[page].authLevel <= userSourceAuth;
+    hasAuthData && (Pages[page]?.authLevel ?? 0) <= userHighestAuth;
 
   if (
-    sourceAuthLevel > userAuthLevel ||
     (hasAuthData &&
-      (!doesUserHaveViewPermission || !doesUserPassPagePermission))
+      (!doesUserPassPagePermission))
   ) {
     return <NoMatch />;
   } 
@@ -147,10 +162,9 @@ const Source = ({}) => {
           <TopNav
             menuItems={Object.values(pages)
               .filter(d => {
-                const authLevel = d?.authLevel || -1
+                const pageAuthLevel = d?.authLevel || -1
                 const userAuth = user.authLevel || -1
-
-                return !d.hidden && (authLevel <= userAuth) && (authLevel <= userSourceAuth)
+                return !d.hidden && (pageAuthLevel <= userAuth) && (pageAuthLevel <= userHighestAuth)
               })
               .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
               .map(d => {
