@@ -6,7 +6,7 @@ import { wrappers } from "~/modules/ams/src";
 import { Link } from "react-router-dom";
 import TaskList from "~/pages/DataManager/Tasks/TaskList";
 const amsReduxWrapper = wrappers["ams-redux"];
-
+const PUBLIC_GROUP = 'Public';
 const ReduxedAdminPage = amsReduxWrapper((props) => {
   const { user } = useContext(DamaContext);
   const { groups, source, users, getGroups, getUsers, getUsersPreferences } =
@@ -76,6 +76,9 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const addUserAuth = useMemo(() => {
     return async ({ rowKey: userId }) => {
       const newAuth = { auth: { ...auth } };
+      if(!newAuth.auth["users"]) {
+        newAuth.auth["users"] = {}
+      }
       newAuth.auth["users"][userId] = -1;
       console.log("newAuth, addUserAuth::", newAuth);
       await updateAuth(newAuth);
@@ -103,6 +106,9 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const addGroupAuth = useMemo(() => {
     return async ({ rowKey: groupName }) => {
       const newAuth = { auth: { ...auth } };
+      if(!newAuth.auth["groups"]) {
+        newAuth.auth["groups"] = {}
+      }
       newAuth.auth["groups"][groupName] = "-1";
       console.log("newAuth, addGroupAuth::", newAuth);
       await updateAuth(newAuth);
@@ -136,8 +142,12 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
     (allGroup) => !currentGroupNames.includes(JSON.stringify(allGroup.name))
   );
 
-  const groupRows = [...groups];
-  groupRows.push({ name: "public" });
+  if(!Object.keys(auth?.groups ?? {}).includes(PUBLIC_GROUP)) {
+    otherGroups.push({"name": PUBLIC_GROUP, authLevel: -1})
+  } else {
+    groups.push({"name": PUBLIC_GROUP })
+  }
+
   return (
     <div
       className={`${
@@ -243,7 +253,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
                   setUserAuth={setGroupAuth}
                   key={groupName}
                   user={
-                    groupRows?.find((group) => group.name === groupName) ?? {}
+                    groups?.find((group) => group.name === groupName) ?? {}
                   }
                   authLevel={auth.groups[groupName]}
                   loggedInUser={loggedInUser}
