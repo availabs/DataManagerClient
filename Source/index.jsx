@@ -21,7 +21,6 @@ const Source = ({}) => {
   const [ activeViewId, setActiveViewId ] = useState(viewId)
   const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
   // console.log('source page: ');
-  const userAuthLevel = user.authLevel;
 
   useEffect(() => {
     async function fetchData() {
@@ -106,9 +105,18 @@ const Source = ({}) => {
     return `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
   }, [baseUrl, sourceId, activeViewId, searchParams])
 
-  const hasAuthData = React.useMemo(() => {
-    return !user.isAuthenticating && sourceAuth;
-  }, [sourceAuth, user]);
+  const serverAuthedForSource = React.useMemo(() => {
+    let serverAuthedForSource = true;
+    if (
+      Object.keys(source).some((attrKey) => {
+        //"message" indicates error message was thrown
+        return source[attrKey] ? Object.keys(source[attrKey]).includes("message") : false;
+      })
+    ){
+      serverAuthedForSource = false;
+    }
+    return serverAuthedForSource;
+  }, [source])
 
   const { authUsers, authGroups } = React.useMemo(() => {
     return {
@@ -148,14 +156,21 @@ const Source = ({}) => {
   const userHighestAuth = Math.max(userGroupAuth, userSourceAuth)
 
   const doesUserPassPagePermission =
-    hasAuthData && (Pages[page]?.authLevel ?? 0) <= userHighestAuth;
+    !user.isAuthenticating && (Pages[page]?.authLevel ?? 1) <= userHighestAuth;
 
-  if (
-    (hasAuthData &&
-      (!doesUserPassPagePermission))
+  if (!(Object.keys(source).length > 0) || user.isAuthenticating) {
+    //todo loading spinner?
+    console.log("blank screen");
+    return <></>;
+  } else if (
+    Object.keys(source).length > 0 &&
+    !user.isAuthenticating &&
+    (!serverAuthedForSource || !doesUserPassPagePermission)
   ) {
+    console.log("no matching");
     return <NoMatch />;
-  } 
+  }
+
   return (
      
         <SourcesLayout baseUrl={baseUrl}>
