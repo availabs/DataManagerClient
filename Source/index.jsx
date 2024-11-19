@@ -24,26 +24,33 @@ const Source = ({}) => {
 
   useEffect(() => {
     async function fetchData() {
-      //console.time("fetch data");
-      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
-      const resp = await falcor.get(lengthPath);
-      let data = await falcor.get(
-        [
-          "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
-          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
-          "attributes", Object.values(ViewAttributes)
-        ],
-        [
-          "dama", pgEnv, "sources", "byId", sourceId,
-          "attributes", Object.values(SourceAttributes)
-        ],
-        [
-          "dama", pgEnv, "sources", "byId", sourceId, "meta"
-        ]
-      );
-      //console.timeEnd("fetch data");
-      //console.log(data)
-      return data;
+      try {
+        //console.time("fetch data");
+        console.log("fetching data")
+        const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+        const resp = await falcor.get(lengthPath);
+        let data = await falcor.get(
+          [
+            "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+            { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+            "attributes", Object.values(ViewAttributes)
+          ],
+          [
+            "dama", pgEnv, "sources", "byId", sourceId,
+            "attributes", Object.values(SourceAttributes)
+          ],
+          [
+            "dama", pgEnv, "sources", "byId", sourceId, "meta"
+          ]
+        );
+        //console.timeEnd("fetch data");
+        //console.log(data)
+        return data;
+      }
+      catch (e) {
+        console.log("e from fetching source::", e)
+      }
+
     }
 
     fetchData();
@@ -155,19 +162,17 @@ const Source = ({}) => {
   const userSourceAuth = authUsers[user.id] ?? -1;
   const userHighestAuth = Math.max(userGroupAuth, userSourceAuth)
 
-  const doesUserPassPagePermission =
-    !user.isAuthenticating && (Pages[page]?.authLevel ?? 1) <= userHighestAuth;
+  const sourceLoaded  = useMemo(() => {
+    return Object.keys(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { })).length > 0;
+  }, [falcorCache])
+  const doesUserPassPagePermission = sourceLoaded ? (Pages[page]?.authLevel ?? 1) <= userHighestAuth : false;
 
-  if (!(Object.keys(source).length > 0) || user.isAuthenticating) {
+  if (!sourceLoaded || user.isAuthenticating) {
     //todo loading spinner?
-    console.log("blank screen");
     return <></>;
   } else if (
-    Object.keys(source).length > 0 &&
-    !user.isAuthenticating &&
     (!serverAuthedForSource || !doesUserPassPagePermission)
   ) {
-    console.log("no matching");
     return <NoMatch />;
   }
 
