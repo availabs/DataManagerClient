@@ -10,10 +10,30 @@ import SourcesLayout from "./layout";
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
-import baseUserViewAccess  from "../utils/authLevel";
 import { NoMatch } from "../utils/404";
 
 const PUBLIC_GROUP = 'Public';
+
+const computeAuth = ({sourceAuth, user}) => {
+  const { authUsers, authGroups } = {
+    authUsers: get(sourceAuth, ["users"], {}),
+    authGroups: get(sourceAuth, ["groups"], {}),
+  };
+  const userGroupAuth = Object.keys(authGroups).reduce((a, curGroupName) => {
+    let max = a;
+
+    if(user.groups.includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
+      //user is a member. take this authLevel if it is higher
+      if(parseInt(authGroups[curGroupName]) > max) {
+        max = parseInt(authGroups[curGroupName]);
+      }
+    }
+    return max;
+  }, -1);
+
+  const userSourceAuth = authUsers[user.id] ?? -1;
+  return Math.max(userGroupAuth, userSourceAuth)
+}
 
 const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
@@ -125,42 +145,14 @@ const Source = ({}) => {
     return serverAuthedForSource;
   }, [source])
 
-  const { authUsers, authGroups } = React.useMemo(() => {
-    return {
-      authUsers: get(sourceAuth, ["users"], {}),
-      authGroups: get(sourceAuth, ["groups"], {}),
-    };
-  }, [sourceAuth]);
-
   const Page = useMemo(() => {
     return page
       ? get(pages, `[${page}].component`, pages["overview"].component)
       : pages["overview"].component;
   }, [page, pages, Pages, sourceAuth]);
 
-  // const doesUserHaveViewPermission =
-  //   authGroups?.[PUBLIC_GROUP] > 0 ||
-  //   (hasAuthData &&
-  //     (Object.keys(authUsers).includes(user?.id?.toString()) ||
-  //       Object.keys(authGroups).some((authGroupName) =>
-  //         user?.groups.includes(authGroupName)
-  //       )));
 
-  //Look at all groups in `authGroups`, get max value for all groups user is a member of
-  const userGroupAuth = Object.keys(authGroups).reduce((a,curGroupName) => {
-    let max = a;
-
-    if(user.groups.includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
-      //user is a member. take this authLevel if it is higher
-      if(parseInt(authGroups[curGroupName]) > max) {
-        max = parseInt(authGroups[curGroupName]);
-      }
-    }
-    return max;
-  }, -1);
-
-  const userSourceAuth = authUsers[user.id] ?? -1;
-  const userHighestAuth = Math.max(userGroupAuth, userSourceAuth)
+  const userHighestAuth = computeAuth({sourceAuth, user});
 
   const sourceLoaded  = useMemo(() => {
     return Object.keys(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { })).length > 0;
@@ -198,6 +190,7 @@ const Source = ({}) => {
           />
           <div className='w-full flex-1 bg-white shadow'>
             <Page
+              userHighestAuth={userHighestAuth}
               searchParams={ searchParams }
               setSearchParams={ setSearchParams }
               source={source}
