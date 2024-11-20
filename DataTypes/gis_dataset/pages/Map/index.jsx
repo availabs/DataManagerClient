@@ -181,7 +181,6 @@ const MapPage = ({source,views, HoverComp, showViewSelector=true, displayPinnedG
       // add tempSymbology as depen
   },[source, views, mapData, activeViewId, symSources, symLayers, displayPinnedGeomBorder])
 
-  console.log('Layer', layer)
 
   return (
     <div>
