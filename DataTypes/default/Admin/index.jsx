@@ -165,7 +165,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
             accessor={(g) => g.id}
             listAccessor={(g) => g.email}
             placeholder="Add user access..."
-            onChange={async (v) => {
+            onChange={(v) => {
               addUserAuth({ rowKey: v.id });
             }}
           />
@@ -178,7 +178,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
             </div>
             <div className="grid grid-cols-6 gap-2 items-center">
               {currentSourceUserIds.map((sourceUserId, i) => (
-                <UserRow
+                <AuthRow
                   removeUserAuth={removeUserAuth}
                   setUserAuth={setUserAuth}
                   key={sourceUserId}
@@ -235,7 +235,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
             listAccessor={(g) => g.name}
             displayAccessor={(g) => g.name}
             placeholder="Add group access..."
-            onChange={async (v) => {
+            onChange={(v) => {
               addGroupAuth({ rowKey: v.name });
             }}
           />
@@ -248,7 +248,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
             </div>
             <div className="grid grid-cols-6 gap-2 items-center">
               {currentGroupNames.map((groupName, i) => (
-                <UserRow
+                <AuthRow
                   removeUserAuth={removeGroupAuth}
                   setUserAuth={setGroupAuth}
                   key={groupName}
@@ -263,15 +263,14 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
           </>
         )}
       </AdminPageTile>
-
-
       <AdminPageTile title="Events" tileWidth="w-full">
         <TaskList sourceId={source.source_id} />
       </AdminPageTile>
     </div>
   );
 };
-const UserRow = (props) => {
+
+const AuthRow = (props) => {
   const {
     user,
     loggedInUser,
