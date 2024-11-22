@@ -40,7 +40,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const myTheme = useContext(ThemeContext);
   const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
 
-  const { auth } = source?.statistics ?? {};
+  const { auth: sourceAuth } = source?.statistics ?? {};
 
   const updateAuth = useMemo(() => {
     return async (newAuth) => {
@@ -75,74 +75,74 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
 
   const addUserAuth = useMemo(() => {
     return async ({ rowKey: userId }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       if(!newAuth.auth["users"]) {
         newAuth.auth["users"] = {}
       }
-      newAuth.auth["users"][userId] = -1;
+      newAuth.auth["users"][userId] = "1";
       console.log("newAuth, addUserAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
   const removeUserAuth = useMemo(() => {
     return async ({ rowKey: userId }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       delete newAuth.auth["users"][userId];
       console.log("newAuth, removeUserAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
   const setUserAuth = useMemo(() => {
     return async ({ rowKey: userId, authLevel }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       newAuth.auth["users"][userId] = authLevel;
       console.log("newAuth,setUserAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
   const addGroupAuth = useMemo(() => {
     return async ({ rowKey: groupName }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       if(!newAuth.auth["groups"]) {
         newAuth.auth["groups"] = {}
       }
-      newAuth.auth["groups"][groupName] = "-1";
+      newAuth.auth["groups"][groupName] = "1";
       console.log("newAuth, addGroupAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
   const removeGroupAuth = useMemo(() => {
     return async ({ rowKey: groupName }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       delete newAuth.auth["groups"][groupName];
       console.log("newAuth, removeGroupAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
   const setGroupAuth = useMemo(() => {
     return async ({ rowKey: groupName, authLevel }) => {
-      const newAuth = { auth: { ...auth } };
+      const newAuth = { auth: { ...sourceAuth } };
       newAuth.auth["groups"][groupName] = authLevel;
       console.log("newAuth,setGroupAuth::", newAuth);
       await updateAuth(newAuth);
     };
-  }, [auth, updateAuth]);
+  }, [sourceAuth, updateAuth]);
 
-  const currentSourceUserIds = auth?.users ? Object.keys(auth?.users) : [];
+  const currentSourceUserIds = sourceAuth?.users ? Object.keys(sourceAuth?.users) : [];
   const otherUsers = users.filter(
     (allUser) => !currentSourceUserIds.includes(JSON.stringify(allUser.id))
   );
-  const currentGroupNames = auth?.groups ? Object.keys(auth?.groups) : [];
+  const currentGroupNames = sourceAuth?.groups ? Object.keys(sourceAuth?.groups) : [];
   const otherGroups = groups.filter(
     (allGroup) => !currentGroupNames.includes(JSON.stringify(allGroup.name))
   );
 
-  if(!Object.keys(auth?.groups ?? {}).includes(PUBLIC_GROUP)) {
+  if(!Object.keys(sourceAuth?.groups ?? {}).includes(PUBLIC_GROUP)) {
     otherGroups.push({"name": PUBLIC_GROUP, authLevel: -1})
   } else {
     groups.push({"name": PUBLIC_GROUP })
@@ -186,7 +186,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
                     users?.find((user) => user.id === parseInt(sourceUserId)) ??
                     {}
                   }
-                  authLevel={auth.users[sourceUserId]}
+                  authLevel={sourceAuth.users[sourceUserId]}
                   loggedInUser={loggedInUser}
                 />
               ))}
@@ -255,7 +255,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
                   user={
                     groups?.find((group) => group.name === groupName) ?? {}
                   }
-                  authLevel={auth.groups[groupName]}
+                  authLevel={sourceAuth.groups[groupName]}
                   loggedInUser={loggedInUser}
                 />
               ))}
@@ -294,7 +294,7 @@ const UserRow = (props) => {
       <div className="col-span-2 grid">
         <Input
           type="number"
-          min="-1" //-1 means no access
+          min="1"
           max={loggedInUser.authLevel}
           required
           value={authLevel}
