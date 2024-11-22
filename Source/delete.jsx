@@ -32,14 +32,14 @@ async function getData({ falcor, pgEnv, sourceId }) {
 }
 
 const DeleteButton = ({ text }) => {
-  const { falcor, baseUrl, pgEnv } = React.useContext(DamaContext);
+  const { falcor, baseUrl, pgEnv, user } = React.useContext(DamaContext);
   const { sourceId } = useParams();
   const navigate = useNavigate();
 
   async function deleteSourceClick () {
     const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/deleteDamaSource`, {
       method: "POST",
-      body: JSON.stringify({ "source_id": sourceId }),
+      body: JSON.stringify({ "source_id": sourceId, token: user.token }),
       headers: {
         "Content-Type": "application/json"
       }

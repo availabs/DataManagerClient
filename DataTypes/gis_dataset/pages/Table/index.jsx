@@ -58,7 +58,8 @@ const TablePage = ({
   TableFilter = DefaultTableFilter,
   showViewSelector = true,
   fullWidth = false,
-  striped = false
+  striped = false,
+  userHighestAuth=0
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
@@ -186,7 +187,7 @@ const TablePage = ({
       <div className="flex">
         {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
-          data={tableData} columns={columns}/>
+          data={tableData} columns={columns} userHighestAuth={userHighestAuth}/>
         { showViewSelector ? <ViewSelector views={views} /> : '' }
       </div>
       <div className={tableContainerClassName} style={tableContainerStyle}>

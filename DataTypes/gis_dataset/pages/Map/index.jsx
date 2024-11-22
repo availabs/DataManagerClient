@@ -195,10 +195,9 @@ const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, se
   )
 }
 
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles }) => {
+const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles, userHighestAuth=0 }) => {
   const [searchParams] = useSearchParams();
   const urlVariable = searchParams.get("variable")
-
   const { viewId } = useParams();
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()
@@ -333,6 +332,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             activeView={activeView}
             activeViewId={activeViewId}
             layer={layer}
+            userHighestAuth={userHighestAuth}
         />
         {showViewSelector ? <ViewSelector views={views} /> : ''}
       </div>

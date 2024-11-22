@@ -48,6 +48,13 @@ export const getAttributes = (data) => {
     },{})
 }
 
+export const SOURCE_AUTH_CONFIG = {
+  "VIEW": 1,
+  "DOWNLOAD": 2,
+  "EDIT": 3,
+  "ADMIN" : 5
+};
+
 // export const getName = (source) => {
 //   return source.display_name && source.display_name.length > 0 ? 
 //   source.display_name : 
