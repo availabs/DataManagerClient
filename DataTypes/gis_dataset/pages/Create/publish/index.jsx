@@ -37,7 +37,8 @@ export default function PublishButton({ state, dispatch }) {
     email,
     customViewAttributes,
     sourceType,
-    mbtilesOptions
+    mbtilesOptions,
+    useMbTiles
   } = state
 
 // console.log("SOURCE TYPE:", sourceType)
@@ -78,6 +79,7 @@ export default function PublishButton({ state, dispatch }) {
           etlContextId,
           customViewAttributes,
           mbtilesOptions,
+          useMbTiles
         };
 
         const sourceTypeURL = sourceType === "csv_dataset" ? "csv-dataset" : "gis-dataset";
