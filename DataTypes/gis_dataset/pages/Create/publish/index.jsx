@@ -37,7 +37,8 @@ export default function PublishButton({ state, dispatch }) {
     email,
     customViewAttributes,
     sourceType,
-    mbtilesOptions
+    mbtilesOptions,
+    useMbTiles
   } = state
 
   const { 
@@ -76,6 +77,7 @@ export default function PublishButton({ state, dispatch }) {
           etlContextId,
           customViewAttributes,
           mbtilesOptions,
+          useMbTiles
         };
 
         const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
