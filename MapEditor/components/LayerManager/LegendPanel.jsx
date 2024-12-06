@@ -1,11 +1,12 @@
-import React, { useMemo, useContext } from 'react'
+import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
+import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -170,7 +171,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, initialViewId } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters } = useMemo(() => {
     return {
       initialViewId: get(layer,`initial-view-id`),
       sourceId: get(layer,`source_id`),
@@ -183,6 +184,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       filterGroupLegendColumn: get(layer, `['filter-group-legend-column']`, ''),
       viewGroup: get(layer, `['filter-source-views']`, []),
       viewGroupName: get(layer, `['view-group-name']`, ''),
+      dynamicFilters:get(layer, `['dynamic-filters']`, []),
     }
   },[state, layer]);
   const toggleSymbology = () => {
@@ -199,36 +201,35 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
 
+  const layerTitle = layer.name ?? filterGroupName
   const legendTitle = (
-    
-      <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
-        {shouldDisplayColorSquare && <div className='pl-1'><Symbol layer={layer} color={paintValue}/></div>}
-        {layer.name ?? filterGroupName}
-        <div className='flex'>
-          <div className='text-sm pt-1  flex items-center'>
-            <LayerMenu 
-              layer={layer}
-              button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
-            />
-          </div>
-          <CaretUpSolid
-            onClick={() => {
-              onRowMove(i, i-1)
-            }}
-            size={24}
-            className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+    <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
+      {shouldDisplayColorSquare && <div className='pl-1 flex'><Symbol layer={layer} color={paintValue}/>{layerTitle}</div>}
+      {!shouldDisplayColorSquare && layerTitle}
+      <div className='flex'>
+        <div className='text-sm pt-1  flex items-center'>
+          <LayerMenu 
+            layer={layer}
+            button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
           />
-          <CaretDownSolid
-            onClick={ () => {
-              onRowMove(i, i+1)
-            }}
-            size={24}
-            className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-          />
-          <VisibilityButton layer={layer}/>
         </div>
+        <CaretUpSolid
+          onClick={() => {
+            onRowMove(i, i-1)
+          }}
+          size={24}
+          className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+        />
+        <CaretDownSolid
+          onClick={ () => {
+            onRowMove(i, i+1)
+          }}
+          size={24}
+          className={`${i === numLayers-1 ? 'pointer-events-none' : ''} mr-[-3px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+        />
+        <VisibilityButton layer={layer}/>
       </div>
-
+    </div>
   );
 
   //----------------------------------
@@ -250,7 +251,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     }
   }, [sourceId, falcor, pgEnv]);
 
-  const views = useMemo(() => {
+  const views = React.useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
       .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
   }, [falcorCache, sourceId, pgEnv]);
@@ -378,6 +379,9 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
+  if(dynamicFilters.length > 0) {
+    groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer}/>)
+  }
   return (
     <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
       <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
@@ -430,4 +434,151 @@ function LegendPanel (props) {
   )
 }
 
+const DynamicFilter = ({layer}) => {
+  const { state, setState  } = React.useContext(SymbologyContext);
+  const { falcor, falcorCache, pgEnv } = useContext(DamaContext);
+  let { layerType, dynamicFilters, viewId } = useMemo(() => {
+    return {
+      viewId:get(layer,`view_id`),
+      layerType : get(layer, `['layer-type']`),
+      dynamicFilters:get(layer, `['dynamic-filters']`, []),
+    }
+  },[state, layer]);
+
+  const selectedColumnNames = dynamicFilters?.map(dynamicF => dynamicF.column_name);
+
+  React.useEffect(() => {
+    if(selectedColumnNames.length > 0) {
+      selectedColumnNames.forEach(colName => {
+        const options = JSON.stringify({
+          groupBy: [(colName).split('AS ')[0]],
+          exclude: {[(colName).split('AS ')[0]]: ['null']},
+          orderBy: {"2": 'desc'}
+        })
+        falcor.get([
+          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 200},[colName, 'count(1)::int as count']
+        ]) 
+      })
+    }
+  },[selectedColumnNames, layerType, viewId]);
+  return (
+    <div className="flex my-2 flex-col">
+      <b>Dynamic Filters:</b>
+      {
+        dynamicFilters.map((dFilter, i) => {
+          const colName  = dFilter.column_name;
+          const options = JSON.stringify({
+            groupBy: [(colName).split('AS ')[0]],
+            exclude: {[(colName).split('AS ')[0]]: ['null']},
+            orderBy: {"2": 'desc'}
+          })
+          const sampleData =  Object.values(
+            get(falcorCache, [
+              'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'], [])
+          ).map(v =>  v?.[colName]).filter(val => typeof val !== "object");
+
+          sampleData.sort();
+          return (
+            <div key={`${colName}_${i}_legend_filter_option_row`} className='w-full'>
+              <DynamicFilterControl
+                layer={layer}
+                filterIndex={i}
+                sampleData={sampleData}
+                button={
+                  <div className='flex w-full p-1 pl-0 rounded items-center justify-between border-transparent border hover:border-gray-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
+                } 
+              />
+            </div> 
+          )
+        })
+      }
+    </div>
+  )
+}
+
+
+
+function DynamicFilterControl({button, layer, sampleData, filterIndex}) {
+  const { state, setState  } = React.useContext(SymbologyContext);
+
+  const {filterValues} = useMemo(() => {
+    return {
+      filterValues:get(layer, `['dynamic-filters'][${filterIndex}].values`, []),
+    }
+  }, [state, filterIndex])
+  return (
+    <Menu as="div" className="relative inline-block text-left w-full">
+      <Menu.Button as="div">{button}</Menu.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items
+          anchor="right"
+          className="absolute w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+        >
+          <div className=" p-2 max-h-[250px] overflow-auto ">
+            {sampleData.map((datum) => {
+              return (
+                <Menu.Item key={`menu_item_${datum}`}>
+                  {({ active }) => (
+                    <div
+                      className={`${
+                        active ? "bg-pink-50 " : ""
+                      } group flex w-full items-center rounded-md px-1 py-1 text-sm`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filterValues.includes(datum)}
+                        onChange={(e) => {
+                          if (filterValues.includes(datum)) {
+                            setState((draft) => {
+                              draft.symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = filterValues.filter(
+                                (val) => val !== datum
+                              );
+                            });
+                          } else {
+                            const newValues = [...filterValues];
+                            newValues.push(datum);
+
+                            setState((draft) => {
+                              console.log(
+                                JSON.parse(
+                                  JSON.stringify(
+                                    draft.symbology.layers[layer.id]
+                                  )
+                                )
+                              );
+                              draft.symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = newValues;
+                            });
+                          }
+                        }}
+                      />
+                      <div className="truncate flex items-center text-[15px] px-4 py-1">
+                        {datum}
+                      </div>
+                    </div>
+                  )}
+                </Menu.Item>
+              );
+            })}
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
+} 
 export default LegendPanel

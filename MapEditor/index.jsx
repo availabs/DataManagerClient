@@ -224,6 +224,7 @@ const MapEditor = () => {
           draft.symbology.layers[draft?.symbology?.activeLayer] = {
             ...draftActiveLayer,
             ...draftInteractiveFilter,
+            name: draftActiveLayer.name,
             filter: draftInteractiveFilter.filter ?? {},
             order: draftActiveLayer.order,
             "layer-type": "interactive",
@@ -420,7 +421,7 @@ const MapEditor = () => {
           if(viewGroupEnabled) {
             domainOptions['viewId'] = viewGroupId;
           }
-          console.log({domainOptions})
+
           setState(draft => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, true)
           })

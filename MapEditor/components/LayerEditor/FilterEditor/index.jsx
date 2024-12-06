@@ -2,33 +2,50 @@ import React, { useContext, useMemo, useState } from "react";
 import { Button } from "~/modules/avl-components/src";
 import { SymbologyContext } from "../../../";
 import { ExistingFilterList, FilterBuilder } from "./FilterControls";
+import { DynamicFilterBuilder } from "./DynamicFilterBuilder"
 import { InteractiveFilterControl } from "../InteractiveFilterControl";
 import get from "lodash/get";
 import set from "lodash/set";
 
 function FilterEditor(props) {
   const { state, setState } = useContext(SymbologyContext);
-  const [displayBuilder, setDisplayBuilder] = useState(false);
-  const [activeColumn, setActiveColumn] = useState();
-  const layerType = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}]['layer-type']`
-  );
+  const [displayFilterBuilder, setDisplayFilterBuilder] = useState(false);
+  const [displayDynamicBuilder, setDisplayDynamicBuilder] = useState(false);
+  const [activeFilterColumn, setActiveFilterColumn] = useState();
 
-  const selectedInteractiveFilterIndex = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
-  );
+  const { existingFilter, existingDynamicFilter, layerType, pathBase } = useMemo(() => {
+    const layerType = get(
+      state,
+      `symbology.layers[${state.symbology.activeLayer}]['layer-type']`
+    );
+    const selectedInteractiveFilterIndex = get(
+      state,
+      `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
+    );
+    const pathBase =
+      layerType === "interactive"
+          ? `['interactive-filters'][${selectedInteractiveFilterIndex}]`
+          : ``;
 
-  const pathBase =
-    layerType === "interactive"
-        ? `['interactive-filters'][${selectedInteractiveFilterIndex}]`
-        : ``;
-
-  const existingFilter = get(
-    state,
-    `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filter`
-  );
+    return {
+      pathBase,
+      layerType,
+      existingFilter: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]${pathBase}['filter']`,
+        {}
+      ),
+      existingDynamicFilter: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]${pathBase}['dynamic-filters']`,
+        []
+      ),
+      sourceId: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}].source_id`
+      )
+    }
+  }, [state, props])
 
   return (
     <div className="pb-4 w-full max-h-[calc(100vh_-_251px)] scrollbar-xs overflow-x-hidden overflow-y-auto">
@@ -43,8 +60,8 @@ function FilterEditor(props) {
       <div className="mx-4">
         <ExistingFilterList
           removeFilter={(columnName) => {
-            setActiveColumn(null);
-            setDisplayBuilder(false);
+            setActiveFilterColumn(null);
+            setDisplayFilterBuilder(false);
             setState((draft) => {
               if(existingFilter) {
                 const newFilter = Object.keys(existingFilter).reduce((a, c) => {
@@ -69,28 +86,35 @@ function FilterEditor(props) {
 
             });
           }}
-          activeColumn={activeColumn}
-          setActiveColumn={setActiveColumn}
+          activeColumn={activeFilterColumn}
+          setActiveColumn={setActiveFilterColumn}
         />
       </div>
-      <div className="m-4">
+      <div className="m-4 mt-2">
         <Button
           className="p-1"
           themeOptions={{ size: "sm", color: "transparent" }}
           onClick={() => {
-            setDisplayBuilder(true);
-            setActiveColumn(null);
+            setDisplayFilterBuilder(true);
+            setDisplayDynamicBuilder(false);
+            setActiveFilterColumn(null);
           }}
         >
           Add Filter
         </Button>
       </div>
-      {(activeColumn || displayBuilder) && (
+      {(activeFilterColumn || displayFilterBuilder) && (
         <FilterBuilder
           path={`${pathBase}['filter']`}
-          params={{ activeColumn, setActiveColumn }}
+          params={{ activeColumn: activeFilterColumn, setActiveColumn: setActiveFilterColumn }}
         />
       )}
+      <div className="w-full mt-1 mx-4 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx">
+        Dynamic Filters
+      </div>
+      <DynamicFilterBuilder 
+        path={`${pathBase}['dynamic-filters']`}
+      />
     </div>
   );
 }
