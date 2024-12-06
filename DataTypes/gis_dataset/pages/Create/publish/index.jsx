@@ -21,7 +21,7 @@ const buttonStates = {
 }
 
 export default function PublishButton({ state, dispatch }) {
-  
+
   const {
     layerName,
     publishStatus,
@@ -40,18 +40,20 @@ export default function PublishButton({ state, dispatch }) {
     mbtilesOptions
   } = state
 
-  const { 
-    text: publishButtonText, 
-    color: publishButtonBgColor } = useMemo(()=> 
+// console.log("SOURCE TYPE:", sourceType)
+
+  const {
+    text: publishButtonText,
+    color: publishButtonBgColor } = useMemo(()=>
       get(buttonStates, publishStatus, buttonStates['AWAITING'])
-  , [publishStatus]) 
+  , [publishStatus])
 
   if (!layerName || uploadErrMsg || lyrAnlysErrMsg || !tableDescriptor) {
     return "";
   }
 
   const publish = () => {
-    const runPublish = async () => { 
+    const runPublish = async () => {
       try {
         dispatch({type: 'update', payload: { publishStatus : 'IN_PROGRESS' }})
 
@@ -78,7 +80,9 @@ export default function PublishButton({ state, dispatch }) {
           mbtilesOptions,
         };
 
-        const res = await fetch(`${state.damaServerPath}/gis-dataset/publish`, 
+        const sourceTypeURL = sourceType === "csv_dataset" ? "csv-dataset" : "gis-dataset";
+
+        const res = await fetch(`${state.damaServerPath}/${ sourceTypeURL }/publish`,
         {
           method: "POST",
           body: JSON.stringify(publishData),
@@ -86,7 +90,7 @@ export default function PublishButton({ state, dispatch }) {
             "Content-Type": "application/json",
           },
         });
-        
+
         const publishFinalEvent = await res.json();
         console.log('publishFinalEvent', publishFinalEvent)
 
@@ -95,10 +99,10 @@ export default function PublishButton({ state, dispatch }) {
         dispatch({ type: 'update', payload: { publishStatus : 'PUBLISHED',  damaSourceId: source_id, etlContextId: etl_context_id }});
       } catch (err) {
         dispatch({
-          type: 'update', 
-          payload: { 
-            publishStatus : 'ERROR', 
-            publishErrMsg: err.message 
+          type: 'update',
+          payload: {
+            publishStatus : 'ERROR',
+            publishErrMsg: err.message
           }
         });
         console.error("==>", err);
@@ -129,11 +133,11 @@ export default function PublishButton({ state, dispatch }) {
 }
 
 function PublishErrorMessage({state}) {
-  
-  const { 
-    etlContextId, 
-    publishStatus, 
-    publishErrMsg 
+
+  const {
+    etlContextId,
+    publishStatus,
+    publishErrMsg
   } = state
 
   if (publishStatus !== "ERROR") {
@@ -193,5 +197,3 @@ function PublishErrorMessage({state}) {
     </table>
   );
 }
-
-
