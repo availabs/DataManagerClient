@@ -436,18 +436,18 @@ const MapEditor = () => {
           })
         }
         let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "No data") {
-            legend.push({color: showOther, label: "No data"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "No data") {
-            legend.pop();
-          }
-        }
         if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
+          const isShowOtherEnabled = showOther === '#ccc';
+          if(isShowOtherEnabled) {
+            if(legend[legend.length-1].label !== "No data") {
+              legend.push({color: showOther, label: "No data"});
+            }
+            legend[legend.length-1].color = showOther;
+          } else {
+            if(legend[legend.length-1].label === "No data") {
+              legend.pop();
+            }
+          }
           setState(draft => {
             set(draft, `${pathBase}.${layerPaintPath}`, paint)
             set(draft, `${pathBase}['legend-data']`, legend)
