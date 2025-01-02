@@ -704,6 +704,26 @@ function MapManager () {
                       </div>
                     )
                   }
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+
+                          onClick={() => {
+                            setState(draft => {
+                              draft.blankBaseMap = !draft.blankBaseMap;
+                              console.log("Settting draft.blankBaseMap::", draft.blankBaseMap)
+                            })
+                          }}
+                        >
+                          {state.blankBaseMap ? "Reset base map layer" : "Use blank basemap"}
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
                 </SymbologyMenu>
                 <div 
                   className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 

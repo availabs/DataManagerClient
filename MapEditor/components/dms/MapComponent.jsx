@@ -37,7 +37,8 @@ const Edit = ({value, onChange, size}) => {
         isEdit: true,
         setInitialBounds: cachedData.setInitialBounds || false,
         initialBounds: cachedData.initialBounds || null,
-        hideControls: cachedData.hideControls || false
+        hideControls: cachedData.hideControls || false,
+        blankBaseMap: cachedData.blankBaseMap || false
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -185,7 +186,7 @@ const Edit = ({value, onChange, size}) => {
                     center: center,
                     zoom: zoom,
                     protocols: [PMTilesProtocol],
-                    styles: defaultStyles
+                    styles: state.blankBaseMap ? blankStyles : defaultStyles
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }
@@ -216,7 +217,8 @@ const View = ({value, size}) => {
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || {},
         initialBounds: cachedData.initialBounds || null,
-        hideControls: cachedData.hideControls || false
+        hideControls: cachedData.hideControls || false,
+        blankBaseMap: cachedData.blankBaseMap || false
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -359,7 +361,7 @@ const View = ({value, size}) => {
                     center: center,
                     zoom: zoom,
                     protocols: [PMTilesProtocol],
-                    styles: defaultStyles
+                    styles: state.blankBaseMap ? blankStyles : defaultStyles
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }
@@ -417,25 +419,49 @@ export default {
 }
 
 const defaultStyles =  [
-              {
-                name: "Default",
-                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              { name: "Satellite",
-                style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
-              },
-              { name: "Streets",
-                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
-              },
-             
-              { name: "Light",
-                style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              { name: "Dark",
-                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              // {
-              //   name: 'Sattelite 3d ',
-              //   style: terrain_3d_source
-              // }
+  {
+    name: "Default",
+    style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  { name: "Satellite",
+    style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
+  },
+  { name: "Streets",
+    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
+  },
+  { name: "Light",
+    style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  { name: "Dark",
+    style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  {
+    name: "Blank",
+    style: {
+      sources:{},
+      version: 8,
+      layers: [{
+          "id": "background",
+          "type": "background",
+          "layout": {"visibility": "visible"},
+          "paint": {"background-color": 'rgba(208, 208, 206, 0)'}
+      }]
+    }
+  }
+]
+
+const blankStyles = [
+  {
+    name: "Blank",
+    style: {
+      sources:{},
+      version: 8,
+      layers: [{
+          "id": "background",
+          "type": "background",
+          "layout": {"visibility": "visible"},
+          "paint": {"background-color": 'rgba(208, 208, 206, 0)'}
+      }]
+    }
+  }
 ]
