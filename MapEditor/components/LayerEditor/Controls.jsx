@@ -543,6 +543,39 @@ function ChoroplethControl({path, params={}}) {
   .filter(d => d);
 
   const isShowOtherEnabled = showOther === '#ccc'
+  const breakInputs = breaks?.map((breakValue, breakIndex) => {
+    const displayedValue = breakIndex === 0 ? `Minimum: ${breakValue}`: breakValue
+    return (
+      <input
+        key={`${breakValue}_${breakIndex}`}
+        className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+        type='text' 
+        value={displayedValue}
+        disabled={breakIndex === 0}
+        onChange={(e) => {
+          setState(draft => {
+            const newBreaks = [...breaks];
+            newBreaks[breakIndex] = parseFloat(e.target.value)
+            if(Number.isNaN(newBreaks[breakIndex])){
+              newBreaks[breakIndex] = 0;
+            }
+            set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+          })
+        }}
+      />
+    )
+  });
+  if(breakInputs){
+    breakInputs.push(
+      <input
+        key={`${max}`}
+        className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+        type="text"
+        value={`Maximum: ${max}`}
+        disabled={true}
+      />
+    );
+  }
 
   /**
    * categories[0] is breaks[0] to breaks[1]
@@ -623,7 +656,13 @@ function ChoroplethControl({path, params={}}) {
               onChange={(e) => setState(draft => {
                 // console.log('SelectViewColumnControl set column path', path, e.target.value)
                 set(draft, `${pathBase}.['num-bins']`, e.target.value)
-                set(draft, `${pathBase}.['choroplethdata']`, {});
+                if(method === 'custom'){
+                  const newBreaks = [...breaks].slice(0,-1);
+                  set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+                }
+                else {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
                 set(draft, `${pathBase}.['color-range']`, colorbrewer[colorKey][e.target.value])
               })}
             >
@@ -643,13 +682,16 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={method}
               onChange={(e) => setState(draft => {
-                set(draft, `${pathBase}.['choroplethdata']`, {});
+                if(e.target.value !== "custom") {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
                 set(draft, `${pathBase}['bin-method']`, e.target.value)
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
               <option  value={'pretty'}>Pretty Breaks</option>
               <option  value={'equalInterval'}>Equal Interval</option>
+              <option  value={'custom'}>Custom</option>
              
             </select>
           </div>
@@ -680,6 +722,11 @@ function ChoroplethControl({path, params={}}) {
           </div>
 
         </div>
+        {
+          method === 'custom' && <div className='flex flex-col p-2'>
+            <>Breaks:{breakInputs}</>
+          </div>
+        }
         <div className='w-full max-h-[250px] overflow-auto'>
           {
             isLoadingColorbreaks ?  (
@@ -687,7 +734,7 @@ function ChoroplethControl({path, params={}}) {
                   Creating scale...
                   <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
                 </div>
-              ) : rangeInputs
+              ) : method === 'custom' ? <><div className='p-2'>Ranges:</div>{rangeInputs}</> : rangeInputs
           }
           {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
