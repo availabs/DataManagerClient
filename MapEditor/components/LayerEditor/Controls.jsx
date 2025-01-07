@@ -723,11 +723,11 @@ function ChoroplethControl({path, params={}}) {
 
         </div>
         {
-          method === 'custom' && <div className='flex flex-col p-2'>
+          method === 'custom' && <div className='flex flex-col px-2'>
             <>Breaks:{breakInputs}</>
           </div>
         }
-        <div className='w-full max-h-[250px] overflow-auto'>
+        <div className='w-full max-h-[300px] overflow-auto'>
           {
             isLoadingColorbreaks ?  (
                 <div className="flex w-full justify-center overflow-hidden pb-2" >
