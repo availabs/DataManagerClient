@@ -36,6 +36,7 @@ export default function UploadGisDataset({
     userId: user?.id ?? ctxUser.id,
     email: user?.email ?? ctxUser.email,
     etlContextId: null,
+    analysisContextId: null,
     customViewAttributes: { years: [] },
     dataType: dataType,
     // maxSeenEventId: null,
@@ -54,6 +55,9 @@ export default function UploadGisDataset({
     layerName: null,
     lyrAnlysErrMsg: null,
     layerAnalysis: null,
+    layerAnalysisReady: false,
+    analysisPolling: false,
+    analysisPollingInterval: null,
 
     // schemaEditor state
     
