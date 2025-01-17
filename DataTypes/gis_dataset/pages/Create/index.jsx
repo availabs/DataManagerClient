@@ -23,10 +23,9 @@ export default function UploadGisDataset({
 }) {
 
   // console.log('tippecanoeOptions', tippecanoeOptions)
-  const { name: damaSourceName, source_id: sourceId, type } = source;
+  const { name: damaSourceName, source_id: sourceId, type, uploadedFile, gisUploadId, analysisContextId } = source;
   const { pgEnv, baseUrl, falcor, user:ctxUser } = React.useContext(DamaContext);
   const navigate = useNavigate()
- 
   const [state, dispatch] = useReducer(reducer, {
     damaSourceId: sourceId,
     databaseColumnNames: databaseColumnNames ? 
@@ -36,16 +35,16 @@ export default function UploadGisDataset({
     userId: user?.id ?? ctxUser.id,
     email: user?.email ?? ctxUser.email,
     etlContextId: null,
-    analysisContextId: null,
+    analysisContextId: analysisContextId || null,
     customViewAttributes: { years: [] },
     dataType: dataType,
     // maxSeenEventId: null,
     damaServerPath: `${DAMA_HOST}/dama-admin/${pgEnv}`,
 
     // uploadFile state
-    gisUploadId: null,
+    gisUploadId: gisUploadId || null,
     fileUploadStatus: null,
-    uploadedFile: null,
+    uploadedFile: uploadedFile || null,
     uploadErrMsg: null,
     polling: false,
     pollingInterval: null,
@@ -113,7 +112,9 @@ export default function UploadGisDataset({
       dispatch({ type: "update", payload: { etlContextId: newEtlCtxId } });
     };
 
-    getContextId()
+    if(!state.analysisContextId) {
+      getContextId()
+    }
   }, [pgEnv, state.damaServerPath]);
 
   if (!sourceId && !damaSourceName) {

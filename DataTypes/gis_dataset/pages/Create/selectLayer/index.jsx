@@ -1,8 +1,9 @@
 import React, {useEffect} from "react";
 import { LayerAnalysisSection } from './components'
+import { useLocation } from "react-router-dom";
 
 export default function SelectLayer({state, dispatch}) {
-  
+  const location = useLocation();
   const { 
     damaServerPath,
     gisUploadId, 
@@ -17,7 +18,6 @@ export default function SelectLayer({state, dispatch}) {
     analysisPollingInterval,
     layerAnalysisReady
   } = state
-
   useEffect(() => {
     // get Layer Names ater file is successfully uploaded
     if (gisUploadId && uploadedFile) {
@@ -37,7 +37,6 @@ export default function SelectLayer({state, dispatch}) {
       }
     }
   }, [ gisUploadId, uploadedFile, damaServerPath, dispatch ]);
-
   //Kickoff Layer Analysis
   useEffect(() => {
     // when layer is selected get analysis of layer
@@ -55,7 +54,12 @@ export default function SelectLayer({state, dispatch}) {
             }
           );
           const lyrAnlys = await lyrAnlysRes.json();
-          dispatch({ type: 'update', payload: { analysisPolling: true, analysisContextId: lyrAnlys.etl_context_id } })
+          if(Object.keys(lyrAnlys).includes('GEODATASET_ANALYSIS_VERSION')) {
+            dispatch({type: 'update', payload: { layerAnalysis: lyrAnlys, layerAnalysisReady: true }});
+          } else {
+            window.history.replaceState(null, "", `${location.pathname}/${lyrAnlys.etl_context_id}`)
+            dispatch({ type: 'update', payload: { analysisPolling: true, analysisContextId: lyrAnlys.etl_context_id } })
+          }
         }
         fetchData(gisUploadId, layerName)
       } catch (err) {
@@ -110,15 +114,12 @@ export default function SelectLayer({state, dispatch}) {
 
   //FINAL API call, once polling is done for layer analysis
   useEffect(() => {
-    console.log("There is a new analysisContextId::", analysisContextId);
-    
     const fetchAnalysis = async () => {
       const lyrAnlysRes = await fetch(
         `${damaServerPath}/gis-dataset/${gisUploadId}/${layerName}/layerAnalysis`
       );
       const lyrAnlys = await lyrAnlysRes.json();
-      console.log("RETREIVED final layer analysis::",lyrAnlys)
-      dispatch({type: 'update', payload: {layerAnalysis: lyrAnlys}});
+      dispatch({type: 'update', payload: { layerAnalysis: lyrAnlys }});
     }
 
     //Once we are done polling (we see analysis:FINAL event), we can fire this off
