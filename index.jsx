@@ -202,6 +202,17 @@ const DamaRoutes = DAMA_ARGS => {
       topNav,
       component: DAMA_Wrapper(Create, DAMA_ARGS)
     },
+    {
+      name: "Create Source",
+      path: `${baseUrl}/create/source/:analysisContextId`,
+      exact: true,
+      authLevel: false,
+      mainNav: false,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(Create, DAMA_ARGS)
+    },
     // Source Delete
     {
       name: "Delete Source",

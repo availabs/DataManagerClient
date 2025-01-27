@@ -17,9 +17,10 @@ export default function UploadGisDataset({ state, dispatch }) {
     pollingInterval,
     uploadErrMsg,
     uploadedFile,
-    fileUploadStatus
+    fileUploadStatus,
+    damaSourceName,
+    dataType
   } = state
-
   // -- upload file
   const uploadGisDataset = async (file) => {
     try {
@@ -30,6 +31,8 @@ export default function UploadGisDataset({ state, dispatch }) {
       formData.append("etlContextId", etlContextId);
       formData.append("user_id", userId);
       formData.append("email", email);
+      formData.append("name", damaSourceName);
+      formData.append("type", dataType)
       formData.append("fileSizeBytes", file.size);
       formData.append("file", file);
       

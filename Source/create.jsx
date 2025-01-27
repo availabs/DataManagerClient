@@ -7,12 +7,14 @@ import get from 'lodash/get'
 import { damaDataTypes } from '../DataTypes'
 
 import SourcesLayout from './layout'
-
+import { DAMA_HOST } from "~/config";
 import {SourceAttributes, /*ViewAttributes, getAttributes*/} from './attributes'
     
 import { DamaContext } from "../store";
-
+import { useParams } from "react-router-dom";
 const SourceCreate = ({baseUrl}) => {
+  const { analysisContextId } = useParams();
+
 // prettier canary
   //const {falcor, falcorCache} = useFalcor()
   const [ source, setSource ] = useState( 
@@ -61,13 +63,27 @@ const SourceCreate = ({baseUrl}) => {
     ,[dataTypes, source.type])
   
   // console.log('new source', CreateComp)
+  useEffect(() => {
+    const fetchAnalysisData = async () => {
+      const url = `${DAMA_HOST}/dama-admin/${pgEnv}/events/query?etl_context_id=${analysisContextId}&event_id=-1`
+      const res = await fetch(url);
+      const analysisData = await res.json();
+      const initialUploadEvent = analysisData.find(pEvent => pEvent.type === 'upload:INITIAL');
+      const { type, name } = initialUploadEvent.payload;
+
+      const initialAnalysisEvent = analysisData.find(pEvent => pEvent.type === 'analysis:INITIAL');
+      const { fileId } = initialAnalysisEvent.payload;
+
+      setSource({ ...source, type, name, uploadedFile: initialUploadEvent.payload, gisUploadId: fileId, analysisContextId })
+    }
+    if (analysisContextId) {
+      fetchAnalysisData();
+    }
+  }, [analysisContextId]);
 
   if (dataTypes === null) {
     return <div>Requesting data types statuses</div>;
   }
-
-  // console.log('new source', CreateComp)
-  
   return (
     <div>
       {/*<div className='fixed right-0 top-[170px] w-64 '>
