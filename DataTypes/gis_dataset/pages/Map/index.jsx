@@ -67,135 +67,8 @@ const ViewSelector = ({views}) => {
   )
 }
 
-// import { getAttributes } from '~/pages/DataManager/Source/attributes'
-const DefaultMapFilter = ({ source, filters, setFilters, activeViewId, layer, setTempSymbology }) => {
-  const { pgEnv, falcor, falcorCache  } = React.useContext(DamaContext);
 
-  const metadata = React.useMemo(() => {
-    const md = get(source, ["metadata", "columns"], get(source, "metadata", []));
-    if (Array.isArray(md)) {
-      return md;
-    }
-    return [];
-  }, [source]);
-
-  const dataVariables = React.useMemo(() => {
-    return metadata
-      .filter(md => md.display === "data-variable")
-      .map(md => md.name);
-  }, [metadata]);
-
-  const metaVariables = React.useMemo(() => {
-    return metadata
-      .filter(md => md.display === "meta-variable")
-      .map(md => md.name);
-  }, [metadata]);
-
-  const variables = React.useMemo(() => {
-    return [...dataVariables, ...metaVariables];
-  }, [dataVariables, metaVariables]);
-
-  const activeVar = get(filters, ["activeVar", "value"], "");
-  const activeVarType = dataVariables.includes(activeVar) ? "data-variable" : "meta-variable";
-
-  React.useEffect(() => {
-    falcor.get(["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"])
-  }, [falcor, pgEnv, activeViewId]);
-
-  const [dataLength, setDataLength] = React.useState(0);
-  React.useEffect(() => {
-    const dl = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "data", "length"], 0);
-    setDataLength(dl);
-  }, [falcorCache, pgEnv, activeViewId]);
-
-  React.useEffect(() => {
-    if (!(dataLength && variables.length)) return;
-    falcor.get([
-      "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-      { from: 0, to: dataLength - 1 }, variables
-    ])
-    // falcor.chunk([
-    //   "dama", pgEnv, "viewsbyId", activeViewId, "databyIndex",
-    //   Array.from(Array(dataLength-1).keys()), variables
-    // ])
-  }, [falcor, pgEnv, activeViewId, dataLength, variables]);
-
-  const [data, setData] = React.useState([]);
-
-  React.useEffect(() => {
-    if (!activeVar || (activeVar === "none")) setData([]);
-    const dataById = get(falcorCache, ["dama", pgEnv, "viewsbyId", activeViewId, "databyId"], {});
-    const data = Object.keys(dataById)
-      .map(id => {
-        const value = get(dataById, [id, activeVar], null);
-        return {
-          id,
-          var: activeVar,
-          value: value === 'null' ? null : value
-        }
-      }).filter(d => d.value !== null);
-    setData(data);
-  }, [falcorCache, pgEnv, activeViewId, activeVar]);
-
-  React.useEffect(() => {
-    if (!data.length) return;
-
-    const symbology = JSON.parse(JSON.stringify(get(source, ["metadata", "symbology"], {})));
-
-    const defaultSettings = {
-      name: activeVar,
-      type: activeVarType === "data-variable" ? 'threshold' : "ordinal",
-      data
-    }
-
-    const paths = layer.layers.map(({ id, type }) => {
-      return [id, `${ type }-color`, activeVar, "settings"];
-    })
-
-    paths.forEach(path => {
-      const test = get(symbology, path, null);
-      if (!test) {
-        const [id, pp, av] = path;
-        symbology[id] = symbology[id] || {};
-        symbology[id][pp] = symbology[id][pp] || {};
-        symbology[id][pp][av] = symbology[id][pp][av] || {};
-        symbology[id][pp][av].settings = defaultSettings;
-      }
-      else {
-        const [id, pp, av] = path;
-        symbology[id][pp][av].settings.data = data;
-      }
-    });
-
-    setTempSymbology(symbology);
-
-  }, [layer, data, setTempSymbology, activeVar, activeVarType, source]);
-
-
-  return (
-    <div className='flex flex-1'>
-      <div className='py-3.5 px-2 text-sm text-gray-400'>Variable : </div>
-      <div className='flex-1'>
-        <select
-            className="pl-3 pr-4 py-2.5 border border-blue-100 bg-blue-50 w-full bg-white mr-2 flex items-center justify-between text-sm"
-            value={activeVar}
-            onChange={(e) => setFilters({'activeVar' :{ value: e.target.value}})}
-          >
-            <option  className="ml-2  truncate" value={null}>
-              none
-            </option>
-            {variables?.map((v,i) => (
-              <option key={i} className="ml-2  truncate" value={v}>
-                {v}
-              </option>
-            ))}
-        </select>
-      </div>
-    </div>
-  )
-}
-
-const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterData = {}, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles }) => {
+const MapPage = ({source,views, HoverComp, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles }) => {
   const [searchParams] = useSearchParams();
   const urlVariable = searchParams.get("variable")
 
@@ -204,10 +77,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
   //const { falcor } = useFalcor()
   const [ editing, setEditing ] = React.useState(null)
   //const [ activeVar, setActiveVar] = React.useState(null)
-  const [ filters, _setFilters ] = useState(filterData)
-  const setFilters = React.useCallback(filters => {
-    _setFilters(prev => ({ ...prev, ...filters }))
-  }, []);
 
   // console.log("\n\n\n\n\n");
   // console.log("what is the content of the filters data: ", filters);
@@ -287,7 +156,7 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
         }
       }
 
-      console.log('sources', sources)
+      
 
       if(sources?.[0]?.source?.tiles?.[0] && !sources[0].source.tiles[0].includes('?') ) {
         
@@ -301,7 +170,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             pgEnv,
             source: source,
             activeView: activeView,
-            filters,
             hoverComp: HoverComp?.Component || false,
             isPinnable: HoverComp?.isPinnable || false,
             attributes,
@@ -311,29 +179,13 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             symbology: get(mapData, `symbology`, {})//{... get(mapData, `symbology`, {}), ...tempSymbology}
       }
       // add tempSymbology as depen
-  },[source, views, mapData, activeViewId,filters, symSources, symLayers, displayPinnedGeomBorder])
+  },[source, views, mapData, activeViewId, symSources, symLayers, displayPinnedGeomBorder])
 
+  console.log('Layer', layer)
 
   return (
     <div>
-      {/*<div className='flex'>
-        <div className='pl-2 pr-2 py-2 flex-1'>
-          Map View { viewId }
-        </div>
-      </div>*/}
       <div className='flex'>
-
-        <MapFilter
-            source={source}
-            metaData={metaData}
-            filters={filters}
-            setFilters={setFilters}
-            tempSymbology={tempSymbology}
-            setTempSymbology={setTempSymbology}
-            activeView={activeView}
-            activeViewId={activeViewId}
-            layer={layer}
-        />
         {showViewSelector ? <ViewSelector views={views} /> : ''}
       </div>
       <div className='w-full h-[900px]'>
@@ -344,7 +196,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
           source={ source }
           tempSymbology={ tempSymbology }
           setTempSymbology={ setTempSymbology }
-          filters={filters}
           mapStyles={mapStyles}/>
       </div>
 
@@ -386,18 +237,6 @@ const MapPage = ({source,views, HoverComp, MapFilter=DefaultMapFilter, filterDat
             })
           }
         </dl>
-        {/*<Symbology
-          layer={layer}
-          onChange={setTempSymbology}
-        />
-        <div className='flex'>
-          <div className='flex-1' />
-          <SaveSymbologyButton
-            metaData={metaData}
-            symbology={tempSymbology}
-            viewId={activeViewId}
-          />
-        </div>*/}
       </div> : ''}
     </div>
   )
@@ -418,7 +257,7 @@ const PMTilesProtocol = {
   }
 }
 
-const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters, mapStyles }) => {
+const Map = ({ layers, layer, tempSymbology, setTempSymbology, source,  mapStyles }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -454,13 +293,11 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters, 
     });
   }, [mounted, layers]);
 
-  const activeVar = get(filters, ["activeVar", "value"], "");
-
   const styles = React.useMemo(() => {
     return mapStyles && mapStyles?.length > 0 ? mapStyles : DEFAULT_MAP_STYLES;
   }, [mapStyles]);
 
-
+  const activeVar = 'none';
   const updateLegend = React.useCallback(legend => {
     if (!activeVar || (activeVar === "none")) return;
     // const { type, ...rest } = legend;
@@ -493,11 +330,10 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters, 
         out[cur.id].symbology = cloneDeep(tempSymbology);
         out[cur.id].updateLegend = updateLegend;;
         out[cur.id].sourceId = source.source_id;
-        out[cur.id].filters = filters;
       }
       return out
     },{})
-  },[layers, layerData, tempSymbology, updateLegend, source.source_id, filters])
+  },[layers, layerData, tempSymbology, updateLegend, source.source_id])
 
   //console.log('mapTheme',mapTheme)
   return (
@@ -525,50 +361,6 @@ const Map = ({ layers, layer, tempSymbology, setTempSymbology, source, filters, 
 }
 
 
-const SaveSymbologyButton = ({metaData,symbology, viewId}) => {
-  const { pgEnv, falcor } = React.useContext(DamaContext);
-
-  const save = async () => {
-    //console.log('click save 222', attr, value)
-    if(viewId) {
-      try{
-        let val = metaData || { tiles:{} }
-        val.tiles['symbology'] = symbology
-        let response = await falcor.set({
-            paths: [
-              ['dama',pgEnv,'views','byId',viewId,'attributes', 'metadata' ]
-            ],
-            jsonGraph: {
-              dama:{
-                [pgEnv]:{
-                  views: {
-                    byId:{
-                      [viewId] : {
-                        attributes : {
-                          metadata: JSON.stringify(val)
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-        })
-        console.log('set run response', response)
-      } catch (error) {
-        console.log('error stuff',error,symbology, metaData);
-      }
-    }
-  }
-  return(
-    <button
-      className='inline-flex items-center gap-x-1.5 rounded-sm bg-blue-600 py-1.5 px-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-      onClick={save}
-    >
-      Save Symbology
-    </button>
-  )
-}
 
 
 

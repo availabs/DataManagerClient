@@ -119,7 +119,7 @@ const TablePage = ({
   React.useEffect(() => {
     if (dataLength > 0) {
       console.log("dataLength", dataLength);
-      let maxData = Math.min(dataLength, 10000);
+      let maxData = Math.min(dataLength, 250);
       console.time("getViewData", maxData);
       falcor
         .chunk(
