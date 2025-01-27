@@ -49,7 +49,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       const resValue = await res.json();
       if (Array.isArray(resValue)) {
         const [{ id }] = resValue;
-        dispatch({type: 'update', payload: {polling:false, gisUploadId: id}})
+        dispatch({type: 'update', payload: {polling:false, gisUploadId: id, processPolling: true}})
       } else {
         throw resValue;
       }
@@ -83,12 +83,12 @@ export default function UploadGisDataset({ state, dispatch }) {
       doPolling()
       dispatch({type:'update', payload: {pollingInterval: null}})
     }
-  }, [polling, pollingInterval, damaServerPath, etlContextId, dispatch])  
+  }, [polling, pollingInterval, damaServerPath, etlContextId, dispatch]);
 
   if (!etlContextId) {
     return "no context Id no upload";
   }
-
+  console.log({uploadedFile})
   if (!uploadedFile) {
     return (
       <>

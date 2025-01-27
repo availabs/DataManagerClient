@@ -16,11 +16,14 @@ export default function SelectLayer({state, dispatch}) {
     analysisContextId,
     analysisPolling,
     analysisPollingInterval,
+    processPolling,
+    processPollingInterval,
     layerAnalysisReady
   } = state
   useEffect(() => {
     // get Layer Names ater file is successfully uploaded
-    if (gisUploadId && uploadedFile) {
+    console.log("use effect to get layer names, conditional vals::", {gisUploadId, uploadedFile,processPolling})
+    if (gisUploadId && uploadedFile && !processPolling) {
       try {
         const fetchData = async (gisUploadId) => {
           const url = `${damaServerPath}/gis-dataset/${gisUploadId}/layerNames`;
@@ -36,7 +39,8 @@ export default function SelectLayer({state, dispatch}) {
         dispatch({type: 'update', payload: {lyrAnlysErrMsg: err.message}});
       }
     }
-  }, [ gisUploadId, uploadedFile, damaServerPath, dispatch ]);
+  }, [ gisUploadId, uploadedFile, damaServerPath, dispatch, processPolling ]);
+
   //Kickoff Layer Analysis
   useEffect(() => {
     // when layer is selected get analysis of layer
@@ -68,8 +72,50 @@ export default function SelectLayer({state, dispatch}) {
     }
   }, [gisUploadId, layerName, damaServerPath, dispatch]);
 
+  //Poll upload processing progress
+  useEffect(() => {
+    //HOPEFULLY -- this pull the event we need
+    const doPolling = async () => {
+      const url = `${damaServerPath}/events/query?etl_context_id=${etlContextId}&event_id=-1`
+      const res = await fetch(url);
+      const pollingData = await res.json()
 
-  // --- Poll Upload Progress  
+      const finalEvent = pollingData.some(
+        (pEvent) =>
+          pEvent.type === "upload:FINAL"
+      );
+
+      if (finalEvent) {
+        dispatch({ type: 'update', payload: { processPolling: false } })
+      }
+      if (!finalEvent) {
+        const errorEvent = pollingData.find(
+          (pEvent) =>
+            (pEvent.type.includes("upload") && pEvent.error)
+        );
+
+        if (errorEvent) {
+          console.error("Error with layer upload processing::", errorEvent)
+          dispatch({ type: 'update', payload: { processPolling: false } })
+        }
+      }
+    }
+
+    // -- start polling
+    if(processPolling && !processPollingInterval) {
+      let id = setInterval( doPolling, 3000)
+      dispatch({type:'update', payload: {processPollingInterval: id}})
+    } 
+    // -- stop polling
+    else if( processPollingInterval && !processPolling) {
+      clearInterval(processPollingInterval)
+      // run polling one last time in case it never finished
+      doPolling()
+      dispatch({type:'update', payload: {processPollingInterval: null}})
+    }
+  }, [processPolling, processPollingInterval, damaServerPath, etlContextId, dispatch]);
+
+  // --- Poll Analysis Progress  
   useEffect(() => {
     const doPolling = async () => {
       const url = `${damaServerPath}/events/query?etl_context_id=${analysisContextId}&event_id=-1`

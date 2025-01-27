@@ -46,6 +46,8 @@ export default function UploadGisDataset({
     fileUploadStatus: null,
     uploadedFile: uploadedFile || null,
     uploadErrMsg: null,
+    processPolling: false,
+    processPollingInterval: null,
     polling: false,
     pollingInterval: null,
 
