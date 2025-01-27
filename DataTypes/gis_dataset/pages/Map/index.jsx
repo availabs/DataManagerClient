@@ -68,10 +68,9 @@ const ViewSelector = ({views}) => {
 }
 
 
-const MapPage = ({source,views, HoverComp, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles }) => {
+const MapPage = ({source,views, HoverComp, showViewSelector=true, displayPinnedGeomBorder=false, mapStyles, userHighestAuth=0 }) => {
   const [searchParams] = useSearchParams();
   const urlVariable = searchParams.get("variable")
-
   const { viewId } = useParams();
   const { pgEnv, baseUrl, user } = React.useContext(DamaContext);
   //const { falcor } = useFalcor()

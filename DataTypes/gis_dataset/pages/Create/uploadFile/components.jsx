@@ -11,10 +11,11 @@ export function ProgressBar({ progress }) {
     margin: 50,
   };
 
+  const divWidth = (progress) * .9;
   const Childdiv = {
     display: "inline-block",
     height: "84%",
-    width: `${progress}%`,
+    width: `${divWidth}%`,
     backgroundColor: "#3b82f680",
     borderRadius: 40,
     textAlign: "right",

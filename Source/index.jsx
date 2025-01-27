@@ -10,9 +10,30 @@ import SourcesLayout from "./layout";
 
 import { SourceAttributes, ViewAttributes, getAttributes } from "~/pages/DataManager/Source/attributes";
 import { DamaContext } from "~/pages/DataManager/store";
-import baseUserViewAccess  from "../utils/authLevel";
 import { NoMatch } from "../utils/404";
 
+const PUBLIC_GROUP = 'Public';
+
+const computeAuth = ({sourceAuth, user}) => {
+  const { authUsers, authGroups } = {
+    authUsers: get(sourceAuth, ["users"], {}),
+    authGroups: get(sourceAuth, ["groups"], {}),
+  };
+  const userGroupAuth = Object.keys(authGroups).reduce((a, curGroupName) => {
+    let max = a;
+
+    if(user.groups.includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
+      //user is a member. take this authLevel if it is higher
+      if(parseInt(authGroups[curGroupName]) > max) {
+        max = parseInt(authGroups[curGroupName]);
+      }
+    }
+    return max;
+  }, -1);
+
+  const userSourceAuth = authUsers[user.id] ?? -1;
+  return Math.max(userGroupAuth, userSourceAuth)
+}
 
 const Source = ({}) => {
   const { sourceId, page, viewId } = useParams()
@@ -20,36 +41,36 @@ const Source = ({}) => {
   const [ activeViewId, setActiveViewId ] = useState(viewId)
   const { pgEnv, baseUrl, falcor, falcorCache, user } = React.useContext(DamaContext)
   // console.log('source page: ');
-  const userAuthLevel = user.authLevel;
-
-  const Page = useMemo(() => {
-    return page
-      ? get(pages, `[${page}].component`, pages["overview"].component)
-      : pages["overview"].component;
-  }, [page, pages]);
 
   useEffect(() => {
     async function fetchData() {
-      //console.time("fetch data");
-      const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
-      const resp = await falcor.get(lengthPath);
-      let data = await falcor.get(
-        [
-          "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
-          { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
-          "attributes", Object.values(ViewAttributes)
-        ],
-        [
-          "dama", pgEnv, "sources", "byId", sourceId,
-          "attributes", Object.values(SourceAttributes)
-        ],
-        [
-          "dama", pgEnv, "sources", "byId", sourceId, "meta"
-        ]
-      );
-      //console.timeEnd("fetch data");
-      //console.log(data)
-      return data;
+      try {
+        //console.time("fetch data");
+        console.log("fetching data")
+        const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
+        const resp = await falcor.get(lengthPath);
+        let data = await falcor.get(
+          [
+            "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
+            { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
+            "attributes", Object.values(ViewAttributes)
+          ],
+          [
+            "dama", pgEnv, "sources", "byId", sourceId,
+            "attributes", Object.values(SourceAttributes)
+          ],
+          [
+            "dama", pgEnv, "sources", "byId", sourceId, "meta"
+          ]
+        );
+        //console.timeEnd("fetch data");
+        //console.log(data)
+        return data;
+      }
+      catch (e) {
+        console.log("e from fetching source::", e)
+      }
+
     }
 
     fetchData();
@@ -100,8 +121,7 @@ const Source = ({}) => {
     return attributes;
   }, [falcorCache, sourceId, pgEnv]);
 
-  const sourceAuthLevel = baseUserViewAccess(source?.statistics?.access || {});
-
+  const sourceAuth = source?.statistics?.auth;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const makeUrl = React.useCallback(d => {
@@ -111,35 +131,52 @@ const Source = ({}) => {
     })
     return `${baseUrl}/source/${sourceId}${d.path}${activeViewId && d.path ? '/'+activeViewId : ''}${ params.length ? `?${ params.join("&") }` : "" }`
   }, [baseUrl, sourceId, activeViewId, searchParams])
- 
-  if(sourceAuthLevel > userAuthLevel) {
-    return  <NoMatch />
-  } 
+
+  const serverAuthedForSource = React.useMemo(() => {
+    let serverAuthedForSource = true;
+    if (
+      Object.keys(source).some((attrKey) => {
+        //"message" indicates error message was thrown
+        return source[attrKey] ? Object.keys(source[attrKey]).includes("message") : false;
+      })
+    ){
+      serverAuthedForSource = false;
+    }
+    return serverAuthedForSource;
+  }, [source])
+
+  const Page = useMemo(() => {
+    return page
+      ? get(pages, `[${page}].component`, pages["overview"].component)
+      : pages["overview"].component;
+  }, [page, pages, Pages, sourceAuth]);
+
+
+  const userHighestAuth = computeAuth({sourceAuth, user});
+
+  const sourceLoaded  = useMemo(() => {
+    return Object.keys(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { })).length > 0;
+  }, [falcorCache])
+  const doesUserPassPagePermission = sourceLoaded ? (Pages[page]?.authLevel ?? 1) <= userHighestAuth : false;
+
+  if (!sourceLoaded || user.isAuthenticating) {
+    //todo loading spinner?
+    return <></>;
+  } else if (
+    (!serverAuthedForSource || !doesUserPassPagePermission)
+  ) {
+    return <NoMatch />;
+  }
 
   return (
      
         <SourcesLayout baseUrl={baseUrl}>
-          {/*<div className='flex w-full p-2 border-b items-center'>
-            <div className="text-2xl text-gray-700 font-medium overflow-hidden ">
-              {source.display_name || source.name}
-            </div>
-            <div className='flex-1'></div>
-            <div className='py-2'>
-              { user && user.authLevel >= 10 ?
-                <Link
-                  className={"bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-2"}
-                  to={`${baseUrl}/delete/source/${source.source_id}/`}>
-                    <i className='fad fa-trash' />
-                </Link> : ''
-              }
-            </div>
-          </div>*/}
           <TopNav
             menuItems={Object.values(pages)
               .filter(d => {
-                const authLevel = d?.authLevel || -1
+                const pageAuthLevel = d?.authLevel || -1
                 const userAuth = user.authLevel || -1
-                return !d.hidden && (authLevel <= userAuth)
+                return !d.hidden && (pageAuthLevel <= userAuth) && (pageAuthLevel <= userHighestAuth)
               })
               .sort((a,b) => (a?.authLevel || -1)  - (b?.authLevel|| -1))
               .map(d => {
@@ -153,6 +190,7 @@ const Source = ({}) => {
           />
           <div className='w-full flex-1 bg-white shadow'>
             <Page
+              userHighestAuth={userHighestAuth}
               searchParams={ searchParams }
               setSearchParams={ setSearchParams }
               source={source}
