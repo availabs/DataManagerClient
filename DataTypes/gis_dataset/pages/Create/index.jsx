@@ -20,8 +20,8 @@ export default function UploadGisDataset({
   tippecanoeOptions = {},
   customRules = {},
   databaseColumnNames = null,
+  useMbTiles = false
 }) {
-
   // console.log('tippecanoeOptions', tippecanoeOptions)
   const { name: damaSourceName, source_id: sourceId, type, uploadedFile, gisUploadId, analysisContextId } = source;
   const { pgEnv, baseUrl, falcor, user:ctxUser } = React.useContext(DamaContext);
@@ -64,7 +64,7 @@ export default function UploadGisDataset({
     
     tableDescriptor: null,
     mbtilesOptions: { preserveColumns: {}, ...tippecanoeOptions },
-
+    useMbTiles,
     // publish state
     publishStatus: "AWAITING",
     publishErrMsg: null,
