@@ -88,7 +88,7 @@ export default function UploadGisDataset({ state, dispatch }) {
   if (!etlContextId) {
     return "no context Id no upload";
   }
-  console.log({uploadedFile})
+
   if (!uploadedFile) {
     return (
       <>

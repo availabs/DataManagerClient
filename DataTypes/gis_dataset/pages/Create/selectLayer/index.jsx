@@ -22,7 +22,6 @@ export default function SelectLayer({state, dispatch}) {
   } = state
   useEffect(() => {
     // get Layer Names ater file is successfully uploaded
-    console.log("use effect to get layer names, conditional vals::", {gisUploadId, uploadedFile,processPolling})
     if (gisUploadId && uploadedFile && !processPolling) {
       try {
         const fetchData = async (gisUploadId) => {
