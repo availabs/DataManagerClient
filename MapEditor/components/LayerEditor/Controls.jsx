@@ -281,10 +281,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId } = useMemo(() => ({
+  const { layerType, viewId, sourceId, method } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
+    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+    method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
   }),[state])
 
   const column = useMemo(() => {
@@ -325,6 +326,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
 
+            // Custom color scale relies on a premade scale
+            // So, when we change data columns, we need to reset the color scale first
+            if(method === 'custom') {
+              set(draft, `${pathBase}['bin-method']`, 'ckmeans');
+            }
             set(draft, `${pathBase}['choroplethdata']`, {});
             set(draft, `${pathBase}['categories']`, {});
             set(draft, `${pathBase}.${path}`, e.target.value)
@@ -538,7 +544,7 @@ function ChoroplethControl({path, params={}}) {
 
   const { breaks, max } = choroplethdata;
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i].color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i]?.color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
   })
   .filter(d => d);
 
@@ -654,11 +660,21 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={numbins}
               onChange={(e) => setState(draft => {
-                // console.log('SelectViewColumnControl set column path', path, e.target.value)
                 set(draft, `${pathBase}.['num-bins']`, e.target.value)
                 if(method === 'custom'){
-                  const newBreaks = [...breaks].slice(0,-1);
-                  set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+                  const diffBins = numbins - e.target.value;
+                  if(diffBins > 0) {
+                    const newBreaks = [...breaks].slice(0,-diffBins);
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+                  } else {
+                    const numBinsToAdd = diffBins * -1;
+                    //Add empty positions
+                    const newBreaks = [...breaks];
+                    for(let i=0; i<numBinsToAdd; i++) {
+                      newBreaks.push(max)
+                    }
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks);
+                  }
                 }
                 else {
                   set(draft, `${pathBase}.['choroplethdata']`, {});
