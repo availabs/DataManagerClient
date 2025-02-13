@@ -553,7 +553,7 @@ function ChoroplethControl({path, params={}}) {
     const displayedValue = breakIndex === 0 ? `Minimum: ${breakValue}`: breakValue
     return (
       <input
-        key={`${breakValue}_${breakIndex}`}
+        key={`custom_breaks_${breakIndex}`}
         className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
         type='text' 
         value={displayedValue}
@@ -561,7 +561,18 @@ function ChoroplethControl({path, params={}}) {
         onChange={(e) => {
           setState(draft => {
             const newBreaks = [...breaks];
-            newBreaks[breakIndex] = parseFloat(e.target.value)
+            let parsedVal = e.target.value;
+
+            //If last element is a decimal, and the new string is longer than the previous string
+            if(parsedVal.slice(-1) === '.' && parsedVal.length > breaks[breakIndex].toString().length) {
+              //User is attempting to input a decimal place
+              //Add a `1` to the end so that is parses correctly
+              //Adding a `0` will not allow the user to continue to add digits after the decimal
+              parsedVal = parsedVal + "1"
+            }
+
+            newBreaks[breakIndex] = parseFloat(parsedVal)
+
             if(Number.isNaN(newBreaks[breakIndex])){
               newBreaks[breakIndex] = 0;
             }
