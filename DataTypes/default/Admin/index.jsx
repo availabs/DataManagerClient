@@ -37,6 +37,7 @@ const ReduxedAdminPage = amsReduxWrapper((props) => {
 });
 
 const AdminPage = ({ source, users, groups, loggedInUser }) => {
+  const componentGroups = [...groups];
   const myTheme = useContext(ThemeContext);
   const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
 
@@ -145,7 +146,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   if(!Object.keys(sourceAuth?.groups ?? {}).includes(PUBLIC_GROUP)) {
     otherGroups.push({"name": PUBLIC_GROUP, authLevel: -1})
   } else {
-    groups.push({"name": PUBLIC_GROUP })
+    componentGroups.push({"name": PUBLIC_GROUP })
   }
 
   return (
@@ -253,7 +254,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
                   setUserAuth={setGroupAuth}
                   key={groupName}
                   user={
-                    groups?.find((group) => group.name === groupName) ?? {}
+                    componentGroups?.find((group) => group.name === groupName) ?? {name: groupName}
                   }
                   authLevel={sourceAuth.groups[groupName]}
                   loggedInUser={loggedInUser}
