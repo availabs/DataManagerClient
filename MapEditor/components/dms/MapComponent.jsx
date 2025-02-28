@@ -123,6 +123,15 @@ const Edit = ({value, onChange, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
+    const isHorizontalLegendActive = Object.values(state?.symbologies)
+      ?.filter((symb) => symb.isVisible)
+      .some((symb) => {
+        return Object.values(symb?.symbology?.layers).some(
+          (symbLayer) => symbLayer["legend-orientation"] === "horizontal"
+        );
+      });
+
+
     const interactiveFilterIndicies = useMemo(
         () =>
           Object.values(state.symbologies).map(
@@ -194,7 +203,7 @@ const Edit = ({value, onChange, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     <div className=''><MapManager /></div>
                     <div className='flex-1'/>
-                    <div className=''><LegendPanel /></div>
+                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
@@ -291,6 +300,13 @@ const View = ({value, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
+    const isHorizontalLegendActive = Object.values(state?.symbologies)
+      ?.filter((symb) => symb.isVisible)
+      .some((symb) => {
+        return Object.values(symb?.symbology?.layers).some(
+          (symbLayer) => symbLayer["legend-orientation"] === "horizontal"
+        );
+      });
 
     const interactiveFilterIndicies = useMemo(
         () =>
@@ -369,38 +385,12 @@ const View = ({value, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     {!state.hideControls && <div className=''><MapManager /></div>}
                     <div className='flex-1'/>
-                    <div className=''><LegendPanel /></div>
+                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
     )
 }
-
-// const View = ({value}) => {
-//     const mounted = useRef(false);
-//     return (
-//         <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
-//             <AvlMap
-//               layers={ [] }
-//               layerProps = { {} }
-//               mapOptions={{
-//                 center: [-76, 43.3],
-//                 zoom: 6,
-//                 protocols: [PMTilesProtocol],
-//                 styles: defaultStyles
-//               }}
-//               leftSidebar={ false }
-//               rightSidebar={ false }
-//             />
-//             <div className={'absolute inset-0 flex pointer-events-none'}>
-//               <div className='p-2'><div className='bg-white'>Left Sidebar</div></div>
-//               <div className='flex-1'/>
-//               <div className='p-2'><div className='bg-white'>Right Sidebar</div></div>
-//             </div>
-//         </div>
-//     )
-// }
-
 
 export default {
     "name": 'Map: Dama',

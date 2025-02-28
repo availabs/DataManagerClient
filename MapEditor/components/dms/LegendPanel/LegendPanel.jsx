@@ -8,6 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
+import { fnumIndex } from '../../LayerEditor/datamaps'
 //import {LayerMenu} from './LayerPanel'
 
 
@@ -153,6 +154,42 @@ function StepLegend({layer}) {
   )
 }
 
+function HorizontalLegend({ layer, toggleSymbology }) {
+  const { state, setState  } = React.useContext(MapContext);
+  console.log("in HorizontalLegend")
+  let { legenddata, choroplethdata, showOther } = useMemo(() => {
+    return {
+      legenddata : get(layer, `['legend-data']`, []),
+      choroplethdata: get(layer, `['choroplethdata']`, { breaks: [] }),
+      showOther: get(layer, `['category-show-other']`, '#ccc')
+    }
+  },[state]);
+  const isShowOtherEnabled = showOther === '#ccc'
+
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      <div
+        className={`flex-1 flex w-full p-2`}
+      >
+        {legenddata.map((d, i) => (
+          <div className="flex-1 h-6 overflow-hidden">
+            <div className='flex justify-self-end text-xs'>
+              { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : fnumIndex(choroplethdata?.breaks?.[i])}
+            </div>
+            <div
+              key={i}
+              className="flex-1 h-2 w-20"
+              style={{ backgroundColor: d.color }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function LegendRow ({ index, layer, i, symbology_id }) {
   const navigate = useNavigate();
   const  activeLayer  = null
@@ -160,10 +197,11 @@ function LegendRow ({ index, layer, i, symbology_id }) {
   let paintValue = typePaint[layer.type](layer)
 
 
-  let { layerType: type, selectedInteractiveFilterIndex } = useMemo(() => {
+  let { layerType: type, selectedInteractiveFilterIndex, legendOrientation } = useMemo(() => {
     return {
       layerType : get(layer, `['layer-type']`),
-      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`)
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      legendOrientation: get(layer, `['legend-orientation']`, 'vertical'),
     }
   },[layer]);
 
@@ -196,8 +234,14 @@ function LegendRow ({ index, layer, i, symbology_id }) {
           </div>
         </div>
       </div>
-      {type === 'categories' && <CategoryLegend layer={layer} />}
-      {type === 'choropleth' && <StepLegend layer={layer} />}
+        {legendOrientation === "horizontal" ? (
+          <HorizontalLegend layer={layer} />
+        ) : (
+        <>
+          {type === 'categories' && <CategoryLegend layer={layer} />}
+          {type === 'choropleth' && <StepLegend layer={layer} />}
+        </>
+      )}
     </div>
   )
 }
@@ -241,11 +285,11 @@ function LegendPanel (props) {
     <>
       {/* ------Layer Pane ----------- */}
       <div className='p-4'>
-        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)] max-w-[300px] overflow-auto pointer-events-auto scrollbar-sm'>
+        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)]  overflow-auto pointer-events-auto scrollbar-sm'>
           {layersBySymbology.map((symb) => (
             <div
               key={symb.symbology_id}
-              className="m-2 p-2 rounded"
+              className="m-1 p-1 rounded"
             >
               <div className="font-normal">{symb.name}</div>
               {Object.values(symb.layers)
