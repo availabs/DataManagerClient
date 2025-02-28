@@ -97,15 +97,15 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
 
 }
 
-const fnumIndex = (d, fractions = 2, currency = false) => {
+export const fnumIndex = (d, fractions = 2, currency = false) => {
     if (d >= 1000000000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000000000).toFixed(fractions)} T`;
+      return `${currency ? '$' : ``} ${(d / 1000000000000).toFixed(fractions)}T`;
     } else if (d >= 1000000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000000).toFixed(fractions)} B`;
+      return `${currency ? '$' : ``} ${(d / 1000000000).toFixed(fractions)}B`;
     } else if (d >= 1000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000).toFixed(fractions)} M`;
+      return `${currency ? '$' : ``} ${(d / 1000000).toFixed(fractions)}M`;
     } else if (d >= 1000) {
-      return `${currency ? '$' : ``} ${(d / 1000).toFixed(fractions)} K`;
+      return `${currency ? '$' : ``} ${(d / 1000).toFixed(fractions)}K`;
     } else {
       return typeof d === "object" ? `` : `${currency ? '$' : ``} ${parseInt(d)}`;
     }
