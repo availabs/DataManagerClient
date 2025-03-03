@@ -7,7 +7,6 @@ import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { fnumIndex } from '../LayerEditor/datamaps'
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -188,7 +187,6 @@ function HorizontalLegend({ layer, toggleSymbology }) {
       </div>
     )
   }
-  const test = fnumIndex(choroplethdata?.breaks?.[0])
 
   return (
     <div
@@ -200,8 +198,8 @@ function HorizontalLegend({ layer, toggleSymbology }) {
       >
         {legenddata.map((d, i) => (
           <div className="flex-1 h-6">
-            <div className='flex justify-self-end text-xs'>
-              { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : fnumIndex(choroplethdata?.breaks?.[i])}
+            <div className='flex justify-self-end text-xs h-4'>
+              { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
             </div>
 
             <div

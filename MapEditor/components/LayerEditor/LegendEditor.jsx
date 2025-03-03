@@ -5,7 +5,6 @@ import set from 'lodash/set'
 
 import { InteractiveFilterControl } from './InteractiveFilterControl'
 import typeConfigs from './typeConfigs'
-import { fnumIndex } from './datamaps'
 
 
 const typeSymbols = {
@@ -118,9 +117,21 @@ function LegendEditor() {
           {legenddata.map((d, i) => (
             <div className="flex-1 h-6">
               <div className="flex justify-self-end text-xs">
-                { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : fnumIndex(choroplethdata?.breaks?.[i])}
+                <input
+                  type="text"
+                  className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                  value={legenddata[i].label}
+                  onChange={(e) =>
+                    setState((draft) => {
+                      set(
+                        draft,
+                        `${pathBase}['legend-data'][${i}].label`,
+                        e.target.value
+                      );
+                    })
+                  }
+                />
               </div>
-
               <div
                 key={i}
                 className="flex-1 h-4"

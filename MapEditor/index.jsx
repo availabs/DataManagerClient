@@ -277,7 +277,7 @@ const MapEditor = () => {
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId, initialViewId, baseDataColumn } = useMemo(() => {
+  let { layerType, viewId, sourceId, paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled, layerPaintPath, viewGroupId, initialViewId, baseDataColumn, legendOrientation } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
       'fill':"layers[1].paint['fill-color']",
@@ -308,10 +308,11 @@ const MapEditor = () => {
       filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
       filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
       viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
-      viewGroupId:get(state,`${pathBase}['view-group-id']`),
-      initialViewId:get(state,`${pathBase}['initial-view-id']`),
+      viewGroupId: get(state,`${pathBase}['view-group-id']`),
+      initialViewId: get(state,`${pathBase}['initial-view-id']`),
+      legendOrientation: get(state,`${pathBase}['legend-orientation']`, 'vertical'),
     }
-  },[state])
+  },[state]);
 
   useEffect(() => {
     //console.log('getmetadat', sourceId)
@@ -435,7 +436,7 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
-        let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
+        let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
         if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
           const isShowOtherEnabled = showOther === '#ccc';
           if(isShowOtherEnabled) {
@@ -462,7 +463,27 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+
+  useEffect(() => {
+    console.log("---NEW LEGEND, switching legend orientation----");
+    let { legend } = choroplethPaint(baseDataColumn, choroplethdata['max'], colorrange, numbins, method, choroplethdata['breaks'], showOther, legendOrientation);
+    const isShowOtherEnabled = showOther === "#ccc";
+    if (isShowOtherEnabled) {
+      if (legend[legend.length - 1].label !== "No data") {
+        legend.push({ color: showOther, label: "No data" });
+      }
+      legend[legend.length - 1].color = showOther;
+    } else {
+      if (legend[legend.length - 1].label === "No data") {
+        legend.pop();
+      }
+    }
+
+    setState((draft) => {
+      set(draft, `${pathBase}['legend-data']`, legend);
+    });
+  }, [legendOrientation]);
 
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 

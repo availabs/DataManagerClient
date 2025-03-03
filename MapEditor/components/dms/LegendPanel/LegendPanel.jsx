@@ -8,7 +8,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
-import { fnumIndex } from '../../LayerEditor/datamaps'
 //import {LayerMenu} from './LayerPanel'
 
 
@@ -155,16 +154,13 @@ function StepLegend({layer}) {
 }
 
 function HorizontalLegend({ layer, toggleSymbology }) {
-  const { state, setState  } = React.useContext(MapContext);
-  console.log("in HorizontalLegend")
-  let { legenddata, choroplethdata, showOther } = useMemo(() => {
+  let { legenddata, showOther } = useMemo(() => {
     return {
       legenddata : get(layer, `['legend-data']`, []),
-      choroplethdata: get(layer, `['choroplethdata']`, { breaks: [] }),
       showOther: get(layer, `['category-show-other']`, '#ccc')
     }
-  },[state]);
-  const isShowOtherEnabled = showOther === '#ccc'
+  },[layer]);
+  const isShowOtherEnabled = showOther === '#ccc';
 
   return (
     <div
@@ -175,8 +171,8 @@ function HorizontalLegend({ layer, toggleSymbology }) {
       >
         {legenddata.map((d, i) => (
           <div className="flex-1 h-6 overflow-hidden">
-            <div className='flex justify-self-end text-xs'>
-              { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : fnumIndex(choroplethdata?.breaks?.[i])}
+            <div className='flex h-4 justify-self-end text-xs'>
+              {isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
             </div>
             <div
               key={i}
