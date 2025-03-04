@@ -25,16 +25,7 @@ const getData = async () => {
     return {}
 }
 
-const sectionArrayTheme = {
-  heights: {
-    "1/3": { style: "calc(33vh - 65px)", iconSize: 33 },
-    "1/2": { style: "calc(50vh - 65px)", iconSize: 50 },
-    "2/3": { style: "calc(66vh - 65px)", iconSize: 66 },
-    "1": { style: "calc(100vh - 65px)", iconSize: 100 },
-  },
-};
-
-const Edit = ({value, onChange, size, height="1"}) => {
+const Edit = ({value, onChange, size}) => {
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
     console.log('pg env MapContext ', pgEnv)
@@ -192,10 +183,9 @@ const Edit = ({value, onChange, size, height="1"}) => {
         center: [-75.17, 42.85],
         zoom: 6.6
     }
-    const heightStyle = sectionArrayTheme.heights[height].style;
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:heightStyle}} ref={mounted}>
+            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 65px)'}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
@@ -225,7 +215,7 @@ Edit.settings = {
     name: 'ElementEdit'
 }
 
-const View = ({value, size, height="1"}) => {
+const View = ({value, size}) => {
     // console.log('Dama Map: View')
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
@@ -375,10 +365,9 @@ const View = ({value, size, height="1"}) => {
         center: [-75.17, 42.85],
         zoom: 6.6
     }
-    const heightStyle = sectionArrayTheme.heights[height].style;
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_view' className="w-full relative" style={{height: heightStyle}} ref={mounted}>
+            <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
