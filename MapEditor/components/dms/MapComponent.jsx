@@ -9,6 +9,7 @@ import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
 import { usePrevious } from '../../components/LayerManager/utils'
 import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
+import { HEIGHT_OPTIONS } from "./MapManager/MapManager";
 
 const isJson = (str)  => {
     try {
@@ -38,7 +39,9 @@ const Edit = ({value, onChange, size}) => {
         setInitialBounds: cachedData.setInitialBounds || false,
         initialBounds: cachedData.initialBounds || null,
         hideControls: cachedData.hideControls || false,
-        blankBaseMap: cachedData.blankBaseMap || false
+        blankBaseMap: cachedData.blankBaseMap || false,
+        height: cachedData.height || "1",
+        zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -183,9 +186,10 @@ const Edit = ({value, onChange, size}) => {
         center: [-75.17, 42.85],
         zoom: 6.6
     }
+    const heightStyle = HEIGHT_OPTIONS[state.height];
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 65px)'}} ref={mounted}>
+            <div id='dama_map_edit' className="w-full relative" style={{height: heightStyle}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
@@ -227,10 +231,11 @@ const View = ({value, size}) => {
         symbologies: cachedData.symbologies || {},
         initialBounds: cachedData.initialBounds || null,
         hideControls: cachedData.hideControls || false,
-        blankBaseMap: cachedData.blankBaseMap || false
+        blankBaseMap: cachedData.blankBaseMap || false,
+        height: cachedData.height || "1",
+        zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])
-
 
     //console.log('render map component view', state)
     useEffect(() => {
@@ -365,9 +370,10 @@ const View = ({value, size}) => {
         center: [-75.17, 42.85],
         zoom: 6.6
     }
+    const heightStyle = HEIGHT_OPTIONS[state.height];
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
+            <div id='dama_map_view' className="w-full relative" style={{height: heightStyle}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
@@ -377,7 +383,10 @@ const View = ({value, size}) => {
                     center: center,
                     zoom: zoom,
                     protocols: [PMTilesProtocol],
-                    styles: state.blankBaseMap ? blankStyles : defaultStyles
+                    styles: state.blankBaseMap ? blankStyles : defaultStyles,
+                    dragPan: state.zoomPan,
+                    scrollZoom: state.zoomPan,
+                    dragRotate: state.zoomPan
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }

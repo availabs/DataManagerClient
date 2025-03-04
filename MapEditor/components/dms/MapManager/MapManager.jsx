@@ -600,19 +600,34 @@ function TabPanel ({tabIndex, tab}) {
 }
 
 
+export const HEIGHT_OPTIONS = {
+  1: "900px",
+  "2/3": "600px",
+  "1/3": "300px",
+  "1/4": "150px",
+};
 function MapManager () {
   const { state, setState } = React.useContext(MapContext);
   
-  // console.log('MapManager', state)
-
-  const containerOverflow = state.isEdit ? 'overflow-x-auto overflow-x-visible' : 'overflow-y-auto';
+  const { blankBaseMap, isEdit, hideControls, initialBounds, tabs, height, zoomPan } = useMemo(() => {  
+    return {
+      isEdit: get(state, ['isEdit'], false),
+      blankBaseMap: get(state, ['blankBaseMap'], false),
+      hideControls: get(state, ['hideControls'], false),
+      initialBounds: get(state, ['initialBounds'], {}),
+      height: get(state, ['height'], "1"),
+      tabs: get(state, ['tabs'], []),
+      zoomPan: get(state, ['zoomPan'], true),
+    }
+  }, [state]);
+  const containerOverflow = isEdit ? 'overflow-x-auto overflow-x-visible' : 'overflow-y-auto';
   return(
     <div className='p-4'>
       <div className={`bg-white/95 w-[340px] ${containerOverflow} rounded-lg drop-shadow-lg pointer-events-auto  min-h-[400px] max-h-[calc(100vh_-_111px)] scrollbar-sm `}>
         <Tab.Group className='flex'>
           <div className='flex flex-col justify-between items-center border-r'>
             <Tab.List className='flex w-[40px] flex-1 flex-col '>
-              {state.tabs.map((tab,i) => (
+              {tabs.map((tab,i) => (
                 <Tab  key={tab.name} as={Fragment}>
                   {({ selected }) => (
                     <div
@@ -632,7 +647,7 @@ function MapManager () {
               ))}
             </Tab.List>
             {
-              state.isEdit && (
+              isEdit && (
               <>
                 <SymbologyMenu 
                   button={
@@ -650,13 +665,62 @@ function MapManager () {
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                        >
+                          Height:
+                          <select
+                            className={`ml-1 bg-transparent`}
+                            value={height}
+                            onChange={(e) => {
+                              setState((draft) => {
+                                console.log("setting new map hieght::", e)
+                                draft.height = e.target.value;
+                              });
+                            }}
+                          >
+                            {Object.keys(HEIGHT_OPTIONS).map((hOptionKey, i) => {
+                              return (
+                                <option key={i} value={hOptionKey}>
+                                  {HEIGHT_OPTIONS[hOptionKey]}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                           onClick={() => {
                             setState(draft => {
                               draft.hideControls = !draft.hideControls;
                             })
                           }}
                         >
-                          {state.hideControls ? "Display Map Controls" : "Hide Map Controls"}
+                          {hideControls ? "Display Map Controls" : "Hide Map Controls"}
+                        </div>
+                      )}
+                    </Menu.Item>
+                  </div>
+                  <div className="px-1 py-1">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <div 
+                          className={`${
+                            active ? 'bg-pink-50 ' : ''
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                          onClick={() => {
+                            setState(draft => {
+                              draft.zoomPan = !draft.zoomPan;
+                            })
+                          }}
+                        >
+                          {zoomPan ? "Disable zoom/pan" : "Enable zoom/pan"}
                         </div>
                       )}
                     </Menu.Item>
@@ -681,7 +745,7 @@ function MapManager () {
                     </Menu.Item>
                   </div>
                   {
-                    state.initialBounds && (                  
+                    initialBounds && (                  
                       <div className="px-1 py-1">
                         <Menu.Item>
                           {({ active }) => (
@@ -719,7 +783,7 @@ function MapManager () {
                             })
                           }}
                         >
-                          {state.blankBaseMap ? "Reset base map layer" : "Use blank basemap"}
+                          {blankBaseMap ? "Reset base map layer" : "Use blank basemap"}
                         </div>
                       )}
                     </Menu.Item>
@@ -728,7 +792,7 @@ function MapManager () {
                 <div 
                   className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
                   onClick={() => setState(draft => {
-                    draft.tabs.push({name: `Layers ${state.tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
+                    draft.tabs.push({name: `Layers ${tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
                   })}
                 >
                   <Plus className='fill-slate-500 hover:fill-pink-700' />
@@ -738,7 +802,7 @@ function MapManager () {
           </div>
 
           <Tab.Panels className='flex-1 w-[220px] '>
-            {state.tabs.map((tab,i) => (
+            {tabs.map((tab,i) => (
               <Tab.Panel key={i} className='w-full'>
                 <TabPanel  tab={tab} tabIndex={i} />
               </Tab.Panel>)
