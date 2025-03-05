@@ -90,7 +90,7 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
             label = `${
               paint[i + 2] > 1000 ? fnumIndex(paint[i + 2]) : paint[i + 2]
             } - ${
-              paint[i + 2] > 1000
+              paint[i + 2] > 1000 || paint[i + 4] > 1000
                 ? fnumIndex(paint[i + 4] || max)
                 : paint[i + 4] || max
             }`;
