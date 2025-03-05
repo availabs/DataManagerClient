@@ -40,7 +40,7 @@ const Edit = ({value, onChange, size}) => {
         initialBounds: cachedData.initialBounds || null,
         hideControls: cachedData.hideControls || false,
         blankBaseMap: cachedData.blankBaseMap || false,
-        height: cachedData.height || "1",
+        height: cachedData.height || "full",
         zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])
@@ -232,7 +232,7 @@ const View = ({value, size}) => {
         initialBounds: cachedData.initialBounds || null,
         hideControls: cachedData.hideControls || false,
         blankBaseMap: cachedData.blankBaseMap || false,
-        height: cachedData.height || "1",
+        height: cachedData.height || "full",
         zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])

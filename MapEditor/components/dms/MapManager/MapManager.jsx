@@ -599,13 +599,14 @@ function TabPanel ({tabIndex, tab}) {
   )
 }
 
-
 export const HEIGHT_OPTIONS = {
+  "full": 'calc(95vh)',
   1: "900px",
   "2/3": "600px",
   "1/3": "300px",
   "1/4": "150px",
 };
+
 function MapManager () {
   const { state, setState } = React.useContext(MapContext);
   
@@ -615,10 +616,10 @@ function MapManager () {
       blankBaseMap: get(state, ['blankBaseMap'], false),
       hideControls: get(state, ['hideControls'], false),
       initialBounds: get(state, ['initialBounds'], {}),
-      height: get(state, ['height'], "1"),
+      height: get(state, ['height'], "full"),
       tabs: get(state, ['tabs'], []),
       zoomPan: get(state, ['zoomPan'], true),
-    }
+    };
   }, [state]);
   const containerOverflow = isEdit ? 'overflow-x-auto overflow-x-visible' : 'overflow-y-auto';
   return(
