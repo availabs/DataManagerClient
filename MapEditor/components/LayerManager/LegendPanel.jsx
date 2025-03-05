@@ -193,7 +193,7 @@ function HorizontalLegend({ layer, toggleSymbology }) {
         className={`flex-1 flex w-full p-2`}
       >
         {legenddata.map((d, i) => (
-          <div className="flex-1 h-6">
+          <div className="flex-1 h-6" key={`horizontal_legend_item_${i}`}>
             <div className='flex justify-self-end text-xs h-4'>
               { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
             </div>

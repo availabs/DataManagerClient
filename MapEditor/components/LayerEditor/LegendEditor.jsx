@@ -89,7 +89,7 @@ function LegendEditor() {
       </div>
       {legendOrientation === "vertical" &&
         legenddata.map((d, i) => (
-          <div key={i} className="w-full flex items-center hover:bg-pink-50">
+          <div key={`vertical_input_${i}`} className="w-full flex items-center hover:bg-pink-50">
             <div className="flex items-center h-6 w-10 justify-center  ">
               {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
               <Symbol color={d.color} />
@@ -115,7 +115,7 @@ function LegendEditor() {
       {legendOrientation === "horizontal" && (
         <div className={`flex-1 flex w-full p-2`}>
           {legenddata.map((d, i) => (
-            <div className="flex-1 h-6">
+            <div className="flex-1 h-6" key={`horizontal_input_${i}`}>
               <div className="flex justify-self-end text-xs">
                 <input
                   type="text"
