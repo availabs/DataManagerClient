@@ -38,7 +38,6 @@ const typeSymbols = {
 
 function LegendEditor() {
   const { state, setState  } = React.useContext(SymbologyContext);
-  console.log("in legend editor")
   const { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
     return {
       selectedInteractiveFilterIndex: get(
@@ -73,7 +72,7 @@ function LegendEditor() {
   return (
     <div className="w-full max-h-[550px] pb-4 overflow-auto">
       <div className="flex p-4 pt-0 text-sm">
-        <div className="pr-2"> Legend Orientation: </div>
+        <div className="pr-2"> Legend Type: </div>
         <select
           className="w-full py-2 bg-transparent"
           value={legendOrientation}
@@ -85,6 +84,7 @@ function LegendEditor() {
         >
           <option value="vertical">Vertical</option>
           <option value="horizontal">Horizontal</option>
+          <option value="none">None</option>
         </select>
       </div>
       {legendOrientation === "vertical" &&
@@ -119,7 +119,7 @@ function LegendEditor() {
               <div className="flex justify-self-end text-xs">
                 <input
                   type="text"
-                  className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                  className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
                   value={legenddata[i].label}
                   onChange={(e) =>
                     setState((draft) => {

@@ -164,18 +164,14 @@ function StepLegend({ layer, toggleSymbology }) {
 
 function HorizontalLegend({ layer, toggleSymbology }) {
   const { state, setState  } = React.useContext(SymbologyContext);
-  console.log("in HorizontalLegend")
-  let { legenddata, isLoadingColorbreaks, choroplethdata, showOther } = useMemo(() => {
+  let { legenddata, isLoadingColorbreaks, showOther } = useMemo(() => {
     return {
       legenddata : get(layer, `['legend-data']`, []),
       isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
-      choroplethdata: get(layer, `['choroplethdata']`, { breaks: [] }),
       showOther: get(layer, `['category-show-other']`, '#ccc')
     }
   },[state]);
   const isShowOtherEnabled = showOther === '#ccc'
-
-  console.log("in HorizontalLegend choroplethdata", choroplethdata?.breaks);
 
   if(isLoadingColorbreaks){
     return (
@@ -449,25 +445,29 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
           {groupSelectorElements}
         </div>
       </div>
-      {legendOrientation === "horizontal" ? (
-        <HorizontalLegend layer={layer} toggleSymbology={toggleSymbology} />
-      ) : (
-        <>
-          {type === "categories" && (
-            <CategoryLegend layer={layer} toggleSymbology={toggleSymbology} />
-          )}
-          {type === "choropleth" && (
-            <StepLegend layer={layer} toggleSymbology={toggleSymbology} />
-          )}
-          {type === "interactive" && (
-            <InteractiveLegend
-              layer={layer}
-              toggleSymbology={toggleSymbology}
-              isListVisible={isListVisible}
-            />
-          )}
-        </>
-      )}
+      {
+        legendOrientation !== "none" && (
+          legendOrientation === "horizontal" ? (
+            <HorizontalLegend layer={layer} toggleSymbology={toggleSymbology} />
+          ) : (
+            <>
+              {type === "categories" && (
+                <CategoryLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {type === "choropleth" && (
+                <StepLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {type === "interactive" && (
+                <InteractiveLegend
+                  layer={layer}
+                  toggleSymbology={toggleSymbology}
+                  isListVisible={isListVisible}
+                />
+              )}
+            </>
+          )
+        )
+      }
     </div>
   );
 }
