@@ -281,7 +281,7 @@ function LegendPanel (props) {
     <>
       {/* ------Layer Pane ----------- */}
       <div className='p-4'>
-        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)]  overflow-auto pointer-events-auto scrollbar-sm'>
+        <div className='min-h-10 relative bg-white/75 max-h-[calc(100vh_-_111px)] overflow-auto pointer-events-auto scrollbar-sm'>
           {layersBySymbology.map((symb) => (
             <div
               key={symb.symbology_id}
@@ -290,6 +290,7 @@ function LegendPanel (props) {
               <div className="font-normal">{symb.name}</div>
               {Object.values(symb.layers)
                 .sort((a,b) => b.order - a.order)
+                .filter(layer => layer?.['legend-orientation'] !== 'none')
                 .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} symbology_id={symb.symbology_id}/>)}
             </div>
           ))}
