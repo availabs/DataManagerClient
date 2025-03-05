@@ -454,7 +454,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
               {type === "categories" && (
                 <CategoryLegend layer={layer} toggleSymbology={toggleSymbology} />
               )}
-              {type === "choropleth" && (
+              {(type === "choropleth" || type === "circles") && (
                 <StepLegend layer={layer} toggleSymbology={toggleSymbology} />
               )}
               {type === "interactive" && (

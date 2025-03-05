@@ -284,12 +284,15 @@ const MapEditor = () => {
       'circle':"layers[0].paint['circle-color']",
       'line':"layers[1].paint['line-color']"
     }
-
-    const layerPaintPath = paintPaths[polygonLayerType];
+    const layerType =  get(state, `${pathBase}['layer-type']`, {});
+    let layerPaintPath = paintPaths[polygonLayerType];
    
+    if(layerType === 'circles') {
+      layerPaintPath = "layers[0].paint['circle-radius']"
+    }
     return {
       layerPaintPath,
-      layerType: get(state, `${pathBase}['layer-type']`, {}),
+      layerType,
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
@@ -402,7 +405,7 @@ const MapEditor = () => {
             set(draft, `${pathBase}['legend-data']`, legend)
           })
         }
-      } else if(layerType === 'choropleth') {
+      } else if(layerType === 'choropleth' || layerType === 'circles') {
         const domainOptions = {
           column: baseDataColumn,
           viewId,
@@ -436,8 +439,23 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
-        let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
-        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
+        let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        if(layerType === 'circles') {
+          let RADIUS = 3;
+          paint = colorBreaks["breaks"].reduce(
+            (acc, curr, i) => {
+              acc.push(RADIUS);
+              acc.push(curr);
+              RADIUS += 6*(i+1);
+              return acc;
+            },
+            ["step", ["get", baseDataColumn]]
+          );
+          paint.push(RADIUS)
+        }
+        console.log("paintvalue::", paintValue)
+        console.log("paint before new setstate::", paint)
+        if((isValidCategoryPaint(paint) || layerType === 'circles') && !isEqual(paint, paintValue)) {
           const isShowOtherEnabled = showOther === '#ccc';
           if(isShowOtherEnabled) {
             if(legend[legend.length-1].label !== "No data") {
