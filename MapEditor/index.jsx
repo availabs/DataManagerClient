@@ -277,7 +277,35 @@ const MapEditor = () => {
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { layerType, viewId, sourceId, paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled, layerPaintPath, viewGroupId, initialViewId, baseDataColumn, legendOrientation } = useMemo(() => {
+  let {
+    layerType,
+    viewId,
+    sourceId,
+    paintValue,
+    column,
+    categories,
+    categorydata,
+    colors,
+    colorrange,
+    numCategories,
+    numbins,
+    method,
+    showOther,
+    symbology_id,
+    choroplethdata,
+    filterGroupEnabled,
+    filterGroupLegendColumn,
+    viewGroupEnabled,
+    layerPaintPath,
+    viewGroupId,
+    initialViewId,
+    baseDataColumn,
+    legendOrientation,
+    minRadius,
+    maxRadius,
+    lowerBound,
+    upperBound
+  } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
       'fill':"layers[1].paint['fill-color']",
@@ -314,6 +342,10 @@ const MapEditor = () => {
       viewGroupId: get(state,`${pathBase}['view-group-id']`),
       initialViewId: get(state,`${pathBase}['initial-view-id']`),
       legendOrientation: get(state,`${pathBase}['legend-orientation']`, 'vertical'),
+      minRadius: get(state,`${pathBase}['min-radius']`, 8),
+      maxRadius: get(state,`${pathBase}['max-radius']`, 128),
+      lowerBound: get(state,`${pathBase}['lower-bound']`, null),
+      upperBound: get(state,`${pathBase}['upper-bound']`, null),
     }
   },[state]);
 
@@ -441,20 +473,34 @@ const MapEditor = () => {
         }
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
         if(layerType === 'circles') {
-          let RADIUS = 3;
-          paint = colorBreaks["breaks"].reduce(
-            (acc, curr, i) => {
-              acc.push(RADIUS);
-              acc.push(curr);
-              RADIUS += 6*(i+1);
-              return acc;
-            },
-            ["step", ["get", baseDataColumn]]
-          );
-          paint.push(RADIUS)
+          console.log("---RECALCULATING CIRCLE RADIUS---")
+          // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+          // minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+          // upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+          // maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+          if(!lowerBound) {
+            setState(draft => {
+              set(draft,`${pathBase}['lower-bound']`, colorBreaks['breaks'][0])
+            })
+          }
+          if(!upperBound) {
+            setState(draft => {
+              set(draft,`${pathBase}['upper-bound']`, colorBreaks['max'])
+            })
+          }
+          const circleLowerBound = lowerBound !== null ? lowerBound : colorBreaks['breaks'][0];
+          const circleUpperBound = upperBound !== null ? upperBound : colorBreaks['max'];
+
+          paint = [
+            "interpolate",
+            ["linear"],
+            ["number", ["get", baseDataColumn]],
+            circleLowerBound, //min of dataset
+            minRadius,//min radius (px) of circle
+            circleUpperBound, //max of dataset
+            maxRadius, //max radius (px) of circle
+          ];
         }
-        console.log("paintvalue::", paintValue)
-        console.log("paint before new setstate::", paint)
         if((isValidCategoryPaint(paint) || layerType === 'circles') && !isEqual(paint, paintValue)) {
           const isShowOtherEnabled = showOther === '#ccc';
           if(isShowOtherEnabled) {

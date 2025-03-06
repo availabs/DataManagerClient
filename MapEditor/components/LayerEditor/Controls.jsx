@@ -325,6 +325,12 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             if(sourceTiles !== 'no source tiles') {
               set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
+            if(layerType === 'circles') {
+              set(draft, `${pathBase}['lower-bound']`, null);
+              set(draft, `${pathBase}['upper-bound']`, null);
+              set(draft, `${pathBase}['min-radius']`, 8);
+              set(draft, `${pathBase}['max-radius']`, 128);
+            }
 
             // Custom color scale relies on a premade scale
             // So, when we change data columns, we need to reset the color scale first
@@ -514,7 +520,111 @@ function CategoricalColorControl({path, params={}}) {
     )
 }
 
+function CircleControl({path, params={}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
+  // console.log('CircleControl', params)
 
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { lowerBound, upperBound, minRadius, maxRadius } = useMemo(() => {
+    return {
+      lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+      minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+      upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+      maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+    }
+  },[state]);
+
+  //layerPaintPath = "layers[0].paint['circle-radius']"
+  //"layers[0].paint['circle-radius'][3]" is the lower bound for interpolation function
+  //"layers[0].paint['circle-radius'][4]" is the min radius of the circle
+  //"layers[0].paint['circle-radius'][5]" is the upper bound for the interpolation function
+  //"layers[0].paint['circle-radius'][6]" is the max radius of the circle
+  return (
+    <div className=" w-full items-center">
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Min Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={minRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['min-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Max Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={maxRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['max-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Lower Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={lowerBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['lower-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Upper Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={upperBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['upper-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function roundToNearestTen(v) {
   return Math.pow(10, Math.round(Math.log10(v)));
@@ -812,7 +922,8 @@ export const controlTypes = {
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
-  'choroplethControl':ChoroplethControl, 
+  'choroplethControl':ChoroplethControl,
+  'circleControl': CircleControl,
   'interactiveFilterControl': InteractiveFilterControl,
   'range': RangeControl,
   'simple': SimpleControl,

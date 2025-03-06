@@ -53,13 +53,12 @@ function LegendEditor() {
     pathBase = `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`;
   }
   
-  const { type, legenddata, legendOrientation, choroplethdata, showOther } = useMemo(() => {
+  const { type, legenddata, legendOrientation, showOther } = useMemo(() => {
     return {
-      legendOrientation: get(state, `${pathBase}['legend-orientation']`, []),
+      legendOrientation: get(state, `${pathBase}['legend-orientation']`, 'vertical'),
       legenddata : get(state, `${pathBase}['legend-data']`, []),
       type : get(state, `${pathBase}['type']`, 'fill'),
-      choroplethdata: get(state, `${pathBase}['choroplethdata']`, { breaks: [] }),
-      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc')
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
     }
   },[state])
 
@@ -82,8 +81,9 @@ function LegendEditor() {
             });
           }}
         >
-          <option value="vertical">Vertical</option>
-          <option value="horizontal">Horizontal</option>
+          {layerType !== 'circles' && <option value="vertical">Vertical</option>}
+          {layerType !== 'circles' && <option value="horizontal">Horizontal</option>}
+          {layerType === 'circles' && <option value="vertical">Visible</option>}
           <option value="none">None</option>
         </select>
       </div>
