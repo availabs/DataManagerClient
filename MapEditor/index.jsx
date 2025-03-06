@@ -304,7 +304,9 @@ const MapEditor = () => {
     minRadius,
     maxRadius,
     lowerBound,
-    upperBound
+    upperBound,
+    radiusCurve,
+    curveFactor
   } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
@@ -346,6 +348,8 @@ const MapEditor = () => {
       maxRadius: get(state,`${pathBase}['max-radius']`, 128),
       lowerBound: get(state,`${pathBase}['lower-bound']`, null),
       upperBound: get(state,`${pathBase}['upper-bound']`, null),
+      radiusCurve: get(state,`${pathBase}['radius-curve']`, 'linear'),
+      curveFactor: get(state,`${pathBase}['curve-factor']`, 1),
     }
   },[state]);
 
@@ -490,10 +494,9 @@ const MapEditor = () => {
           }
           const circleLowerBound = lowerBound !== null ? lowerBound : colorBreaks['breaks'][0];
           const circleUpperBound = upperBound !== null ? upperBound : colorBreaks['max'];
-
           paint = [
             "interpolate",
-            ["linear"],
+            [radiusCurve, curveFactor],
             ["number", ["get", baseDataColumn]],
             circleLowerBound, //min of dataset
             minRadius,//min radius (px) of circle

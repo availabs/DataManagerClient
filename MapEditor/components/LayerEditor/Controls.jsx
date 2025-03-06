@@ -530,22 +530,70 @@ function CircleControl({path, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { lowerBound, upperBound, minRadius, maxRadius } = useMemo(() => {
+  let { lowerBound, upperBound, minRadius, maxRadius, radiusCurve, curveFactor } = useMemo(() => {
     return {
       lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
       minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
       upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
       maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+      radiusCurve: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][0]`, 'linear'),
+      curveFactor: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][1]`, 1),
     }
   },[state]);
 
   //layerPaintPath = "layers[0].paint['circle-radius']"
+  //"layers[0].paint['circle-radius'][1][0]" is the curve function
+  //"layers[0].paint['circle-radius'][1][1]" is the `base` 
+      //Controls the rate at which the output increases: higher values make the output 
+      //increase more towards the high end of the range. 
+      //With values close to 1 the output increases linearly.
   //"layers[0].paint['circle-radius'][3]" is the lower bound for interpolation function
   //"layers[0].paint['circle-radius'][4]" is the min radius of the circle
   //"layers[0].paint['circle-radius'][5]" is the upper bound for the interpolation function
   //"layers[0].paint['circle-radius'][6]" is the max radius of the circle
   return (
     <div className=" w-full items-center">
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 pl-2">Radius curve:</div>
+        <div className="w-full border border-transparent hover:border-slate-200 rounded mr-1 mb-1">
+          <select
+            className='w-full p-2 pl-0 bg-transparent text-slate-700 text-sm'
+            value={radiusCurve}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['radius-curve']`,
+                  e.target.value
+                );
+              });
+            }}
+          >
+            <option value='linear'>Linear</option>
+            <option value='exponential'>Exponential</option>
+          </select>
+        </div>
+      </div>
+      {radiusCurve === 'exponential' && <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Curve Factor:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={curveFactor}
+            step=".1"
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['curve-factor']`,
+                  parseFloat(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>}
       <div className="flex items-center">
         <div className="text-sm text-slate-400 px-2">Min Radius:</div>
         <div className="border border-transparent hover:border-slate-200 m-1 rounded ">

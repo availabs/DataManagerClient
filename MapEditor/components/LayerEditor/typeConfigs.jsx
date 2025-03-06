@@ -477,9 +477,9 @@ const typeConfigs = {
       },
       controls: [
         {
-          type: 'choroplethControl',
+          type: 'circleControl',
           params: {
-            format: (v) => {console.log("circle radius v::", v);return `${((v?.length-3 || 0)/2) || '10'} Categories`}
+            format: (v) => `${v[4]}px - ${v[6]}px`
           },
           path: `layers[0].paint['circle-radius']`
         }

@@ -7,6 +7,7 @@ import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
+import { fnumIndex } from '../LayerEditor/datamaps'
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -127,12 +128,16 @@ function CategoryLegend({ layer, toggleSymbology }) {
 function CircleLegend({ layer, toggleSymbology }) {
   console.log("CircleLegend", layer);
   const { state, setState } = React.useContext(SymbologyContext);
-  let { legenddata, isLoadingColorbreaks } = useMemo(() => {
+  let { minRadius, maxRadius, lowerBound, upperBound, legenddata, isLoadingColorbreaks } = useMemo(() => {
     return {
       legenddata: get(layer, `['legend-data']`, []),
       isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
+      minRadius: get(layer,`['min-radius']`, 8),
+      maxRadius: get(layer,`['max-radius']`, 128),
+      lowerBound: get(layer,`['lower-bound']`, null),
+      upperBound: get(layer,`['upper-bound']`, null),
     };
-  }, [state]);
+  }, [layer]);
   const Symbol = typeSymbols[layer.type] || typeSymbols["fill"]``;
 
   if (isLoadingColorbreaks) {
@@ -156,37 +161,29 @@ function CircleLegend({ layer, toggleSymbology }) {
   //21 = 7.0
   return (
     <div
-      className="w-full max-h-[250px] overflow-x-auto scrollbar-sm"
+      className="w-[33%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4"
       onClick={toggleSymbology}
     >
-      {legenddata.filter(d => d.label !== "No data").map((d, i) => {
+      <div className='flex w-full justify-between'>
+        <div>
+          {minRadius}px
+        </div>
+        <div>
+          {maxRadius}px
+        </div>
+      </div>
+      <div className='ml-8'>
+        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
+      </div>
+      <div className='flex w-full justify-between'>
+        <div>
+          {fnumIndex(lowerBound)}
+        </div>
+        <div>
+          {fnumIndex(upperBound)}
+        </div>
+      </div>
 
-           
-          
-        console.log("iconScale",iconScale);
-        iconScale += .3
-
-
-
-        RADIUS += 6*(i+1);
-
-                
-        return (
-          <div key={i} className="w-full pl-6 flex items-centerhover:bg-pink-50 justify-start">
-            <div className="flex items-center h-6 justify-start">
-              <i
-                class="fa-solid fa-arrow-right-long"
-                style={{  transform: `scaleX(${iconScale})` }}
-              ></i>
-
-            </div>
-            <div className='ml-8'>{RADIUS}px</div>
-            <div className="flex items-center  text-center  px-8 text-slate-500 h-6 text-sm truncate justify-start">
-              {d.label}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
