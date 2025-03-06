@@ -126,11 +126,9 @@ function CategoryLegend({ layer, toggleSymbology }) {
 }
 
 function CircleLegend({ layer, toggleSymbology }) {
-  console.log("CircleLegend", layer);
-  const { state, setState } = React.useContext(SymbologyContext);
-  let { minRadius, maxRadius, lowerBound, upperBound, legenddata, isLoadingColorbreaks } = useMemo(() => {
+ // console.log("CircleLegend", layer);
+  let { minRadius, maxRadius, lowerBound, upperBound, isLoadingColorbreaks } = useMemo(() => {
     return {
-      legenddata: get(layer, `['legend-data']`, []),
       isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
       minRadius: get(layer,`['min-radius']`, 8),
       maxRadius: get(layer,`['max-radius']`, 128),
@@ -138,7 +136,6 @@ function CircleLegend({ layer, toggleSymbology }) {
       upperBound: get(layer,`['upper-bound']`, null),
     };
   }, [layer]);
-  const Symbol = typeSymbols[layer.type] || typeSymbols["fill"]``;
 
   if (isLoadingColorbreaks) {
     return (
@@ -153,12 +150,6 @@ function CircleLegend({ layer, toggleSymbology }) {
       </div>
     );
   }
-  console.log("circle legenddata::", legenddata);
-  let iconScale = 1;
-  let RADIUS = 3;
-  //if 3px = 1.0
-  //9px = 3.0
-  //21 = 7.0
   return (
     <div
       className="w-[33%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4"
