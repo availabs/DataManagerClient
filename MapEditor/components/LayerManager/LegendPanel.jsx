@@ -1,7 +1,7 @@
 import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid } from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
@@ -96,6 +96,7 @@ function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
     >
       {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {activeFilterLayerType === 'circles' && (<CircleLegend layer={layer} toggleSymbology={toggleSymbology} />)}
     </div>
   );
 }
@@ -121,6 +122,73 @@ function CategoryLegend({ layer, toggleSymbology }) {
       ))}
     </div>
   )
+}
+
+function CircleLegend({ layer, toggleSymbology }) {
+  console.log("CircleLegend", layer);
+  const { state, setState } = React.useContext(SymbologyContext);
+  let { legenddata, isLoadingColorbreaks } = useMemo(() => {
+    return {
+      legenddata: get(layer, `['legend-data']`, []),
+      isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
+    };
+  }, [state]);
+  const Symbol = typeSymbols[layer.type] || typeSymbols["fill"]``;
+
+  if (isLoadingColorbreaks) {
+    return (
+      <div className="w-full max-h-[250px] overflow-x-auto scrollbar-sm">
+        <div className="flex w-full justify-center overflow-hidden pb-2">
+          Creating legend...
+          <span
+            style={{ fontSize: "1.5rem" }}
+            className={`ml-2 fa-solid fa-spinner fa-spin`}
+          />
+        </div>
+      </div>
+    );
+  }
+  console.log("circle legenddata::", legenddata);
+  let iconScale = 1;
+  let RADIUS = 3;
+  //if 3px = 1.0
+  //9px = 3.0
+  //21 = 7.0
+  return (
+    <div
+      className="w-full max-h-[250px] overflow-x-auto scrollbar-sm"
+      onClick={toggleSymbology}
+    >
+      {legenddata.filter(d => d.label !== "No data").map((d, i) => {
+
+           
+          
+        console.log("iconScale",iconScale);
+        iconScale += .3
+
+
+
+        RADIUS += 6*(i+1);
+
+                
+        return (
+          <div key={i} className="w-full pl-6 flex items-centerhover:bg-pink-50 justify-start">
+            <div className="flex items-center h-6 justify-start">
+              <i
+                class="fa-solid fa-arrow-right-long"
+                style={{  transform: `scaleX(${iconScale})` }}
+              ></i>
+
+            </div>
+            <div className='ml-8'>{RADIUS}px</div>
+            <div className="flex items-center  text-center  px-8 text-slate-500 h-6 text-sm truncate justify-start">
+              {d.label}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function StepLegend({ layer, toggleSymbology }) {
@@ -454,7 +522,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
               {type === "categories" && (
                 <CategoryLegend layer={layer} toggleSymbology={toggleSymbology} />
               )}
-              {(type === "choropleth" || type === "circles") && (
+              {type === 'circles' && (
+                  <CircleLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {(type === "choropleth") && (
                 <StepLegend layer={layer} toggleSymbology={toggleSymbology} />
               )}
               {type === "interactive" && (
