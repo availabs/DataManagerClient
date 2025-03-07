@@ -87,7 +87,7 @@ function LegendEditor() {
           <option value="none">None</option>
         </select>
       </div>
-      {legendOrientation === "vertical" &&
+      {layerType !== 'circles' && legendOrientation === "vertical" &&
         legenddata.map((d, i) => (
           <div key={`vertical_input_${i}`} className="w-full flex items-center hover:bg-pink-50">
             <div className="flex items-center h-6 w-10 justify-center  ">
@@ -112,7 +112,7 @@ function LegendEditor() {
             </div>
           </div>
         ))}
-      {legendOrientation === "horizontal" && (
+      {layerType !== 'circles' && legendOrientation === "horizontal" && (
         <div className={`flex-1 flex w-full p-2`}>
           {legenddata.map((d, i) => (
             <div className="flex-1 h-6" key={`horizontal_input_${i}`}>
