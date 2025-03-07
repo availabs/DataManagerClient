@@ -306,7 +306,8 @@ const MapEditor = () => {
     lowerBound,
     upperBound,
     radiusCurve,
-    curveFactor
+    curveFactor,
+    legendData
   } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
@@ -350,6 +351,7 @@ const MapEditor = () => {
       upperBound: get(state,`${pathBase}['upper-bound']`, null),
       radiusCurve: get(state,`${pathBase}['radius-curve']`, 'linear'),
       curveFactor: get(state,`${pathBase}['curve-factor']`, 1),
+      legendData: get(state,`${pathBase}['legend-data']`),
     }
   },[state]);
 
@@ -533,7 +535,7 @@ const MapEditor = () => {
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
   useEffect(() => {
-    if(choroplethdata) {
+    if(choroplethdata && !legendData) {
       console.log("---NEW LEGEND, switching legend orientation----");
       let { legend } = choroplethPaint(baseDataColumn, choroplethdata['max'], colorrange, numbins, method, choroplethdata['breaks'], showOther, legendOrientation);
       if(legend) {
@@ -555,7 +557,7 @@ const MapEditor = () => {
       }
 
     }
-  }, [legendOrientation]);
+  }, [legendOrientation, legendData]);
 
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 

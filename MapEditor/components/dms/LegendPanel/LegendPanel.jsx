@@ -8,6 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
+import { fnumIndex } from '../../LayerEditor/datamaps';
 //import {LayerMenu} from './LayerPanel'
 
 
@@ -153,7 +154,7 @@ function StepLegend({layer}) {
   )
 }
 
-function HorizontalLegend({ layer, toggleSymbology }) {
+function HorizontalLegend({ layer }) {
   let { legenddata, showOther } = useMemo(() => {
     return {
       legenddata : get(layer, `['legend-data']`, []),
@@ -181,6 +182,43 @@ function HorizontalLegend({ layer, toggleSymbology }) {
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CircleLegend({ layer }) {
+  const { minRadius, maxRadius, lowerBound, upperBound } = useMemo(() => {
+    return {
+      minRadius: get(layer,`['min-radius']`, 8),
+      maxRadius: get(layer,`['max-radius']`, 128),
+      lowerBound: get(layer,`['lower-bound']`, null),
+      upperBound: get(layer,`['upper-bound']`, null),
+    };
+  }, [layer]);
+
+  return (
+    <div
+      className="w-[50%] max-h-[350px] overflow-x-auto scrollbar-sm text-sm"
+    >
+      <div className='flex w-full justify-between'>
+        <div>
+          {minRadius}px
+        </div>
+        <div>
+          {maxRadius}px
+        </div>
+      </div>
+      <div className='ml-8'>
+        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
+      </div>
+      <div className='flex w-full justify-between'>
+        <div>
+          {fnumIndex(lowerBound)}
+        </div>
+        <div>
+          {fnumIndex(upperBound)}
+        </div>
       </div>
     </div>
   );
@@ -233,11 +271,15 @@ function LegendRow ({ index, layer, i, symbology_id }) {
         {legendOrientation === "horizontal" ? (
           <HorizontalLegend layer={layer} />
         ) : (
-        <>
-          {type === 'categories' && <CategoryLegend layer={layer} />}
-          {type === 'choropleth' && <StepLegend layer={layer} />}
-        </>
-      )}
+            type === 'circles' ? (
+            <CircleLegend layer={layer} />
+          ) : (
+              <>
+                {type === 'categories' && <CategoryLegend layer={layer} />}
+                {type === 'choropleth' && <StepLegend layer={layer} />}
+              </>
+            )
+        )}
     </div>
   )
 }
