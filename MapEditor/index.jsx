@@ -277,19 +277,53 @@ const MapEditor = () => {
       ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  let { layerType, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata, filterGroupEnabled, filterGroupLegendColumn, viewGroupEnabled,layerPaintPath, viewGroupId, initialViewId, baseDataColumn } = useMemo(() => {
+  let {
+    layerType,
+    viewId,
+    sourceId,
+    paintValue,
+    column,
+    categories,
+    categorydata,
+    colors,
+    colorrange,
+    numCategories,
+    numbins,
+    method,
+    showOther,
+    symbology_id,
+    choroplethdata,
+    filterGroupEnabled,
+    filterGroupLegendColumn,
+    viewGroupEnabled,
+    layerPaintPath,
+    viewGroupId,
+    initialViewId,
+    baseDataColumn,
+    legendOrientation,
+    minRadius,
+    maxRadius,
+    lowerBound,
+    upperBound,
+    radiusCurve,
+    curveFactor,
+    legendData
+  } = useMemo(() => {
     const polygonLayerType = get(state, `${pathBase}['type']`, {});
     const paintPaths = {
       'fill':"layers[1].paint['fill-color']",
       'circle':"layers[0].paint['circle-color']",
       'line':"layers[1].paint['line-color']"
     }
-
-    const layerPaintPath = paintPaths[polygonLayerType];
+    const layerType =  get(state, `${pathBase}['layer-type']`, {});
+    let layerPaintPath = paintPaths[polygonLayerType];
    
+    if(layerType === 'circles') {
+      layerPaintPath = "layers[0].paint['circle-radius']"
+    }
     return {
       layerPaintPath,
-      layerType: get(state, `${pathBase}['layer-type']`, {}),
+      layerType,
       viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
@@ -308,10 +342,18 @@ const MapEditor = () => {
       filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
       filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
       viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
-      viewGroupId:get(state,`${pathBase}['view-group-id']`),
-      initialViewId:get(state,`${pathBase}['initial-view-id']`),
+      viewGroupId: get(state,`${pathBase}['view-group-id']`),
+      initialViewId: get(state,`${pathBase}['initial-view-id']`),
+      legendOrientation: get(state,`${pathBase}['legend-orientation']`, 'vertical'),
+      minRadius: get(state,`${pathBase}['min-radius']`, 8),
+      maxRadius: get(state,`${pathBase}['max-radius']`, 128),
+      lowerBound: get(state,`${pathBase}['lower-bound']`, null),
+      upperBound: get(state,`${pathBase}['upper-bound']`, null),
+      radiusCurve: get(state,`${pathBase}['radius-curve']`, 'linear'),
+      curveFactor: get(state,`${pathBase}['curve-factor']`, 1),
+      legendData: get(state,`${pathBase}['legend-data']`),
     }
-  },[state])
+  },[state]);
 
   useEffect(() => {
     //console.log('getmetadat', sourceId)
@@ -401,7 +443,7 @@ const MapEditor = () => {
             set(draft, `${pathBase}['legend-data']`, legend)
           })
         }
-      } else if(layerType === 'choropleth') {
+      } else if(layerType === 'choropleth' || layerType === 'circles') {
         const domainOptions = {
           column: baseDataColumn,
           viewId,
@@ -435,8 +477,36 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
-        let { paint, legend } = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        if(isValidCategoryPaint(paint) && !isEqual(paint, paintValue)) {
+        let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        if(layerType === 'circles') {
+          console.log("---RECALCULATING CIRCLE RADIUS---")
+          // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+          // minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+          // upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+          // maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+          if(!lowerBound) {
+            setState(draft => {
+              set(draft,`${pathBase}['lower-bound']`, colorBreaks['breaks'][0])
+            })
+          }
+          if(!upperBound) {
+            setState(draft => {
+              set(draft,`${pathBase}['upper-bound']`, colorBreaks['max'])
+            })
+          }
+          const circleLowerBound = lowerBound !== null ? lowerBound : colorBreaks['breaks'][0];
+          const circleUpperBound = upperBound !== null ? upperBound : colorBreaks['max'];
+          paint = [
+            "interpolate",
+            [radiusCurve, curveFactor],
+            ["number", ["get", baseDataColumn]],
+            circleLowerBound, //min of dataset
+            minRadius,//min radius (px) of circle
+            circleUpperBound, //max of dataset
+            maxRadius, //max radius (px) of circle
+          ];
+        }
+        if((isValidCategoryPaint(paint) || layerType === 'circles') && !isEqual(paint, paintValue)) {
           const isShowOtherEnabled = showOther === '#ccc';
           if(isShowOtherEnabled) {
             if(legend[legend.length-1].label !== "No data") {
@@ -462,7 +532,32 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, baseDataColumn,  categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+
+  useEffect(() => {
+    if(choroplethdata && !legendData) {
+      console.log("---NEW LEGEND, switching legend orientation----");
+      let { legend } = choroplethPaint(baseDataColumn, choroplethdata['max'], colorrange, numbins, method, choroplethdata['breaks'], showOther, legendOrientation);
+      if(legend) {
+        const isShowOtherEnabled = showOther === "#ccc";
+        if (isShowOtherEnabled) {
+          if (legend[legend.length - 1].label !== "No data") {
+            legend.push({ color: showOther, label: "No data" });
+          }
+          legend[legend.length - 1].color = showOther;
+        } else {
+          if (legend[legend.length - 1].label === "No data") {
+            legend.pop();
+          }
+        }
+    
+        setState((draft) => {
+          set(draft, `${pathBase}['legend-data']`, legend);
+        });
+      }
+
+    }
+  }, [legendOrientation, legendData]);
 
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 

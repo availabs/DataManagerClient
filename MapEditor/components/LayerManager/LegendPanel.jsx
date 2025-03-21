@@ -1,12 +1,13 @@
 import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid, SquareMinusSolid, SquarePlusSolid} from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid } from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
 import {LayerMenu} from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
+import { fnumIndex } from '../LayerEditor/datamaps'
 
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -96,6 +97,7 @@ function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
     >
       {activeFilterLayerType === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
       {activeFilterLayerType === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
+      {activeFilterLayerType === 'circles' && (<CircleLegend layer={layer} toggleSymbology={toggleSymbology} />)}
     </div>
   );
 }
@@ -106,7 +108,6 @@ function CategoryLegend({ layer, toggleSymbology }) {
   if(!legenddata || legenddata.length === 0 ) {
     legenddata = []
   }
-  
   return (
     <div
       className='w-full max-h-[250px] overflow-x-auto'
@@ -122,6 +123,60 @@ function CategoryLegend({ layer, toggleSymbology }) {
       ))}
     </div>
   )
+}
+
+function CircleLegend({ layer, toggleSymbology }) {
+ // console.log("CircleLegend", layer);
+  let { minRadius, maxRadius, lowerBound, upperBound, isLoadingColorbreaks } = useMemo(() => {
+    return {
+      isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
+      minRadius: get(layer,`['min-radius']`, 8),
+      maxRadius: get(layer,`['max-radius']`, 128),
+      lowerBound: get(layer,`['lower-bound']`, null),
+      upperBound: get(layer,`['upper-bound']`, null),
+    };
+  }, [layer]);
+
+  if (isLoadingColorbreaks) {
+    return (
+      <div className="w-full max-h-[250px] overflow-x-auto scrollbar-sm">
+        <div className="flex w-full justify-center overflow-hidden pb-2">
+          Creating legend...
+          <span
+            style={{ fontSize: "1.5rem" }}
+            className={`ml-2 fa-solid fa-spinner fa-spin`}
+          />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="w-[33%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4"
+      onClick={toggleSymbology}
+    >
+      <div className='flex w-full justify-between'>
+        <div>
+          {minRadius}px
+        </div>
+        <div>
+          {maxRadius}px
+        </div>
+      </div>
+      <div className='ml-8'>
+        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
+      </div>
+      <div className='flex w-full justify-between'>
+        <div>
+          {fnumIndex(lowerBound)}
+        </div>
+        <div>
+          {fnumIndex(upperBound)}
+        </div>
+      </div>
+
+    </div>
+  );
 }
 
 function StepLegend({ layer, toggleSymbology }) {
@@ -163,6 +218,53 @@ function StepLegend({ layer, toggleSymbology }) {
   )
 }
 
+function HorizontalLegend({ layer, toggleSymbology }) {
+  const { state, setState  } = React.useContext(SymbologyContext);
+  let { legenddata, isLoadingColorbreaks, showOther } = useMemo(() => {
+    return {
+      legenddata : get(layer, `['legend-data']`, []),
+      isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
+      showOther: get(layer, `['category-show-other']`, '#ccc')
+    }
+  },[state]);
+  const isShowOtherEnabled = showOther === '#ccc'
+
+  if(isLoadingColorbreaks){
+    return (
+      <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
+        <div className="flex w-full justify-center overflow-hidden pb-2" >
+          Creating legend...
+          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+      onClick={toggleSymbology}
+    >
+      <div
+        className={`flex-1 flex w-full p-2`}
+      >
+        {legenddata.map((d, i) => (
+          <div className="flex-1 h-6" key={`horizontal_legend_item_${i}`}>
+            <div className='flex justify-self-end text-xs h-4'>
+              { isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
+            </div>
+
+            <div
+              key={i}
+              className="flex-1 h-2"
+              style={{ backgroundColor: d.color }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -171,10 +273,11 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   const [isListVisible, setIsListVisible] = React.useState(true);
 
-  let { layerType: type, selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters } = useMemo(() => {
+  let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters } = useMemo(() => {
     return {
       initialViewId: get(layer,`initial-view-id`),
       sourceId: get(layer,`source_id`),
+      legendOrientation: get(layer, `['legend-orientation']`, 'vertical'),
       layerType : get(layer, `['layer-type']`),
       selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
       interactiveFilters: get(layer, `['interactive-filters']`, []),
@@ -383,18 +486,49 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer}/>)
   }
   return (
-    <div  className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 group border`}>
-      <div className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${type === "interactive" && !shouldDisplayColorSquare ? 'pl-[3px]' : '' }`}>
+    <div
+      className={`${
+        activeLayer == layer.id ? "bg-pink-100" : ""
+      } hover:border-pink-500 group border`}
+    >
+      <div
+        className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${
+          type === "interactive" && !shouldDisplayColorSquare ? "pl-[3px]" : ""
+        }`}
+      >
         <div className="text-sm mr-1 flex flex-col justify-start align-start content-start flex-wrap w-full">
           {legendTitle}
           {groupSelectorElements}
         </div>
       </div>
-      {type === 'categories' && <CategoryLegend layer={layer} toggleSymbology={toggleSymbology}/>}
-      {type === 'choropleth' && <StepLegend layer={layer} toggleSymbology={toggleSymbology}/>}
-      {type === 'interactive' && <InteractiveLegend layer={layer} toggleSymbology={toggleSymbology} isListVisible={isListVisible}/>}
+      {
+        legendOrientation !== "none" && (
+          legendOrientation === "horizontal" ? (
+            <HorizontalLegend layer={layer} toggleSymbology={toggleSymbology} />
+          ) : (
+            <>
+              {type === "categories" && (
+                <CategoryLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {type === 'circles' && (
+                  <CircleLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {(type === "choropleth") && (
+                <StepLegend layer={layer} toggleSymbology={toggleSymbology} />
+              )}
+              {type === "interactive" && (
+                <InteractiveLegend
+                  layer={layer}
+                  toggleSymbology={toggleSymbology}
+                  isListVisible={isListVisible}
+                />
+              )}
+            </>
+          )
+        )
+      }
     </div>
-  )
+  );
 }
 
 function LegendPanel (props) {

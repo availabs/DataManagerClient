@@ -277,6 +277,7 @@ const typeConfigs = {
               {name:'Simple', value: 'simple'},
               {name:'Categories', value: 'categories'},
               {name:'Color Range', value: 'choropleth'},
+              {name:'Circles', value:'circles'},
               {name:'Interactive', value: 'interactive'}
             ]
           },
@@ -291,7 +292,34 @@ const typeConfigs = {
       conditional: [
         {
           path: `['layer-type']`,
-          conditions: ['categories', 'choropleth']
+          conditions: ['categories', 'choropleth'] //label is misleading for circles
+        },
+        {
+          path: `['filterGroupEnabled']`,
+          conditions: [false]
+        }
+      ],
+      controls: [
+        {
+          type: 'selectViewColumn',
+          params: {
+            options: [
+              {name:'Column Select', value: 'simple'},
+              
+            ]
+          },
+          path: `['data-column']`,
+          datapath: `['category-data']`
+        }
+      ]
+    },
+    {
+      label: 'Radius By',
+      type: 'inline',
+      conditional: [
+        {
+          path: `['layer-type']`,
+          conditions: ['circles'] //label is misleading for circles
         },
         {
           path: `['filterGroupEnabled']`,
@@ -317,7 +345,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
+        conditions: ['categories', 'choropleth', 'circles']
       },
       controls: [
         {
@@ -337,7 +365,7 @@ const typeConfigs = {
         },
         {
           path: `['layer-type']`,
-          conditions: ['categories', 'choropleth']
+          conditions: ['categories', 'choropleth', 'circles']
         }
       ],
       controls: [
@@ -355,7 +383,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'choropleth']
+        conditions: ['categories', 'choropleth', 'circles']
       },
       controls: [
         {
@@ -375,7 +403,7 @@ const typeConfigs = {
         },
         {
           path: `['layer-type']`,
-          conditions: ['categories', 'choropleth']
+          conditions: ['categories', 'choropleth', 'circles']
         }
       ],
       controls: [
@@ -436,9 +464,40 @@ const typeConfigs = {
           params: {
             format: (v) => `${((v?.[3]?.length-3 || 0)/2) || '10'} Categories`
           },
-          path: `layers[1].paint['circle-color']`
+          path: `layers[0].paint['circle-color']`
         }
       ]
+    },
+    {
+      label: 'Scale',
+      type: 'popover',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['circles']
+      },
+      controls: [
+        {
+          type: 'circleControl',
+          params: {
+            format: (v) => `${v[4]}px - ${v[6]}px`
+          },
+          path: `layers[0].paint['circle-radius']`
+        }
+      ]
+    },
+    {
+      label: 'Fill',
+      type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['circles']
+      },
+      controls: [
+        {
+          type: 'color',
+          path: `layers[0].paint['circle-color']`
+        },
+      ],
     },
     {
       label: 'Fill',
@@ -471,6 +530,10 @@ const typeConfigs = {
     {
       label: 'Size',
       type: 'inline',
+      conditional: {
+        path: `['layer-type']`,
+        conditions: ['categories', 'choropleth', 'simple']
+      },
       controls: [
         {
           type: 'range',
@@ -491,7 +554,7 @@ const typeConfigs = {
       type: 'popover',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'choropleth', 'simple']
+        conditions: ['categories', 'choropleth', 'simple', 'circles']
       },
       controls: [
         {
@@ -531,7 +594,7 @@ const typeConfigs = {
       type: 'inline',
       conditional: {
         path: `['layer-type']`,
-        conditions: ['categories', 'choropleth', 'simple']
+        conditions: ['categories', 'choropleth', 'simple', 'circles']
       },
       controls: [
         {
