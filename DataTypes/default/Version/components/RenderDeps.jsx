@@ -46,7 +46,7 @@ export const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseU
 
                                         <div key={`${i}_3`} className="mt-1 text-sm text-gray-900 sm:mt-0 align-midivle">
                                             <Link to={`${baseUrl}/source/${d.source_id}/versions/${d.view_id}`}>
-                                                {get(viewMeta, [d.view_id, "attributes", "version"])}
+                                                {typeof get(viewMeta, [d.view_id, "attributes", "version"]) === 'string' ? get(viewMeta, [d.view_id, "attributes", "version"]) : ''}
                                             </Link>
                                         </div>
 
