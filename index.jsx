@@ -11,6 +11,7 @@ import CollectionView from "./Collection";
 import CollectionCreate from "./Collection/create";
 import CollectionDelete from "./Collection/delete";
 
+import SchedulesComponent from "./Schedules";
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
 import SettingsComponent from "./Source/settings";
@@ -394,6 +395,16 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       component: DAMA_Wrapper(DmsList, DAMA_ARGS)
+    },
+    { name: "Schedules",
+      path: `${ baseUrl }/schedules`,
+      exact: true,
+      authLevel,
+      mainNav: true,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      component: DAMA_Wrapper(SchedulesComponent, DAMA_ARGS)
     }
   ];
 };
