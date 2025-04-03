@@ -130,7 +130,7 @@ const TablePage = ({
             "viewsbyId",
             activeViewId,
             "databyIndex",
-            Array.from(Array(maxData-1).keys()),//{"from":0, "to": maxData-1},
+            Array.from(Array(maxData).keys()),//{"from":0, "to": maxData-1},
             attributes,
           ]
         )
@@ -151,13 +151,13 @@ const TablePage = ({
       )
     ).map((d) => get(falcorCache, d.value, {}));
 
-    //console.log('attr data from cache', data)
+    console.log('attr data from cache', data)
 
     return data;
   }, [pgEnv, activeViewId, falcorCache, dataLength]);
 
   let years = get(activeView, ["metadata", "years"], []);
-
+  console.log({tableData})
   const { data, columns } = React.useMemo(
     () => transform(tableData, attributes, filters, years, source),
     [tableData, attributes, transform, filters, years, source]
