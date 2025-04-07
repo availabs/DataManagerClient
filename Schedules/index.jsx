@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { get } from "lodash";
-import moment from "moment";
 import {
     Dialog,
     DialogPanel,
@@ -12,6 +11,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 import { useFalcor } from "~/modules/avl-components/src";
 import { ScalableLoading } from "~/modules/avl-components/src";
 import { DAMA_HOST } from "~/config";
+import {formatDate} from "../utils/macros.jsx";
 
 const scheduleAttributes = {
     name: "name",
@@ -244,7 +244,8 @@ function ListSchedules({
                                         key={`${item?.created_on}`}
                                         className="py-2 px-4 border-b"
                                     >
-                                        {moment(item?.created_on).format('YYYY-MM-DD HH:mm:ss')}
+                                        {/*{moment(item?.created_on).format('YYYY-MM-DD HH:mm:ss')}*/}
+                                        {formatDate(item?.created_on)}
                                     </td>
 
                                     <td
