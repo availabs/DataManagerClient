@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { get } from "lodash";
 import {
     Dialog,
@@ -11,7 +10,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 import { useFalcor } from "~/modules/avl-components/src";
 import { ScalableLoading } from "~/modules/avl-components/src";
 import { DAMA_HOST } from "~/config";
-import {formatDate} from "../utils/macros.jsx";
+import { formatDate } from "../utils/macros.jsx";
 
 const scheduleAttributes = {
     name: "name",
@@ -83,9 +82,9 @@ function ListSchedules({
     const [showDeleteModal, setShowDeleteModal] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [removeDamaQueueName, setRemoveDamaQueueName] = React.useState(null);
-    const { pgEnv } = useContext(DamaContext);
-    const { falcor, falcorCache } = useFalcor();
-    const navigate = useNavigate();
+    const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
+
+    const [schedules, setSchedules] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -109,8 +108,6 @@ function ListSchedules({
         fetchData();
     }, [falcor]);
 
-    const [schedules, setSchedules] = useState([]);
-
     useEffect(() => {
         const derivedSchedules = types.reduce((acc, cur) => {
             acc.push(...Object.values(get(falcorCache, [
@@ -125,28 +122,6 @@ function ListSchedules({
         }, []);
         setSchedules(derivedSchedules);
     }, [falcorCache, pgEnv]);
-    // const schedules = useMemo(() => {
-    //     return types.reduce((acc, cur) => {
-    //         acc.push(...Object.values(get(falcorCache, [
-    //             "dama",
-    //             pgEnv,
-    //             "schedule",
-    //             "type",
-    //             cur,
-    //             "dataByIndex"], {}))
-    //             .map(v =>
-    //                 Object.entries(v).reduce((out, attr) => {
-    //                     const [k, v] = attr
-    //                     typeof v.value !== 'undefined' ?
-    //                         out[k] = v?.value :
-    //                         out[k] = v
-    //                     return out
-    //                 }, {})
-    //             ))
-
-    //         return acc;
-    //     }, []);
-    // }, [falcorCache, pgEnv]);
 
     const headers = ['name', 'type', 'cron', 'timezone', 'options', 'created_on', " "];
 
@@ -178,6 +153,7 @@ function ListSchedules({
             setLoading(false);
         }
     };
+
     return (
         <div className="w-full p-5">
             <div className="flex m-3">
