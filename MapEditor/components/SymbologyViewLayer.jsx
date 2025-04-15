@@ -59,6 +59,8 @@ const ViewLayerRender = ({
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
   // - On layerProps change
+  const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+
   useEffect(() => {
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
@@ -265,7 +267,7 @@ const ViewLayerRender = ({
         maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
-  }, [layerProps]);
+  }, [doesSourceExistOnMap, layerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
