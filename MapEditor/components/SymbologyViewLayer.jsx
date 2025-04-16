@@ -452,7 +452,7 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
         ], [])
       }
-    return out
+    return Array.isArray(out) ? out : []
   }, [source_id, falcorCache]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
