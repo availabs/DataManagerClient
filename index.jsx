@@ -23,6 +23,7 @@ import { DamaContext } from "./store"
 
 
 import DamaMap from './MapEditor/components/dms/MapComponent'
+import Map from './MapEditor/components/dms/map/MapComponent.jsx'
 
 import MapEditor from './MapEditor';
 
@@ -414,5 +415,6 @@ export default DamaRoutes;
 
 
 export {
-  DamaMap
+  DamaMap,
+    Map
 }
