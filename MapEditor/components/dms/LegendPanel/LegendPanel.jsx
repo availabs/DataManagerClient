@@ -171,7 +171,7 @@ function HorizontalLegend({ layer }) {
         className={`flex-1 flex w-full p-2`}
       >
         {legenddata.map((d, i) => (
-          <div className="flex-1 h-6 overflow-hidden">
+          <div key={i} className="flex-1 h-6 overflow-hidden">
             <div className='flex h-4 justify-self-end text-xs'>
               {isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
             </div>
