@@ -19,6 +19,29 @@ const ViewLayerRender = ({
 }) => {
   const mctx = useContext(MapContext);
   const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
+
+  const [sourceReady, setSourceReady] = React.useState(false);
+  const cachedFilterPropsRef = useRef(null);
+
+  useEffect(() => {
+    const sourceId = layerProps?.sources?.[0]?.id;
+    if (!sourceId) return;
+
+    if (maplibreMap.getSource(sourceId)) {
+      setSourceReady(true);
+    } else {
+      const check = () => {
+        if (maplibreMap.getSource(sourceId)) {
+          setSourceReady(true);
+          maplibreMap.off('sourcedata', check);
+        }
+      };
+      maplibreMap.on('sourcedata', check);
+      return () => {
+        maplibreMap.off('sourcedata', check);
+      };
+    }
+  }, [maplibreMap, layerProps?.sources?.[0]?.id]);
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
@@ -59,23 +82,33 @@ const ViewLayerRender = ({
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
   // - On layerProps change
-  const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+  // const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+
+  const didFilterGroupColumnsChange =
+      layerProps.filterGroupEnabled &&
+      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+
+  const didDataColumnChange =
+      !layerProps.filterGroupEnabled &&
+      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+
+  const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+  const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
+
   useEffect(() => {
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    const didFilterGroupColumnsChange =
-      layerProps.filterGroupEnabled &&
-      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+    const shouldApplyFilters = didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange;
 
-    const didDataColumnChange =
-      !layerProps.filterGroupEnabled &&
-      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+    if (shouldApplyFilters) {
+      cachedFilterPropsRef.current = layerProps;
+    }
 
-    const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
-    const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
-    // console.log('debug map ue init', didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange)
-    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
+    if (!sourceReady) return;
+
+    console.log('debug map ue init', didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange)
+    if(sourceReady && cachedFilterPropsRef.current) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         // console.log('debug map if', maplibreMap.getSource(layerProps?.sources?.[0]?.id))
         let newSource = cloneDeep(layerProps.sources?.[0])
@@ -289,7 +322,7 @@ const ViewLayerRender = ({
         }
       }
     });
-  }, [doesSourceExistOnMap, layerProps]);
+  }, [sourceReady, didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange, layerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
