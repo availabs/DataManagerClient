@@ -70,10 +70,11 @@ export default function FilterControls() {
                         }
                     </div>
 
-                    <div className={'grid grid-cols-3 gap-1 px-2 py-1 text-gray-700'}>
+                    <div className={'grid grid-cols-4 gap-1 px-2 py-1 text-gray-700'}>
                         <div className={'text-sm font-semibold'}>Dynamic Filter</div>
                         <div className={'text-sm font-semibold'}>Search Param Value</div>
                         <div className={'text-sm font-semibold'}>Default Value</div>
+                        <div className={'text-sm font-semibold'}>Type</div>
 
                         {
                             dynamicFilterOptions.map((filter, fI) => (
@@ -98,6 +99,18 @@ export default function FilterControls() {
                                                    draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer]['dynamic-filters'][fI].values = value ? [value] : [];
                                                })
                                            }}/>
+
+                                    <select className={'text-sm'}
+                                            value={filter.dataType}
+                                            onChange={e => {
+                                                setState((draft) => {
+                                                    draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer]['dynamic-filters'][fI].dataType = e.target.value;
+                                                })
+                                            }}
+                                    >
+                                        <option key={'str'} value={undefined}>String</option>
+                                        <option key={'num'} value={'numeric'}>Numeric</option>
+                                    </select>
                                 </>
                             ))
                         }

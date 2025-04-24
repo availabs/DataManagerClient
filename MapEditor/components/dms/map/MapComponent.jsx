@@ -84,8 +84,11 @@ const Edit = ({value, onChange, size}) => {
                 draft.symbologies[activeSym].symbology.layers[activeSymSymbology.activeLayer]['dynamic-filters']
                     .filter(f => searchParamValues[getSearchParamKey(f)])
                     .forEach(filter => {
-                        const newValues = searchParamValues[getSearchParamKey(filter)].split('|||')
-                        filter.values = newValues?.length ? newValues : filter.defaultValue?.length ? [filter.defaultValue] : []
+                        const isNumeric = filter.dataType === 'numeric';
+                        const newValues = searchParamValues[getSearchParamKey(filter)].split('|||');
+                        filter.values =
+                            newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
+                                filter.defaultValue?.length ? [isNumeric ? +filter.defaultValue : filter.defaultValue] : []
                     })
             }
         })
