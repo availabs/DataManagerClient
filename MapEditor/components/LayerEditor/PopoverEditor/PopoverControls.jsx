@@ -3,7 +3,7 @@ import { SymbologyContext } from "../../../";
 import { DamaContext } from "../../../../store"
 
 import { Close } from '../../icons'
-import { DndList } from '~/modules/avl-components/src'
+import { DndList, Button } from '~/modules/avl-components/src'
 
 import {AddColumnSelectControl} from "../Controls"
 import get from 'lodash/get'
@@ -17,13 +17,19 @@ const getDiffColumns = (baseArray, subArray) => {
 
 export function ColumnSelectControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const selectedColumns = useMemo(() => {
-    return get(
-      state,
-      `symbology.layers[${state.symbology.activeLayer}].${path}`,
-      []
-    )
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  const { selectedColumns, layerType } = useMemo(() => {
+    return {
+      selectedColumns: get(state, `${pathBase}.${path}`),
+      layerType: get(state, `${pathBase}['layer-type']`),
+    };
   }, [state, path, params]);
+
   const viewId = get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`)
   const sourceId = get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`);
   const { pgEnv, falcor, falcorCache } = useContext(DamaContext);
@@ -45,6 +51,16 @@ export function ColumnSelectControl({path, params={}}) {
         "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
       ], []);
     }
+
+    if(params.onlyTypedAttributes) {
+      columns = columns.filter(d => {
+        if(layerType === 'choropleth' && !['integer', 'number'].includes(d.type)){
+          return false
+        }
+        return true
+      })
+    }
+
     return columns;
   }, [sourceId, falcorCache]); 
   
@@ -56,19 +72,34 @@ export function ColumnSelectControl({path, params={}}) {
   );
 
   useEffect(() => {
-    if(selectedColumns.length === 0) {
-      setState((draft) => {
-        set(
-          draft,
-          `symbology.layers[${state.symbology.activeLayer}].${path}`,
-          attributes
-            .filter((d) => !["wkb_geometry"].includes(d.name))
-            .map((attr) => ({
-              column_name: attr.name,
-              display_name: attr?.display_name || attr.name,
-            }))
-        );
-      });
+    if(selectedColumns === undefined) {
+      if(!params.default){
+        setState((draft) => {
+          set(
+            draft,
+            `${pathBase}.${path}`,
+            attributes
+              .filter((d) => !["wkb_geometry"].includes(d.name))
+              .map((attr) => ({
+                column_name: attr.name,
+                display_name: attr?.display_name || attr.name,
+              }))
+          );
+        });
+      } else {
+        setState((draft) => {
+          set(
+            draft,
+            `${pathBase}.${path}`,
+            attributes
+              .filter(attr => attr.name === params.default)
+              .map((attr) => ({
+                column_name: attr.name,
+                display_name: attr?.display_name || attr.name,
+              }))
+          );
+        });
+      }
     }
   }, [attributes]);
 
@@ -77,7 +108,6 @@ export function ColumnSelectControl({path, params={}}) {
       ? selectedColumns
       : selectedColumns.map((columnObj) => columnObj?.column_name)) : undefined;
   }, [selectedColumns]);
-
   const availableColumnNames = useMemo(() => {
     return (
       selectedColumnNames
@@ -110,6 +140,71 @@ export function ColumnSelectControl({path, params={}}) {
 
   return (
     <div className='flex w-full flex-wrap'>
+      <div className='flex w-full flex-wrap my-2'>
+        <AddColumnSelectControl
+          setState={(newColumn) => {
+            setState((draft) => {
+              if (newColumn !== "") {
+                const newAttr = attributes.find(attr => attr.name === newColumn);
+                set(
+                  draft,
+                  `${pathBase}.${path}`,
+                  selectedColumns
+                    ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                    : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
+                );
+              }
+            });
+          }}
+          availableColumnNames = { 
+            availableColumnNames.map(colName => {
+              const newAttr = attributes.find(attr => attr.name === colName);
+              return { value: colName, label: newAttr?.display_name || colName };
+            }) 
+          }
+        />
+      </div>
+      <div className='flex w-full flex-wrap my-2 mx-4 justify-around'>
+        <Button
+          themeOptions={{ size: "xs", color: 'primary' }}
+          className={availableColumnNames?.length === 0 ? "disabled:opacity-75 pointer-events-none	" : " "}
+          disabled={availableColumnNames?.length === 0}
+          onClick={() => {
+            setState(draft => {
+              set(
+                draft,
+                `${pathBase}.${path}`,
+                attributes
+                  .filter((d) => !["wkb_geometry"].includes(d.name))
+                  .map((attr) => ({
+                    column_name: attr.name,
+                    display_name: attr?.display_name || attr.name,
+                  }))
+              );
+            })
+
+          }}
+        >
+          Add All Columns
+        </Button>
+        <Button
+          themeOptions={{ size: "xs", color: 'danger' }}
+          className={selectedColumnNames?.length === 0 ? "disabled:opacity-75 pointer-events-none	bgDanger" : " bgDanger"}
+          disabled={selectedColumnNames?.length === 0}
+          onClick={() => {
+            setState(draft => {
+              set(
+                draft,
+                `${pathBase}.${path}`,
+                []
+              );
+            })
+
+          }}
+        >
+          Remove All Columns
+        </Button>
+      </div>
       <ExistingColumnList
         selectedColumns={selectedColumns}
         sampleData={sampleData}
@@ -121,7 +216,7 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               sections
             );
           });
@@ -136,7 +231,7 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               newColumns
             );
           })
@@ -146,33 +241,11 @@ export function ColumnSelectControl({path, params={}}) {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${state.symbology.activeLayer}].${path}`,
+              `${pathBase}.${path}`,
               selectedColumns.filter((colObj) => colObj.column_name !== columnName)
             );
           })
         }}
-      />
-      <AddColumnSelectControl
-        setState={(newColumn) => {
-          setState((draft) => {
-            if (newColumn !== "") {
-              const newAttr = attributes.find(attr => attr.name === newColumn);
-              set(
-                draft,
-                `symbology.layers[${state.symbology.activeLayer}].${path}`,
-                selectedColumns
-                  ? [...selectedColumns, { column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-                  : [{ column_name: newColumn, display_name: newAttr?.display_name || newColumn }]
-              );
-            }
-          });
-        }}
-        availableColumnNames = { 
-          availableColumnNames.map(colName => {
-            const newAttr = attributes.find(attr => attr.name === colName);
-            return { value: colName, label: newAttr?.display_name || colName };
-          }) 
-        }
       />
     </div>
   );

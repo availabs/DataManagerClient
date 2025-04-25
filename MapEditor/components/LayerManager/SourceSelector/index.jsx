@@ -102,7 +102,10 @@ function SourceSelector () {
       layers: getLayer(layerId, viewLayer),
       // state data about the layer on the map
       isVisible: true,
-      order: Object.keys(state?.symbology?.layers || {})?.length || 0
+      hover: "hover",
+      order: Object.keys(state?.symbology?.layers || {})?.length || 0,
+      filterGroupEnabled: false,
+      viewGroupEnabled: false,
     }
 
     //console.log('newLayer', newLayer)
@@ -113,7 +116,10 @@ function SourceSelector () {
       if(!draft?.symbology?.layers) {
         draft.symbology.layers = {}
       }
-      set(draft, `symbology.layers[${layerId}]`,newLayer)
+      set(draft, `symbology.layers[${layerId}]`,newLayer);
+      if(!draft.symbology.activeLayer || !draft.symbology.layers[draft.symbology.activeLayer]){
+        set(draft, `symbology.activeLayer`,newLayer.id)
+      }
     })
     setSource({ add: false, sourceId: null, viewId: null})
   }

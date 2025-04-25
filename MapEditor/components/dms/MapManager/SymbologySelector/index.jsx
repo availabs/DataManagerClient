@@ -10,7 +10,7 @@ import { MapContext } from '../../MapComponent'
 import { SymbologyAttributes, getAttributes } from "../../../../../Collection/attributes"
 
 export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
-  const { state, setState, falcor, falcorCache, pgEnv ='freight_data' } = useContext(MapContext);
+  const { state, setState, falcor, falcorCache, pgEnv } = useContext(MapContext);
   // ---------------------------------
   // -- get Symbologies to list
   // ---------------------------------
@@ -45,6 +45,16 @@ export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
         newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
           newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
         })
+
+        newSymbology.symbology.layers[layerId]["interactive-filters"]?.forEach(
+          (iFilter, filterIndex) => {
+            (iFilter?.layers || []).forEach((d, i) => {
+              newSymbology.symbology.layers[layerId]["interactive-filters"][
+                filterIndex
+              ].layers[i].layout = { visibility: "none" };
+            });
+          }
+        );
       })
 
       draft.symbologies[''+symbologyId] = newSymbology

@@ -1,11 +1,10 @@
-import React, { useContext , useMemo, useEffect, Fragment }from 'react'
+import React, { useMemo, useEffect, Fragment }from 'react'
+import { Button } from "~/modules/avl-components/src";
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../store"
 import { Menu, Transition, Switch } from '@headlessui/react'
-// import get from 'lodash/get'
 import isEqual from 'lodash/isEqual'
-import { Close, CaretDown } from '../icons'
-import { DndList } from '~/modules/avl-components/src'
+import { CaretDown, Close } from '../icons'
 import { rgb2hex, toHex, categoricalColors, rangeColors } from '../LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './datamaps'
 import colorbrewer from '../LayerManager/colors'//"colorbrewer"
@@ -13,9 +12,10 @@ import { StyledControl } from './ControlWrappers'
 import get from 'lodash/get'
 import set from 'lodash/set'
 import cloneDeep from 'lodash/cloneDeep'
-function onlyUnique(value, index, array) {
-  return array.indexOf(value) === index;
-}
+import { CategoryControl } from './CategoryControl';
+import { InteractiveFilterControl } from './InteractiveFilterControl';
+import { FilterGroupControl } from './FilterGroupControl';
+import { ViewGroupControl } from './ViewGroupControl'
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -45,24 +45,19 @@ function ControlMenu({ button, children}) {
 export function SelectTypeControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
-  // console.log('select control', params)
-  let { value, viewId, sourceId,paintValue, column, categories, categorydata, colors, colorrange, numCategories, numbins, method, showOther, symbology_id, choroplethdata } = useMemo(() => {
+  //console.log('select control', {path, datapath, params})
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { sourceId, column, } = useMemo(() => {
     return {
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
-      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
+
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue : get(state, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, {}),
-      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      numCategories: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-categories']`, 10),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
-      symbology_id: get(state, `symbology_id`),
+      column: get(state, `${pathBase}['data-column']`, ''),
+
     }
   },[state])
 
@@ -89,130 +84,28 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
   }, [sourceId,falcorCache])
 
-  const options = useMemo(() => {
-    //console.log('metadata',metadata)
-    const hasCols = metadata?.length > 0 
-    const hasNumber = metadata?.reduce((out,curr) => {
-      if(['integer', 'number'].includes(curr.type)){
-        out = true
-      }
-      return out
-    },false)
-
-    return  [
-      {name:'Simple', value: 'simple'},
-      hasCols ? {name:'Categories', value: 'categories'} : null,
-      hasNumber ? {name:'Color Range', value: 'choropleth'} : null
-    ].filter(d => d)
-  },[metadata])
-
-  React.useEffect(() => {
-    const setPaint = async () => {
-      if (value === 'categories') {
-        let { paint, legend } = categories?.paint && categories?.legend
-          ? cloneDeep(categories)
-          : categoryPaint(
-            column,
-            categorydata,
-            colors,
-            numCategories,
-            metadata
-          );
-
-        if (!(paint.length % 2)) {
-          paint.push(showOther);
-        } else {
-          paint[paint.length-1] = showOther;
-        }
-
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "Other") {
-            legend.push({color: showOther, label: "Other"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "Other") {
-            legend.pop();
-          }
-        }
-
-        if(isValidCategoryPaint(paint) && !isEqual(paint,paintValue)) {
-          setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, { paint, legend })
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
-          })
-        }
-      } else if(value === 'choropleth') {
-        const domainOptions = {
-          column,
-          viewId,
-          numbins,
-          method
-        }
-
-        let colorBreaks; 
-
-        if(choroplethdata && Object.keys(choroplethdata).length === 2 ) {
-          colorBreaks = choroplethdata;
-        }
-        else {
-          console.log("getting new choropleth breaks")
-          setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, true)
-          })
-          const res = await falcor.get([
-            "dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ]);
-          colorBreaks = get(res, [
-            "json","dama", pgEnv, "symbologies", "byId", [symbology_id], "colorDomain", "options", JSON.stringify(domainOptions)
-          ])
-          setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
-          })
-        }
-        let { paint, legend } = choroplethPaint(column, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther);
-        const isShowOtherEnabled = showOther === '#ccc';
-        if(isShowOtherEnabled) {
-          if(legend[legend.length-1].label !== "No data") {
-            legend.push({color: showOther, label: "No data"});
-          }
-          legend[legend.length-1].color = showOther;
-        } else {
-          if(legend[legend.length-1].label === "No data") {
-            legend.pop();
-          }
-        }
-
-        if(paint && !isEqual(paint,paintValue)) {
-          setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, paint)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, legend)
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, colorBreaks)
-          })
-        }
-      } else if( value === 'simple' && typeof paintValue !== 'string') {
-        // console.log('switch to simple')
-        setState(draft => {
-          set(draft, `symbology.layers[${state.symbology.activeLayer}].${datapath}`, rgb2hex(null))
-        })
-      }
-    }
-    setPaint();
-  }, [value, column, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata])
 
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
         <select
           className='w-full p-2 bg-transparent'
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          value={get(state, `${pathBase}.${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            if(!column && e.target.value === 'categories') {
+              const defaultColorColumn = metadata.filter(col => !['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
+              set(draft, `${pathBase}['data-column']`, defaultColorColumn)
+            } else if (e.target.value === 'choropleth') {
+              const currentColumn = metadata.find(col => col.name === column);
+              if(!['integer', 'number'].includes(currentColumn?.type)) {
+                const defaultColorColumn = metadata.filter(col => ['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
+                set(draft, `${pathBase}['data-column']`, defaultColorColumn)
+              }
+            }
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
-          {(options || []).map((opt,i) => {
+          {(params.options || []).map((opt,i) => {
             return (
               <option key={i} value={opt.value}>{opt.name}</option>
             )
@@ -225,14 +118,20 @@ export function SelectTypeControl({path, datapath, params={}}) {
 
 function ColorControl({path,params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex'>
       <div className='flex items-center'>
         <input
           type='color' 
-          value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, '#ccc'))}
+          value={toHex(get(state, `${pathBase}.${path}`, '#ccc'))}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
       </div>
@@ -246,6 +145,11 @@ function RangeControl({path,params={}}) {
   const identity = (d) => d
   const f = params?.format || identity  
   
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <div className='flex w-full  items-center'>
       <div className='flex-1 flex w-full'>
@@ -255,16 +159,16 @@ function RangeControl({path,params={}}) {
           min={params.min || "0"}
           max={params.max || "1"}
           step={params.step || "0.01"}
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || "1")}
+          value={get(state, `${pathBase}].${path}`, params.default || "1")}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, +e.target.value)
+            set(draft, `${pathBase}].${path}`, +e.target.value)
           })}
         />
       </div>
       <div className='pl-2'>
         <input 
           className='w-14 px-2 py-1 bg-transparent'
-          value={`${f(get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || "1"))}${params.units ? params.units : ''}`} 
+          value={`${f(get(state, `${pathBase}].${path}`, params.default || "1"))}${params.units ? params.units : ''}`} 
           onChange={() => {}}
         />
       </div>
@@ -274,17 +178,63 @@ function RangeControl({path,params={}}) {
 
 function SimpleControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex'>
       <div className='flex items-center'>
         <input
           className='w-full'
           type='text' 
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params?.default ?? '#ccc')}
+          value={get(state, `${pathBase}.${path}`, params?.default ?? '#ccc')}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
+      </div>
+    </label>
+  )
+}
+
+function ToggleControl({path, params={title:""}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  const { value } = useMemo(() => {
+    return {
+      value: get(state, `${pathBase}.${path}`, {}),
+    }
+  },[state])
+
+  return (
+    <label className='flex'>
+      <div className='flex items-center'>
+        <Switch
+          checked={value}
+          onChange={()=>{
+            setState(draft=> {
+              set(draft, `${pathBase}${path}`,!value)
+            })
+          }}
+          className={`${
+            value ? 'bg-blue-500' : 'bg-gray-200'
+          } relative inline-flex h-4 w-8 items-center rounded-full `}
+        >
+          <span className="sr-only">{params.title}</span>
+          <div
+            className={`${
+              value ? 'translate-x-5' : 'translate-x-0'
+            } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+          />
+        </Switch>
       </div>
     </label>
   )
@@ -294,14 +244,19 @@ export function SelectControl({path, params={}}) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
   //console.log('select control', params)
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
         <select
           className='w-full py-2 bg-transparent'
-          value={get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, params.default || params?.options?.[0]?.value )}
+          value={get(state, `${pathBase}.${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
           {(params?.options || []).map((opt,i) => {
@@ -321,15 +276,21 @@ function SelectViewColumnControl({path, datapath, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
 
-  const {layerType, viewId, sourceId} = useMemo(() => ({
-    layerType: get(state,`symbology.layers[${state.symbology.activeLayer}]['layer-type']`),
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  const { layerType, viewId, sourceId, method } = useMemo(() => ({
+    layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
+    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+    method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
   }),[state])
 
   const column = useMemo(() => {
-    return get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, null )
-  },[state])
+    return get(state, `${pathBase}.${path}`, null )
+  },[state, path])
 
   useEffect(() => {
     if(sourceId) {
@@ -337,7 +298,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
       ]);
     }
-  },[sourceId])
+  },[pgEnv, sourceId])
 
   const metadata = useMemo(() => {
     let out = get(falcorCache, [
@@ -349,39 +310,8 @@ function SelectViewColumnControl({path, datapath, params={}}) {
         ], [])
       }
     return out
-  }, [sourceId,falcorCache])
+  }, [pgEnv, sourceId, falcorCache])
 
-  //console.log('metadata', metadata)
-
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      falcor.get([
-        'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[column, 'count(1)::int as count']
-      ])      
-    }
-  },[column])
-
-  useEffect(() => {
-    if(column && layerType === 'categories') {
-      const options = JSON.stringify({
-        groupBy: [(column).split('AS ')[0]],
-        exclude: {[(column).split('AS ')[0]]: ['null']},
-        orderBy: {"2": 'desc'}
-      })
-      let data = get(falcorCache, [
-           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'
-      ], {})
-      setState(draft => {
-        set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, data)
-      })
-    }
-
-  }, [column, falcorCache])
 
   return (
     <label className='flex w-full'>
@@ -390,19 +320,26 @@ function SelectViewColumnControl({path, datapath, params={}}) {
           className='w-full p-2 bg-transparent'
           value={column}
           onChange={(e) => setState(draft => {
-            
-            let sourceTiles = get(state, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
-            // console.log('SelectViewColumnControl set column path', path, e.target.value, sourceTiles)
+            let sourceTiles = get(state, `${pathBase}.sources[0].source.tiles[0]`, 'no source tiles').split('?')[0]
             
             if(sourceTiles !== 'no source tiles') {
-            // console.log('set source tiles', sourceTiles+`?cols=${e.target.value}`)
-              set(draft, `symbology.layers[${state.symbology.activeLayer}].sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+              set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
+            }
+            if(layerType === 'circles') {
+              set(draft, `${pathBase}['lower-bound']`, null);
+              set(draft, `${pathBase}['upper-bound']`, null);
+              set(draft, `${pathBase}['min-radius']`, 8);
+              set(draft, `${pathBase}['max-radius']`, 128);
             }
 
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, {});
-            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {})
-            set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, e.target.value)
-
+            // Custom color scale relies on a premade scale
+            // So, when we change data columns, we need to reset the color scale first
+            if(method === 'custom') {
+              set(draft, `${pathBase}['bin-method']`, 'ckmeans');
+            }
+            set(draft, `${pathBase}['choroplethdata']`, {});
+            set(draft, `${pathBase}['categories']`, {});
+            set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
           {(metadata || [])
@@ -427,10 +364,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
 function ColorRangeControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   
-  let rangeColorKey = get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`,colorbrewer.schemeGroups.sequential[0])
-  let numbins = get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9)
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let rangeColorKey = get(state, `${pathBase}['range-key']`,colorbrewer.schemeGroups.sequential[0])
+  let numbins = get(state, `${pathBase}['num-bins']`, 9)
   // console.log('select control', colorbrewer,rangeColorKey, numbins)
-  let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[rangeColorKey][numbins])
+  let value = get(state, `${pathBase}.${path}`, colorbrewer[rangeColorKey][numbins])
   
   // console.log('value', value, path, colorbrewer)
 
@@ -463,8 +405,8 @@ function ColorRangeControl({path, params={}}) {
                     <div
                       className = {`flex-1 flex w-full p-2`}
                       onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[colorKey][numbins])
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, colorKey)
+                        set(draft, `${pathBase}.${path}`, colorbrewer[colorKey][numbins])
+                        set(draft, `${pathBase}['range-key']`, colorKey)
                       })}
                     >
                       {colorbrewer[colorKey][numbins].map((d,i) => <div key={i} className='flex-1 h-4' style={{backgroundColor: d}} />)}
@@ -486,8 +428,8 @@ function ColorRangeControl({path, params={}}) {
                     <div
                       className = {`flex-1 flex w-full p-2`}
                       onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colorbrewer[colorKey][numbins])
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, colorKey)
+                        set(draft, `${pathBase}.${path}`, colorbrewer[colorKey][numbins])
+                        set(draft, `${pathBase}['range-key']`, colorKey)
                       })}
                     >
                       {colorbrewer[colorKey][numbins].map((d,i) => <div key={i} className='flex-1 h-4' style={{backgroundColor: d}} />)}
@@ -505,8 +447,36 @@ function ColorRangeControl({path, params={}}) {
 function CategoricalColorControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   // console.log('select control', params)
-  let colors = categoricalColors
-  let value = get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors['cat1'])
+  let colors = categoricalColors;
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { value, categories } = useMemo(() => {
+    return {
+      value: get(state, `${pathBase}.${path}`, colors['cat1']),
+      categories: get(state, `${pathBase}['categories']`, {}),
+    }
+  }, [state]);
+
+  const replaceCategoryPaint = (oldCategories, newColors) => {
+    const newLegend = oldCategories.legend.map((row, i) => {
+      return { ...row, color: toHex(newColors[i]) };
+    });
+
+    const newPaint = oldCategories.paint.map((row, i) => {
+      if (i < 3 || i === oldCategories.paint.length - 1) {
+        return row;
+      } else if (i % 2 === 1) {
+        return toHex(newColors[((i + 1) / 2 - 2) % newColors.length]);
+      } else {
+        return row;
+      }
+    });
+    return { paint: newPaint, legend: newLegend };
+  };
 
   // console.log('value', value, path)
   return (
@@ -530,9 +500,13 @@ function CategoricalColorControl({path, params={}}) {
                     <div className='w-4 h-4' />
                     <div
                       className = {`flex-1 flex w-full p-2`}
-                      onClick={() => setState(draft => {
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}].${path}`, colors[colorKey])
-                      })}
+                      onClick={() => {
+                        setState(draft => {
+                          const newCategories = replaceCategoryPaint(categories, colors[colorKey]);
+                          set(draft, `${pathBase}.${path}`, colors[colorKey]);
+                          set(draft, `${pathBase}['categories']`, newCategories);
+                        });
+                      }}
                     >
                       {colors[colorKey].map((d,i) => <div key={i} className='w-4 h-4' style={{backgroundColor: d}} />)}
                     </div>
@@ -546,253 +520,158 @@ function CategoricalColorControl({path, params={}}) {
     )
 }
 
-function CategoryControl({path, params={}}) {
+function CircleControl({path, params={}}) {
   const { state, setState } = React.useContext(SymbologyContext);
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
+  // console.log('CircleControl', params)
 
-  let { value: mapPaint, column, categorydata, colors, sourceId, categories, showOther } = useMemo(() => {
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { lowerBound, upperBound, minRadius, maxRadius, radiusCurve, curveFactor } = useMemo(() => {
     return {
-      sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      value: get(state, `symbology.layers[${state.symbology.activeLayer}].${path}`, {}),
-      column: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      categorydata: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-data']`, {}),
-      colors: get(state, `symbology.layers[${state.symbology.activeLayer}]['color-set']`, categoricalColors['cat1']),
-      categories: get(state, `symbology.layers[${state.symbology.activeLayer}]['categories']`, {}),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc')
+      lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+      minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+      upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+      maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+      radiusCurve: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][0]`, 'linear'),
+      curveFactor: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][1]`, 1),
     }
-  },[state])
+  },[state]);
 
-  const [activeCatIndex, setActiveCatIndex] = React.useState();
-  useEffect(() => {
-    //console.log('getmetadat', sourceId)
-    if(sourceId) {
-      falcor.get([
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata"
-      ])//.then(d => console.log('source metadata sourceId', sourceId, d));
-    }
-  },[sourceId])
-
-  const metadataLookup = useMemo(() => {
-    //console.log('getmetadata', falcorCache)
-      let out = get(falcorCache, [
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value", "columns"
-      ], [])
-      if(out.length === 0) {
-        out = get(falcorCache, [
-          "dama", pgEnv, "sources", "byId", sourceId, "attributes", "metadata", "value"
-        ], [])
-      }
-      return JSON.parse((out.filter(d => d.name === column)?.[0] || {})?.meta_lookup || "{}")
-      
-
-  }, [sourceId,falcorCache])
-
-  //Number of total distinct values, not counting `null`
-  const numCategories = useMemo(() => {
-      //console.log('categorydata', categorydata)
-      return Object.values(categorydata)
-        .reduce((out,cat) => {
-          if(typeof cat[column] !== 'object') {
-            out++
-          }
-          return out
-        },0)
-   }, [categorydata])
-
-  const currentCategories = categories?.legend?.filter(row => row.label !== "Other") ?? []
-  const availableCategories = getDiffColumns(
-    Object.values(categorydata)
-      .filter((cat) => typeof cat[column] !== "object")
-      .map((catData) => catData[column]),
-    currentCategories.map((cat) => cat.label)
-  ).map((cat) => ({ label: cat, value: cat }));
-
-  const isShowOtherEnabled = showOther === '#ccc'
+  //layerPaintPath = "layers[0].paint['circle-radius']"
+  //"layers[0].paint['circle-radius'][1][0]" is the curve function
+  //"layers[0].paint['circle-radius'][1][1]" is the `base` 
+      //Controls the rate at which the output increases: higher values make the output 
+      //increase more towards the high end of the range. 
+      //With values close to 1 the output increases linearly.
+  //"layers[0].paint['circle-radius'][3]" is the lower bound for interpolation function
+  //"layers[0].paint['circle-radius'][4]" is the min radius of the circle
+  //"layers[0].paint['circle-radius'][5]" is the upper bound for the interpolation function
+  //"layers[0].paint['circle-radius'][6]" is the max radius of the circle
   return (
-   
-      <div className=' w-full items-center'>
-        {
-          activeCatIndex !== undefined  && 
-          <>
-            <label className='flex'>
-              <div className='flex items-center'>
-                <input
-                  type='color' 
-                  value={toHex(get(state, `symbology.layers[${state.symbology.activeLayer}]['categories'].legend[${activeCatIndex}].color`, colors[(activeCatIndex % colors.length)]))}
-                  onChange={(e) => {
-                    const updatedCategoryPaint = [...mapPaint];
-                    const indexOfLabel = updatedCategoryPaint.indexOf(currentCategories[activeCatIndex].label);
-                    updatedCategoryPaint.splice(indexOfLabel+1, 1, e.target.value);
-
-                    setState(draft => {
-                      const newLegend = currentCategories.map((d, i) => {
-                        if (i === activeCatIndex) {
-                          return { color: e.target.value, label: get(metadataLookup, d.label, d.label) }
-                        }
-                        else {
-                          return { color: d.color, label: get(metadataLookup, d.label, d.label) }
-                        }
-                      })
-
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, newLegend)
-                      set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
-                        paint: updatedCategoryPaint, legend: newLegend
-                      });
-                    })
-                  }}
-                />
-              </div>
-              <div className='flex items-center p-2'>Custom color for {currentCategories[activeCatIndex].label} </div>
-            </label>
-          </>
-        }
-        <div className='flex items-center'>
-          <div className='text-sm text-slate-400 px-2'>Showing</div>
-          <div className='border border-transparent hover:border-slate-200 m-1 rounded '>
-            <select
-              className='w-full p-2 bg-transparent text-slate-700 text-sm'
-              value={currentCategories.length}
-              onChange={(e) => setState(draft => {
-                set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{});
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, e.target.value);
-              })}
-            >
-              <option key={'def'} value={currentCategories.length}>{currentCategories.length} Categories</option>
-              {([10,20,30,50,100] || [])
-                .filter(d => d < numCategories && d !== currentCategories.length)
-                .map((val,i) => {
-                return (
-                  <option key={i} value={val}>{val} Categories</option>
-                )
-              })}
-            </select>
-          </div>
-        </div>
-        <div className='flex items-center'>
-          <div className='text-sm text-slate-400 px-2'>Show Other</div>
-          <div className='flex items-center'>
-            <Switch
-              checked={isShowOtherEnabled}
-              onChange={()=>{
-                setState(draft=> {
-                  const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, update) 
-                })
-              }}
-              className={`${
-                isShowOtherEnabled ? 'bg-blue-500' : 'bg-gray-200'
-              } relative inline-flex h-4 w-8 items-center rounded-full `}
-            >
-              <span className="sr-only">Show other</span>
-              <div
-                className={`${
-                  isShowOtherEnabled ? 'translate-x-5' : 'translate-x-0'
-                } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
-              />
-            </Switch>
-
-          </div>
-
-        </div>
-        <div className='w-full max-h-[250px] overflow-auto'>
-          {currentCategories.map((d,i) => (
-            <div key={i} className='group/title w-full flex items-center hover:bg-slate-100'>
-              <div 
-                className='flex items-center h-8 w-8 justify-center  border-r border-b ' 
-                onClick={() => {
-                  if (activeCatIndex !== i) {
-                    setActiveCatIndex(i);
-                  } else {
-                    setActiveCatIndex(undefined);
-                  }
-                }}
-              >
-                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>
-              </div>
-              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>{d.label}</div>
-              <div
-                className="group/icon border-b w-8 h-8 flex items-center border-slate-200 cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-200"
-                onClick={() => {
-                  const updatedCategoryPaint = [...mapPaint];
-                  const updatedCategoryLegend = currentCategories.filter(cat => cat.label !== d.label);
-                  const indexOfLabel = updatedCategoryPaint.indexOf(d.label);
-
-                  //In filter array, the `label` preceeds its paint `value`
-                  updatedCategoryPaint.splice(indexOfLabel, 2);
-                  setState(draft=> {
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend)
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
-                    set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
-                      paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                        return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                      })
-                    });
-                  });
-                }}
-              >
-                <Close
-                  className="mx-[6px] cursor-pointer group-hover/icon:fill-slate-500 "
-                />
-              </div>
-            </div> 
-          ))}
-          {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
-              <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
-                <div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor: showOther }}/>
-              </div>
-              <div className='flex items-center text-center flex-1 px-4 text-slate-600 border-b h-8 truncate'>Other</div>
-            </div>
-          }
-          <>
-            <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-                Add Column
-            </div>
-            <div className="flex-1 flex items-center mx-4 pb-4">
-              <StyledControl>
-                <label className='flex w-full'>
-                  <div className='flex w-full items-center'>
-                    <select
-                      className='w-full py-2 bg-transparent'
-                      value={''}
-                      onChange={(e) =>
-                        {
-                          const updatedCategoryPaint = [...mapPaint];
-                          const updatedCategoryLegend = [...currentCategories];
-
-                          const lastColorUsed = updatedCategoryPaint[updatedCategoryPaint.length-2];
-                          const lastColorIndex = colors.map(color => rgb2hex(color)).indexOf(lastColorUsed);
-                          const nextColor = lastColorIndex < colors.length-1 ? colors[lastColorIndex+1] : colors[0];
-
-                          updatedCategoryLegend.push({ color: nextColor, label: e.target.value })
-                          updatedCategoryPaint.splice(mapPaint.length-1, 0, e.target.value, rgb2hex(nextColor));
-                          
-                          setState(draft=> {
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['categories']`,{
-                              paint: updatedCategoryPaint, legend: updatedCategoryLegend.map(d => {
-                                return {color: d.color, label: get(metadataLookup, d.label, d.label )}
-                              })
-                            });
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-categories']`, updatedCategoryLegend.length);
-                            set(draft, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`, updatedCategoryLegend) 
-                          });
-                        }
-                      }
-                    >
-                      <option key={-1} value={""}></option>
-                      {(availableCategories || []).map((opt, i) => (
-                        <option key={i} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </label>
-              </StyledControl>
-            </div>
-          </>
+    <div className=" w-full items-center">
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 pl-2">Radius curve:</div>
+        <div className="w-full border border-transparent hover:border-slate-200 rounded mr-1 mb-1">
+          <select
+            className='w-full p-2 pl-0 bg-transparent text-slate-700 text-sm'
+            value={radiusCurve}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['radius-curve']`,
+                  e.target.value
+                );
+              });
+            }}
+          >
+            <option value='linear'>Linear</option>
+            <option value='exponential'>Exponential</option>
+          </select>
         </div>
       </div>
-    )
+      {radiusCurve === 'exponential' && <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Curve Factor:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={curveFactor}
+            step=".1"
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['curve-factor']`,
+                  parseFloat(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>}
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Min Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={minRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['min-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Max Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={maxRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['max-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Lower Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={lowerBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['lower-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Upper Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={upperBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['upper-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function roundToNearestTen(v) {
@@ -804,32 +683,80 @@ function ChoroplethControl({path, params={}}) {
   const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
   // console.log('select control', params)
   //let colors = categoricalColors
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
   let { numbins, method, colorKey, legenddata, showOther, choroplethdata, isLoadingColorbreaks } = useMemo(() => {
     return {
-      numbins: get(state, `symbology.layers[${state.symbology.activeLayer}]['num-bins']`, 9),
-      colorKey: get(state, `symbology.layers[${state.symbology.activeLayer}]['range-key']`, 'seq1'),
-      method: get(state, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, 'ckmeans'),
-      legenddata: get(state, `symbology.layers[${state.symbology.activeLayer}]['legend-data']`),
-      choroplethdata: get(state, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']`, { breaks: [] }),
-      showOther: get(state, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`, '#ccc'),
-      isLoadingColorbreaks: get(state, `symbology.layers[${state.symbology.activeLayer}]['is-loading-colorbreaks']`, false)
+      numbins: get(state, `${pathBase}['num-bins']`, 9),
+      colorKey: get(state, `${pathBase}['range-key']`, 'seq1'),
+      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
+      legenddata: get(state, `${pathBase}['legend-data']`),
+      choroplethdata: get(state, `${pathBase}['choroplethdata']`, { breaks: [] }),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
+      isLoadingColorbreaks: get(state, `${pathBase}['is-loading-colorbreaks']`, false)
     }
   },[state])
 
   const { breaks, max } = choroplethdata;
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i].color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i]?.color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
   })
   .filter(d => d);
 
   const isShowOtherEnabled = showOther === '#ccc'
+  const breakInputs = breaks?.map((breakValue, breakIndex) => {
+    const displayedValue = breakIndex === 0 ? `Minimum: ${breakValue}`: breakValue
+    return (
+      <input
+        key={`custom_breaks_${breakIndex}`}
+        className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+        type='text' 
+        value={displayedValue}
+        disabled={breakIndex === 0}
+        onChange={(e) => {
+          setState(draft => {
+            const newBreaks = [...breaks];
+            let parsedVal = e.target.value;
+
+            //If last element is a decimal, and the new string is longer than the previous string
+            if(parsedVal.slice(-1) === '.' && parsedVal.length > breaks[breakIndex].toString().length) {
+              //User is attempting to input a decimal place
+              //Add a `1` to the end so that is parses correctly
+              //Adding a `0` will not allow the user to continue to add digits after the decimal
+              parsedVal = parsedVal + "1"
+            }
+
+            newBreaks[breakIndex] = parseFloat(parsedVal)
+
+            if(Number.isNaN(newBreaks[breakIndex])){
+              newBreaks[breakIndex] = 0;
+            }
+            set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+          })
+        }}
+      />
+    )
+  });
+  if(breakInputs){
+    breakInputs.push(
+      <input
+        key={`${max}`}
+        className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+        type="text"
+        value={`Maximum: ${max}`}
+        disabled={true}
+      />
+    );
+  }
 
   /**
    * categories[0] is breaks[0] to breaks[1]
    * categories[n-1] (last element) is breaks[n-1] to max
    * minimum value of non-first break, is the value of the prior break + 1
    * max value of non-last break, is the value of the next break - 1
-   * TODO -- what if lower bound is 0? can't move it 10%!
    */
   const rangeInputs = categories?.map((category, catIndex) => {
     return (
@@ -856,7 +783,7 @@ function ChoroplethControl({path, params={}}) {
                         const minBreakValue = breaks[catIndex-1] + 1;
                         const newBreaks = [...breaks];
                         newBreaks[catIndex] = catIndex !== 0 ? Math.max(newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10), minBreakValue) : newBreaks[catIndex] - roundToNearestTen(newBreaks[catIndex]/10);
-                        set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                        set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
                       })
                     }}
                   />
@@ -875,12 +802,12 @@ function ChoroplethControl({path, params={}}) {
                         if(catIndex !== categories.length-1){
                           const maxBreakValue = catIndex === categories.length-2 ? max - 1 : breaks[catIndex+2] - 1;
                           newBreaks[catIndex+1] = Math.min(newBreaks[catIndex+1] + roundToNearestTen(newBreaks[catIndex+1]/10), maxBreakValue);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['breaks']`, newBreaks)
+                          set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
                         }
                         else {
                           //adjust max
                           const newMax = max + roundToNearestTen(max/10);
-                          set(draft, `symbology.layers[${state.symbology.activeLayer}]['choroplethdata']['max']`, newMax)
+                          set(draft, `${pathBase}['choroplethdata']['max']`, newMax)
                         }
                       })
                     }}
@@ -893,8 +820,6 @@ function ChoroplethControl({path, params={}}) {
     );
   });
   
-  
-  
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>
@@ -904,10 +829,26 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={numbins}
               onChange={(e) => setState(draft => {
-                // console.log('SelectViewColumnControl set column path', path, e.target.value)
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['num-bins']`, e.target.value)
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['choroplethdata']`, {});
-                set(draft, `symbology.layers[${state.symbology.activeLayer}].['color-range']`, colorbrewer[colorKey][e.target.value])
+                set(draft, `${pathBase}.['num-bins']`, e.target.value)
+                if(method === 'custom'){
+                  const diffBins = numbins - e.target.value;
+                  if(diffBins > 0) {
+                    const newBreaks = [...breaks].slice(0,-diffBins);
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+                  } else {
+                    const numBinsToAdd = diffBins * -1;
+                    //Add empty positions
+                    const newBreaks = [...breaks];
+                    for(let i=0; i<numBinsToAdd; i++) {
+                      newBreaks.push(max)
+                    }
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks);
+                  }
+                }
+                else {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
+                set(draft, `${pathBase}.['color-range']`, colorbrewer[colorKey][e.target.value])
               })}
             >
               {(Object.keys(colorbrewer[colorKey]) || [])
@@ -926,13 +867,16 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={method}
               onChange={(e) => setState(draft => {
-                set(draft, `symbology.layers[${state.symbology.activeLayer}]['bin-method']`, e.target.value)
+                if(e.target.value !== "custom") {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
+                set(draft, `${pathBase}['bin-method']`, e.target.value)
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
-              <option  value={'jenks'}>Jenks</option>
               <option  value={'pretty'}>Pretty Breaks</option>
               <option  value={'equalInterval'}>Equal Interval</option>
+              <option  value={'custom'}>Custom</option>
              
             </select>
           </div>
@@ -945,7 +889,7 @@ function ChoroplethControl({path, params={}}) {
               onChange={()=>{
                 setState(draft=> {
                   const update = isShowOtherEnabled ? 'rgba(0,0,0,0)' : '#ccc';
-                  set(draft, `symbology.layers[${state.symbology.activeLayer}]['category-show-other']`,update)
+                  set(draft, `${pathBase}['category-show-other']`,update)
                 })
               }}
               className={`${
@@ -963,14 +907,19 @@ function ChoroplethControl({path, params={}}) {
           </div>
 
         </div>
-        <div className='w-full max-h-[250px] overflow-auto'>
+        {
+          method === 'custom' && <div className='flex flex-col px-2'>
+            <>Breaks:{breakInputs}</>
+          </div>
+        }
+        <div className='w-full max-h-[300px] overflow-auto'>
           {
             isLoadingColorbreaks ?  (
                 <div className="flex w-full justify-center overflow-hidden pb-2" >
                   Creating scale...
                   <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
                 </div>
-              ) : rangeInputs
+              ) : method === 'custom' ? <><div className='p-2'>Ranges:</div>{rangeInputs}</> : rangeInputs
           }
           {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
@@ -984,15 +933,11 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
-const getDiffColumns = (baseArray, subArray) => {
-  return baseArray.filter(baseItem => !subArray.includes(baseItem))
-}
-
-export const AddColumnSelectControl = ({setState, availableColumnNames}) => {
+export const AddColumnSelectControl = ({setState, availableColumnNames, label="Add Column"}) => {
   return (
     <>
-      <div className='w-full text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center mx-4'>
-          Add Column
+      <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center ml-4'>
+          {label}
       </div>
       <div className="flex-1 flex items-center mx-4">
         <StyledControl>
@@ -1025,10 +970,15 @@ export const controlTypes = {
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
-  'choroplethControl':ChoroplethControl, 
+  'choroplethControl':ChoroplethControl,
+  'circleControl': CircleControl,
+  'interactiveFilterControl': InteractiveFilterControl,
   'range': RangeControl,
   'simple': SimpleControl,
   'select': SelectControl,
   'selectType': SelectTypeControl,
-  'selectViewColumn': SelectViewColumnControl
+  'selectViewColumn': SelectViewColumnControl,
+  'filterGroupControl': FilterGroupControl,
+  'viewGroupControl': ViewGroupControl,
+  'toggleControl': ToggleControl,
 }

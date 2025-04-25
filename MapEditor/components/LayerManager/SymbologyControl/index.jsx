@@ -1,14 +1,11 @@
 import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../..'
-import { DamaContext } from "../../../../store"
-
-import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { MenuDots , Plus} from '../../icons'
+import { useParams } from "react-router-dom";
+import { Transition, Dialog } from '@headlessui/react'
+import { Plus, FolderOpen, Trash, FloppyDisk } from '../../icons'
 
 import { SelectSymbology } from '../SymbologySelector';
-import get from 'lodash/get'
-
+import set from 'lodash/set'
 import { CreateSymbologyMenu, SymbologyControlMenu, SaveChangesMenu } from './components'
 
 
@@ -64,57 +61,73 @@ export const INITIAL_NEW_MAP_MODAL_STATE = {
   symbologyId: null
 };
 
-const INITIAL_SAVE_CHANGES_MODAL_STATE = {
-
-};
-
 function SymbologyControl () {
   const { state, setState } = useContext(SymbologyContext);
-  
+  const { symbologyId } = useParams()
   const [newMapModalState, setNewMapModalState] = useState(INITIAL_NEW_MAP_MODAL_STATE);
-  const [saveChangesModalState, setSaveChangesModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
-
   const menuButtonContainerClassName = ' p-1 rounded hover:bg-slate-100 group';
   return (
     <div className='p-1 flex'>
       <div className='w-full px-1 flex bg-slate-100 border border-transparent hover:border-slate-300 group rounded-md shadow-sm ring-1 ring-inset ring-slate-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-600 sm:max-w-md'>
         <input
-          readOnly
           type="text"
           className='block w-[220px] flex-1 outline-0  bg-transparent p-2 text-slate-800 placeholder:text-gray-400  focus:border-0  sm:leading-6'
           placeholder={'Select / Create New Map'}
           value={state?.name}
-          onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+          onClick={!symbologyId ? (() => setNewMapModalState({...newMapModalState, open: true})) : undefined}
+          onChange={(e) => {
+            setState(draft => {
+              set(draft, `name`, e.target.value);
+            })
+          }}
         />
-        {
-          state?.symbology_id && 
-
-          <div className='flex items-center mr-2'>
-            <SaveChangesMenu 
+        <div className='flex items-center'>
+          <div className='flex  mr-2'>
+            <CreateSymbologyMenu 
+              className="relative inline-block text-left"
               button={
-                <i className='fa-regular fa-floppy-disk cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
+                <Plus
+                  size={14}
+                  className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                />
               }
             />
           </div>
-        }
-        <div className='flex items-center mr-2'>
-          <CreateSymbologyMenu 
-            className="relative inline-block text-left"
-            button={
-              <Plus className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>
-            }
-          />
+          { symbologyId && 
+            <>
+              <div
+                className='flex  mr-2'
+                onClick={() => setNewMapModalState({...newMapModalState, open: true})}
+              >
+                <FolderOpen
+                  size={14}
+                  className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+                />
+              </div>
+              <div className='flex  mr-2'>
+                <SaveChangesMenu 
+                  button={
+                    <FloppyDisk
+                      size={14}
+                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                    />
+                  }
+                />
+              </div>
+              <div className='flex'>
+                <SymbologyControlMenu 
+                  button={
+                    <Trash
+                      size={14}   
+                      className={`cursor-pointer fill-none group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
+                    />
+                  }
+                />
+              </div>
+            </>
+          }
         </div>
-        {
-          state?.symbology_id && 
-          <div className='flex items-center'>
-            <SymbologyControlMenu 
-              button={
-                <i className='fa-regular fa-trash cursor-pointer text-slate-100 group-hover:text-gray-400 group-hover:hover:text-pink-700' />
-              }
-            />
-           </div>
-        }
+
       </div>
       <div className='flex items-center ml-1'>
         <SelectSymbology 

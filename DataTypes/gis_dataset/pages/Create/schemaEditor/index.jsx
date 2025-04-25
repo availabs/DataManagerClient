@@ -12,6 +12,7 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
     databaseColumnNames,
     gisUploadId,
     layerName,
+    layerAnalysisReady
   } = state;
 
 
@@ -22,6 +23,7 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
       // if updating source must wait for database columns
       //console.log('damaSourceId', damaSourceId, databaseColumnNames)
       if (
+        !layerAnalysisReady ||
         (damaSourceId && !databaseColumnNames) ||
         !gisUploadId ||
         !layerName
@@ -48,6 +50,7 @@ export default function UpdateGisDatasetLayerDatabaseDbSchema({
       return dispatch({ type: "update", payload: { tableDescriptor: tblDsc } });
     })();
   }, [
+    layerAnalysisReady,
     damaSourceId,
     databaseColumnNames,
     gisUploadId,

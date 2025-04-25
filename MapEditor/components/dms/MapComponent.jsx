@@ -7,8 +7,9 @@ import { useImmer } from 'use-immer';
 import MapManager from './MapManager/MapManager'
 import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
-
+import { usePrevious } from '../../components/LayerManager/utils'
 import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
+import { HEIGHT_OPTIONS } from "./MapManager/MapManager";
 
 const isJson = (str)  => {
     try {
@@ -28,13 +29,18 @@ const getData = async () => {
 const Edit = ({value, onChange, size}) => {
     // const {falcor, falcorCache} = useFalcor();
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext)
-    console.log('pg env MapContext ', pgEnv)
     const mounted = useRef(false);
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
         symbologies: cachedData.symbologies || {},
-        isEdit: true
+        isEdit: true,
+        setInitialBounds: cachedData.setInitialBounds || false,
+        initialBounds: cachedData.initialBounds || null,
+        hideControls: cachedData.hideControls || false,
+        blankBaseMap: cachedData.blankBaseMap || false,
+        height: cachedData.height || "full",
+        zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -119,21 +125,80 @@ const Edit = ({value, onChange, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
-  
+    const isHorizontalLegendActive = Object.values(state?.symbologies)
+      ?.filter((symb) => symb.isVisible)
+      .some((symb) => {
+        return Object.values(symb?.symbology?.layers).some(
+          (symbLayer) => symbLayer["legend-orientation"] === "horizontal"
+        );
+      });
 
+
+    const interactiveFilterIndicies = useMemo(
+        () =>
+          Object.values(state.symbologies).map(
+            (topSymb) => {
+                return Object.values(topSymb.symbology.layers).map(l => l.selectedInteractiveFilterIndex)
+            }
+          ),
+        [state.symbologies]
+      );
+      const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
+    
+      useEffect(() => {
+        setState((draft) => {
+          Object.keys(draft.symbologies)
+            .forEach(topSymbKey => {
+                const curTopSymb = draft.symbologies[topSymbKey];
+                Object.keys(curTopSymb.symbology.layers)
+                  .filter((lKey) => {
+                    return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
+                  })
+                  .forEach((lKey) => {
+                    const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+
+                    if(draftInteractiveFilter) {
+                      const newSymbology = {
+                        ...layer,
+                        ...draftInteractiveFilter,
+                        order: layer.order,
+                        "layer-type": "interactive",
+                        "interactive-filters": draftFilters,
+                        selectedInteractiveFilterIndex: draftFilterIndex
+                      };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
+                    }
+                  });
+            })
+        });
+      }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
+
+
+    const { center, zoom } = state.initialBounds ? state.initialBounds : {
+        center: [-75.17, 42.85],
+        zoom: 6.6
+    }
+    const heightStyle = HEIGHT_OPTIONS[state.height];
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_edit' className="w-full relative" style={{height:'calc(100vh - 65px)'}} ref={mounted}>
+            <div id='dama_map_edit' className="w-full relative" style={{height: heightStyle}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-75.17, 42.85],
-                    zoom: 6.6,
+                    center: center,
+                    zoom: zoom,
                     protocols: [PMTilesProtocol],
-                    styles: defaultStyles
+                    styles: state.blankBaseMap ? blankStyles : defaultStyles
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }
@@ -141,7 +206,7 @@ const Edit = ({value, onChange, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     <div className=''><MapManager /></div>
                     <div className='flex-1'/>
-                    <div className=''><LegendPanel /></div>
+                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
@@ -162,10 +227,14 @@ const View = ({value, size}) => {
     //console.log('cachedData', cachedData, value)
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
-        symbologies: cachedData.symbologies || [],
+        symbologies: cachedData.symbologies || {},
+        initialBounds: cachedData.initialBounds || null,
+        hideControls: cachedData.hideControls || false,
+        blankBaseMap: cachedData.blankBaseMap || false,
+        height: cachedData.height || "full",
+        zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
     })
     const [mapLayers, setMapLayers] = useImmer([])
-
 
     //console.log('render map component view', state)
     useEffect(() => {
@@ -227,7 +296,7 @@ const View = ({value, size}) => {
             }
         }
         updateLayers()
-    }, [state.symbologies])
+    }, [state?.symbologies])
 
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
@@ -235,63 +304,101 @@ const View = ({value, size}) => {
         },{}) 
     }, [state?.symbologies]);
 
+    const isHorizontalLegendActive = Object.values(state?.symbologies)
+      ?.filter((symb) => symb.isVisible)
+      .some((symb) => {
+        return Object.values(symb?.symbology?.layers).some(
+          (symbLayer) => symbLayer["legend-orientation"] === "horizontal"
+        );
+      });
+
+    const interactiveFilterIndicies = useMemo(
+        () =>
+          Object.values(state.symbologies).map(
+            (topSymb) => {
+                return Object.values(topSymb.symbology.layers).map(l => l.selectedInteractiveFilterIndex)
+            }
+          ),
+        [state.symbologies]
+      );
+      const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
+    
+      useEffect(() => {
+        setState((draft) => {
+          Object.keys(draft.symbologies)
+            .forEach(topSymbKey => {
+                const curTopSymb = draft.symbologies[topSymbKey];
+  
+                Object.keys(curTopSymb.symbology.layers)
+                  .filter((lKey) => {
+                    return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
+                  })
+                  .forEach((lKey) => {
+                    const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
+                
+                    const draftFilters = layer['interactive-filters'];
+                    const draftFilterIndex = layer.selectedInteractiveFilterIndex;
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+                    if(draftInteractiveFilter) {
+                      const newSymbology = {
+                        ...layer,
+                        ...draftInteractiveFilter,
+                        order: layer.order,
+                        "layer-type": "interactive",
+                        "interactive-filters": draftFilters,
+                        selectedInteractiveFilterIndex: draftFilterIndex
+                      };
+  
+                      newSymbology.layers.forEach((d, i) => {
+                        newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
+                      });
+                      draft.symbologies[topSymbKey].symbology.layers[lKey] = newSymbology;
+                    }
+                  });
+            })
+        });
+      }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
+
     /*
 
     -73.77114629819935,
           42.653137397916566
     */
+        
+    const { center, zoom } = state.initialBounds ? state.initialBounds : {
+        center: [-75.17, 42.85],
+        zoom: 6.6
+    }
+    const heightStyle = HEIGHT_OPTIONS[state.height];
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
-            <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
+            <div id='dama_map_view' className="w-full relative" style={{height: heightStyle}} ref={mounted}>
                 <AvlMap
                   layers={ mapLayers }
                   layerProps = { layerProps }
                   hideLoading={true}
                   showLayerSelect={true}
                   mapOptions={{
-                    center: [-75.17, 42.85],
-                    zoom: 6.6,
+                    center: center,
+                    zoom: zoom,
                     protocols: [PMTilesProtocol],
-                    styles: defaultStyles
+                    styles: state.blankBaseMap ? blankStyles : defaultStyles,
+                    dragPan: state.zoomPan,
+                    scrollZoom: state.zoomPan,
+                    dragRotate: state.zoomPan
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }
                 />
                 <div className={'absolute inset-0 flex pointer-events-none'}>
-                    <div className=''><MapManager /></div>
+                    {!state.hideControls && <div className=''><MapManager /></div>}
                     <div className='flex-1'/>
-                    <div className=''><LegendPanel /></div>
+                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
                 </div>
             </div>
         </MapContext.Provider>
     )
 }
-
-// const View = ({value}) => {
-//     const mounted = useRef(false);
-//     return (
-//         <div id='dama_map_view' className="w-full relative" style={{height:'calc(100vh - 51px)'}} ref={mounted}>
-//             <AvlMap
-//               layers={ [] }
-//               layerProps = { {} }
-//               mapOptions={{
-//                 center: [-76, 43.3],
-//                 zoom: 6,
-//                 protocols: [PMTilesProtocol],
-//                 styles: defaultStyles
-//               }}
-//               leftSidebar={ false }
-//               rightSidebar={ false }
-//             />
-//             <div className={'absolute inset-0 flex pointer-events-none'}>
-//               <div className='p-2'><div className='bg-white'>Left Sidebar</div></div>
-//               <div className='flex-1'/>
-//               <div className='p-2'><div className='bg-white'>Right Sidebar</div></div>
-//             </div>
-//         </div>
-//     )
-// }
-
 
 export default {
     "name": 'Map: Dama',
@@ -310,25 +417,49 @@ export default {
 }
 
 const defaultStyles =  [
-              {
-                name: "Default",
-                style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              { name: "Satellite",
-                style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
-              },
-              { name: "Streets",
-                style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
-              },
-             
-              { name: "Light",
-                style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              { name: "Dark",
-                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              // {
-              //   name: 'Sattelite 3d ',
-              //   style: terrain_3d_source
-              // }
+  {
+    name: "Default",
+    style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  { name: "Satellite",
+    style: "https://api.maptiler.com/maps/hybrid/style.json?key=mU28JQ6HchrQdneiq6k9",
+  },
+  { name: "Streets",
+    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
+  },
+  { name: "Light",
+    style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  { name: "Dark",
+    style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
+  },
+  {
+    name: "Blank",
+    style: {
+      sources:{},
+      version: 8,
+      layers: [{
+          "id": "background",
+          "type": "background",
+          "layout": {"visibility": "visible"},
+          "paint": {"background-color": 'rgba(208, 208, 206, 0)'}
+      }]
+    }
+  }
+]
+
+const blankStyles = [
+  {
+    name: "Blank",
+    style: {
+      sources:{},
+      version: 8,
+      layers: [{
+          "id": "background",
+          "type": "background",
+          "layout": {"visibility": "visible"},
+          "paint": {"background-color": 'rgba(208, 208, 206, 0)'}
+      }]
+    }
+  }
 ]

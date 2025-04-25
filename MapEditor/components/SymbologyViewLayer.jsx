@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useContext, useRef } from "react"
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
@@ -6,15 +6,19 @@ import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../store"
+import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
-
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
 const ViewLayerRender = ({
   maplibreMap,
   layer,
   layerProps,
   allLayerProps
 }) => {
-  
+  const mctx = useContext(MapContext);
+  const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
@@ -33,17 +37,46 @@ const ViewLayerRender = ({
       })
     }
   }, [])
-  
+
+  const mapCenter = maplibreMap.getCenter();
+  const mapZoom = maplibreMap.getZoom();
+
+  useEffect(() => {
+    if(state.setInitialBounds) {
+      setState(draft => {
+        draft.setInitialBounds = false;
+        const newBounds = {
+          center: mapCenter,
+          zoom: mapZoom
+        };
+        if(!isEqual(state.initialBounds, newBounds)){
+          draft.initialBounds = newBounds;
+        }
+      })
+    }
+  }, [maplibreMap, state.setInitialBounds]);
+
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
-  
   // - On layerProps change
+  const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+
   useEffect(() => {
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    if(layerProps?.['data-column'] !== (prevLayerProps?.['data-column']) || layerProps?.filter !== (prevLayerProps?.['filter'])) {
-      //console.log('data-column update')
+    const didFilterGroupColumnsChange =
+      layerProps.filterGroupEnabled &&
+      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+
+    const didDataColumnChange =
+      !layerProps.filterGroupEnabled &&
+      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+
+    const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+    const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
+
+    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
@@ -57,7 +90,7 @@ const ViewLayerRender = ({
             maplibreMap.removeLayer(l?.id) 
           }
         })
-        // consol
+
         maplibreMap.removeSource(newSource.id)
         if(!maplibreMap.getSource(newSource.id)){
           maplibreMap.addSource(newSource.id, newSource.source)
@@ -67,23 +100,53 @@ const ViewLayerRender = ({
 
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
-            if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
-            } else {
-              maplibreMap.addLayer(l) 
-            }
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
         })
       }
     }
 
-    // -------------------------------
-    // Reorder Layers
-    // to do: STILL BUGGY
-    // -------------------------------
-    if(layerProps?.order < (prevLayerProps?.order || -1)) {
-      let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
+    if(Object.keys(layerProps)?.length && layerProps.view_id !== prevLayerProps?.view_id) {
+      if(maplibreMap.getSource(prevLayerProps?.sources?.[0]?.id)){
+        const oldSource = cloneDeep(prevLayerProps.sources?.[0])
+        let newSource = cloneDeep(layerProps.sources?.[0])
+        let tileBase = newSource?.source.tiles?.[0];
+
+        if(tileBase){
+          newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+        }
+
+        layerProps?.layers?.forEach(l => {
+          if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+            maplibreMap.removeLayer(l?.id) 
+          }
+        })
+
+        maplibreMap.removeSource(oldSource.id)
+        if(!maplibreMap.getSource(newSource.id)){
+          maplibreMap.addSource(newSource.id, newSource.source)
+        } else {
+          console.log('cant add',maplibreMap.getSource(newSource.id))
+        }
+
+        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
+        layerProps?.layers?.forEach(l => {
+          if(maplibreMap.getLayer(beneathLayer?.id)){
+            maplibreMap.addLayer(l, beneathLayer?.id) 
+          } else {
+            maplibreMap.addLayer(l) 
+          }
+        })
+      }
+    }
+
+    if(prevLayerProps?.order !== undefined && layerProps?.order < prevLayerProps?.order) {
+      let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {
-        if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
+        if(maplibreMap.getLayer(l?.id)){
           maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
         }
       })
@@ -121,54 +184,90 @@ const ViewLayerRender = ({
     // -------------------------------
     // Apply filters
     // -------------------------------
-    const { filter: layerFilter } = layerProps;
+    const { filter: layerFilter, ["dynamic-filters"]:dynamicFilter } = layerProps;
     layerProps?.layers?.forEach((l,i) => {
       if(maplibreMap.getLayer(l.id)){
+        let mapLayerFilter = [];
         if(layerFilter){
-          const mapLayerFilter = Object.keys(layerFilter).map(
+          mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
               let mapFilter = [];
-              const filterOperator = layerFilter[filterColumnName].operator;
-              const filterValue = layerFilter[filterColumnName].value;
-              const filterColumnClause = ["get", filterColumnName];
+              //TODO actually handle calculated columns
+              if(filterColumnName.includes("rpad(substring(prop_class, 1, 1), 3, '0')")) {
+                const filterColumnClause = ["slice", ["get", "prop_class"], 0, 1];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValues = layerFilter?.[filterColumnName]?.value.map(fVal => fVal?.substring(0,1))
 
-              if(filterOperator === 'between') {
                 mapFilter = [
-                  "all",
-                  [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
-                  ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  "in",
+                  filterColumnClause,
+                  ["literal", filterValues]
                 ];
+
+                if(filterOperator === "!="){
+                  mapFilter = ["!", mapFilter];
+                }
               }
               else {
-                if (["==", "!="].includes(filterOperator)) {
-                  //Allows for `or`, i.e. ogc_fid = 123 or 456
-                  mapFilter = [
-                    "in",
-                    filterColumnClause,
-                    ["literal", filterValue]
-                  ];
+                const filterOperator = layerFilter[filterColumnName].operator;
+                const filterValue = layerFilter[filterColumnName].value;
+                const filterColumnClause = ["get", filterColumnName];
 
-                  if(filterOperator === "!="){
-                    mapFilter = ["!", mapFilter];
-                  }
+                if(filterOperator === 'between') {
+                  mapFilter = [
+                    "all",
+                    [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
+                    ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                  ];
                 }
                 else {
-                  mapFilter = [
-                    filterOperator,
-                    ["to-string", filterColumnClause],
-                    ["to-string", filterValue]
-                  ];
+                  if (["==", "!="].includes(filterOperator)) {
+                    // "in"Allows for `or`, i.e. ogc_fid = 123 or 456
+                    mapFilter = [
+                      "in",
+                      filterColumnClause,
+                      ["literal", filterValue]
+                    ];
+  
+                    if(filterOperator === "!="){
+                      mapFilter = ["!", mapFilter];
+                    }
+                  }
+                  else {
+                    mapFilter = [
+                      filterOperator,
+                      ["to-string", filterColumnClause],
+                      ["to-string", filterValue]
+                    ];
+                  }
                 }
               }
-
               return mapFilter;
             }
           );
-          maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter]);
         }
+        const layerHasDynamicFilter =
+          dynamicFilter &&
+          dynamicFilter?.length > 0 &&
+          dynamicFilter.some((dFilter) => dFilter?.values?.length > 0);
+        let dynamicMapLayerFilters = [];
+        if (layerHasDynamicFilter) {
+          dynamicMapLayerFilters = dynamicFilter
+            ?.filter((dFilter) => dFilter?.values?.length > 0)
+            .map((dFilter) => {
+              let mapFilter = [];
+
+              const filterValue = dFilter.values;
+              const filterColumnClause = ["get", dFilter.column_name];
+              //"in" Allows for `or`, i.e. ogc_fid = 123 or 456
+              mapFilter = ["in", filterColumnClause, ["literal", filterValue]];
+              return mapFilter;
+            });
+        }
+        maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
-  }, [layerProps]);
+  }, [doesSourceExistOnMap, layerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
@@ -182,24 +281,49 @@ const ViewLayerRender = ({
 const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = tileBase;
 
-  const layerHasFilter = layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0;
-  const getUrlHasDataColumn = (url) => url.includes(layerProps?.["data-column"]);
-  if (newTileUrl && (layerProps?.["data-column"] || layerHasFilter)) {
+
+  const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0) 
+
+  const dataFilterCols =
+    layerProps?.filterGroupEnabled && layerProps?.["filter-group"]?.length > 0
+      ? layerProps?.["filter-group"]
+          ?.map((filterObj) => filterObj.column_name)
+      : [layerProps?.["data-column"]];
+  
+  const dynamicCols = layerProps?.["dynamic-filters"]
+    ?.filter((dFilter) => dFilter?.values?.length > 0)
+    .map((dFilter) => dFilter.column_name); 
+  const colsToAppend = dataFilterCols.concat(dynamicCols).filter(onlyUnique).filter(col => !!col).join(",")
+
+  if (newTileUrl && (colsToAppend || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
     }
 
-    if (layerProps?.["data-column"] && !getUrlHasDataColumn(newTileUrl)) {
-      newTileUrl += layerProps?.["data-column"];
+    const splitUrl = newTileUrl.split("?cols=");
+    //If layerProps has a data column, and the URL has nothing after the ?cols=, append data column
+    if (colsToAppend && splitUrl[1].length === 0) {
+      newTileUrl += colsToAppend;
     }
 
-    if (getUrlHasDataColumn(newTileUrl) && layerHasFilter) {
+    //If layerProps has a data column, and the URL already has something after the ?cols=, replace it with data column
+    if (colsToAppend && splitUrl[1].length > 0) {
+      newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
+    }
+
+    if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
       newTileUrl += ",";
     }
 
     if (layerHasFilter) {
       Object.keys(layerProps.filter).forEach((filterCol, i) => {
-        newTileUrl += `${filterCol}`;
+        //TODO actually handle calculated columns
+        if(filterCol.includes("rpad(substring(prop_class, 1, 1), 3, '0')")){
+          newTileUrl += `prop_class`;
+        }
+        else {
+          newTileUrl += `${filterCol}`;
+        }
 
         if (i < Object.keys(layerProps.filter).length - 1) {
           newTileUrl += ",";
@@ -274,17 +398,13 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  let { pgEnv, falcor, falcorCache } = ctx;
+  const { pgEnv, falcor, falcorCache } = ctx;
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 
   const hoverColumns = React.useMemo(() => {
     return layer.props['hover-columns'];
   }, [layer]);
-
-  if(!pgEnv) {
-    pgEnv = 'hazmit_dama'
-  }
 
   useEffect(() => {
     if(source_id) {
@@ -332,7 +452,7 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
         ], [])
       }
-    return out
+    return Array.isArray(out) ? out : []
   }, [source_id, falcorCache]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
@@ -364,7 +484,7 @@ const HoverComp = ({ data, layer }) => {
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
-      {Object.keys(attrInfo).length === 0 ? `Fetching Attributes ${id}` : ""}
+      {Object.keys(attrInfo).length === 0 && attributes.length !== 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .sort((a,b) =>{
@@ -378,7 +498,7 @@ const HoverComp = ({ data, layer }) => {
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");
           if ( !(hoverAttr.name || hoverAttr.display_name) ) {
-            return <></>;
+            return <span key={i}></span>;
           }
           else {
             return (

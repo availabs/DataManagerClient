@@ -1,13 +1,13 @@
 import React from 'react'
 
-export const Close = ({className='fill-slate-800'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const Close = ({className='fill-slate-800', size="20"}) => (
+	<svg width={size} height={size} viewBox="0 0 24 24" className={className}>
 		<path d="M10.5858 12L4.92898 17.6569L6.3432 19.0711L12 13.4143L17.6569 19.0711L19.0711 17.6569L13.4142 12L19.0711 6.34317L17.6569 4.92896L12 10.5858L6.34317 4.92897L4.92896 6.34319L10.5858 12Z" ></path>
 	</svg>
 )
 
-export const Plus = ({className='fill-slate-800'}) => (
-	<svg width="12" height="12" viewBox="0 0 12 12" className={className}>
+export const Plus = ({className='fill-slate-800', size="12"}) => (
+	<svg width={size} height={size} viewBox="0 0 12 12" className={className}>
 		<path d="M7 0H5V5H0V7H5V12H7V7H12V5H7V0Z" ></path>
 	</svg>
 )
@@ -32,18 +32,24 @@ export const ShowOther = ({className='fill-slate-800'}) => (
 )
 
 
-export const Eye = ({className='fill-gray-900'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const Eye = ({className='fill-gray-900', onClick=() => {} }) => (
+	<svg width="20" height="20" viewBox="0 0 24 24" className={className} onClick={onClick}>
 		<path fillRule="evenodd" clipRule="evenodd" d="M15.1278 12C15.1278 13.6863 13.7274 15.0533 12 15.0533C10.2726 15.0533 8.8722 13.6863 8.8722 12C8.8722 10.3137 10.2726 8.94664 12 8.94664C13.7274 8.94664 15.1278 10.3137 15.1278 12ZM13.3717 12C13.3717 12.7395 12.7576 13.339 12 13.339C11.2424 13.339 10.6283 12.7395 10.6283 12C10.6283 11.2604 11.2424 10.6609 12 10.6609C12.7576 10.6609 13.3717 11.2604 13.3717 12Z" ></path>
 		<path fillRule="evenodd" clipRule="evenodd" d="M12 18C7.90486 18 4.40498 15.512 3 12C4.40498 8.48798 7.90475 6 11.9999 6C16.095 6 19.595 8.48798 21 12C19.595 15.512 16.0951 18 12 18ZM11.9999 7.71429C15.1026 7.71429 17.7877 9.45991 19.0808 12C17.7877 14.5401 15.1027 16.2857 12 16.2857C8.89726 16.2857 6.21206 14.5401 4.91897 12C6.21206 9.45991 8.89715 7.71429 11.9999 7.71429Z" ></path>
 	</svg>
 )
 
-export const EyeClosed = ({className='fill-slate-800'}) => (
-	<svg width="20" height="20" viewBox="0 0 24 24" className={className}>
+export const EyeClosed = ({className='fill-slate-800', onClick=() => {} }) => (
+	<svg width="20" height="20" viewBox="0 0 24 24" className={className} onClick={onClick}>
 		<path d="M3 12C3.34629 12.8656 3.81984 13.669 4.3982 14.3883L3.1051 15.6814L4.51932 17.0956L5.80754 15.8074C6.60111 16.4553 7.50288 16.9811 8.48252 17.3552L8.01453 19.1018L9.94638 19.6194L10.4142 17.8735C10.9301 17.9567 11.4599 18 12 18C12.5413 18 13.0722 17.9565 13.5892 17.873L14.0572 19.6194L15.989 19.1018L15.5207 17.354C16.4999 16.9796 17.4012 16.4537 18.1944 15.8058L19.4842 17.0956L20.8984 15.6814L19.6034 14.3863C20.181 13.6676 20.654 12.8648 21 12H19.0808C17.7877 14.5401 15.1027 16.2857 12 16.2857C8.89725 16.2857 6.21206 14.5401 4.91897 12H3Z" ></path>
 	</svg>
 )
+
+export const EyeSlashed = ({className='fill-slate-800', size="16", onClick=() => {} }) => (
+  <svg width={size} height={size} viewBox="0 0 640 512" className={className} onClick={onClick}>
+    <path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z" />
+  </svg>
+); 
 
 
 export const Line = ({className='fill-slate-800'}) => (
@@ -82,7 +88,71 @@ export const MultiType = ({className='fill-slate-800'}) => (
 
 
 export const CaretDown = ({className='fill-slate-800'}) => (
-	<svg width="12" height="12" viewBox="0 0 12 12"  className={className}>
+	<svg width="12" height="12" viewBox="0 0 12 12" className={className}>
 		<path fillRule="evenodd" clipRule="evenodd" d="M2.64645 4.64645C2.84171 4.45118 3.15829 4.45118 3.35355 4.64645L6 7.29289L8.64645 4.64645C8.84171 4.45118 9.15829 4.45118 9.35355 4.64645C9.54882 4.84171 9.54882 5.15829 9.35355 5.35355L6.35355 8.35355C6.15829 8.54882 5.84171 8.54882 5.64645 8.35355L2.64645 5.35355C2.45118 5.15829 2.45118 4.84171 2.64645 4.64645Z"></path>
 	</svg>
 )
+
+export const CaretDownSolid = ({ className = "fill-slate-800", size = "12", onClick=() => {} }) => (
+  <svg width={size} height={size} viewBox="0 0 320 512" className={className} onClick={onClick}>
+    <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
+  </svg>
+);
+
+export const CaretUpSolid = ({ className = "fill-slate-800", size = "12", onClick=() => {} }) => (
+  <svg width={size} height={size} viewBox="0 0 320 512" className={className} onClick={onClick}>
+    <path d="M182.6 137.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-9.2 9.2-11.9 22.9-6.9 34.9s16.6 19.8 29.6 19.8l256 0c12.9 0 24.6-7.8 29.6-19.8s2.2-25.7-6.9-34.9l-128-128z" />
+  </svg>
+);
+
+export const FolderOpen = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 576 512">
+    <path d="M384 480l48 0c11.4 0 21.9-6 27.6-15.9l112-192c5.8-9.9 5.8-22.1 .1-32.1S555.5 224 544 224l-400 0c-11.4 0-21.9 6-27.6 15.9L48 357.1 48 96c0-8.8 7.2-16 16-16l117.5 0c4.2 0 8.3 1.7 11.3 4.7l26.5 26.5c21 21 49.5 32.8 79.2 32.8L416 144c8.8 0 16 7.2 16 16l0 32 48 0 0-32c0-35.3-28.7-64-64-64L298.5 96c-17 0-33.3-6.7-45.3-18.7L226.7 50.7c-12-12-28.3-18.7-45.3-18.7L64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l23.7 0L384 480z" />
+  </svg>
+);
+
+export const Trash = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z" />
+  </svg>
+);
+
+export const FloppyDisk = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-242.7c0-17-6.7-33.3-18.7-45.3L352 50.7C340 38.7 323.7 32 306.7 32L64 32zm0 96c0-17.7 14.3-32 32-32l192 0c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32L96 224c-17.7 0-32-14.3-32-32l0-64zM224 288a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" />
+  </svg>
+);
+
+export const SquareMinusSolid = ({
+  className = "fill-slate-800",
+  size = "12",
+}) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm88 200l144 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-144 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z" />
+  </svg>
+);
+
+export const SquarePlusSolid = ({
+  className = "fill-slate-800",
+  size = "12",
+}) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 448 512">
+    <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM200 344l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
+  </svg>
+);
+
+export const StarSolid = ({ className = "fill-slate-800", size = "12" }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 576 512">
+    <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" />
+  </svg>
+);
+
+export const LongArrowRight = ({
+  className = "fill-slate-800",
+  size = "12",
+	width
+}) => (
+  <svg preserveAspectRatio="none" className={className} width={width || size} height={width}  viewBox="0 0 512 512">
+    <path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l370.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128z" />
+  </svg>
+);

@@ -56,7 +56,7 @@ let methods = {
 
 let round = (n, p = 2) => (e => Math.round(n * e) / e)(Math.pow(10, p))
 
-export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks, showOther  ) {
+export function choroplethPaint( column, max, colors, num=10, method='ckmeans',colorBreaks, showOther, legendOrientation="vertical"  ) {
   //console.log('paint method', method)
   let paint = [
     'step',
@@ -69,41 +69,59 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     return false
   }
 
+
+
   domain.forEach((d,i) => {
     paint.push(colors[i]);
-    paint.push(Math.floor(+d))
+    paint.push(+d)
   })
 
   paint.push(colors[num-1])
 
   const legend = [
-    ...(paint || []).filter((d,i) => i > 2 )
-    .map((d,i) => {
-      
-      if(i % 2 === 1) {
-        //console.log('test', fnumIndex(paint[i+4] || max))
-        return {color: paint[i+1], label: `${fnumIndex(paint[i+2])} - ${fnumIndex(paint[i+4] || max)}`}
-      }
-      return null
-    })
-    .filter(d => d)
-  ]
+    ...(paint || [])
+      .filter((d, i) => i > 2)
+      .map((d, i) => {
+        if (i % 2 === 1) {
+          //console.log('test', fnumIndex(paint[i+4] || max))
+          let label = '';
 
+          if(legendOrientation === "vertical") {
+            label = `${
+              paint[i + 2] > 1000 ? fnumIndex(paint[i + 2]) : paint[i + 2]
+            } - ${
+              paint[i + 2] > 1000 || paint[i + 4] > 1000
+                ? fnumIndex(paint[i + 4] || max)
+                : paint[i + 4] || max
+            }`;
+          } else if (legendOrientation = "horizontal") {
+            label = `${paint[i + 2] > 1000 ? fnumIndex(paint[i + 2]) : paint[i + 2]}`;
+          }
+
+          return {
+            color: paint[i + 1],
+            label,
+          };
+        }
+        return null;
+      })
+      .filter((d) => d),
+  ];
 
   return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
 
 }
 
-const fnumIndex = (d, fractions = 2, currency = false) => {
+export const fnumIndex = (d, fractions = 2, currency = false) => {
     if (d >= 1000000000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000000000).toFixed(fractions)} T`;
+      return `${currency ? '$' : ``}${(d / 1000000000000).toFixed(fractions)}T`;
     } else if (d >= 1000000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000000).toFixed(fractions)} B`;
+      return `${currency ? '$' : ``}${(d / 1000000000).toFixed(fractions)}B`;
     } else if (d >= 1000000) {
-      return `${currency ? '$' : ``} ${(d / 1000000).toFixed(fractions)} M`;
+      return `${currency ? '$' : ``}${(d / 1000000).toFixed(fractions)}M`;
     } else if (d >= 1000) {
-      return `${currency ? '$' : ``} ${(d / 1000).toFixed(fractions)} K`;
+      return `${currency ? '$' : ``}${(d / 1000).toFixed(fractions)}K`;
     } else {
-      return typeof d === "object" ? `` : `${currency ? '$' : ``} ${parseInt(d)}`;
+      return typeof d === "object" ? `` :`${currency ? '$' : ``}${parseInt(d)}`;
     }
   }

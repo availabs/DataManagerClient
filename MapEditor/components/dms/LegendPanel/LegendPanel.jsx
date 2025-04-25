@@ -5,9 +5,10 @@ import { MapContext } from '../MapComponent'
 import { DndList } from '~/modules/avl-components/src'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../../icons'
+import { Eye, EyeClosed, SquareMinusSolid, SquarePlusSolid } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
+import { fnumIndex } from '../../LayerEditor/datamaps';
 //import {LayerMenu} from './LayerPanel'
 
 
@@ -153,24 +154,105 @@ function StepLegend({layer}) {
   )
 }
 
+function HorizontalLegend({ layer }) {
+  let { legenddata, showOther } = useMemo(() => {
+    return {
+      legenddata : get(layer, `['legend-data']`, []),
+      showOther: get(layer, `['category-show-other']`, '#ccc')
+    }
+  },[layer]);
+  const isShowOtherEnabled = showOther === '#ccc';
 
-function LegendRow ({ index, layer, i }) {
+  return (
+    <div
+      className="w-full max-h-[350px] overflow-x-auto scrollbar-sm"
+    >
+      <div
+        className={`flex-1 flex w-full p-2`}
+      >
+        {legenddata.map((d, i) => (
+          <div key={i} className="flex-1 h-6 overflow-hidden">
+            <div className='flex h-4 justify-self-end text-xs'>
+              {isShowOtherEnabled && i === legenddata.length-1 ? 'N/A' : legenddata[i].label}
+            </div>
+            <div
+              key={i}
+              className="flex-1 h-2 w-20"
+              style={{ backgroundColor: d.color }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CircleLegend({ layer }) {
+  const { minRadius, maxRadius, lowerBound, upperBound } = useMemo(() => {
+    return {
+      minRadius: get(layer,`['min-radius']`, 8),
+      maxRadius: get(layer,`['max-radius']`, 128),
+      lowerBound: get(layer,`['lower-bound']`, null),
+      upperBound: get(layer,`['upper-bound']`, null),
+    };
+  }, [layer]);
+
+  return (
+    <div
+      className="w-[50%] max-h-[350px] overflow-x-auto scrollbar-sm text-sm"
+    >
+      <div className='flex w-full justify-between'>
+        <div>
+          {minRadius}px
+        </div>
+        <div>
+          {maxRadius}px
+        </div>
+      </div>
+      <div className='ml-8'>
+        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
+      </div>
+      <div className='flex w-full justify-between'>
+        <div>
+          {fnumIndex(lowerBound)}
+        </div>
+        <div>
+          {fnumIndex(upperBound)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LegendRow ({ index, layer, i, symbology_id }) {
   const navigate = useNavigate();
   const  activeLayer  = null
-
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint[layer.type](layer)
-  const type = layer['layer-type']
+
+
+  let { layerType: type, selectedInteractiveFilterIndex, legendOrientation } = useMemo(() => {
+    return {
+      layerType : get(layer, `['layer-type']`),
+      selectedInteractiveFilterIndex: get(layer, `['selectedInteractiveFilterIndex']`),
+      legendOrientation: get(layer, `['legend-orientation']`, 'vertical'),
+    }
+  },[layer]);
+
 
   //TODO -- how to get `baseUrl` when you don't have damaContext??
-  const sourceUrl = `/cenrep/source/${layer.source_id}`
+  const sourceUrl = `/datasources/source/${layer.source_id}`
+
+  const layerName = type === 'interactive' ? layer.label : layer.name;
+
+  type = type === 'interactive' ? get(layer, `['interactive-filters'][${selectedInteractiveFilterIndex}]['layer-type']`) : type;
 
   return (
     <div className={`${activeLayer == layer.id ? 'bg-pink-100' : ''} hover:border-pink-500 border border-transparent`}>
       <div className={`group/title w-full  p-2 py-1 flex items-center`}>
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
-          {layer.name}
+          {layerName}
           <div 
             className="cursor-pointer text-white group-hover/title:text-black group/icon "
             onClick={(e) => {
@@ -186,8 +268,18 @@ function LegendRow ({ index, layer, i }) {
           </div>
         </div>
       </div>
-      {type === 'categories' && <CategoryLegend layer={layer} />}
-      {type === 'choropleth' && <StepLegend layer={layer} />}
+        {legendOrientation === "horizontal" ? (
+          <HorizontalLegend layer={layer} />
+        ) : (
+            type === 'circles' ? (
+            <CircleLegend layer={layer} />
+          ) : (
+              <>
+                {type === 'categories' && <CategoryLegend layer={layer} />}
+                {type === 'choropleth' && <StepLegend layer={layer} />}
+              </>
+            )
+        )}
     </div>
   )
 }
@@ -231,16 +323,17 @@ function LegendPanel (props) {
     <>
       {/* ------Layer Pane ----------- */}
       <div className='p-4'>
-        <div className='min-h-20 relative bg-white/75 max-h-[calc(100vh_-_111px)] max-w-[300px] overflow-auto pointer-events-auto scrollbar-sm'>
+        <div className='min-h-10 relative bg-white/75 max-h-[calc(100vh_-_111px)] overflow-auto pointer-events-auto scrollbar-sm'>
           {layersBySymbology.map((symb) => (
             <div
               key={symb.symbology_id}
-              className="m-2 p-2 rounded"
+              className="m-1 p-1 rounded"
             >
               <div className="font-normal">{symb.name}</div>
               {Object.values(symb.layers)
                 .sort((a,b) => b.order - a.order)
-                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} />)}
+                .filter(layer => layer?.['legend-orientation'] !== 'none')
+                .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} symbology_id={symb.symbology_id}/>)}
             </div>
           ))}
         </div>

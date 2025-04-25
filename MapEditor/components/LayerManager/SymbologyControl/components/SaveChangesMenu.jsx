@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useMemo } from 'react'
+import { useContext, useState, useRef, useMemo, useEffect } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
 import { Button } from "~/modules/avl-components/src";
@@ -7,7 +7,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import { Modal } from '../'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
 
 export function SaveChangesMenu({ button, className}) {
@@ -51,20 +50,20 @@ function SaveChangesModal ({ open, setOpen })  {
   const { symbologyId } = useParams()
   const navigate = useNavigate()
 
-  const origSymbology = useMemo(() => {
+  const dbSymbology = useMemo(() => {
     return symbologies.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
-  const initialSaveAsName = useMemo(() => {
-    return generateDefaultName(state?.name)
-  }, [state.name]);
-
   const INITIAL_SAVE_CHANGES_MODAL_STATE = {
     action: null,
-    name: initialSaveAsName
+    name: generateDefaultName(state?.name)
   };
 
   const [modalState, setModalState] = useState(INITIAL_SAVE_CHANGES_MODAL_STATE)
+
+  useEffect(() => {
+    setModalState({...modalState, name: generateDefaultName(state?.name)})
+  }, [state.name])
 
   async function updateData() {
     await falcor.set({
@@ -104,6 +103,11 @@ function SaveChangesModal ({ open, setOpen })  {
     const newSymb = get(resp, ['json','dama', pgEnv , 'symbologies' , 'byId'],{})?.[newSymbologyId]?.attributes
     
     if(newSymbologyId) {
+      await falcor.invalidate(
+        ["dama", pgEnv, "symbologies", "byIndex"],
+        ["dama", pgEnv, "symbologies", "length"]
+      );
+
       setOpen(false);
       setModalState({ action: null, name:'' });
       setState(newSymb);
@@ -115,18 +119,18 @@ function SaveChangesModal ({ open, setOpen })  {
     const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
 
     if(modalState.action === 'save'){
-      if(state?.symbology?.layers && origSymbology && !isEqual(state?.symbology, origSymbology?.symbology)) {
+      if(state?.symbology?.layers && dbSymbology && !isEqual(state?.symbology, dbSymbology?.symbology)) {
         updateData()
       }
-      if(state?.name && state?.name !== origSymbology.name) {
+      if(state?.name && state?.name !== dbSymbology?.name) {
         updateName()
       }
     } else if (modalState.action === 'discard') {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
-      setState(origSymbology)
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
+      setState(dbSymbology)
     }
     else if (modalState.action === "saveas") {
-      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(origSymbology));
+      window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(dbSymbology));
       createSymbologyMap();
     }
 
@@ -137,13 +141,17 @@ function SaveChangesModal ({ open, setOpen })  {
   const isSymbologyModified = useMemo(() => {
     return (
       state?.symbology?.layers && 
-      origSymbology && 
-      !isEqual(state?.symbology?.layers, origSymbology?.symbology?.layers)
-    );
-  }, [state?.symbology, origSymbology]);
+      dbSymbology && 
+      !isEqual(state?.symbology?.layers, dbSymbology?.symbology?.layers)
+    ) || state?.name !== dbSymbology?.name;
+  }, [state, dbSymbology]);
 
-  const modalButtonType = modalState.action === 'discard' ? 'danger' : 'primary';
-  const modalButtonClassName = !modalState.action ? "disabled:opacity-75 " : " ";
+  const modalButtonType = !modalState.action
+    ? "white"
+    : modalState.action === "discard"
+    ? "danger"
+    : "primary";
+  const modalButtonClassName = !modalState.action ? "disabled:opacity-75 pointer-events-none	" : " ";
 
   return (
     <Modal
@@ -241,11 +249,11 @@ function SaveChangesModal ({ open, setOpen })  {
         <div className="px-1">
           <Button
             themeOptions={{ size: "sm", color: modalButtonType }}
-            className={modalButtonClassName + " capitalize"}
+            className={modalButtonClassName}
             disabled={!modalState.action}
             onClick={onSubmit}
           >
-            {modalState.action} changes
+            {SAVE_CHANGES_BUTTON_LABEL[modalState.action] ?? 'Save ...'}
           </Button>
         </div>
         <div className="px-1">
@@ -263,4 +271,10 @@ function SaveChangesModal ({ open, setOpen })  {
     </Modal>
   )
 
+}
+
+const SAVE_CHANGES_BUTTON_LABEL = {
+  'save': "Save Changes",
+  'saveas': "Save and Open",
+  'discard': "Discard Changes"
 }
