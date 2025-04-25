@@ -39,7 +39,7 @@ export const SymbologySelector = () => {
     // }, [symbologies]);
 
     const symOptions = symbologies.map(sym => ({label: sym.name, key: sym.symbology_id}));
-    const layerOptions = Object.values(state.symbologies?.[activeSym]?.symbology?.layers || {}).map(layer => ({label: layer.name, key: layer.id}));
+    const layerOptions = Object.values(state.symbologies?.[activeSym]?.symbology?.layers || {}).map((layer, i) => ({label: layer.name?.length && layer.name !== ' ' ? layer.name : `layer - ${i+1}`, key: layer.id}));
 
     return (
         <div className={'flex w-full bg-white items-center'}>
