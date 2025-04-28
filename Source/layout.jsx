@@ -51,6 +51,9 @@ export const Header = ({baseUrl=''}) => {
             <div key={'Upload'} className='py-1 '>
               {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
             </div>
+            <div key={'Schedule Tasks'} className='py-1 '>
+              {Item(`${baseUrl}/schedules`, 'fa fa-clock flex-shrink-0  pr-1', 'Schedule Tasks')}
+            </div>
           </div>
         </Dropdown>
       </div>

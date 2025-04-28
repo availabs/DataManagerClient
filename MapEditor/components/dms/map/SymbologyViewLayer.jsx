@@ -2,12 +2,12 @@ import React, { useEffect, useContext, useRef } from "react"
 import get from "lodash/get"
 import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
-import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
-import { usePrevious, getValidSources } from './LayerManager/utils'
-import {DAMA_HOST} from '~/config'
-import { DamaContext } from "../../store"
-import { MapContext } from "./dms/MapComponent"
+import { AvlLayer } from "~/modules/avl-map-2/src"
+import { usePrevious } from './utils.js'
+import { MapContext } from "./MapComponent.jsx"
 import { CMSContext } from '~/modules/dms/src'
+import bbox from '@turf/bbox';
+import { featureCollection } from '@turf/helpers';
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
@@ -19,6 +19,29 @@ const ViewLayerRender = ({
 }) => {
   const mctx = useContext(MapContext);
   const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
+
+  const [sourceReady, setSourceReady] = React.useState(false);
+  const cachedFilterPropsRef = useRef(null);
+
+  useEffect(() => {
+    const sourceId = layerProps?.sources?.[0]?.id;
+    if (!sourceId) return;
+
+    if (maplibreMap.getSource(sourceId)) {
+      setSourceReady(true);
+    } else {
+      const check = () => {
+        if (maplibreMap.getSource(sourceId)) {
+          setSourceReady(true);
+          maplibreMap.off('sourcedata', check);
+        }
+      };
+      maplibreMap.on('sourcedata', check);
+      return () => {
+        maplibreMap.off('sourcedata', check);
+      };
+    }
+  }, [maplibreMap, layerProps?.sources?.[0]?.id]);
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
@@ -59,25 +82,35 @@ const ViewLayerRender = ({
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
   // - On layerProps change
-  const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+  // const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+
+  const didFilterGroupColumnsChange =
+      layerProps.filterGroupEnabled &&
+      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+
+  const didDataColumnChange =
+      !layerProps.filterGroupEnabled &&
+      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+
+  const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
+  const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
 
   useEffect(() => {
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
-    const didFilterGroupColumnsChange =
-      layerProps.filterGroupEnabled &&
-      !isEqual(layerProps?.["filter-group"], prevLayerProps?.["filter-group"]);
+    const shouldApplyFilters = didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange;
 
-    const didDataColumnChange =
-      !layerProps.filterGroupEnabled &&
-      layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
+    if (shouldApplyFilters) {
+      cachedFilterPropsRef.current = layerProps;
+    }
 
-    const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
-    const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
+    if (!sourceReady) return;
 
-    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
+    console.log('debug map ue init', didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange)
+    if(sourceReady && cachedFilterPropsRef.current) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
+        // console.log('debug map if', maplibreMap.getSource(layerProps?.sources?.[0]?.id))
         let newSource = cloneDeep(layerProps.sources?.[0])
         let tileBase = newSource.source.tiles?.[0];
 
@@ -267,7 +300,29 @@ const ViewLayerRender = ({
         maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
-  }, [doesSourceExistOnMap, layerProps]);
+
+    maplibreMap.once('idle', () => {
+      if(layerProps?.zoomToFitBounds){
+        const layers = (layerProps?.layers || []).map(l => l.id);
+        const renderedFeatures = maplibreMap.queryRenderedFeatures(undefined, { layers });
+
+        if (renderedFeatures.length > 0) {
+          const fc = featureCollection(renderedFeatures);
+          const bounds = bbox(fc); // [minX, minY, maxX, maxY]
+
+          maplibreMap.fitBounds(
+              [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
+              {
+                padding: 40,
+                duration: 2000,
+                easing: t => 1 - (1 - t) * (1 - t),
+                // easing: t => t * t,
+              }
+          );
+        }
+      }
+    });
+  }, [sourceReady, didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange, layerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
@@ -279,7 +334,7 @@ const ViewLayerRender = ({
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {
-  let newTileUrl = tileBase;
+  let newTileUrl = `${tileBase}`;
 
 
   const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0) 
@@ -395,10 +450,7 @@ export default ViewLayer;
 const HoverComp = ({ data, layer }) => {
   if(!layer.props.hover) return
   const { source_id, view_id } = layer;
-  const dctx = React.useContext(DamaContext);
-  const cctx = React.useContext(CMSContext);
-  const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv, falcor, falcorCache } = ctx;
+  const { pgEnv, falcor, falcorCache } = React.useContext(CMSContext);
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 

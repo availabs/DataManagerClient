@@ -11,6 +11,7 @@ import CollectionView from "./Collection";
 import CollectionCreate from "./Collection/create";
 import CollectionDelete from "./Collection/delete";
 
+import SchedulesComponent from "./Schedules";
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
 import SettingsComponent from "./Source/settings";
@@ -22,6 +23,7 @@ import { DamaContext } from "./store"
 
 
 import DamaMap from './MapEditor/components/dms/MapComponent'
+import Map from './MapEditor/components/dms/map/MapComponent.jsx'
 
 import MapEditor from './MapEditor';
 
@@ -394,6 +396,16 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       Component: DAMA_Wrapper(DmsList, DAMA_ARGS)
+    },
+    { name: "Schedules",
+      path: `${ baseUrl }/schedules`,
+      exact: true,
+      authLevel,
+      mainNav: true,
+      Title: () => <Header baseUrl={baseUrl}/>,
+      sideNav,
+      topNav,
+      Component: DAMA_Wrapper(SchedulesComponent, DAMA_ARGS)
     }
   ];
 };
@@ -403,5 +415,6 @@ export default DamaRoutes;
 
 
 export {
-  DamaMap
+  DamaMap,
+    Map
 }
