@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, createContext} from "react";
 import isEqual from "lodash/isEqual"
 import { AvlMap } from "~/modules/avl-map-2/src"
-import { PMTilesProtocol } from './pmtiles/index.js'
+import { PMTilesProtocol } from './pmtiles/index'
 import { useImmer } from 'use-immer';
 import LegendPanel from './LegendPanel/LegendPanel.jsx'
 import SymbologyViewLayer from './SymbologyViewLayer.jsx'
