@@ -1,5 +1,5 @@
 import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Input, Button } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import { CollectionAttributes } from '~/pages/DataManager/Collection/attributes'

@@ -1,5 +1,5 @@
 import get from "lodash/get.js";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 import React, {useState} from "react";
 
 export const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseUrl }) => {

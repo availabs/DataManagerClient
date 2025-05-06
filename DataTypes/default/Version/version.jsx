@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState, useContext, useRef, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import get from 'lodash/get'
 import { DamaContext } from "../../../store";
 import { ChevronDownIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'

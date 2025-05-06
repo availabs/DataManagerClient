@@ -3,7 +3,7 @@ import {  TopNav, SideNav } from "~/modules/avl-components/src";
 
 
 import get from "lodash/get";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router";
 import { Pages, damaDataTypes } from "../DataTypes";
 
 import SourcesLayout from "./layout";

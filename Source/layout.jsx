@@ -6,7 +6,7 @@ import { DamaContext } from '../store'
 import { Dropdown } from '~/modules/avl-components/src'
 import { Item } from '~/pages/Auth/AuthMenu'
 
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
 
 

@@ -7,7 +7,7 @@ import LegendPanel from './LegendPanel/LegendPanel.jsx'
 import SymbologyViewLayer from './SymbologyViewLayer.jsx'
 import { CMSContext } from '~/modules/dms/src'
 import {SymbologySelector} from "./SymbologySelector.jsx";
-import {useSearchParams} from "react-router-dom";
+import {useSearchParams} from "react-router";
 import FilterControls from "./controls/FilterControls.jsx";
 import {defaultStyles, blankStyles} from "./styles.js";
 import MoreControls from "./controls/MoreControls.jsx";

@@ -3,7 +3,7 @@ import { DAMA_HOST } from "~/config";
 import { /*useFalcor,*//*TopNav,*/ Input, Button /*withAuth, Input*/ } from '~/modules/avl-components/src'
 
 import get from 'lodash/get'
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { damaDataTypes } from '../DataTypes'
 
 import CollectionsLayout from '../Source/layout'

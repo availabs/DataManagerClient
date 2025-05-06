@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 import { DamaContext } from "~/pages/DataManager/store"
 import { DAMA_HOST } from "~/config";
