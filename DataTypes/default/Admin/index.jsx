@@ -1,172 +1,350 @@
-import React, { useEffect, /*useMemo,*/ useState } from 'react';
-import { Button } from "~/modules/avl-components/src"
-import { DamaContext } from "~/pages/DataManager/store"
-import { useParams, Link } from "react-router-dom";
-import TaskList from "~/pages/DataManager/Tasks/TaskList"
+import { useContext, useState, useEffect, useMemo } from "react";
+import { ThemeContext, Input, Button } from "~/modules/avl-components/src";
+import Select from "~/modules/avl-components/src/components/Inputs/select";
+import { DamaContext } from "~/pages/DataManager/store";
+import { wrappers } from "~/modules/ams/src";
+import { Link } from "react-router-dom";
+import TaskList from "~/pages/DataManager/Tasks/TaskList";
+const amsReduxWrapper = wrappers["ams-redux"];
+const PUBLIC_GROUP = 'Public';
+const ReduxedAdminPage = amsReduxWrapper((props) => {
+  const { user } = useContext(DamaContext);
+  const { groups, source, users, getGroups, getUsers, getUsersPreferences } =
+    props;
 
-const AdminPage = ({source, views, activeViewId, }) => {
-  const currentKeys = ['Guest User', 'Public User', 'Agency User'];
-  const currentRoles = ['view', 'download'];
+  useEffect(() => {
+    if (user) {
+      getGroups();
+      getUsers();
+    }
+  }, [user]);
 
-  const currentAccess = Object.assign({}, ...currentKeys.map((key) => {
-    return {
-      [key]: Object.assign({}, ...currentRoles.map((role) => { return { [role]: false} }))
+  useEffect(() => {
+    if (!users?.some((user) => !!user.preferences)) {
+      const userEmails = users?.map((user) => user.email);
+      getUsersPreferences({ userEmails });
+    }
+  }, [users]);
+
+  return (
+    <AdminPage
+      groups={groups}
+      users={users}
+      source={source}
+      loggedInUser={user}
+    />
+  );
+});
+
+const AdminPage = ({ source, users, groups, loggedInUser }) => {
+  const componentGroups = [...groups];
+  const myTheme = useContext(ThemeContext);
+  const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
+
+  const { auth: sourceAuth } = source?.statistics ?? {};
+
+  const updateAuth = useMemo(() => {
+    return async (newAuth) => {
+      await falcor.set({
+        paths: [
+          [
+            "dama",
+            pgEnv,
+            "sources",
+            "byId",
+            source.source_id,
+            "attributes",
+            "statistics",
+          ],
+        ],
+        jsonGraph: {
+          dama: {
+            [pgEnv]: {
+              sources: {
+                byId: {
+                  [source.source_id]: {
+                    attributes: { statistics: JSON.stringify(newAuth) },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
     };
-  }));
+  }, [falcor, pgEnv, source.source_id]);
 
-  const [editing, setEditing] = React.useState(currentAccess);
-  const { sourceId } = useParams();
-  const {pgEnv, baseUrl, user, falcor} = React.useContext(DamaContext);
-  const {visibility = 'visible'} = source?.statistics || {};
-  const {access = currentAccess} = source?.statistics || {};
-
-  const updateVisibilityData = async() => {
-    const sourceStatistics = source?.statistics || {};
-    sourceStatistics['visibility'] = visibility == 'hidden' ? 'visible' : 'hidden';
-
-    await falcor.set({
-      paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "statistics"]], jsonGraph: {
-          dama: {
-              [pgEnv]: {
-                  sources: {
-                      byId: {
-                          [sourceId]: {
-                              attributes: {statistics: JSON.stringify(sourceStatistics)}
-                          }
-                      }
-                  }
-              }
-          }
+  const addUserAuth = useMemo(() => {
+    return async ({ rowKey: userId }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      if(!newAuth.auth["users"]) {
+        newAuth.auth["users"] = {}
       }
-    })
-  };
+      newAuth.auth["users"][userId] = "1";
+      console.log("newAuth, addUserAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
 
-  const updateAccess = async(group, control, event) => {
-    const ca = JSON.parse(JSON.stringify(access));
-    ca[group][control] = event.target.checked;
-    const sourceStatistics = source?.statistics || {};
-    sourceStatistics['access'] = ca;
-    
-    await falcor.set({
-      paths: [['dama', pgEnv, 'sources', 'byId', sourceId, 'attributes', "statistics"]], jsonGraph: {
-          dama: {
-              [pgEnv]: {
-                  sources: {
-                      byId: {
-                          [sourceId]: {
-                              attributes: {statistics: JSON.stringify(sourceStatistics)}
-                          }
-                      }
-                  }
-              }
-          }
+  const removeUserAuth = useMemo(() => {
+    return async ({ rowKey: userId }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      delete newAuth.auth["users"][userId];
+      console.log("newAuth, removeUserAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
+
+  const setUserAuth = useMemo(() => {
+    return async ({ rowKey: userId, authLevel }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      newAuth.auth["users"][userId] = authLevel;
+      console.log("newAuth,setUserAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
+
+  const addGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      if(!newAuth.auth["groups"]) {
+        newAuth.auth["groups"] = {}
       }
-    });
+      newAuth.auth["groups"][groupName] = "1";
+      console.log("newAuth, addGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
+
+  const removeGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      delete newAuth.auth["groups"][groupName];
+      console.log("newAuth, removeGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
+
+  const setGroupAuth = useMemo(() => {
+    return async ({ rowKey: groupName, authLevel }) => {
+      const newAuth = { auth: { ...sourceAuth } };
+      newAuth.auth["groups"][groupName] = authLevel;
+      console.log("newAuth,setGroupAuth::", newAuth);
+      await updateAuth(newAuth);
+    };
+  }, [sourceAuth, updateAuth]);
+
+  const currentSourceUserIds = sourceAuth?.users ? Object.keys(sourceAuth?.users) : [];
+  const otherUsers = users.filter(
+    (allUser) => !currentSourceUserIds.includes(JSON.stringify(allUser.id))
+  );
+  const currentGroupNames = sourceAuth?.groups ? Object.keys(sourceAuth?.groups) : [];
+  const otherGroups = groups.filter(
+    (allGroup) => !currentGroupNames.includes(JSON.stringify(allGroup.name))
+  );
+
+  if(!Object.keys(sourceAuth?.groups ?? {}).includes(PUBLIC_GROUP)) {
+    otherGroups.push({"name": PUBLIC_GROUP, authLevel: -1})
+  } else {
+    componentGroups.push({"name": PUBLIC_GROUP })
   }
 
   return (
-    <div>
-      <div className=" flex flex-col md:flex-row">
-        <div className='flex-1'>
-          <div className='flex justify-between group'>
-            <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              {/*<dt className="text-sm font-medium text-gray-500 py-5">name</dt>*/}
-              <dd className="mt-1 text-2xl text-gray-700 font-medium overflow-hidden sm:mt-0 sm:col-span-3">
-                Admin
-              </dd>
-            </div>
-          </div>
-          <div className='flex-1 border-b-2 '>
-            <div className="py-4">
-              <div className="flex items-center border-t-2 ">
-                <div className='py-3 px-6 text-blue-500 font-medium text-lg'> Access Controls</div>
-              </div>
-            </div>
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-center" style={{ paddingRight: "40px" }}>
-                      
-                    </th>
-                    <th className="text-center">
-                      Show
-                    </th>
-                    <th className="text-center">
-                      Download
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentKeys.map((key, i) => {
-                    return (
-                      <tr key={i} className='border-b-2 '>
-                        <td className='p-2'>{key}</td>
-                        <td className="text-center">
-                          <input
-                            type='checkbox'
-                            checked={access[key]['view']}
-                            onChange={(e) => updateAccess(key, 'view', e)}  
-                          />
-                        </td>
-                        <td className="text-center">
-                          <input
-                            type='checkbox'
-                            checked={access[key]['download']}
-                            onChange={(e) => updateAccess(key, 'download', e)}
-                          />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                  
-                </tbody>
-              </table>
-            </div>
-        </div>
-        <div className="w-72 ">
-          <div> Admin Actions </div>
-          <div className="w-full p-1 flex">
-            <Link 
-                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                to={`${baseUrl}/source/${source.source_id}/meta_advanced`}>
-                  Advanced Metadata <i className='fa fa-circle-info' />
-            </Link>
-          </div>
-            <div className="w-full p-1 flex">
-            <Link
-                className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                to={`${baseUrl}/source/${source.source_id}/add_version`}>
-                  Add Version <i className='fad fa-upload' />
-            </Link>
-          </div>
-          <div className='flex w-full p-1'>
-              <Link onClick={updateVisibilityData}
-                  className={"w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"}
-                  style={{backgroundColor: visibility == 'visible'?'lightgreen': '#FF7276'}}
-                  > 
-                    Visibile {visibility == 'visible'? "ON" : "OFF"}
-              </Link>
-              
-          </div>
-          <div className="w-full p-1 flex">
-            <Link 
-                className={"w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"}
-                to={`${baseUrl}/delete/source/${source.source_id}`}> 
-                  Delete <i className='fad fa-trash' />
-            </Link>
-          </div>
-          
-          
-          
-        </div>
-
+    <div
+      className={`${
+        myTheme.background ?? "bg-grey-100"
+      } h-full flex flex-wrap py-12 sm:px-6 lg:px-8 gap-3`}
+    >
+      <div className="w-full">
+        <h2 className="text-xl font-medium text-gray-900">Admin</h2>
       </div>
-      <div className='py-10 px-2'>
-        <TaskList sourceId={sourceId}/>
+      <AdminPageTile title="User Access Controls" tileWidth="w-2/3">
+        <div className="mb-4">
+          <Select
+            searchable={true}
+            domain={otherUsers}
+            accessor={(g) => g.id}
+            listAccessor={(g) => g.email}
+            placeholder="Add user access..."
+            onChange={(v) => {
+              addUserAuth({ rowKey: v.id });
+            }}
+          />
+        </div>
+        {currentSourceUserIds.length > 0 && (
+          <>
+            <div className="grid grid-cols-6 gap-2">
+              <div className="col-span-2 font-bold">Name</div>
+              <div className="col-span-2">Authority Level</div>
+            </div>
+            <div className="grid grid-cols-6 gap-2 items-center">
+              {currentSourceUserIds.map((sourceUserId, i) => (
+                <AuthRow
+                  removeUserAuth={removeUserAuth}
+                  setUserAuth={setUserAuth}
+                  key={sourceUserId}
+                  user={
+                    users?.find((user) => user.id === parseInt(sourceUserId)) ??
+                    {}
+                  }
+                  authLevel={sourceAuth.users[sourceUserId]}
+                  loggedInUser={loggedInUser}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </AdminPageTile>
+      <AdminPageTile title="Admin Actions" tileWidth="w-[30%]">
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"
+            }
+            to={`${baseUrl}/source/${source.source_id}/meta_advanced`}
+          >
+            Advanced Metadata <i className="fa fa-circle-info" />
+          </Link>
+        </div>
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center border shadow hover:bg-blue-100 p-4"
+            }
+            to={`${baseUrl}/source/${source.source_id}/add_version`}
+          >
+            Add Version <i className="fad fa-upload" />
+          </Link>
+        </div>
+        <div className="w-full p-1 flex">
+          <Link
+            className={
+              "w-full flex-1 text-center bg-red-100 border border-red-200 shadow hover:bg-red-400 hover:text-white p-4"
+            }
+            to={`${baseUrl}/delete/source/${source.source_id}`}
+          >
+            Delete <i className="fad fa-trash" />
+          </Link>
+        </div>
+      </AdminPageTile>
+      <AdminPageTile title="Group Access Controls" tileWidth="w-2/3">
+        <div className="mb-4">
+          <Select
+            searchable={true}
+            domain={otherGroups}
+            accessor={(g) => g.name}
+            listAccessor={(g) => g.name}
+            displayAccessor={(g) => g.name}
+            placeholder="Add group access..."
+            onChange={(v) => {
+              addGroupAuth({ rowKey: v.name });
+            }}
+          />
+        </div>
+        {currentGroupNames.length > 0 && (
+          <>
+            <div className="grid grid-cols-6 gap-2">
+              <div className="col-span-2 font-bold">Name</div>
+              <div className="col-span-2">Authority Level</div>
+            </div>
+            <div className="grid grid-cols-6 gap-2 items-center">
+              {currentGroupNames.map((groupName, i) => (
+                <AuthRow
+                  removeUserAuth={removeGroupAuth}
+                  setUserAuth={setGroupAuth}
+                  key={groupName}
+                  user={
+                    componentGroups?.find((group) => group.name === groupName) ?? {name: groupName}
+                  }
+                  authLevel={sourceAuth.groups[groupName]}
+                  loggedInUser={loggedInUser}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </AdminPageTile>
+      <AdminPageTile title="Events" tileWidth="w-full">
+        <TaskList sourceId={source.source_id} />
+      </AdminPageTile>
+    </div>
+  );
+};
+
+const AuthRow = (props) => {
+  const {
+    user,
+    loggedInUser,
+    removeUserAuth,
+    setUserAuth,
+    authLevel: initialAuthLevel,
+  } = props;
+
+  const [authLevel, setAuthLevel] = useState(initialAuthLevel);
+  const displayName =
+    user.name ?? user?.preferences?.display_name ?? user.email;
+
+  //users have ids
+  //groups have names
+  const rowKey = user.id ? "id" : "name";
+
+  return (
+    <>
+      <div className="col-span-2">{displayName}</div>
+      <div className="col-span-2 grid">
+        <Input
+          type="number"
+          min="1"
+          max={loggedInUser.authLevel}
+          required
+          value={authLevel}
+          onChange={(v) => setAuthLevel(v)}
+        />
+      </div>
+      <div className="col-span-1 grid">
+        <Button
+          themeOptions={{ size: "sm" }}
+          type="submit"
+          disabled={initialAuthLevel === authLevel}
+          onClick={async () => {
+            setUserAuth({ rowKey: user[rowKey], authLevel });
+          }}
+        >
+          confirm
+        </Button>
+      </div>
+      <div className="col-span-1 grid">
+        <Button
+          themeOptions={{ size: "sm", color: "cancel" }}
+          type="submit"
+          onClick={async () => {
+            removeUserAuth({ rowKey: user[rowKey] });
+          }}
+        >
+          remove
+        </Button>
+      </div>
+    </>
+  );
+};
+
+const AdminPageTile = ({ children, title = "", tileWidth = "sm:max-w-md" }) => {
+  const myTheme = useContext(ThemeContext);
+
+  return (
+    <div className={`mt-8 ${tileWidth}`}>
+      <div
+        className={`${
+          myTheme.tile ?? "bg-white py-8 px-4 shadow-lg sm:rounded-md sm:px-10"
+        } h-full min-height-[400px]`}
+      >
+        <div className="sm:w-full border-gray-200">
+          <h2 className="text-xl font-medium text-gray-900 mb-2">{title}</h2>
+          {children}
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-
-export default AdminPage    
+export default ReduxedAdminPage;

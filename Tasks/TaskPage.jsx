@@ -14,7 +14,7 @@ function onlyUnique(value, index, array) {
 }
 
 const DateCell = ({ value, ...props }) => {
-  const myDate = new Date(value);
+  const myDate = new Date(value.replace(/"/g, ''));
 
   return (
     <div>{ myDate.toLocaleString() }</div>
@@ -39,8 +39,9 @@ const COLUMNS = [
     Header: "Data",
     Cell: ({ value }) => {
       const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
-      const displayValue = parsedValue?.data || parsedValue?.message;
-      return <>{JSON.stringify(displayValue)}</>;
+      const displayValue = parsedValue?.data || parsedValue?.message || parsedValue;
+      const MAX_PAYLOAD_DISPLAYED = 1000; // prevent mega big string from accidentally printing
+      return <div className="max-h-[75px] overflow-auto">{JSON.stringify(displayValue).substring(0, MAX_PAYLOAD_DISPLAYED)}</div>;
     },
   },
 ];

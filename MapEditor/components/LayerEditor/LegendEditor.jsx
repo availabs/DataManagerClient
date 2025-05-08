@@ -1,15 +1,11 @@
-import React, { useContext , useMemo, Fragment}from 'react'
+import React, { useMemo}from 'react'
 import {SymbologyContext} from '../../'
-import { Plus, Close, MenuDots, CaretDown } from '../icons'
-import { Menu, Popover, Transition, Tab, Dialog } from '@headlessui/react'
-import { toHex } from '../LayerManager/utils'
 import get from 'lodash/get'
 import set from 'lodash/set'
 
-import { LayerMenu } from '../LayerManager/LayerPanel'
+import { InteractiveFilterControl } from './InteractiveFilterControl'
 import typeConfigs from './typeConfigs'
-import { wrapperTypes } from './ControlWrappers'
-import { SelectControl } from './Controls'
+
 
 const typeSymbols = {
   'fill': ({layer,color}) => {
@@ -42,7 +38,6 @@ const typeSymbols = {
 
 function LegendEditor() {
   const { state, setState  } = React.useContext(SymbologyContext);
-  
   const { layerType, selectedInteractiveFilterIndex } = useMemo(() => {
     return {
       selectedInteractiveFilterIndex: get(
@@ -58,41 +53,96 @@ function LegendEditor() {
     pathBase = `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`;
   }
   
-  const { type, legenddata } = useMemo(() => {
+  const { type, legenddata, legendOrientation, showOther } = useMemo(() => {
     return {
+      legendOrientation: get(state, `${pathBase}['legend-orientation']`, 'vertical'),
       legenddata : get(state, `${pathBase}['legend-data']`, []),
       type : get(state, `${pathBase}['type']`, 'fill'),
+      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
     }
   },[state])
 
   if(!legenddata || legenddata.length === 0 ) {
     return <div> No Legend Data </div>
   }
-
+  const isShowOtherEnabled = showOther === '#ccc'
   const Symbol = typeSymbols[type] || typeSymbols['fill']
+
   return (
-    <div className='w-full max-h-[550px] pb-4 overflow-auto'>
-        {legenddata.map((d,i) => (
-          <div key={i} className='w-full flex items-center hover:bg-pink-50'>
-            <div className='flex items-center h-6 w-10 justify-center  '>
+    <div className="w-full max-h-[550px] pb-4 overflow-auto">
+      <div className="flex p-4 pt-0 text-sm">
+        <div className="pr-2"> Legend Type: </div>
+        <select
+          className="w-full py-2 bg-transparent"
+          value={legendOrientation}
+          onChange={(e) => {
+            setState((draft) => {
+              set(draft, `${pathBase}['legend-orientation']`, e.target.value);
+            });
+          }}
+        >
+          {layerType !== 'circles' && <option value="vertical">Vertical</option>}
+          {layerType !== 'circles' && <option value="horizontal">Horizontal</option>}
+          {layerType === 'circles' && <option value="vertical">Visible</option>}
+          <option value="none">None</option>
+        </select>
+      </div>
+      {layerType !== 'circles' && legendOrientation === "vertical" &&
+        legenddata.map((d, i) => (
+          <div key={`vertical_input_${i}`} className="w-full flex items-center hover:bg-pink-50">
+            <div className="flex items-center h-6 w-10 justify-center  ">
               {/*<div className='w-4 h-4 rounded border-[0.5px] border-slate-600' style={{backgroundColor:d.color}}/>*/}
               <Symbol color={d.color} />
             </div>
-            <div className='flex items-center text-center flex-1 px-4 text-slate-500  text-sm truncate'>
-              <input 
+            <div className="flex items-center text-center flex-1 px-4 text-slate-500  text-sm truncate">
+              <input
                 type="text"
-                className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
-                placeholder={'Select / Create New Map'}
+                className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
                 value={legenddata[i].label}
-                onChange={(e) => setState(draft => { 
-                  set(draft, `${pathBase}['legend-data'][${i}].label`, e.target.value);
-                })}
+                onChange={(e) =>
+                  setState((draft) => {
+                    set(
+                      draft,
+                      `${pathBase}['legend-data'][${i}].label`,
+                      e.target.value
+                    );
+                  })
+                }
               />
             </div>
-          </div> 
+          </div>
         ))}
+      {layerType !== 'circles' && legendOrientation === "horizontal" && (
+        <div className={`flex-1 flex w-full p-2`}>
+          {legenddata.map((d, i) => (
+            <div className="flex-1 h-6" key={`horizontal_input_${i}`}>
+              <div className="flex justify-self-end text-xs">
+                <input
+                  type="text"
+                  className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                  value={legenddata[i].label}
+                  onChange={(e) =>
+                    setState((draft) => {
+                      set(
+                        draft,
+                        `${pathBase}['legend-data'][${i}].label`,
+                        e.target.value
+                      );
+                    })
+                  }
+                />
+              </div>
+              <div
+                key={i}
+                className="flex-1 h-4"
+                style={{ backgroundColor: d.color }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
 
@@ -102,10 +152,15 @@ function LegendEditorContainer (props) {
   const config = useMemo(() => typeConfigs[activeLayer.type] || []
     ,[activeLayer.type])
   
+  const layerType = activeLayer['layer-type'];
+
   return activeLayer && (
     <div>
       <div className=''>
-      <div className='font-bold tracking-wider text-sm text-slate-700 p-4'>Legend</div>
+        <div className='font-bold tracking-wider text-sm text-slate-700 p-4 pb-2'>Legend</div>
+        {layerType === "interactive" && <div className='px-2'>
+          <InteractiveFilterControl path={"['interactive-filters']"} params={{enableBuilder: false}}/>
+        </div>}
         <LegendEditor />
       </div>
     </div>

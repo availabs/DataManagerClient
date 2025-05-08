@@ -12,7 +12,7 @@ import get from 'lodash/get'
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
   return (
-    <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full flex flex-col`}>
+    <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full w-full flex flex-col`}>
       {hideBreadcrumbs ? '' :  <div className=''>
         <Breadcrumbs fullWidth={fullWidth} isListAll={isListAll} />
       </div> }

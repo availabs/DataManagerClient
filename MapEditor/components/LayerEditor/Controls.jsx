@@ -281,10 +281,11 @@ function SelectViewColumnControl({path, datapath, params={}}) {
       ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
-  const { layerType, viewId, sourceId } = useMemo(() => ({
+  const { layerType, viewId, sourceId, method } = useMemo(() => ({
     layerType: get(state,`${pathBase}['layer-type']`),
     viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`)
+    sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
+    method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
   }),[state])
 
   const column = useMemo(() => {
@@ -324,7 +325,18 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             if(sourceTiles !== 'no source tiles') {
               set(draft, `${pathBase}.sources[0].source.tiles[0]`, sourceTiles+`?cols=${e.target.value}`)
             }
+            if(layerType === 'circles') {
+              set(draft, `${pathBase}['lower-bound']`, null);
+              set(draft, `${pathBase}['upper-bound']`, null);
+              set(draft, `${pathBase}['min-radius']`, 8);
+              set(draft, `${pathBase}['max-radius']`, 128);
+            }
 
+            // Custom color scale relies on a premade scale
+            // So, when we change data columns, we need to reset the color scale first
+            if(method === 'custom') {
+              set(draft, `${pathBase}['bin-method']`, 'ckmeans');
+            }
             set(draft, `${pathBase}['choroplethdata']`, {});
             set(draft, `${pathBase}['categories']`, {});
             set(draft, `${pathBase}.${path}`, e.target.value)
@@ -508,7 +520,159 @@ function CategoricalColorControl({path, params={}}) {
     )
 }
 
+function CircleControl({path, params={}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const { falcor, falcorCache, pgEnv } = React.useContext(DamaContext);
+  // console.log('CircleControl', params)
 
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  let { lowerBound, upperBound, minRadius, maxRadius, radiusCurve, curveFactor } = useMemo(() => {
+    return {
+      lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+      minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+      upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+      maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+      radiusCurve: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][0]`, 'linear'),
+      curveFactor: get(state, `${pathBase}.layers[0].paint['circle-radius'][1][1]`, 1),
+    }
+  },[state]);
+
+  //layerPaintPath = "layers[0].paint['circle-radius']"
+  //"layers[0].paint['circle-radius'][1][0]" is the curve function
+  //"layers[0].paint['circle-radius'][1][1]" is the `base` 
+      //Controls the rate at which the output increases: higher values make the output 
+      //increase more towards the high end of the range. 
+      //With values close to 1 the output increases linearly.
+  //"layers[0].paint['circle-radius'][3]" is the lower bound for interpolation function
+  //"layers[0].paint['circle-radius'][4]" is the min radius of the circle
+  //"layers[0].paint['circle-radius'][5]" is the upper bound for the interpolation function
+  //"layers[0].paint['circle-radius'][6]" is the max radius of the circle
+  return (
+    <div className=" w-full items-center">
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 pl-2">Radius curve:</div>
+        <div className="w-full border border-transparent hover:border-slate-200 rounded mr-1 mb-1">
+          <select
+            className='w-full p-2 pl-0 bg-transparent text-slate-700 text-sm'
+            value={radiusCurve}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['radius-curve']`,
+                  e.target.value
+                );
+              });
+            }}
+          >
+            <option value='linear'>Linear</option>
+            <option value='exponential'>Exponential</option>
+          </select>
+        </div>
+      </div>
+      {radiusCurve === 'exponential' && <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Curve Factor:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={curveFactor}
+            step=".1"
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['curve-factor']`,
+                  parseFloat(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>}
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Min Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={minRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['min-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Max Radius:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={maxRadius}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['max-radius']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Lower Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={lowerBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['lower-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <div className="text-sm text-slate-400 px-2">Upper Bound:</div>
+        <div className="border border-transparent hover:border-slate-200 m-1 rounded ">
+          <input
+            className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+            type="number"
+            value={upperBound}
+            onChange={(e) => {
+              setState((draft) => {
+                set(
+                  draft,
+                  `${pathBase}['upper-bound']`,
+                  parseInt(e.target.value)
+                );
+              });
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function roundToNearestTen(v) {
   return Math.pow(10, Math.round(Math.log10(v)));
@@ -538,11 +702,55 @@ function ChoroplethControl({path, params={}}) {
 
   const { breaks, max } = choroplethdata;
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i].color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i]?.color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
   })
   .filter(d => d);
 
   const isShowOtherEnabled = showOther === '#ccc'
+  const breakInputs = breaks?.map((breakValue, breakIndex) => {
+    const displayedValue = breakIndex === 0 ? `Minimum: ${breakValue}`: breakValue
+    return (
+      <input
+        key={`custom_breaks_${breakIndex}`}
+        className='block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
+        type='text' 
+        value={displayedValue}
+        disabled={breakIndex === 0}
+        onChange={(e) => {
+          setState(draft => {
+            const newBreaks = [...breaks];
+            let parsedVal = e.target.value;
+
+            //If last element is a decimal, and the new string is longer than the previous string
+            if(parsedVal.slice(-1) === '.' && parsedVal.length > breaks[breakIndex].toString().length) {
+              //User is attempting to input a decimal place
+              //Add a `1` to the end so that is parses correctly
+              //Adding a `0` will not allow the user to continue to add digits after the decimal
+              parsedVal = parsedVal + "1"
+            }
+
+            newBreaks[breakIndex] = parseFloat(parsedVal)
+
+            if(Number.isNaN(newBreaks[breakIndex])){
+              newBreaks[breakIndex] = 0;
+            }
+            set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+          })
+        }}
+      />
+    )
+  });
+  if(breakInputs){
+    breakInputs.push(
+      <input
+        key={`${max}`}
+        className="block w-full border border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-1 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+        type="text"
+        value={`Maximum: ${max}`}
+        disabled={true}
+      />
+    );
+  }
 
   /**
    * categories[0] is breaks[0] to breaks[1]
@@ -621,9 +829,25 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={numbins}
               onChange={(e) => setState(draft => {
-                // console.log('SelectViewColumnControl set column path', path, e.target.value)
                 set(draft, `${pathBase}.['num-bins']`, e.target.value)
-                set(draft, `${pathBase}.['choroplethdata']`, {});
+                if(method === 'custom'){
+                  const diffBins = numbins - e.target.value;
+                  if(diffBins > 0) {
+                    const newBreaks = [...breaks].slice(0,-diffBins);
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks)
+                  } else {
+                    const numBinsToAdd = diffBins * -1;
+                    //Add empty positions
+                    const newBreaks = [...breaks];
+                    for(let i=0; i<numBinsToAdd; i++) {
+                      newBreaks.push(max)
+                    }
+                    set(draft, `${pathBase}['choroplethdata']['breaks']`, newBreaks);
+                  }
+                }
+                else {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
                 set(draft, `${pathBase}.['color-range']`, colorbrewer[colorKey][e.target.value])
               })}
             >
@@ -643,13 +867,16 @@ function ChoroplethControl({path, params={}}) {
               className='w-full p-2 bg-transparent text-slate-700 text-sm'
               value={method}
               onChange={(e) => setState(draft => {
-                set(draft, `${pathBase}.['choroplethdata']`, {});
+                if(e.target.value !== "custom") {
+                  set(draft, `${pathBase}.['choroplethdata']`, {});
+                }
                 set(draft, `${pathBase}['bin-method']`, e.target.value)
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
               <option  value={'pretty'}>Pretty Breaks</option>
               <option  value={'equalInterval'}>Equal Interval</option>
+              <option  value={'custom'}>Custom</option>
              
             </select>
           </div>
@@ -680,14 +907,19 @@ function ChoroplethControl({path, params={}}) {
           </div>
 
         </div>
-        <div className='w-full max-h-[250px] overflow-auto'>
+        {
+          method === 'custom' && <div className='flex flex-col px-2'>
+            <>Breaks:{breakInputs}</>
+          </div>
+        }
+        <div className='w-full max-h-[300px] overflow-auto'>
           {
             isLoadingColorbreaks ?  (
                 <div className="flex w-full justify-center overflow-hidden pb-2" >
                   Creating scale...
                   <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
                 </div>
-              ) : rangeInputs
+              ) : method === 'custom' ? <><div className='p-2'>Ranges:</div>{rangeInputs}</> : rangeInputs
           }
           {isShowOtherEnabled && <div className='w-full flex items-center hover:bg-slate-100'>
             <div className='flex items-center h-8 w-8 justify-center  border-r border-b '>
@@ -738,7 +970,8 @@ export const controlTypes = {
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
-  'choroplethControl':ChoroplethControl, 
+  'choroplethControl':ChoroplethControl,
+  'circleControl': CircleControl,
   'interactiveFilterControl': InteractiveFilterControl,
   'range': RangeControl,
   'simple': SimpleControl,

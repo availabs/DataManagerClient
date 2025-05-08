@@ -575,21 +575,22 @@ const GISDatasetRenderComponent = props => {
   const [ref, setRef] = React.useState();
   useClickOutside(ref, close);
 
-
   return !legend ? null : (
     <div ref={ setRef } className="absolute top-0 left-0 w-96 grid grid-cols-1 gap-4">
       <div className="z-10">
-{ /* Trivial example of how to customize a part of the Map UI using ThemeUpdater */ }
-          <LegendCmp {...legend} />
-          {/* <LegendContainer { ...legend }
-            toggle={ toggle }
-            isOpen={ isOpen }
-          >
-            <Legend { ...legend }/>
-          </LegendContainer> */}
-       
+        {
+          legend?.type === 'custom' ? 
+            (
+              <LegendContainer { ...legend }
+                toggle={ toggle }
+                isOpen={ isOpen }
+              >
+                <Legend { ...legend }/>
+              </LegendContainer>
+            ) : 
+              <LegendCmp {...legend} />
+        }
       </div>
-
       <div className="z-0">
         <LegendControls legend={ legend }
           updateLegend={ updateLegend }

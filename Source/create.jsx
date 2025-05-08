@@ -7,15 +7,17 @@ import get from 'lodash/get'
 import { damaDataTypes } from '../DataTypes'
 
 import SourcesLayout from './layout'
-
+import { DAMA_HOST } from "~/config";
 import {SourceAttributes, /*ViewAttributes, getAttributes*/} from './attributes'
-    
-import { DamaContext } from "../store";
 
+import { DamaContext } from "../store";
+import { useParams } from "react-router-dom";
 const SourceCreate = ({baseUrl}) => {
+  const { analysisContextId } = useParams();
+
 // prettier canary
   //const {falcor, falcorCache} = useFalcor()
-  const [ source, setSource ] = useState( 
+  const [ source, setSource ] = useState(
     Object.keys(SourceAttributes)
       .filter(d => !['source_id', 'metadata','statistics'].includes(d))
       .reduce((out,current) => {
@@ -33,7 +35,7 @@ const SourceCreate = ({baseUrl}) => {
       const filteredDataTypeKeys = (
         await Promise.all(
           Object.keys(damaDataTypes).map(async (dt) => {
-            
+
 
             if (damaDataTypes[dt].getIsAlreadyCreated) {
               const exclude = await damaDataTypes[dt].getIsAlreadyCreated(pgEnv);
@@ -59,15 +61,29 @@ const SourceCreate = ({baseUrl}) => {
 
   const CreateComp = useMemo(() => get(dataTypes, `[${source.type}].sourceCreate.component`, () => <div />)
     ,[dataTypes, source.type])
-  
+
   // console.log('new source', CreateComp)
+  useEffect(() => {
+    const fetchAnalysisData = async () => {
+      const url = `${DAMA_HOST}/dama-admin/${pgEnv}/events/query?etl_context_id=${analysisContextId}&event_id=-1`
+      const res = await fetch(url);
+      const analysisData = await res.json();
+      const initialUploadEvent = analysisData.find(pEvent => pEvent.type === 'upload:INITIAL');
+      const { type, name } = initialUploadEvent.payload;
+
+      const initialAnalysisEvent = analysisData.find(pEvent => pEvent.type === 'analysis:INITIAL');
+      const { fileId } = initialAnalysisEvent.payload;
+
+      setSource({ ...source, type, name, uploadedFile: initialUploadEvent.payload, gisUploadId: fileId, analysisContextId })
+    }
+    if (analysisContextId) {
+      fetchAnalysisData();
+    }
+  }, [analysisContextId]);
 
   if (dataTypes === null) {
     return <div>Requesting data types statuses</div>;
   }
-
-  // console.log('new source', CreateComp)
-  
   return (
     <div>
       {/*<div className='fixed right-0 top-[170px] w-64 '>
@@ -76,9 +92,9 @@ const SourceCreate = ({baseUrl}) => {
           </pre>
       </div>*/}
       <SourcesLayout>
-        
+
       <div className='p-4 font-medium'> Create New Source </div>
-      
+
       <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
         <dl className="sm:divide-y sm:divide-gray-200">
           {Object.keys(SourceAttributes)
@@ -90,35 +106,35 @@ const SourceCreate = ({baseUrl}) => {
                   <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500 py-5">{attr}</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                     
+
                         <div className='pt-3 pr-8'>
-                          <Input 
-                            className='w-full p-2 flex-1 px-2 shadow bg-grey-50 focus:bg-blue-100  border-gray-300 ' 
-                            value={get(source, attr, '')} 
+                          <Input
+                            className='w-full p-2 flex-1 px-2 shadow bg-grey-50 focus:bg-blue-100  border-gray-300 '
+                            value={get(source, attr, '')}
                             onChange={e => {
                               //console.log('hello', e, attr, {[attr]: e, ...source})
                               setSource({ ...source, [attr]: e,})
                             }}/>
-                        </div> 
-                       
-                      
+                        </div>
+
+
                     </dd>
                   </div>
 
-                 
+
                 </div>
               )
             })
           }
           <div  className='flex justify-between group'>
             <div  className="flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500 py-5">Data Type</dt>
+              <dt className="text-sm font-medium text-gray-500 pt-5 pb-3">Data Type</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-               
+
                   <div className='pt-3 pr-8'>
-                    <select 
-                      className='w-full bg-white p-3 flex-1 shadow bg-grey-50 focus:bg-blue-100  border-gray-300' 
-                      value={get(source, 'type', '')} 
+                    <select
+                      className='w-full bg-white p-3 flex-1 shadow bg-grey-50 focus:bg-blue-100  border-gray-300'
+                      value={get(source, 'type', '')}
                       onChange={e => {
                         //console.log('hello', e, attr, {[attr]: e, ...source})
                         setSource({ ...source, type: e.target.value,})
@@ -129,9 +145,9 @@ const SourceCreate = ({baseUrl}) => {
                           .map(k => <option key={k} value={k} className='p-2'>{k}</option>)
                         }
                     </select>
-                  </div> 
-                 
-                
+                  </div>
+
+
               </dd>
             </div>
           </div>

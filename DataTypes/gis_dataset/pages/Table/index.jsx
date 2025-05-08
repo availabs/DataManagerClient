@@ -58,7 +58,8 @@ const TablePage = ({
   TableFilter = DefaultTableFilter,
   showViewSelector = true,
   fullWidth = false,
-  striped = false
+  striped = false,
+  userHighestAuth=0
 }) => {
   const { viewId } = useParams();
   const [filters, _setFilters] = useState(filterData);
@@ -119,7 +120,7 @@ const TablePage = ({
   React.useEffect(() => {
     if (dataLength > 0) {
       console.log("dataLength", dataLength);
-      let maxData = Math.min(dataLength, 10000);
+      let maxData = Math.min(dataLength, 250);
       console.time("getViewData", maxData);
       falcor
         .chunk(
@@ -129,7 +130,7 @@ const TablePage = ({
             "viewsbyId",
             activeViewId,
             "databyIndex",
-            Array.from(Array(maxData-1).keys()),//{"from":0, "to": maxData-1},
+            Array.from(Array(maxData).keys()),//{"from":0, "to": maxData-1},
             attributes,
           ]
         )
@@ -150,13 +151,13 @@ const TablePage = ({
       )
     ).map((d) => get(falcorCache, d.value, {}));
 
-    //console.log('attr data from cache', data)
+    console.log('attr data from cache', data)
 
     return data;
   }, [pgEnv, activeViewId, falcorCache, dataLength]);
 
   let years = get(activeView, ["metadata", "years"], []);
-
+  console.log({tableData})
   const { data, columns } = React.useMemo(
     () => transform(tableData, attributes, filters, years, source),
     [tableData, attributes, transform, filters, years, source]
@@ -186,7 +187,7 @@ const TablePage = ({
       <div className="flex">
         {/*<div className="flex-1 pl-3 pr-4 py-2">Table View</div>*/}
         <TableFilter filters={filters} setFilters={setFilters} source={source}
-          data={tableData} columns={columns}/>
+          data={tableData} columns={columns} userHighestAuth={userHighestAuth}/>
         { showViewSelector ? <ViewSelector views={views} /> : '' }
       </div>
       <div className={tableContainerClassName} style={tableContainerStyle}>

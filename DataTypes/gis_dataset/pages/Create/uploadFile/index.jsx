@@ -17,9 +17,10 @@ export default function UploadGisDataset({ state, dispatch }) {
     pollingInterval,
     uploadErrMsg,
     uploadedFile,
-    fileUploadStatus
+    fileUploadStatus,
+    damaSourceName,
+    dataType
   } = state
-
   // -- upload file
   const uploadGisDataset = async (file) => {
     try {
@@ -30,6 +31,8 @@ export default function UploadGisDataset({ state, dispatch }) {
       formData.append("etlContextId", etlContextId);
       formData.append("user_id", userId);
       formData.append("email", email);
+      formData.append("name", damaSourceName);
+      formData.append("type", dataType)
       formData.append("fileSizeBytes", file.size);
       formData.append("file", file);
       
@@ -46,7 +49,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       const resValue = await res.json();
       if (Array.isArray(resValue)) {
         const [{ id }] = resValue;
-        dispatch({type: 'update', payload: {polling:false, gisUploadId: id}})
+        dispatch({type: 'update', payload: {polling:false, gisUploadId: id, processPolling: true}})
       } else {
         throw resValue;
       }
@@ -80,7 +83,7 @@ export default function UploadGisDataset({ state, dispatch }) {
       doPolling()
       dispatch({type:'update', payload: {pollingInterval: null}})
     }
-  }, [polling, pollingInterval, damaServerPath, etlContextId, dispatch])  
+  }, [polling, pollingInterval, damaServerPath, etlContextId, dispatch]);
 
   if (!etlContextId) {
     return "no context Id no upload";

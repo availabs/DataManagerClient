@@ -23,10 +23,23 @@ const FILTER_OPERATORS = {
 
 export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
   const { state, setState } = React.useContext(SymbologyContext);
+  const layerType = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}]['layer-type']`
+  );
 
+  const selectedInteractiveFilterIndex = get(
+    state,
+    `symbology.layers[${state.symbology.activeLayer}]['selectedInteractiveFilterIndex']`
+  );
+
+  const pathBase =
+    layerType === "interactive"
+        ? `['interactive-filters'][${selectedInteractiveFilterIndex}]`
+        : ``;
   const existingFilter = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`,
+    `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filter`,
     {}
   );
 
@@ -113,7 +126,6 @@ export function FilterBuilder({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
   const [filterSearchValue, setFilterSearchValue] = React.useState("");
   const { activeColumn: activeColumnName, setActiveColumn } = params;
-
   const { sourceId } = useMemo(
     () => ({
       sourceId: get(
@@ -153,7 +165,7 @@ export function FilterBuilder({ path, params = {} }) {
   const filterOperators = FILTER_OPERATORS[activeAttr?.type] || [];
   const existingFilter = get(
     state,
-    `symbology.layers[${state.symbology.activeLayer}].filter`,
+    `symbology.layers[${state.symbology.activeLayer}]${path}`,
     {}
   );
 
