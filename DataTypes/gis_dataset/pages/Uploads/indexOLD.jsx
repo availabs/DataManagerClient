@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router'
 import GISDatasetLayer from './Layer'
 import Symbology from './symbology/index'
 import { AvlMap } from "~/modules/avl-maplibre/src"

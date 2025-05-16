@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import get from "lodash/get";
 import SourcesLayout from "./layout";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";

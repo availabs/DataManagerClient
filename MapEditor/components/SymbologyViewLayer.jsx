@@ -59,6 +59,8 @@ const ViewLayerRender = ({
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
   // - On layerProps change
+  const doesSourceExistOnMap = maplibreMap.getSource(layerProps?.sources?.[0]?.id);
+
   useEffect(() => {
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
@@ -265,7 +267,7 @@ const ViewLayerRender = ({
         maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
-  }, [layerProps]);
+  }, [doesSourceExistOnMap, layerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
@@ -450,11 +452,11 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
         ], [])
       }
-    return out
+    return Array.isArray(out) ? out : []
   }, [source_id, falcorCache]);
 
   let getAttributes = (typeof attributes?.[0] === 'string' ?
-    attributes : attributes.map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
+    attributes : (attributes || []).map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
 
   React.useEffect(() => {
     falcor.get([
@@ -482,7 +484,7 @@ const HoverComp = ({ data, layer }) => {
       <div className="font-medium pb-1 w-full border-b ">
         {layer?.name || ''}
       </div>
-      {Object.keys(attrInfo).length === 0 && attributes.length !== 0 ? `Fetching Attributes ${id}` : ""}
+      {Object.keys(attrInfo).length === 0 && attributes?.length !== 0 ? `Fetching Attributes ${id}` : ""}
       {Object.keys(attrInfo)
         .filter((k) => typeof attrInfo[k] !== "object")
         .sort((a,b) =>{
@@ -491,7 +493,7 @@ const HoverComp = ({ data, layer }) => {
           return aIndex - bIndex;
         })
         .map((k, i) => {
-          const hoverAttr = attributes.find(attr => attr.name === k || attr.column_name === k) || {};
+          const hoverAttr = (attributes || []).find(attr => attr.name === k || attr.column_name === k) || {};
 
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
           const columnMetadata = JSON.parse(metadataAttr?.meta_lookup || "{}");

@@ -1,6 +1,6 @@
 import React, {useContext, useState} from "react";
 import {DamaContext} from "../../../../store/index.js";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 import get from "lodash/get.js";
 
 export const RenderDependents = ({ dependents = [], viewId, srcMeta, viewMeta }) => {

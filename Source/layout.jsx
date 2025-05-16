@@ -6,18 +6,21 @@ import { DamaContext } from '../store'
 import { Dropdown } from '~/modules/avl-components/src'
 import { Item } from '~/pages/Auth/AuthMenu'
 
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
 
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
   return (
-    <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full w-full flex flex-col`}>
-      {hideBreadcrumbs ? '' :  <div className=''>
-        <Breadcrumbs fullWidth={fullWidth} isListAll={isListAll} />
-      </div> }
-      <div className='flex-1 flex flex-col'>
-        {children}
+
+    <div className='w-full h-full bg-slate-100'>
+      <div className={`${fullWidth ? '' : 'max-w-6xl mx-auto'} h-full flex flex-col`}>
+        {hideBreadcrumbs ? '' :  <div className=''>
+          <Breadcrumbs fullWidth={fullWidth} isListAll={isListAll} />
+        </div> }
+        <div className='flex-1 flex flex-col'>
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -48,6 +51,9 @@ export const Header = ({baseUrl=''}) => {
             </div>
             <div key={'Upload'} className='py-1 '>
               {Item(`${baseUrl}/create/source`, 'fa fa-file-plus flex-shrink-0  pr-1', 'Upload')}
+            </div>
+            <div key={'Schedule Tasks'} className='py-1 '>
+              {Item(`${baseUrl}/schedules`, 'fa fa-clock flex-shrink-0  pr-1', 'Schedule Tasks')}
             </div>
           </div>
         </Dropdown>

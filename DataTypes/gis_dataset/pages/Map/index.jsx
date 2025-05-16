@@ -3,7 +3,7 @@ import { Button,  getColorRange } from "~/modules/avl-components/src"
 import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import cloneDeep from 'lodash/cloneDeep'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router'
 import GISDatasetLayer from './Layer2'
 import Symbology from './symbology/index'
 // import { AvlMap } from "~/modules/avl-maplibre/src"

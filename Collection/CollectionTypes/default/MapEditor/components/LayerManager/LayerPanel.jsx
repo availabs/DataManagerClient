@@ -4,7 +4,7 @@ import { DamaContext } from "../../../../../../store"
 import SourceSelector from './SourceSelector'
 import { DndList } from '~/modules/avl-components/src'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
 import get from 'lodash/get'
 

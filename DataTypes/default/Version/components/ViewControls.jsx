@@ -1,15 +1,16 @@
-import {Link, useParams} from "react-router-dom";
+import {Link, useParams} from "react-router";
 import React, {useContext, useEffect, useMemo, useState} from "react";
 import {DamaContext} from "../../../../store/index.js";
 import get from "lodash/get.js";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { Input, Button, Modal } from "~/modules/avl-components/src"
 import { DAMA_HOST } from '~/config'
+
 const OUTPUT_FILE_TYPES = [
     "CSV",
     "ESRI Shapefile",
     "GeoJSON",
-    "GPKG",
+    "GPKG"
 ];
 const INITIAL_MODAL_STATE = {
     open: false,
@@ -118,6 +119,7 @@ const DownloadModalCheckboxGroup = ({
                                         onChange,
                                         title,
                                     }) => {
+
     return (
         <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
             <div className="flex w-full justify-between items-center p-2 w-1/2 text-md leading-6 text-gray-900">
@@ -129,7 +131,7 @@ const DownloadModalCheckboxGroup = ({
                             if (modalState.length === options.length) {
                                 onChange([]);
                             } else {
-                                onChange(options);
+                                onChange([...options]);
                             }
                         }}
                     >
@@ -159,7 +161,7 @@ const DownloadModalCheckboxGroup = ({
 
 export function ViewControls ({view}) {
     const { viewId,sourceId } = useParams();
-    const { pgEnv, baseUrl, user, falcorCache} = useContext(DamaContext);
+    const { pgEnv, baseUrl, user, falcor, falcorCache } = useContext(DamaContext);
 
     const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
 
@@ -265,7 +267,84 @@ export function ViewControls ({view}) {
         runCreate();
     }
 
+    const [pmTilesModalState, setPmTilesModalState] = React.useState({
+      open: false,
+      selectedColumns: [],
+      columnsHaveBeenInitialized: false,
+      etl_context_id: null,
+      progress: "not-started"
+    });
+
+    const updatePmTilesModalState = React.useCallback(update => {
+      setPmTilesModalState(prev => ({ ...prev, ...update }));
+    }, []);
+    const openPmTilesModal = React.useCallback(e => {
+      e.stopPropagation();
+      setPmTilesModalState(prev =>
+        ({ ...prev,
+            open: true,
+            etl_context_id: null,
+            progress: "not-started"
+          })
+        );
+    }, []);
+    const closePmTilesModal = React.useCallback(() => {
+      setPmTilesModalState(prev => ({ ...prev, open: false }));
+    }, []);
+    const setSelectedColumns = React.useCallback(columns => {
+      if (Array.isArray(columns)) {
+        setPmTilesModalState(prev => ({ ...prev, selectedColumns: columns }));
+      }
+      else {
+        setPmTilesModalState(prev => ({
+          ...prev,
+          selectedColumns: prev.selectedColumns.includes(columns) ?
+                            prev.selectedColumns.filter(col => col !== columns) :
+                            [...prev.selectedColumns, columns]
+        }))
+      }
+    }, []);
+
+    React.useEffect(() => {
+      if (sourceDataColumns.length && !pmTilesModalState.columnsHaveBeenInitialized) {
+        setPmTilesModalState(prev => ({
+          ...prev,
+          selectedColumns: [...sourceDataColumns],
+          columnsHaveBeenInitialized: true
+        }));
+      }
+    }, [pmTilesModalState.columnsHaveBeenInitialized, sourceDataColumns]);
+
+    const cachePmTiles = React.useCallback(() => {
+      fetch(
+        `${ DAMA_HOST }/dama-admin/${ pgEnv }/cache-pmtiles`,
+        { method: "POST",
+          body: JSON.stringify({
+            columns: [...pmTilesModalState.selectedColumns],
+            view_id: viewId,
+            source_id: sourceId
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          }
+        }
+      ).then(res => res.json())
+        .then(json => {
+          console.log("RES:", json);
+          setPmTilesModalState(prev => ({ ...prev,
+                                          etl_context_id: json.etl_context_id,
+                                          progress: "started"
+                                        })
+                              );
+        })
+    }, [pmTilesModalState, sourceId, viewId, pgEnv, falcor]);
+
+    const updateProgress = React.useCallback(progress => {
+      setPmTilesModalState(prev => ({ ...prev, progress }));
+    }, []);
+
     const linkClass = 'w-full flex-1 text-center border shadow p-2 font-medium rounded-md hover:text-white'
+
     return (
         <div className="w-72 px-5">
             {user.authLevel >= 10 ? (
@@ -278,6 +357,12 @@ export function ViewControls ({view}) {
                     >
                         <i className={'fa fa-download'}/> Create Download
                     </button>
+                    <button
+                        className={`${linkClass} bg-green-300 hover:bg-green-600 mb-1`}
+                        onClick={ openPmTilesModal }
+                    >
+                        <i className={'fa fa-download'}/> Cache PM Tiles
+                    </button>
                     <Link
                         className={`${linkClass} bg-red-300 border-red-200 hover:bg-red-600`}
                         to={`${baseUrl}/source/${sourceId}/versions/${viewId}/delete`}
@@ -288,6 +373,16 @@ export function ViewControls ({view}) {
             ) : (
                 ""
             )}
+
+{ /*CREATE PMTILES MODAL*/ }
+            <PmTilesModal { ...pmTilesModalState }
+              close={ closePmTilesModal }
+              columns={ sourceDataColumns.filter(col => col !== "wkb_geometry") }
+              setSelectedColumns={ setSelectedColumns }
+              cachePmTiles={ cachePmTiles }
+              updateProgress={ updateProgress }/>
+
+{ /*CREATE DOWNLOAD MODAL*/ }
             <Modal
                 open={modalState.open}
                 setOpen={setModalOpen}
@@ -320,7 +415,7 @@ export function ViewControls ({view}) {
                         modalState={modalState.columns}
                         onChange={setColumns}
                     />
-                    <DownloadModalGroupedBy >
+                    <DownloadModalGroupedBy>
                         <DownloadModalGroupByToggle
                             onChange={setEnableGroupedBy}
                             modalState={modalState.enableGroupedBy}
@@ -360,4 +455,185 @@ export function ViewControls ({view}) {
             </Modal>
         </div>
     );
+}
+
+const PmTilesModal = props => {
+  const {
+    close,
+    columns,
+    selectedColumns,
+    setSelectedColumns,
+    cachePmTiles,
+    etl_context_id,
+    progress,
+    updateProgress,
+    ...modalState
+  } = props;
+
+  return (
+    <Modal { ...modalState }>
+      <div className="p-2">
+
+        <div className={ `
+            pb-2 border-b-2 border-black
+          ` }
+        >
+          <div className="grid grid-cols-3 gap-2">
+            <DownloadModalCheckboxGroup
+                title={ "Columns" }
+                options={ columns }
+                modalState={ selectedColumns }
+                onChange={ setSelectedColumns }/>
+            <div className="col-span-2">
+              { !etl_context_id ? null :
+                <PmTilesProgressWindow
+                  etl_context_id={ etl_context_id }
+                  updateProgress={ updateProgress }/>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2 grid grid-cols-12 gap-2">
+          <div className="col-start-7 col-span-3">
+            <SlatePmTilesModalButton
+              onClick={ close }
+              disabled={ progress === "started" }
+            >
+              Close
+            </SlatePmTilesModalButton>
+          </div>
+
+          <div className="col-span-3">
+            <GreenPmTilesModalButton
+              onClick={ cachePmTiles }
+              disabled={ !selectedColumns.length || (progress !== "not-started") }
+              color="green"
+            >
+              Cache PM Tiles
+            </GreenPmTilesModalButton>
+          </div>
+        </div>
+
+      </div>
+    </Modal>
+  )
+}
+
+const PmTilesProgressWindow = ({ etl_context_id }) => {
+
+  const { pgEnv, falcor, falcorCache, updateProgress } = useContext(DamaContext);
+
+  const [now, setNow] = React.useState(0);
+  const [events, setEvents] = React.useState([]);
+
+  const getEvents = React.useCallback(() => {
+    if (!etl_context_id) return;
+    falcor.invalidate(["dama", pgEnv, "etlContexts", "byEtlContextId", etl_context_id]);
+    falcor.get(["dama", pgEnv, "etlContexts", "byEtlContextId", etl_context_id])
+      .then(() => { setNow(Date.now()); });
+  }, [falcor, pgEnv, etl_context_id]);
+
+  const timeoutId = React.useRef(null);
+
+  const timeDelayedGetEvents = React.useCallback((delay = 5000) => {
+    new Promise(resolve => {
+      clearTimeout(timeoutId.current);
+      timeoutId.current = setTimeout(resolve, delay);
+    }).then(() => { getEvents(); })
+  }, [getEvents]);
+
+  React.useEffect(() => {
+    if (!events.length) {
+      timeDelayedGetEvents(1000);
+    }
+    else {
+      const firstEvent = events[0];
+      const [firstType, firstState] = firstEvent.type.split(":");
+
+      const lastEvent = events[events.length - 1];
+      const [lastType, lastState] = lastEvent.type.split(":");
+
+      if ((firstType === lastType) && ((lastState !== "ERROR") || (lastState !== "FINAL"))) {
+        timeDelayedGetEvents();
+      }
+      else {
+        updateProgress("completed");
+      }
+    }
+  }, [events, getEvents, timeDelayedGetEvents, now, updateProgress]);
+
+  React.useEffect(() => {
+    if (!etl_context_id) {
+      setEvents([]);
+    }
+    else {
+      const events = get(falcorCache,
+                          ["dama", pgEnv, "etlContexts", "byEtlContextId",
+                            etl_context_id, "value", "events"
+                          ], []
+                        );
+      setEvents(events);
+    }
+  }, [falcorCache, pgEnv, etl_context_id]);
+
+  return (
+    <div className="py-1 px-2 grid grid-cols-1"
+      style={ { fontSize: "0.8rem" } }
+    >
+      <div className="border-b-2 border-current flex">
+        <div className="font-medium text-sm flex-1">Progress Window</div>
+        <div>etl context id: { etl_context_id }</div>
+      </div>
+      { events.map(e => (
+          <EventItem key={ e.event_id } damaEvent={ e }/>
+        ))
+      }
+    </div>
+  )
+}
+
+const EventItem = ({ damaEvent }) => {
+  const data = React.useMemo(() => {
+    return get(damaEvent, ["payload", "data"], null);
+  }, [damaEvent]);
+
+  return (
+    <div className="flex">
+      { damaEvent.type }{ data ? "==>" : "" } { data }
+    </div>
+  )
+}
+
+const PmTilesModalButton = ({ className = "", onClick, disabled = false, children }) => {
+  const doOnClick = React.useCallback(e => {
+    e.stopPropagation();
+    (typeof onClick === "function") && onClick();
+  }, [onClick]);
+  return (
+    <button disabled={ disabled }
+      onClick={ doOnClick }
+      className={ `
+        w-full py-2 rounded cursor-pointer
+        disabled:opacity-50 disabled:cursor-not-allowed
+        text-sm text-black hover:text-white hover:disabled:text-black
+        ${ className }
+      ` }
+    >
+      { children }
+    </button>
+  )
+}
+
+const GreenPmTilesModalButton = props => {
+  return (
+    <PmTilesModalButton { ...props }
+      className="bg-green-300 hover:bg-green-600 hover:disabled:bg-green-300"/>
+  )
+}
+const SlatePmTilesModalButton = props => {
+  return (
+    <PmTilesModalButton { ...props }
+      className="bg-slate-300 hover:bg-slate-600 hover:disabled:bg-slate-300"/>
+  )
 }

@@ -2,7 +2,7 @@ import { useContext, useState, useRef } from 'react'
 import { SymbologyContext } from '../../../..'
 import { DamaContext } from "../../../../../store"
 import { Dialog } from '@headlessui/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import get from 'lodash/get'
 import { Modal } from '../'
 

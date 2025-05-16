@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import {Button} from '~/modules/avl-components/src'
 import get from 'lodash/get'
 import { Dialog } from '@headlessui/react'

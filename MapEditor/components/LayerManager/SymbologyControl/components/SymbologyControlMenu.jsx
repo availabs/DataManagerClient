@@ -2,7 +2,7 @@ import { useContext, useState, Fragment, useRef } from 'react'
 import { DamaContext } from "../../../../../store"
 import { Button } from "~/modules/avl-components/src";
 import { Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router'
 import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
 import { Modal } from '../'
 

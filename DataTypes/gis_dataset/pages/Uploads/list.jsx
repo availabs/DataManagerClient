@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const ListUploads = ({ uploads = [], sourceId = null }) => {
   const navigate = useNavigate();

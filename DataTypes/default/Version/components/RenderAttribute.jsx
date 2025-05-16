@@ -1,5 +1,5 @@
 import {Edit} from "./Edit.jsx";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 import React from "react";
 
 const attrNameMap = {

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo } from 'react';
 import { DamaContext } from '../../store'
 
 import { ETL_CONTEXT_ATTRS } from '../TaskList'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
 
 export const getAttributes = (data) => {
