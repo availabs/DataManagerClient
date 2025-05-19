@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 
 const ListUploads = ({ uploads = [], sourceId = null }) => {

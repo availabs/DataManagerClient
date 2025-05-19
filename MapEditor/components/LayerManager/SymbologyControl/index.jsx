@@ -1,6 +1,6 @@
 import { useContext, useState, Fragment, useRef } from 'react'
 import { SymbologyContext } from '../../..'
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Transition, Dialog } from '@headlessui/react'
 import { Plus, FolderOpen, Trash, FloppyDisk } from '../../icons'
 

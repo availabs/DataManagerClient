@@ -3,7 +3,7 @@ import { ThemeContext, Input, Button } from "~/modules/avl-components/src";
 import Select from "~/modules/avl-components/src/components/Inputs/select";
 import { DamaContext } from "~/pages/DataManager/store";
 import { wrappers } from "~/modules/ams/src";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import TaskList from "~/pages/DataManager/Tasks/TaskList";
 const amsReduxWrapper = wrappers["ams-redux"];
 const PUBLIC_GROUP = 'Public';

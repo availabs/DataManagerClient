@@ -1,6 +1,6 @@
 import React, { useMemo, Fragment } from 'react'
 import { MapContext } from '../MapComponent.jsx'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import get from 'lodash/get'
 import { CMSContext } from '~/modules/dms/src'
 export const fnumIndex = (d, fractions = 2, currency = false) => {

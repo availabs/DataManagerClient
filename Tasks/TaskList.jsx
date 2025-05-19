@@ -1,7 +1,7 @@
 import React from "react"
 import { range as d3range } from "d3-array"
 import { Table } from "~/modules/avl-components/src";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 
 import get from "lodash/get";
 

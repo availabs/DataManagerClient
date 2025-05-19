@@ -1,4 +1,4 @@
-import {Link, useParams} from "react-router-dom";
+import {Link, useParams} from "react-router";
 import React, {useContext, useEffect, useMemo, useState} from "react";
 import {DamaContext} from "../../../../store/index.js";
 import get from "lodash/get.js";

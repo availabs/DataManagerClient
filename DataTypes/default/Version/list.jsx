@@ -1,7 +1,7 @@
 import React, {Fragment} from "react";
 import { Table } from "~/modules/avl-components/src";
 import get from "lodash/get";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { formatDate } from "../../../utils/macros";
 import { DamaContext } from "~/pages/DataManager/store";
 import Version from "./version";

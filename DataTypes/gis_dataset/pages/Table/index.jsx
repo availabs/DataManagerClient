@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import {  Table } from '~/modules/avl-components/src'
 import get from 'lodash/get'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router'
 
 import { DamaContext } from "~/pages/DataManager/store";
 // import { SymbologyControls } from '~/pages/DataManager/components/SymbologyControls'

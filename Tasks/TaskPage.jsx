@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useParams } from "react-router-dom"
+import { useParams } from "react-router"
 
 import get from "lodash/get";
 import { range as d3range } from "d3-array"

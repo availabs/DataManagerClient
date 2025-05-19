@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { /*useFalcor,*//*TopNav,*/ Input /*withAuth, Input, Button*/ } from '~/modules/avl-components/src'
 
 import get from 'lodash/get'
-// import { useParams } from 'react-router-dom'
+// import { useParams } from 'react-router'
 import { damaDataTypes } from '../DataTypes'
 
 import SourcesLayout from './layout'
@@ -11,7 +11,7 @@ import { DAMA_HOST } from "~/config";
 import {SourceAttributes, /*ViewAttributes, getAttributes*/} from './attributes'
 
 import { DamaContext } from "../store";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 const SourceCreate = ({baseUrl}) => {
   const { analysisContextId } = useParams();
 
