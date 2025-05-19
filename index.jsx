@@ -91,7 +91,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -102,7 +102,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -113,7 +113,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
       // Source List (Full)
     {
@@ -125,7 +125,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -136,7 +136,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
     {
       name: "Data Sources",
@@ -147,7 +147,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(List, DAMA_ARGS)
+      element: DAMA_Wrapper(List, DAMA_ARGS)
     },
     // -- Source View
     {
@@ -159,7 +159,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(View, DAMA_ARGS)
+      element: DAMA_Wrapper(View, DAMA_ARGS)
     },
     {
       name: "View Source",
@@ -170,7 +170,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(View, DAMA_ARGS)
+      element: DAMA_Wrapper(View, DAMA_ARGS)
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId`,
@@ -180,7 +180,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(View, DAMA_ARGS)
+      element: DAMA_Wrapper(View, DAMA_ARGS)
     }, {
       name: "View Source",
       path: `${baseUrl}/source/:sourceId/:page/:viewId/:vPage`,
@@ -190,7 +190,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(View, DAMA_ARGS)
+      element: DAMA_Wrapper(View, DAMA_ARGS)
     },
     // Source Create
     {
@@ -202,7 +202,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(Create, DAMA_ARGS)
+      element: DAMA_Wrapper(Create, DAMA_ARGS)
     },
     {
       name: "Create Source",
@@ -213,7 +213,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(Create, DAMA_ARGS)
+      element: DAMA_Wrapper(Create, DAMA_ARGS)
     },
     // Source Delete
     {
@@ -225,7 +225,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(Del, DAMA_ARGS)
+      element: DAMA_Wrapper(Del, DAMA_ARGS)
     },
     // Map Editor
     {
@@ -237,7 +237,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(MapEditor, DAMA_ARGS)
+      element: DAMA_Wrapper(MapEditor, DAMA_ARGS)
     },
     // Map Editor
     {
@@ -249,7 +249,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(MapEditor, DAMA_ARGS)
+      element: DAMA_Wrapper(MapEditor, DAMA_ARGS)
     },
     /**
      * COLLECTIONS
@@ -264,7 +264,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionList, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     {
       name: "Data Collections",
@@ -275,7 +275,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionList, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     {
       name: "Data Collections",
@@ -286,7 +286,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionList, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
     },
     // -- Collection View
     {
@@ -298,7 +298,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Collection",
@@ -309,7 +309,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Symbology",
@@ -320,7 +320,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     {
       name: "View Symbology",
@@ -331,7 +331,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionView, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
     },
     // Collection Create
     {
@@ -343,7 +343,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionCreate, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionCreate, DAMA_ARGS)
     },
     // Collection Delete
     {
@@ -355,7 +355,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(CollectionDelete, DAMA_ARGS)
+      element: DAMA_Wrapper(CollectionDelete, DAMA_ARGS)
     },
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,
@@ -365,7 +365,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(TasksComponent, DAMA_ARGS)
+      element: DAMA_Wrapper(TasksComponent, DAMA_ARGS)
     },
     { name: "Task",
       path: `${ baseUrl }/task/:etl_context_id`,
@@ -375,7 +375,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
+      element: DAMA_Wrapper(TaskPageComponent, DAMA_ARGS)
     },
     { name: "Settings",
       path: `${ baseUrl }/settings`,
@@ -385,7 +385,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(SettingsComponent, DAMA_ARGS)
+      element: DAMA_Wrapper(SettingsComponent, DAMA_ARGS)
     },
     { name: "DMS List",
       path: `${ baseUrl }/dmslist`,
@@ -395,7 +395,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(DmsList, DAMA_ARGS)
+      element: DAMA_Wrapper(DmsList, DAMA_ARGS)
     },
     { name: "Schedules",
       path: `${ baseUrl }/schedules`,
@@ -405,7 +405,7 @@ const DamaRoutes = DAMA_ARGS => {
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
-      Component: DAMA_Wrapper(SchedulesComponent, DAMA_ARGS)
+      element: DAMA_Wrapper(SchedulesComponent, DAMA_ARGS)
     }
   ];
 };
