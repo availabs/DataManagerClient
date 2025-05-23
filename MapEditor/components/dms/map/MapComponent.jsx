@@ -6,6 +6,7 @@ import { useImmer } from 'use-immer';
 import LegendPanel from './LegendPanel/LegendPanel.jsx'
 import SymbologyViewLayer from './SymbologyViewLayer.jsx'
 import { CMSContext } from '~/modules/dms/src'
+import { PageContext} from "~/modules/dms/src/patterns/page/pages/view.jsx";
 import {SymbologySelector} from "./SymbologySelector.jsx";
 import {useSearchParams} from "react-router";
 import FilterControls from "./controls/FilterControls.jsx";
@@ -38,6 +39,7 @@ const Edit = ({value, onChange, size}) => {
     // controls: symbology, more, filters: lists all interactive and dynamic filters and allows for searchParams match.
     const isEdit = Boolean(onChange);
     const { falcor, falcorCache, pgEnv } = React.useContext(CMSContext);
+    const { pageState, setPageState } =  React.useContext(PageContext) || {}
     const cachedData = typeof value === 'object' ? value : value && isJson(value) ? JSON.parse(value) : {};
     const [state,setState] = useImmer({
         tabs: cachedData.tabs || [{"name": "Layers", rows: []}],
@@ -52,7 +54,7 @@ const Edit = ({value, onChange, size}) => {
         zoomToFitBounds: cachedData.zoomToFitBounds
     })
     const [mapLayers, setMapLayers] = useImmer([])
-    const [searchParams] = useSearchParams();
+
     const isReady = useMemo(() => {
         return Object.values(state.symbologies || {}).some(symb => Object.keys(symb?.symbology?.layers || {}).length > 0);
     }, [state.symbologies]);
@@ -61,19 +63,20 @@ const Edit = ({value, onChange, size}) => {
         const activeSym = Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
         const activeSymSymbology = state.symbologies[activeSym]?.symbology;
         const activeLayer = activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
-        const useSearchParams = activeLayer?.useSearchParams;
+        const usePageFilters = activeLayer?.usePageFilters;
         const searchParamKey = activeLayer?.searchParamKey;
 
         const interactiveFilterOptions = (activeLayer?.['interactive-filters'] || []);
-        if(!useSearchParams) return;
+        if(!usePageFilters) return;
 
-        const searchParamFilterKey = searchParams.get(searchParamKey);
+        const searchParamFilterKey = (pageState?.filters || []).find(f => f.searchKey === searchParamKey)?.values;
+
         const fI = interactiveFilterOptions.findIndex(f => f.searchParamValue === searchParamFilterKey || f.label === searchParamFilterKey)
 
         const dynamicFilterOptions = (activeLayer?.['dynamic-filters'] || []);
 
         const getSearchParamKey = f => f.searchParamKey || f.column_name;
-        const searchParamValues = dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: searchParams.get(getSearchParamKey(curr))}), {});
+        const searchParamValues = dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: (pageState.filters || []).find(f => f.searchKey === getSearchParamKey(curr))?.values}), {});
 
         setState(draft => {
             if(fI !== -1){
@@ -85,14 +88,16 @@ const Edit = ({value, onChange, size}) => {
                     .filter(f => searchParamValues[getSearchParamKey(f)])
                     .forEach(filter => {
                         const isNumeric = filter.dataType === 'numeric';
-                        const newValues = searchParamValues[getSearchParamKey(filter)].split('|||');
+                        const newValues = searchParamValues[getSearchParamKey(filter)];
+
                         filter.values =
-                            newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
+                            Array.isArray(newValues) && newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
+                                typeof newValues === 'string' ? newValues :
                                 filter.defaultValue?.length ? [isNumeric ? +filter.defaultValue : filter.defaultValue] : []
                     })
             }
         })
-    }, [searchParams])
+    }, [pageState.filters])
 
     useEffect(() => {
         // -----------------------

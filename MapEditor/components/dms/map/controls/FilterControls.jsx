@@ -35,9 +35,9 @@ export default function FilterControls() {
             >
                 <div key={'filters'} className="py-1 max-h-[500px] overflow-auto scrollbar-sm">
 
-                    <ToggleControl title={'Use Search Params'} value={activeLayer?.useSearchParams}
+                    <ToggleControl title={'Use Page Filters'} value={activeLayer?.usePageFilters}
                                    setValue={value => setState((draft) => {
-                                       draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer].useSearchParams = value;
+                                       draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer].usePageFilters = value;
                                    })}/>
                     <InputControl title={'Search Param Key'} type={'text'} value={activeLayer?.searchParamKey}
                                   setValue={value => setState((draft) => {
