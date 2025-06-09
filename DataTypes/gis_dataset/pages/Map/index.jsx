@@ -156,7 +156,7 @@ const MapPage = ({source,views, HoverComp, showViewSelector=true, displayPinnedG
         }
       }
 
-      
+
 
       if(sources?.[0]?.source?.tiles?.[0] && !sources[0].source.tiles[0].includes('?') ) {
         
