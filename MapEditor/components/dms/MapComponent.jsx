@@ -8,7 +8,8 @@ import MapManager from './MapManager/MapManager'
 import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
 import { usePrevious } from '../../components/LayerManager/utils'
-import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
+import { CMSContext } from "~/modules/dms/src/patterns/page/context";
+// import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
 import { HEIGHT_OPTIONS } from "./MapManager/MapManager";
 
 const isJson = (str)  => {
