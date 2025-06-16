@@ -851,11 +851,11 @@ export class PMTiles {
   }
 
   async getZxyAttempt(
-    z: number,
-    x: number,
-    y: number,
-    signal?: AbortSignal
-  ): Promise<RangeResponse | undefined> {
+    z,
+    x,
+    y,
+    signal
+  ) {
     const tile_id = zxyToTileId(z, x, y);
     const header = await this.cache.getHeader(this.source);
 
@@ -924,7 +924,7 @@ export class PMTiles {
     }
   }
 
-  async getMetadataAttempt(): Promise<any> {
+  async getMetadataAttempt() {
     const header = await this.cache.getHeader(this.source);
 
     const resp = await this.source.getBytes(
@@ -942,7 +942,7 @@ export class PMTiles {
     return JSON.parse(dec.decode(decompressed));
   }
 
-  async getMetadata(): Promise<any> {
+  async getMetadata() {
     try {
       return await this.getMetadataAttempt();
     } catch (e) {
