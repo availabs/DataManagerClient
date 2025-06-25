@@ -5,8 +5,8 @@ import FilterableSearch from "./tmp-cache-files/FilterableSearch.jsx";
 import {MapContext} from "./MapComponent.jsx";
 
 export const SymbologySelector = () => {
-    const { state, setState, falcor, falcorCache, pgEnv } = useContext(MapContext);
-
+    const { state, setState, falcor, pgEnv } = useContext(MapContext);
+    const [falcorCache, setFalcorCache] = useState(falcor.getCache());
     useEffect(() => {
         async function fetchData() {
             const lengthPath = ["dama", pgEnv, "symbologies", "length"];
@@ -17,6 +17,7 @@ export const SymbologySelector = () => {
                 { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
                 "attributes", Object.values(SymbologyAttributes)
             ]);
+            setFalcorCache(falcor.getCache());
         }
         fetchData();
     }, [falcor, pgEnv]);
@@ -24,7 +25,7 @@ export const SymbologySelector = () => {
     const symbologies = useMemo(() => {
         return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
             .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-    }, [falcorCache, pgEnv]);
+    }, [falcorCache?.dama, pgEnv]);
 
     const activeSym = Object.values(state?.symbologies)[0]?.symbology_id;
     // useEffect(() => {
