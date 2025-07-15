@@ -401,7 +401,10 @@ const HoverComp = ({ data, layer }) => {
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv, falcor } = ctx;
+  const [attributes, setAttributes] = React.useState();
+  const [metadata, setMetadata] = React.useState([]);
+  //const [attrInfo, setAttrInfo] = React.useState({});
+  const { pgEnv, falcor, user } = ctx;
   //console.log({dctx, cctx})
 
   const falcorCache = falcor.getCache();
@@ -430,37 +433,109 @@ const HoverComp = ({ data, layer }) => {
   //     ]).then(d => console.log('getting', [ "dama", pgEnv, "viewsbyId", view_id, "databyId", id], d))
   //   }
   // },[pgEnv,view_id,id])
+  React.useEffect(() => {
+    const getHoverColumns = async () => {
+      if (!hoverColumns) {
+        const metadataResp = await falcor.get([
+          "dama",
+          pgEnv,
+          "sources",
+          "byId",
+          source_id,
+          "attributes",
+          "metadata",
+        ]);
 
-  const attributes = React.useMemo(() => {
-    if (!hoverColumns) {
-      let out = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
-      ], [])
-      if(out.length === 0) {
-          out = get(falcorCache, [
-            "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
-          ], [])
+        let out = get(
+          metadataResp,
+          [
+            "json",
+            "dama",
+            pgEnv,
+            "sources",
+            "byId",
+            source_id,
+            "attributes",
+            "metadata",
+            "value",
+            "columns",
+          ],
+          []
+        );
+        if (out.length === 0) {
+          out = get(
+            metadataResp,
+            [
+              "json",
+              "dama",
+              pgEnv,
+              "sources",
+              "byId",
+              source_id,
+              "attributes",
+              "metadata",
+              "value",
+            ],
+            []
+          );
         }
-      return out
-    }
-    else {
-      return hoverColumns;
-    }
+        setAttributes(out);
+      } else {
+        setAttributes(hoverColumns);
+      }
+    };
 
-  }, [source_id, falcorCache, hoverColumns]);
+    getHoverColumns();
+  }, [source_id, falcor, hoverColumns]);
 
-  const metadata = React.useMemo(() => {
-    let out = get(falcorCache, [
-      "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
-    ], [])
-    if(out.length === 0) {
-      out = get(falcorCache, [
-        "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
-      ], [])
-    }
+  React.useEffect(() => {
+    const getMetadata = async () => {
+
+        console.log("getting getMetadata");
+        const metadataResp = await falcor.get([
+          "dama",
+          pgEnv,
+          "sources",
+          "byId",
+          source_id,
+          "attributes",
+          "metadata",
+          "value",
+          "columns",
+        ]);
+
+        console.log("metadataResp", metadataResp);
+
+        let out = get(
+          metadataResp,
+          [
+            "json",
+            "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+          ],
+          []
+        );
+
+        setMetadata(out);
+      
+    };
+
+    getMetadata();
+
     
-    return Array.isArray(out) ? out : []
-  }, [source_id, falcorCache]);
+  })
+
+  // const metadata = React.useMemo(() => {
+  //   let out = get(falcorCache, [
+  //     "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
+  //   ], [])
+  //   if(out.length === 0) {
+  //     out = get(falcorCache, [
+  //       "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+  //     ], [])
+  //   }
+    
+  //   return Array.isArray(out) ? out : []
+  // }, [source_id, falcorCache]);
 //console.log({falcorCache})
   let getAttributes = (typeof attributes?.[0] === 'string' ?
     attributes : (attributes || []).map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
@@ -477,6 +552,27 @@ const HoverComp = ({ data, layer }) => {
     ])
     //.then(d => console.log('got attributes', d));
   }, [falcor, pgEnv, view_id, id, attributes]);
+
+  // React.useEffect(() => {
+  //   const getAttrInfo = async () => {
+  //       console.log("getting getAttrInfo");
+  //       const attrInfoResp = await falcor.get(["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id]);
+
+  //       console.log("attrInfoResp", attrInfoResp);
+  //       let out = get(
+  //         attrInfoResp,
+  //         [
+  //           "json",
+  //           "dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id
+  //         ],
+  //         []
+  //       );
+
+  //       setAttrInfo(out);
+  //   };
+
+  //   getAttrInfo();
+  // }, [id, view_id, pgEnv])
 
   const attrInfo = React.useMemo(() => {
     return get(
@@ -500,6 +596,7 @@ const HoverComp = ({ data, layer }) => {
           return aIndex - bIndex;
         })
         .map((k, i) => {
+          console.log({k})
           const hoverAttr = (attributes || []).find(attr => attr.name === k || attr.column_name === k) || {};
 
           const metadataAttr = metadata.find(attr => attr.name === k || attr.column_name === k) || {};
