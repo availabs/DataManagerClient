@@ -11,12 +11,14 @@ import { CMSContext } from '~/modules/dms/src'
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
-const ViewLayerRender = ({
+const ViewLayerRender = (props) => {
+  const {
   maplibreMap,
   layer,
   layerProps,
   allLayerProps
-}) => {
+} = props;
+
   const mctx = useContext(MapContext);
   const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
   // ------------
@@ -393,12 +395,16 @@ export default ViewLayer;
 
 
 const HoverComp = ({ data, layer }) => {
+  //console.log("inside hover comp, layer::", layer)
   if(!layer.props.hover) return
   const { source_id, view_id } = layer;
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
-  const { pgEnv, falcor, falcorCache } = ctx;
+  const { pgEnv, falcor } = ctx;
+  //console.log({dctx, cctx})
+
+  const falcorCache = falcor.getCache();
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
 
@@ -448,13 +454,14 @@ const HoverComp = ({ data, layer }) => {
       "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value", "columns"
     ], [])
     if(out.length === 0) {
-        out = get(falcorCache, [
-          "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
-        ], [])
-      }
+      out = get(falcorCache, [
+        "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata", "value"
+      ], [])
+    }
+    
     return Array.isArray(out) ? out : []
   }, [source_id, falcorCache]);
-
+//console.log({falcorCache})
   let getAttributes = (typeof attributes?.[0] === 'string' ?
     attributes : (attributes || []).map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
 
@@ -478,7 +485,7 @@ const HoverComp = ({ data, layer }) => {
       {}
     )
   }, [id, falcorCache, view_id, pgEnv]);
-
+//console.log({attrInfo, view_id, id})
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">
       <div className="font-medium pb-1 w-full border-b ">

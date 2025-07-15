@@ -91,7 +91,7 @@ const Edit = ({value, onChange, size}) => {
 
                         filter.values =
                             Array.isArray(newValues) && newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
-                                typeof newValues === 'string' ? newValues :
+                                typeof newValues === 'string' ? [isNumeric ? +newValues : newValues] :
                                 filter.defaultValue?.length ? [isNumeric ? +filter.defaultValue : filter.defaultValue] : []
                     })
             }
