@@ -35,6 +35,9 @@ const Versions = ({ source, views, meta }) => {
     );
   }
 
+  const sourceAuth = source?.statistics?.auth;
+  const canPublicDownload = sourceAuth?.groups['Public'] >= SOURCE_AUTH_CONFIG['DOWNLOAD'];
+  const canUserDownload = SOURCE_AUTH_CONFIG['DOWNLOAD'] <= user.authLevel || canPublicDownload;
   return (
     <div>
       <Table
@@ -58,7 +61,7 @@ const Versions = ({ source, views, meta }) => {
           {
             Header: " Download",
             accessor: (c) => {
-              return SOURCE_AUTH_CONFIG['DOWNLOAD'] <= user.authLevel && <VersionDownload view={c} />;
+              return canUserDownload && <VersionDownload view={c} />;
             },
             disableFilters: true,
           },
