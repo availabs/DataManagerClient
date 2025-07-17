@@ -5,6 +5,7 @@ import get from "lodash/get.js";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { Input, Button, Modal } from "~/modules/avl-components/src"
 import { DAMA_HOST } from '~/config'
+import { SOURCE_AUTH_CONFIG } from "~/pages/DataManager/Source/attributes";
 
 const OUTPUT_FILE_TYPES = [
     "CSV",
@@ -347,7 +348,7 @@ export function ViewControls ({view}) {
 
     return (
         <div className="w-72 px-5">
-            {user.authLevel >= 10 ? (
+            {user.authLevel >= SOURCE_AUTH_CONFIG['SUPER'] ? (
                 <div className="w-full flex flex-col p-1">
                     <button
                         className={`${linkClass} bg-blue-300 hover:bg-blue-600 mb-1`}
