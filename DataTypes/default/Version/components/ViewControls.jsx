@@ -523,7 +523,7 @@ export function ViewControls ({view}) {
                 </div>
                 <div></div>
                 <div className={"flex m-2"}>
-                  Are you sure you want to delete the downloadable file for this view? The underlying source and view will be unaffected.
+                  Are you sure you want to delete the downloadable file for this view? The underlying source and view will NOT be affected.
                 </div>
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                     <button
