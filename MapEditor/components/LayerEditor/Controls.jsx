@@ -312,7 +312,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [pgEnv, sourceId, falcorCache])
 
-
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -342,7 +341,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
-          {(metadata || [])
+          {(metadata && metadata.length ? metadata : [])
             .filter(d => {
               if(layerType === 'choropleth' && !['integer', 'number'].includes(d.type)){
                 return false
@@ -758,6 +757,7 @@ function ChoroplethControl({path, params={}}) {
    * minimum value of non-first break, is the value of the prior break + 1
    * max value of non-last break, is the value of the next break - 1
    */
+    // console.log("inside choropleth, categories::", categories)
   const rangeInputs = categories?.map((category, catIndex) => {
     return (
       <div key={`range_input_${catIndex}`}>
@@ -819,7 +819,7 @@ function ChoroplethControl({path, params={}}) {
       </div>
     );
   });
-  
+
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>

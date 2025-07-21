@@ -541,9 +541,8 @@ const HoverComp = ({ data, layer }) => {
     
     return Array.isArray(out) ? out : []
   }, [source_id, falcorCache]);
-//console.log({falcorCache})
   let getAttributes = (typeof attributes?.[0] === 'string' ?
-    attributes : (attributes || []).map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
+    attributes : (attributes && attributes.length ? attributes : []).map(d => d.name || d.column_name)).filter(d => !['wkb_geometry'].includes(d))
 
   React.useEffect(() => {
     falcor.get([
