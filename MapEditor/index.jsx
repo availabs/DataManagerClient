@@ -245,7 +245,7 @@ const MapEditor = () => {
       Object.values(state.symbology.layers).map(
         (l) => l.selectedInteractiveFilterIndex
       ),
-    [state.symbology.layers]
+    [state?.symbology?.layers]
   );
   const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
 
@@ -537,7 +537,30 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+
+  useEffect(() => {
+    const newPaint = cloneDeep(paintValue[3]);
+    for (let i = 0; i < newPaint.length; i = i + 2) {
+      //0, 2, 4...
+      if (i == 0) {}
+      else if (i == 2) {
+        newPaint[i] = colorrange[0];
+      } else {
+        newPaint[i] = colorrange[i / 2 - 2];
+      }
+    }
+
+    const newLegend = legendData.map((legendRow, i) => ({
+      ...legendRow,
+      color: colorrange[i],
+    }));
+
+    setState((draft) => {
+      set(draft, `${pathBase}.${layerPaintPath}`, newPaint);
+      set(draft, `${pathBase}['legend-data']`, newLegend);
+    });
+  }, [colorrange]);
 
   useEffect(() => {
     if(choroplethdata && !legendData) {
