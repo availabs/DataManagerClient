@@ -875,7 +875,7 @@ function ChoroplethControl({path, params={}}) {
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
-              <option  value={'pretty'}>Pretty Breaks</option>
+              {/* <option  value={'pretty'}>Pretty Breaks</option> */}
               <option  value={'equalInterval'}>Equal Interval</option>
               <option  value={'custom'}>Custom</option>
              
