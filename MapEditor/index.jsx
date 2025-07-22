@@ -3,6 +3,7 @@ import { useImmer } from 'use-immer';
 import { useSearchParams, Link, useNavigate, useParams } from "react-router";
 import get from "lodash/get"
 import set from "lodash/set"
+import omit from "lodash/omit"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
 import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
@@ -71,22 +72,27 @@ const MapEditor = () => {
       .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
+  /**
+   * Uses the url param to query the DB
+   */
   const dbSymbology = useMemo(() => {
     return symbologies?.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
-  let initialSymbology = {
+  const DEFAULT_BLANK_SYMBOLOGY = {
     name: '',
     description: '',
     symbology: {
       layers: {},
     }
   };
+  const numDefaultObjectKeys = Object.keys(DEFAULT_BLANK_SYMBOLOGY).length;
+  let initialSymbology = DEFAULT_BLANK_SYMBOLOGY;
 
   const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
   const rawLocalSymb = window?.localStorage?.getItem(symbologyLocalStorageKey);
   const localStorageSymbology = rawLocalSymb !== "undefined" ? JSON.parse(rawLocalSymb) : null;
-  if(localStorageSymbology){
+  if(localStorageSymbology && Object.keys(localStorageSymbology).length >= numDefaultObjectKeys){
     initialSymbology = localStorageSymbology;
   }
   else if (dbSymbology) {
@@ -105,7 +111,6 @@ const MapEditor = () => {
       initialSymbology?.symbology?.layers
     ).find((layer) => layer.order === 0)?.id;
   }
-
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
@@ -147,7 +152,7 @@ const MapEditor = () => {
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    if(!localStorageSymbology && dbSymbology) {
+    if((!localStorageSymbology || Object.keys(localStorageSymbology).length <= numDefaultObjectKeys) && dbSymbology) {
       setState(dbSymbology)
     }
   },[symbologies.length, dbSymbology])
@@ -540,26 +545,34 @@ const MapEditor = () => {
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
   useEffect(() => {
-    const newPaint = cloneDeep(paintValue[3]);
-    for (let i = 0; i < newPaint.length; i = i + 2) {
-      //0, 2, 4...
-      if (i == 0) {}
-      else if (i == 2) {
-        newPaint[i] = colorrange[0];
-      } else {
-        newPaint[i] = colorrange[i / 2 - 2];
+    const setLegendAndPaint = () => {
+      const newPaint = cloneDeep(paintValue[3]);
+      if(newPaint?.length && legendData?.length) {
+        for (let i = 0; i < newPaint?.length; i = i + 2) {
+          //0, 2, 4...
+          if (i == 0) {}
+          else if (i == 2) {
+            newPaint[i] = colorrange[0];
+          } else {
+            newPaint[i] = colorrange[i / 2 - 2];
+          }
+        }
+
+        const newLegend = legendData?.map((legendRow, i) => ({
+          ...legendRow,
+          color: colorrange[i],
+        }));
+
+        setState((draft) => {
+          set(draft, `${pathBase}.${layerPaintPath}`, newPaint);
+          set(draft, `${pathBase}['legend-data']`, newLegend);
+        });
       }
     }
 
-    const newLegend = legendData.map((legendRow, i) => ({
-      ...legendRow,
-      color: colorrange[i],
-    }));
-
-    setState((draft) => {
-      set(draft, `${pathBase}.${layerPaintPath}`, newPaint);
-      set(draft, `${pathBase}['legend-data']`, newLegend);
-    });
+    if(layerType !== 'simple' && typeof paintValue !== 'string') {
+      setLegendAndPaint();
+    }
   }, [colorrange]);
 
   useEffect(() => {
@@ -610,7 +623,7 @@ const MapEditor = () => {
 
   useEffect(() => {
     if(!!activeLayer){
-      if(viewGroupEnabled && !viewGroupId && !!activeLayer) {
+      if(viewGroupEnabled && !viewGroupId) {
         setState(draft => {
           const defaultView = views.find(v => v.view_id === viewId);
           const defaultGroupName = (defaultView?.version ?? defaultView?.view_id + " group");
@@ -618,12 +631,11 @@ const MapEditor = () => {
           set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
           set(draft, `${pathBase}['view-group-id']`, viewId);
         })
-      } else if (!viewGroupEnabled && !!activeLayer) {
+      } else if (!viewGroupEnabled) {
         setState(draft => {
           set(draft,`${pathBase}['filter-source-views']`, []);
           set(draft, `${pathBase}['view-group-name']`, '');
-          set(draft, `${pathBase}['view-group-id']`, undefined);
-  
+          omit(draft, `${pathBase}['view-group-id']`)
           set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
         })
       }
