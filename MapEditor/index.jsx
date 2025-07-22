@@ -453,10 +453,12 @@ const MapEditor = () => {
 
         let colorBreaks; 
 
+        let regenerateLegend = false;
         if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
           colorBreaks = choroplethdata;
         }
         else {
+          regenerateLegend = true;
           if(filterGroupEnabled) {
             domainOptions['column'] = filterGroupLegendColumn;
           }
@@ -478,6 +480,9 @@ const MapEditor = () => {
           })
         }
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        if(!regenerateLegend && legendData.length > 0) {
+          legend = cloneDeep(legendData)
+        }
         if(layerType === 'circles') {
           console.log("---RECALCULATING CIRCLE RADIUS---")
           // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
@@ -632,7 +637,6 @@ const MapEditor = () => {
     }
 
   }, [baseDataColumn, layerType, viewId, falcorCache])
-
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>
