@@ -287,6 +287,7 @@ const MapEditor = () => {
     viewId,
     sourceId,
     paintValue,
+    breaks,
     column,
     categories,
     categorydata,
@@ -333,6 +334,7 @@ const MapEditor = () => {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
       baseDataColumn: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      breaks: get(state, `${pathBase}['choroplethdata']['breaks']`, []),
       column: get(state, `${pathBase}['data-column']`, ''),
       categories: get(state, `${pathBase}['categories']`, {}),
       categorydata: get(state, `${pathBase}['category-data']`, {}),
@@ -484,7 +486,10 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
+        //console.log("colorBreaks['breaks']",colorBreaks['breaks'])
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
+        //this will fix a problem with the custom scale 
         if(!regenerateLegend && legendData.length > 0) {
           legend = cloneDeep(legendData)
         }
@@ -543,6 +548,59 @@ const MapEditor = () => {
     }
     setPaint();
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+
+  useEffect(() => {
+    if(method === "custom") {
+      console.log("custom breaks changed")
+      const colorBreaks = choroplethdata;
+      let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, breaks, showOther, legendOrientation);
+      if(layerType === 'circles') {
+        console.log("---RECALCULATING CIRCLE RADIUS---")
+        // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+        // minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+        // upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+        // maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+        if(!lowerBound) {
+          setState(draft => {
+            set(draft,`${pathBase}['lower-bound']`, breaks[0])
+          })
+        }
+        if(!upperBound) {
+          setState(draft => {
+            set(draft,`${pathBase}['upper-bound']`, colorBreaks['max'])
+          })
+        }
+        const circleLowerBound = lowerBound !== null ? lowerBound : breaks[0];
+        const circleUpperBound = upperBound !== null ? upperBound : colorBreaks['max'];
+        paint = [
+          "interpolate",
+          [radiusCurve, curveFactor],
+          ["number", ["get", baseDataColumn]],
+          circleLowerBound, //min of dataset
+          minRadius,//min radius (px) of circle
+          circleUpperBound, //max of dataset
+          maxRadius, //max radius (px) of circle
+        ];
+      }
+      if((isValidCategoryPaint(paint) || layerType === 'circles') && !isEqual(paint, paintValue)) {
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled) {
+          if(legend[legend.length-1].label !== "No data") {
+            legend.push({color: showOther, label: "No data"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "No data") {
+            legend.pop();
+          }
+        }
+        setState(draft => {
+          set(draft, `${pathBase}.${layerPaintPath}`, paint)
+          set(draft, `${pathBase}['legend-data']`, legend)
+        })
+      }
+    }  
+  }, [breaks])
 
   useEffect(() => {
     const setLegendAndPaint = () => {
