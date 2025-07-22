@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useContext } from 'react'
+import {useEffect, useMemo, useContext, useState} from 'react'
 import { useNavigate } from 'react-router'
 import {Button} from '~/modules/avl-components/src'
 import get from 'lodash/get'
@@ -10,14 +10,13 @@ import { MapContext } from '../../MapComponent'
 import { SymbologyAttributes, getAttributes } from "../../../../../Collection/attributes"
 
 export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
-  const { state, setState, falcor, falcorCache, pgEnv } = useContext(MapContext);
+  const { state, setState, falcor, pgEnv } = useContext(MapContext);
   // ---------------------------------
   // -- get Symbologies to list
   // ---------------------------------
+  const [falcorCache, setFalcorCache] = useState(falcor.getCache());
   useEffect(() => {
     async function fetchData() {
-      console.log('pgEnv', pgEnv)
-
       const lengthPath = ["dama", pgEnv, "symbologies", "length"];
       const resp = await falcor.get(lengthPath);
 
@@ -26,14 +25,16 @@ export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(SymbologyAttributes)
       ]);
+      setFalcorCache(falcor.getCache());
     }
     fetchData();
   }, [falcor, pgEnv]);
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, pgEnv]);
+        .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+  }, [falcorCache?.dama, pgEnv]);
+
 
   const addLayer = () => {
     const { symbologyId } = modalState; 
