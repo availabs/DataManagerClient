@@ -675,9 +675,9 @@ const MapEditor = () => {
         })
       } else if (!filterGroupEnabled && !!activeLayer) {
         setState(draft => {
-          set(draft,`${pathBase}['filter-group-name']`, '');
-          set(draft, `${pathBase}['filter-group-legend-column']`, '');
-          set(draft, `${pathBase}['filter-group']`,[]);
+          omit(draft,`${pathBase}['filter-group-name']`);
+          omit(draft, `${pathBase}['filter-group-legend-column']`);
+          omit(draft, `${pathBase}['filter-group']`);
         })
       }
     }
@@ -695,8 +695,8 @@ const MapEditor = () => {
         })
       } else if (!viewGroupEnabled) {
         setState(draft => {
-          set(draft,`${pathBase}['filter-source-views']`, []);
-          set(draft, `${pathBase}['view-group-name']`, '');
+          omit(draft,`${pathBase}['filter-source-views']`);
+          omit(draft, `${pathBase}['view-group-name']`);
           omit(draft, `${pathBase}['view-group-id']`)
           set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
         })
