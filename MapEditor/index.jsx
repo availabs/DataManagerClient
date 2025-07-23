@@ -604,7 +604,12 @@ const MapEditor = () => {
 
   useEffect(() => {
     const setLegendAndPaint = () => {
-      const newPaint = cloneDeep(paintValue[3]);
+      let newPaint;
+      if(layerType === 'categories') {
+        newPaint = cloneDeep(paintValue)
+      } else {
+        newPaint = cloneDeep(paintValue[3]);
+      }
       if(newPaint?.length && legendData?.length) {
         for (let i = 0; i < newPaint?.length; i = i + 2) {
           //0, 2, 4...
@@ -657,7 +662,6 @@ const MapEditor = () => {
 
     }
   }, [legendOrientation, legendData]);
-
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 
   useEffect(() => {
