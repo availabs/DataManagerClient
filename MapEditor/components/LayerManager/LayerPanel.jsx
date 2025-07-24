@@ -3,7 +3,7 @@ import { SymbologyContext } from '../../'
 import SourceSelector from './SourceSelector'
 import { DndList } from '~/modules/avl-components/src'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate, Link } from 'react-router'
 import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icons'
 import get from 'lodash/get'
 import { ZoomToFit } from './ZoomToFit'
@@ -64,6 +64,36 @@ export function LayerMenu({layer, button, location='left-0'}) {
       </Menu>
   )
 } 
+
+export function LayerInfo({ layer, button, source, baseUrl, location = "left-0" }) {
+  const sourceUrl = `${baseUrl}/source/${layer.source_id}`
+  return (
+    <Menu as="div" className="relative inline-block text-left">
+      <Menu.Button>{button}</Menu.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items
+          className={`absolute ${location} mt-1 w-64 origin-top-left divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none`}
+        >
+          <div className="px-2 py-2 flex gap-2 flex-col">
+            <div><b>Source Name:</b> {source?.attributes?.name}</div>
+            <div><b>Source Id:</b> {source?.attributes?.source_id}</div>
+            <Link className="text-blue-600 hover:text-pink-400" to={sourceUrl} target="_blank" rel="noopener noreferrer">
+              Link to Data Manager Source
+            </Link>
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
+}
 
 function LayerRow ({index, layer, i}) {
   const { state, setState  } = React.useContext(SymbologyContext);

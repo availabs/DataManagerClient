@@ -1,10 +1,10 @@
 import React, { useMemo, useContext, Fragment } from 'react'
 import { SymbologyContext } from '../../'
 import { DamaContext } from "../../../store"
-import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid } from '../icons'
+import { Fill, Line, Eye, EyeClosed, MenuDots , CaretDown, CaretDownSolid, CaretUpSolid, CircleInfoI } from '../icons'
 import get from 'lodash/get'
 import set from 'lodash/get'
-import {LayerMenu} from './LayerPanel'
+import { LayerMenu, LayerInfo } from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { fnumIndex } from '../LayerEditor/datamaps'
@@ -80,7 +80,7 @@ const typePaint = {
   }
 }
 
-function InteractiveLegend({ layer, toggleSymbology, isListVisible }) {
+function InteractiveLegend({ layer, toggleSymbology }) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   let { interactiveFilters } = useMemo(() => {
@@ -268,10 +268,8 @@ function HorizontalLegend({ layer, toggleSymbology }) {
 
 function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { state, setState  } = React.useContext(SymbologyContext);
-  const { falcor, falcorCache, pgEnv } = useContext(DamaContext);
+  const { falcor, falcorCache, pgEnv, baseUrl } = useContext(DamaContext);
   const { activeLayer } = state.symbology;
-
-  const [isListVisible, setIsListVisible] = React.useState(true);
 
   let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters } = useMemo(() => {
     return {
@@ -303,13 +301,25 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     !type;
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
+  const layerTitle = layer.name ?? filterGroupName;
+  const layerSource = useMemo(
+    () => get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], {}),
+    [sourceId, falcorCache]
+  );
 
-  const layerTitle = layer.name ?? filterGroupName
   const legendTitle = (
     <div className='flex justify-between items-center justify w-full' onClick={toggleSymbology} >
       {shouldDisplayColorSquare && <div className='pl-1 flex'><Symbol layer={layer} color={paintValue}/>{layerTitle}</div>}
       {!shouldDisplayColorSquare && layerTitle}
       <div className='flex'>
+        <div className='text-sm pt-1  flex items-center'>
+          <LayerInfo
+            source={layerSource}
+            layer={layer}
+            baseUrl={baseUrl}
+            button={<CircleInfoI size={16} className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} collapse group-hover:visible pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
+          />
+        </div>
         <div className='text-sm pt-1  flex items-center'>
           <LayerMenu 
             layer={layer}
@@ -492,7 +502,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       } hover:border-pink-500 group border`}
     >
       <div
-        className={`w-full px-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${
+        className={`w-full pl-2 pt-1 pb-0 flex border-blue-50/50 border justify-between items-center ${
           type === "interactive" && !shouldDisplayColorSquare ? "pl-[3px]" : ""
         }`}
       >
@@ -520,7 +530,6 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
                 <InteractiveLegend
                   layer={layer}
                   toggleSymbology={toggleSymbology}
-                  isListVisible={isListVisible}
                 />
               )}
             </>
