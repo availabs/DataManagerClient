@@ -170,7 +170,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   const groupSelectorElements = [];
   if (layerType === "interactive") {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+      <div key={`symbrow_${row.symbologyId}_interactive`} className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
         <div className="text-black">Filters:</div>
         <div className="text-black rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
@@ -199,7 +199,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
 
   if(filterGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+      <div key={`symbrow_${row.symbologyId}_filtergroup`} className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
         <div className='text-black'>{filterGroupName}:</div>
         <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
@@ -234,7 +234,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   }
   if(layer.viewGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full ">
+      <div key={`symbrow_${row.symbologyId}_viewgroup`} className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full ">
         <div className=' text-black'>{viewGroupName}: </div>
         <div className="rounded-md h-[36px]  pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
