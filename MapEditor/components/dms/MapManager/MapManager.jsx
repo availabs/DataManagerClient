@@ -87,8 +87,10 @@ function SymbologyMenu({button, location='left-0', width='w-36', children}) {
 
 
 function SymbologyRow ({tabIndex, row, rowIndex}) {
-  const { state, setState, falcor, falcorCache, pgEnv  } = React.useContext(MapContext);
+  const { state, setState, falcor, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
+  const [views, setViews] = React.useState([])
+  const falcorCache = falcor.getCache();
 
   const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, } = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
@@ -143,28 +145,34 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       //console.time("fetch data");
       const lengthPath = ["dama", pgEnv, "sources", "byId", sourceId, "views", "length"];
       const resp = await falcor.get(lengthPath);
-      return await falcor.get([
+      falcor.get([
         "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex",
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(ViewAttributes)
-      ]);
+      ]).then((d) => {
+      let out = get(
+          d,
+          [
+            "json",
+            "dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"
+          ],
+          []
+        );
+        out = Object.values(out).map(view => view.attributes)
+        setViews(out);
+      });
     }
     if(sourceId) {
       fetchData();
     }
   }, [sourceId, falcor, pgEnv]);
 
-  const views = useMemo(() => {
-    return Object.values(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId, "views", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
-  }, [falcorCache, sourceId, pgEnv]);
-
   const groupSelectorElements = [];
   if (layerType === "interactive") {
     groupSelectorElements.push(
       <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
         <div className="text-black">Filters:</div>
-        <div className="rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+        <div className="text-black rounded-md h-[36px] pl-0 pr-1 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
             className="w-full bg-transparent"
             value={selectedInteractiveFilterIndex}
@@ -263,7 +271,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
               const curView = views.find((v) => v.view_id === view_id);
               return (
                 <option key={i} value={view_id}>
-                  {curView?.version ?? curView?.view_id}
+                  {curView?.version ?? `view ${view_id}`}
                 </option>
               );
             })}

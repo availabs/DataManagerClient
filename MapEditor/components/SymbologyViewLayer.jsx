@@ -78,36 +78,43 @@ const ViewLayerRender = (props) => {
     const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
     const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
 
-    if(didFilterGroupColumnsChange || didDataColumnChange || didFilterChange || didDynamicFilterChange) {
-      if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
-        let newSource = cloneDeep(layerProps.sources?.[0])
-        let tileBase = newSource.source.tiles?.[0];
-
-        if(tileBase){
+    if (
+      didFilterGroupColumnsChange ||
+      didDataColumnChange ||
+      didFilterChange ||
+      didDynamicFilterChange
+    ) {
+      let newSource = cloneDeep(layerProps.sources?.[0]);
+      let tileBase = newSource?.source?.tiles?.[0];
+      if (newSource) {
+        if (tileBase) {
           newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
         }
-
-        layerProps?.layers?.forEach(l => {
-          if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
-            maplibreMap.removeLayer(l?.id) 
+        layerProps?.layers?.forEach((l) => {
+          if (maplibreMap.getLayer(l?.id)) {
+            maplibreMap.removeLayer(l?.id);
           }
-        })
+        });
 
-        maplibreMap.removeSource(newSource.id)
-        if(!maplibreMap.getSource(newSource.id)){
-          maplibreMap.addSource(newSource.id, newSource.source)
+        if (maplibreMap.getSource(newSource.id)) {
+          maplibreMap.removeSource(newSource.id);
+        }
+        if (!maplibreMap.getSource(newSource.id)) {
+          maplibreMap.addSource(newSource.id, newSource.source);
         } else {
-          console.log('cant add',maplibreMap.getSource(newSource.id))
+          console.log("cant add", maplibreMap.getSource(newSource.id));
         }
 
-        let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
-        layerProps?.layers?.forEach(l => {
-          if(maplibreMap.getLayer(beneathLayer?.id)){
-            maplibreMap.addLayer(l, beneathLayer?.id) 
+        let beneathLayer = Object.values(allLayerProps).find(
+          (l) => l?.order === layerProps.order + 1
+        );
+        layerProps?.layers?.forEach((l) => {
+          if (maplibreMap.getLayer(beneathLayer?.id)) {
+            maplibreMap.addLayer(l, beneathLayer?.id);
           } else {
-            maplibreMap.addLayer(l) 
+            maplibreMap.addLayer(l);
           }
-        })
+        });
       }
     }
 
@@ -193,6 +200,7 @@ const ViewLayerRender = (props) => {
         if(layerFilter){
           mapLayerFilter = Object.keys(layerFilter).map(
             (filterColumnName) => {
+              //console.log({filterColumnName})
               let mapFilter = [];
               //TODO actually handle calculated columns
               if(filterColumnName.includes("rpad(substring(prop_class, 1, 1), 3, '0')")) {
