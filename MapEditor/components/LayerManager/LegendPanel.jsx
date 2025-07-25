@@ -66,14 +66,13 @@ const typeSymbols = {
   }
 }
 
-const typePaint = {
+const GET_PAINT_VALUE = {
   'fill': (layer) => {
-
-    return  get(layer, `layers[1].paint['fill-color']`, '#ccc')
+    const opacity = get(layer, `layers[1].paint['fill-opacity']`, '#ccc');
+    return opacity === 0 ? get(layer, `layers[0].paint['line-color']`, '#ccc') : get(layer, `layers[1].paint['fill-color']`, '#ccc')
   },
   'circle': (layer) => {
     return  get(layer, `layers[0].paint['circle-color']`, '#ccc')
-      
   },
   'line': (layer) => {
     return get(layer, `layers[1].paint['line-color']`, '#ccc')
@@ -297,7 +296,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         "simple") ||
     !type;
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typePaint?.[layer?.type] ? typePaint?.[layer?.type](layer) : '#fff'
+  let paintValue = GET_PAINT_VALUE?.[layer?.type] ? GET_PAINT_VALUE?.[layer?.type](layer) : '#fff'
   const layerTitle = layer.name ?? filterGroupName;
   const layerSource = useMemo(
     () => get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], {}),
