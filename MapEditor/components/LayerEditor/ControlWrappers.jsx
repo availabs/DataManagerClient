@@ -12,13 +12,14 @@ import {controlTypes } from './Controls'
 
 export function StyledControl ({children}) {
   return (
-  <div className='rounded-md h-[36px] flex w-full w-[216px] p-2 items-center border border-white/50 hover:bg-white cursor-pointer hover:border-slate-200'>
+  <div className='rounded-md h-[36px] flex w-full max-w-[216px] p-2 items-center border border-white/50 hover:bg-white cursor-pointer hover:border-slate-200'>
       {children}
     </div>
   )
 }
 
 function PopoverControl ({values,title='',children}) {
+  const filteredValues = values.filter(v => v.value !== null)
   return (
     <StyledControl> 
       <Popover className="relative w-full">
@@ -27,13 +28,13 @@ function PopoverControl ({values,title='',children}) {
               <Popover.Button className='w-full'>
                <div className='w-full flex items-center group'>
                 <div className='flex items-center group-hover:flex-1'>
-                  {(values || []).map((v,i) => {
+                  {(filteredValues || []).map((v,i) => {
                     // console.log('test', v.value)
                     return <Fragment key={i}>
                       {v.type === 'color' && <div className='h-4 w-4 border' style={{backgroundColor:toHex(v.value)}}/> }
                       <div className='px-1 py-1 truncate'><span className=''>{v.type === 'color' ? toHex(v.value) : v.value}</span>{v.unit ? v.unit : ''} </div>
-                      <div className='px-1 py-1 truncate'>{i < values.length - 1 ? '/' : ''}</div>
-                      </Fragment>
+                      <div className='px-1 py-1 truncate'>{i < filteredValues.length - 1 ? '/' : ''}</div>
+                    </Fragment>
                   })}
                 </div>
                 <div className='flex items-center '><CaretDown className='fill-slate-400 group-hover:fill-slate-800'/>

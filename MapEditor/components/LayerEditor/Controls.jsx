@@ -115,7 +115,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   )
 } 
 
-function ColorControl({path,params={}}) {
+function ColorControl({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   const pathBase =
@@ -124,8 +124,6 @@ function ColorControl({path,params={}}) {
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
   return (
-    <label className='flex'>
-      <div className='flex items-center'>
         <input
           type='color' 
           value={toHex(get(state, `${pathBase}.${path}`, '#ccc'))}
@@ -133,10 +131,29 @@ function ColorControl({path,params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
-      </div>
-      <div className='flex items-center p-2'>Custom </div>
-    </label>
-  )
+  );
+}
+
+function HexColor({ path, params = {} }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  return (
+    <input
+      className="max-w-[50%] ml-2"
+      type="text"
+      value={get(state, `${pathBase}.${path}`)}
+      onChange={(e) =>
+        setState((draft) => {
+          set(draft, `${pathBase}.${path}`, e.target.value);
+        })
+      }
+    />
+  );
 }
 
 function RangeControl({path,params={}}) {
@@ -970,6 +987,7 @@ export const AddColumnSelectControl = ({setState, availableColumnNames, selected
 
 export const controlTypes = {
   'color': ColorControl,
+  'hexColor': HexColor,
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,
