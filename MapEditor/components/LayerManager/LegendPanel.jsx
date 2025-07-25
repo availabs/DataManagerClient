@@ -127,16 +127,16 @@ function CategoryLegend({ layer, toggleSymbology }) {
 
 function CircleLegend({ layer, toggleSymbology }) {
  // console.log("CircleLegend", layer);
-  let { minRadius, maxRadius, lowerBound, upperBound, isLoadingColorbreaks } = useMemo(() => {
+  let { minRadius, maxRadius, lowerBound, upperBound, isLoadingColorbreaks, dataColumn } = useMemo(() => {
     return {
       isLoadingColorbreaks: get(layer, `['is-loading-colorbreaks']`, false),
       minRadius: get(layer,`['min-radius']`, 8),
       maxRadius: get(layer,`['max-radius']`, 128),
       lowerBound: get(layer,`['lower-bound']`, null),
       upperBound: get(layer,`['upper-bound']`, null),
+      dataColumn: get(layer, `['data-column']`, null)
     };
   }, [layer]);
-
   if (isLoadingColorbreaks) {
     return (
       <div className="w-full max-h-[250px] overflow-x-auto scrollbar-sm">
@@ -152,29 +152,26 @@ function CircleLegend({ layer, toggleSymbology }) {
   }
   return (
     <div
-      className="w-[33%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4"
+      className="w-[100%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4"
       onClick={toggleSymbology}
     >
-      <div className='flex w-full justify-between'>
-        <div>
-          {minRadius}px
+      <div className="w-[33%] text-sm max-h-[250px] overflow-x-auto scrollbar-sm px-4">
+        <div className="flex w-full justify-between">
+          <div>{minRadius}px</div>
+          <div>{maxRadius}px</div>
         </div>
-        <div>
-          {maxRadius}px
+        <div className="ml-8">
+          <i
+            class="fa-solid fa-arrow-right-long"
+            style={{ transform: "scaleX(3)" }}
+          ></i>
         </div>
-      </div>
-      <div className='ml-8'>
-        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
-      </div>
-      <div className='flex w-full justify-between'>
-        <div>
-          {fnumIndex(lowerBound)}
-        </div>
-        <div>
-          {fnumIndex(upperBound)}
+        <div className="flex w-full justify-between">
+          <div>{fnumIndex(lowerBound)}</div>
+          <div>{fnumIndex(upperBound)}</div>
         </div>
       </div>
-
+      <div>{dataColumn}</div>
     </div>
   );
 }
@@ -373,36 +370,40 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   if (type === "interactive") {
     groupSelectorElements.push(
       <div
-      className="text-slate-600 font-medium truncate flex-1"
-    >
-      <div className='text-xs text-black'>Filters:</div>
-      <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
-        <select
-          className="w-full bg-transparent"
-          value={selectedInteractiveFilterIndex}
-          onChange={(e) => {
-            setState((draft) => {
-              draft.symbology.layers[
-                layer.id
-              ].selectedInteractiveFilterIndex = parseInt(e.target.value);
-            });
-          }}
-        >
-          {interactiveFilters.map((iFilter, i) => {
-            return (
-              <option key={i} value={i}>
-                {iFilter.label}
-              </option>
-            );
-          })}
-        </select>
+        key={`symbrow_${layer.id}_interactive`}
+        className="text-slate-600 font-medium truncate flex-1"
+      >
+        <div className='text-xs text-black'>Filters:</div>
+        <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
+          <select
+            className="w-full bg-transparent"
+            value={selectedInteractiveFilterIndex}
+            onChange={(e) => {
+              setState((draft) => {
+                draft.symbology.layers[
+                  layer.id
+                ].selectedInteractiveFilterIndex = parseInt(e.target.value);
+              });
+            }}
+          >
+            {interactiveFilters.map((iFilter, i) => {
+              return (
+                <option key={i} value={i}>
+                  {iFilter.label}
+                </option>
+              );
+            })}
+          </select>
+        </div>
       </div>
-    </div>
     )
   } 
   if(layer.filterGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+      <div
+        key={`symbrow_${layer.id}_filtergroup`}
+        className="text-slate-600 font-medium truncate flex-1 items-center"
+      >
         <div className='text-xs text-black'>{filterGroupName}:</div>
         <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
@@ -446,7 +447,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   }
   if(layer.viewGroupEnabled) {
     groupSelectorElements.push(
-      <div className="text-slate-600 font-medium truncate flex-1 items-center">
+      <div
+        key={`symbrow_${layer.id}_viewgroup`}
+        className="text-slate-600 font-medium truncate flex-1 items-center"
+      >
         <div className='text-xs text-black'>{viewGroupName}: </div>
         <div className="rounded-md h-[36px] pl-0 flex w-full w-[216px] items-center border border-transparent cursor-pointer hover:border-slate-300">
           <select
