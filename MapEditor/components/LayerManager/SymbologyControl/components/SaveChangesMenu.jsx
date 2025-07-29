@@ -8,7 +8,7 @@ import get from 'lodash/get'
 import isEqual from "lodash/isEqual"
 import { Modal } from '../'
 import { LOCAL_STORAGE_KEY_BASE } from '../../../../'
-import { diff, addedDiff, deletedDiff, updatedDiff, detailedDiff } from 'deep-object-diff';
+//import { diff, addedDiff, deletedDiff, updatedDiff, detailedDiff } from 'deep-object-diff';
 export function SaveChangesMenu({ button, className}) {
   const [showSaveChanges, setShowSaveChanges] = useState(false)
 
