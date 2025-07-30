@@ -11,7 +11,14 @@ import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from '../../LayerE
 import colorbrewer from '../../LayerManager/colors'
 // import LegendPanel from './LegendPanel'
 import cloneDeep from 'lodash/cloneDeep'
-import { getAttributes } from '~/pages/DataManager/Collection/attributes'
+import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
+const getAttributes = (data) => {
+  return Object.entries(data || {}).reduce((out, attr) => {
+    const [k, v] = attr;
+    typeof v.value !== "undefined" ? (out[k] = v.value) : (out[k] = v);
+    return out;
+  }, {});
+};
 import { ViewAttributes } from "~/pages/DataManager/Source/attributes"
 const typeIcons = {
   'fill': Fill,
@@ -130,12 +137,32 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     })
   }, [state, setState]);
 
+  useEffect(() => {
+    async function fetchAllSymbologies() {
+      const symbologyLengthPath = ["dama", pgEnv, "symbologies", "length"];
+      const resp = await falcor.get(symbologyLengthPath);
+
+      const symbologyIdsPath = [
+        "dama",
+        pgEnv,
+        "symbologies",
+        "byIndex",
+        { from: 0, to: get(resp.json, symbologyLengthPath, 0) - 1 },
+        "attributes", Object.values(SymbologyAttributes)
+      ];
+      await falcor.get(symbologyIdsPath);
+    }
+
+    fetchAllSymbologies();
+  }, [pgEnv]);
 
   const symbologies = useMemo(() => {
     return Object.values(get(falcorCache, ["dama", pgEnv, "symbologies", "byIndex"], {}))
-      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]));
+      .map(v => getAttributes(get(falcorCache, v.value, { "attributes": {} })["attributes"]))
+      .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
+  console.log({falcorCache})
   const numRows = useMemo(() => {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
@@ -294,7 +321,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
         const layerPaintPath = paintPaths[polygonLayerType];
         const {
           choroplethdata = {},
-          colorrange = colorbrewer["seq1"][9],
+          ["color-range"]:colorrange = colorbrewer["seq1"][9],
           numbins=9,
           method,
           ["category-show-other"]: showOther = "#ccc",
@@ -407,7 +434,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                         console.log("updating symbology for::", row.symbologyId);
                         setState(draft => {
                           let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
-                    
                           Object.keys(newSymbology.symbology.layers).forEach(layerId => {
                             newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
                               const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
