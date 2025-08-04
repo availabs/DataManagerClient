@@ -718,7 +718,7 @@ function ChoroplethControl({path, params={}}) {
   const { breaks, max } = choroplethdata;
 
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i]?.color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i]?.color, label: `${breaks[i]?.toLocaleString('en-US')} - ${breaks[i+1]?.toLocaleString('en-US') || max}`}
   })
   .filter(d => d.color && d.label);
 
