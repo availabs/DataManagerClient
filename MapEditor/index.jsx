@@ -29,6 +29,15 @@ export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
+const PluginLibrary = {
+  'testplugin': {
+    mapRegister: () => {},
+    dataUpdate: () => {},
+    settingsPanel: () => <div>Test Plugin</div>,
+    controlPanel: () => <div>Controls</div>
+  } 
+}
+
 const MapEditor = () => {
   const mounted = useRef(false);
   const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
@@ -84,8 +93,13 @@ const MapEditor = () => {
     description: '',
     symbology: {
       layers: {},
+    },
+    activePlugins: {
+      'testplugin': { data: {} }
     }
   };
+
+
   const numDefaultObjectKeys = Object.keys(DEFAULT_BLANK_SYMBOLOGY).length;
   let initialSymbology = DEFAULT_BLANK_SYMBOLOGY;
 
@@ -176,6 +190,7 @@ const MapEditor = () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
 
+            console.log('hola', draftMapLayers)
             let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
       
             let newLayers = Object.values(state?.symbology?.layers || {})
@@ -187,6 +202,8 @@ const MapEditor = () => {
               })
             let oldLayers = draftMapLayers.filter(d => Object.keys(state?.symbology?.layers || {}).includes(d.id))
             
+
+
             const out = [
                 // keep existing layers & filter
                 ...oldLayers, 
