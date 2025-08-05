@@ -29,13 +29,21 @@ export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
-const PluginLibrary = {
+export const PluginLibrary = {
   'testplugin': {
-    mapRegister: () => {},
-    dataUpdate: () => {},
+    mapRegister: (map, state, setState) => {
+      map.onClick(() => console.log('mapClick'))
+    },
+    dataUpdate: (map, state, setState) => {
+      console.log('plugin Data gets updated')
+    },
     settingsPanel: () => <div>Test Plugin</div>,
     controlPanel: () => <div>Controls</div>
   } 
+}
+
+export const RegisterPlugin = (name, plugin) => {
+  PluginLibrary[name] = plugin
 }
 
 const MapEditor = () => {
@@ -93,9 +101,10 @@ const MapEditor = () => {
     description: '',
     symbology: {
       layers: {},
+      plugins: {}
     },
-    activePlugins: {
-      'testplugin': { data: {} }
+    pluginData : {
+      'testplugin': {}
     }
   };
 
@@ -190,14 +199,19 @@ const MapEditor = () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
 
-            console.log('hola', draftMapLayers)
+            //console.log('hola', draftMapLayers)
             let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-      
-            let newLayers = Object.values(state?.symbology?.layers || {})
+            //console.log('draftMapLayers', draftMapLayers?.[0]?.layerType, currentLayerIds)
+
+            let newLayers = [
+              ...Object.values(state?.symbology?.layers || {}),
+              ...Object.values(state?.symbology?.plugins || {})
+            ]
               .filter(d => d)
               .filter(d => !currentLayerIds.includes(d.id))
               .sort((a,b) => b.order - a.order)
               .map(l => {
+                // if this is a plugin, ? pluginViewLayer(l) : SymbologyViewLayer(l) do the spltubng
                 return new SymbologyViewLayer(l)
               })
             let oldLayers = draftMapLayers.filter(d => Object.keys(state?.symbology?.layers || {}).includes(d.id))
