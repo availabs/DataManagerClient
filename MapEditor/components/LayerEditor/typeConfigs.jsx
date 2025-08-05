@@ -198,6 +198,13 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[1].paint['fill-color']`
+        },
+        {
+          type: 'hexColor',
+          path: `layers[1].paint['fill-color']`,
+          params: {
+            format: (v) => null
+          },
         }
       ]
     },
@@ -212,6 +219,13 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[0].paint['line-color']`
+        },
+        {
+          type: 'hexColor',
+          path: `layers[0].paint['line-color']`,
+          params: {
+            format: (v) => null
+          },
         },
         {
           type: 'range',
@@ -497,6 +511,14 @@ const typeConfigs = {
           type: 'color',
           path: `layers[0].paint['circle-color']`
         },
+        {
+          type: 'hexColor',
+          path: `layers[0].paint['circle-color']`,
+          params: {
+            format: (v) => null
+          },
+        }
+        
       ],
     },
     {
@@ -524,6 +546,13 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[0].paint['circle-color']`
+        },
+        {
+          type: 'hexColor',
+          path: `layers[0].paint['circle-color']`,
+          params: {
+            format: (v) => null
+          },
         }
       ],
     },
@@ -560,6 +589,13 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[0].paint['circle-stroke-color']`
+        },
+        {
+          type: 'hexColor',
+          path: `layers[0].paint['circle-stroke-color']`,
+          params: {
+            format: (v) => null
+          },
         },
         {
           type: 'range',
@@ -816,7 +852,14 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[1].paint['line-color']`
-        }
+        },
+        {
+          type: 'hexColor',
+          path: `layers[1].paint['line-color']`,
+          params: {
+            format: (v) => null
+          },
+        },
       ],
     },
     {
@@ -862,6 +905,13 @@ const typeConfigs = {
         {
           type: 'color',
           path: `layers[0].paint['line-color']`
+        },
+        {
+          type: 'hexColor',
+          path: `layers[0].paint['line-color']`,
+          params: {
+            format: (v) => null
+          },
         },
         {
           type: 'range',

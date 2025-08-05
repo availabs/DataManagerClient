@@ -5,6 +5,7 @@ import { Close, Plus } from '../../icons'
 import get from 'lodash/get'
 import set from 'lodash/set'
 import StyleEditor from '../StyleEditor';
+import { generateDefaultName } from '../../LayerManager/SymbologyControl/components/SaveChangesMenu';
 
 function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
   const { enableBuilder } = params;
@@ -62,10 +63,12 @@ function InteractiveFilterControl({ path, params = {enableBuilder: true} }) {
             className={"col-span-2 capitalize mb-2"}
             onClick={() => {
               setState(draft => {
+                const baseFilterName = interactiveFilters[interactiveFilters.length-1]?.label || layerName;
+                const newFilterName = generateDefaultName(baseFilterName);
                 const newInteractiveFilter = {
                   ...activeLayer,
                   "layer-type": 'simple',
-                  "label": `${layerName}`,
+                  "label": newFilterName,
                   selectedInteractiveFilterIndex: undefined,
                   filterGroupEnabled: false,
                   viewGroupEnabled: false,

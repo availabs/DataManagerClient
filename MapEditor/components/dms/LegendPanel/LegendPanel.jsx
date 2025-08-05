@@ -69,10 +69,10 @@ const typeSymbols = {
   }
 }
 
-const typePaint = {
+const GET_PAINT_VALUE = {
   'fill': (layer) => {
-
-    return  get(layer, `layers[1].paint['fill-color']`, '#ccc')
+    const opacity = get(layer, `layers[1].paint['fill-opacity']`, '#ccc');
+    return opacity === 0 ? get(layer, `layers[0].paint['line-color']`, '#ccc') : get(layer, `layers[1].paint['fill-color']`, '#ccc')
   },
   'circle': (layer) => {
     return  get(layer, `layers[0].paint['circle-color']`, '#ccc')
@@ -87,7 +87,7 @@ function CategoryLegend({layer}) {
   // console.log('categoryLegend', layer)
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
   let  legenddata = layer?.['legend-data'] || []
-  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
+  let paintValue = typeof GET_PAINT_VALUE[layer.type](layer) === 'object' ? GET_PAINT_VALUE[layer.type](layer) : []
   const categories = legenddata || (paintValue || []).filter((d,i) => i > 2 )
     .map((d,i) => {
       if(i%2 === 0) {
@@ -123,7 +123,7 @@ function StepLegend({layer}) {
   },[state])
 
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typeof typePaint[layer.type](layer) === 'object' ? typePaint[layer.type](layer) : []
+  let paintValue = typeof GET_PAINT_VALUE[layer.type](layer) === 'object' ? GET_PAINT_VALUE[layer.type](layer) : []
   const max = Math.max(...choroplethdata)
   // console.log('StepLegend', paintValue, choroplethdata, Math.min(...choroplethdata), )
   const categories = legenddata || [
@@ -228,7 +228,7 @@ function LegendRow ({ index, layer, i, symbology_id }) {
   const navigate = useNavigate();
   const  activeLayer  = null
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typePaint[layer.type](layer)
+  let paintValue = GET_PAINT_VALUE[layer.type](layer)
 
 
   let { layerType: type, selectedInteractiveFilterIndex, legendOrientation } = useMemo(() => {

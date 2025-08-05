@@ -3,6 +3,7 @@ import { useImmer } from 'use-immer';
 import { useSearchParams, Link, useNavigate, useParams } from "react-router";
 import get from "lodash/get"
 import set from "lodash/set"
+import omit from "lodash/omit"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
 import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
@@ -71,22 +72,27 @@ const MapEditor = () => {
       .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
+  /**
+   * Uses the url param to query the DB
+   */
   const dbSymbology = useMemo(() => {
     return symbologies?.find(s => +s.symbology_id === +symbologyId);
   }, [symbologies, symbologyId]);
 
-  let initialSymbology = {
+  const DEFAULT_BLANK_SYMBOLOGY = {
     name: '',
     description: '',
     symbology: {
       layers: {},
     }
   };
+  const numDefaultObjectKeys = Object.keys(DEFAULT_BLANK_SYMBOLOGY).length;
+  let initialSymbology = DEFAULT_BLANK_SYMBOLOGY;
 
   const symbologyLocalStorageKey = LOCAL_STORAGE_KEY_BASE + `${symbologyId}`;
   const rawLocalSymb = window?.localStorage?.getItem(symbologyLocalStorageKey);
   const localStorageSymbology = rawLocalSymb !== "undefined" ? JSON.parse(rawLocalSymb) : null;
-  if(localStorageSymbology){
+  if(localStorageSymbology && Object.keys(localStorageSymbology).length >= numDefaultObjectKeys){
     initialSymbology = localStorageSymbology;
   }
   else if (dbSymbology) {
@@ -105,7 +111,6 @@ const MapEditor = () => {
       initialSymbology?.symbology?.layers
     ).find((layer) => layer.order === 0)?.id;
   }
-
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
@@ -147,7 +152,7 @@ const MapEditor = () => {
     // on navigate or load set state to symbology with data
     // TODO: load state.symbology here and dont autoload them in Collection/index
     // -------------------
-    if(!localStorageSymbology && dbSymbology) {
+    if((!localStorageSymbology || Object.keys(localStorageSymbology).length <= numDefaultObjectKeys) && dbSymbology) {
       setState(dbSymbology)
     }
   },[symbologies.length, dbSymbology])
@@ -245,7 +250,7 @@ const MapEditor = () => {
       Object.values(state.symbology.layers).map(
         (l) => l.selectedInteractiveFilterIndex
       ),
-    [state.symbology.layers]
+    [state?.symbology?.layers]
   );
   const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
 
@@ -282,6 +287,7 @@ const MapEditor = () => {
     viewId,
     sourceId,
     paintValue,
+    breaks,
     column,
     categories,
     categorydata,
@@ -328,6 +334,7 @@ const MapEditor = () => {
       sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
       paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
       baseDataColumn: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
+      breaks: get(state, `${pathBase}['choroplethdata']['breaks']`, []),
       column: get(state, `${pathBase}['data-column']`, ''),
       categories: get(state, `${pathBase}['categories']`, {}),
       categorydata: get(state, `${pathBase}['category-data']`, {}),
@@ -453,10 +460,12 @@ const MapEditor = () => {
 
         let colorBreaks; 
 
+        let regenerateLegend = false;
         if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
           colorBreaks = choroplethdata;
         }
         else {
+          regenerateLegend = true;
           if(filterGroupEnabled) {
             domainOptions['column'] = filterGroupLegendColumn;
           }
@@ -477,7 +486,13 @@ const MapEditor = () => {
             set(draft, `${pathBase}['is-loading-colorbreaks']`, false)
           })
         }
+        //console.log("colorBreaks['breaks']",colorBreaks['breaks'])
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
+        //this will fix a problem with the custom scale 
+        if(!regenerateLegend && legendData.length > 0) {
+          legend = cloneDeep(legendData)
+        }
         if(layerType === 'circles') {
           console.log("---RECALCULATING CIRCLE RADIUS---")
           // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
@@ -532,7 +547,96 @@ const MapEditor = () => {
       }
     }
     setPaint();
-  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, colorrange, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+
+  useEffect(() => {
+    if(method === "custom") {
+      console.log("custom breaks changed")
+      const colorBreaks = choroplethdata;
+      let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, breaks, showOther, legendOrientation);
+      if(layerType === 'circles') {
+        console.log("---RECALCULATING CIRCLE RADIUS---")
+        // lowerBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][3]`),
+        // minRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][4]`),
+        // upperBound: get(state, `${pathBase}.layers[0].paint['circle-radius'][5]`),
+        // maxRadius: get(state, `${pathBase}.layers[0].paint['circle-radius'][6]`),
+        if(!lowerBound) {
+          setState(draft => {
+            set(draft,`${pathBase}['lower-bound']`, breaks[0])
+          })
+        }
+        if(!upperBound) {
+          setState(draft => {
+            set(draft,`${pathBase}['upper-bound']`, colorBreaks['max'])
+          })
+        }
+        const circleLowerBound = lowerBound !== null ? lowerBound : breaks[0];
+        const circleUpperBound = upperBound !== null ? upperBound : colorBreaks['max'];
+        paint = [
+          "interpolate",
+          [radiusCurve, curveFactor],
+          ["number", ["get", baseDataColumn]],
+          circleLowerBound, //min of dataset
+          minRadius,//min radius (px) of circle
+          circleUpperBound, //max of dataset
+          maxRadius, //max radius (px) of circle
+        ];
+      }
+      if((isValidCategoryPaint(paint) || layerType === 'circles') && !isEqual(paint, paintValue)) {
+        const isShowOtherEnabled = showOther === '#ccc';
+        if(isShowOtherEnabled) {
+          if(legend[legend.length-1].label !== "No data") {
+            legend.push({color: showOther, label: "No data"});
+          }
+          legend[legend.length-1].color = showOther;
+        } else {
+          if(legend[legend.length-1].label === "No data") {
+            legend.pop();
+          }
+        }
+        setState(draft => {
+          set(draft, `${pathBase}.${layerPaintPath}`, paint)
+          set(draft, `${pathBase}['legend-data']`, legend)
+        })
+      }
+    }  
+  }, [breaks])
+
+  useEffect(() => {
+    const setLegendAndPaint = () => {
+      let newPaint;
+      if(layerType === 'categories') {
+        newPaint = cloneDeep(paintValue)
+      } else {
+        newPaint = cloneDeep(paintValue[3]);
+      }
+      if(newPaint?.length && legendData?.length) {
+        for (let i = 0; i < newPaint?.length; i = i + 2) {
+          //0, 2, 4...
+          if (i == 0) {}
+          else if (i == 2) {
+            newPaint[i] = colorrange[0];
+          } else {
+            newPaint[i] = colorrange[i / 2 - 2];
+          }
+        }
+
+        const newLegend = legendData?.map((legendRow, i) => ({
+          ...legendRow,
+          color: colorrange[i],
+        }));
+
+        setState((draft) => {
+          set(draft, `${pathBase}.${layerPaintPath}`, newPaint);
+          set(draft, `${pathBase}['legend-data']`, newLegend);
+        });
+      }
+    }
+
+    if(layerType !== 'simple' && typeof paintValue !== 'string') {
+      setLegendAndPaint();
+    }
+  }, [colorrange]);
 
   useEffect(() => {
     if(choroplethdata && !legendData) {
@@ -558,7 +662,6 @@ const MapEditor = () => {
 
     }
   }, [legendOrientation, legendData]);
-
   const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 
   useEffect(() => {
@@ -572,9 +675,9 @@ const MapEditor = () => {
         })
       } else if (!filterGroupEnabled && !!activeLayer) {
         setState(draft => {
-          set(draft,`${pathBase}['filter-group-name']`, '');
-          set(draft, `${pathBase}['filter-group-legend-column']`, '');
-          set(draft, `${pathBase}['filter-group']`,[]);
+          omit(draft,`${pathBase}['filter-group-name']`);
+          omit(draft, `${pathBase}['filter-group-legend-column']`);
+          omit(draft, `${pathBase}['filter-group']`);
         })
       }
     }
@@ -582,7 +685,7 @@ const MapEditor = () => {
 
   useEffect(() => {
     if(!!activeLayer){
-      if(viewGroupEnabled && !viewGroupId && !!activeLayer) {
+      if(viewGroupEnabled && !viewGroupId) {
         setState(draft => {
           const defaultView = views.find(v => v.view_id === viewId);
           const defaultGroupName = (defaultView?.version ?? defaultView?.view_id + " group");
@@ -590,12 +693,11 @@ const MapEditor = () => {
           set(draft, `${pathBase}['view-group-name']`, defaultGroupName);
           set(draft, `${pathBase}['view-group-id']`, viewId);
         })
-      } else if (!viewGroupEnabled && !!activeLayer) {
+      } else if (!viewGroupEnabled) {
         setState(draft => {
-          set(draft,`${pathBase}['filter-source-views']`, []);
-          set(draft, `${pathBase}['view-group-name']`, '');
-          set(draft, `${pathBase}['view-group-id']`, undefined);
-  
+          omit(draft,`${pathBase}['filter-source-views']`);
+          omit(draft, `${pathBase}['view-group-name']`);
+          omit(draft, `${pathBase}['view-group-id']`)
           set(draft, `${pathBase}['view_id']`, initialViewId ?? viewId);
         })
       }
@@ -632,7 +734,6 @@ const MapEditor = () => {
     }
 
   }, [baseDataColumn, layerType, viewId, falcorCache])
-
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>

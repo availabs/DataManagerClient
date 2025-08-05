@@ -277,7 +277,7 @@ function CategoryControl({path, params={}}) {
                       }
                     >
                       <option key={-1} value={""}></option>
-                      {(availableCategories || []).map((opt, i) => (
+                      {(availableCategories || []).sort((a,b) => a.label - b.label).map((opt, i) => (
                         <option key={i} value={opt.value}>
                           {opt.label}
                         </option>

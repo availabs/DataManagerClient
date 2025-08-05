@@ -69,14 +69,14 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
     return false
   }
 
-
+  paint.push(colors[0]);
 
   domain.forEach((d,i) => {
-    paint.push(colors[i]);
     paint.push(+d)
+    paint.push(colors[i]);
   })
 
-  paint.push(colors[num-1])
+  //paint.push(colors[num-1])
 
   const legend = [
     ...(paint || [])
@@ -99,7 +99,7 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
           }
 
           return {
-            color: paint[i + 1],
+            color: paint[i + 3],
             label,
           };
         }
@@ -107,9 +107,7 @@ export function choroplethPaint( column, max, colors, num=10, method='ckmeans',c
       })
       .filter((d) => d),
   ];
-
   return { paint:["case", ["==", ['get', column], null], showOther, paint] , legend }
-
 }
 
 export const fnumIndex = (d, fractions = 2, currency = false) => {

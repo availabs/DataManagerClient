@@ -1,5 +1,4 @@
-import React, { useMemo, useEffect, Fragment }from 'react'
-import { Button } from "~/modules/avl-components/src";
+import React, { useMemo, useEffect, Fragment, useState }from 'react'
 import {SymbologyContext} from '../../'
 import { DamaContext } from "../../../store"
 import { Menu, Transition, Switch } from '@headlessui/react'
@@ -15,7 +14,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { CategoryControl } from './CategoryControl';
 import { InteractiveFilterControl } from './InteractiveFilterControl';
 import { FilterGroupControl } from './FilterGroupControl';
-import { ViewGroupControl } from './ViewGroupControl'
+import { ViewGroupControl } from './ViewGroupControl';
 
 function ControlMenu({ button, children}) {
   const { state, setState  } = React.useContext(SymbologyContext);
@@ -116,7 +115,7 @@ export function SelectTypeControl({path, datapath, params={}}) {
   )
 } 
 
-function ColorControl({path,params={}}) {
+function ColorControl({ path, params = {} }) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   const pathBase =
@@ -125,8 +124,6 @@ function ColorControl({path,params={}}) {
       : `symbology.layers[${state.symbology.activeLayer}]`;
 
   return (
-    <label className='flex'>
-      <div className='flex items-center'>
         <input
           type='color' 
           value={toHex(get(state, `${pathBase}.${path}`, '#ccc'))}
@@ -134,10 +131,29 @@ function ColorControl({path,params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         />
-      </div>
-      <div className='flex items-center p-2'>Custom </div>
-    </label>
-  )
+  );
+}
+
+function HexColor({ path, params = {} }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const pathBase =
+    params?.version === "interactive"
+      ? `symbology.layers[${state.symbology.activeLayer}]${params.pathPrefix}`
+      : `symbology.layers[${state.symbology.activeLayer}]`;
+
+  return (
+    <input
+      className="max-w-[50%] ml-2"
+      type="text"
+      value={get(state, `${pathBase}.${path}`)}
+      onChange={(e) =>
+        setState((draft) => {
+          set(draft, `${pathBase}.${path}`, e.target.value);
+        })
+      }
+    />
+  );
 }
 
 function RangeControl({path,params={}}) {
@@ -312,7 +328,6 @@ function SelectViewColumnControl({path, datapath, params={}}) {
     return out
   }, [pgEnv, sourceId, falcorCache])
 
-
   return (
     <label className='flex w-full'>
       <div className='flex w-full items-center'>
@@ -342,7 +357,7 @@ function SelectViewColumnControl({path, datapath, params={}}) {
             set(draft, `${pathBase}.${path}`, e.target.value)
           })}
         >
-          {(metadata || [])
+          {(metadata && metadata.length ? metadata : [])
             .filter(d => {
               if(layerType === 'choropleth' && !['integer', 'number'].includes(d.type)){
                 return false
@@ -701,10 +716,11 @@ function ChoroplethControl({path, params={}}) {
   },[state])
 
   const { breaks, max } = choroplethdata;
+
   const categories = breaks?.map((d,i) => {
-    return {color: legenddata[i]?.color, label: `${breaks[i]} - ${breaks[i+1] || max}`}
+    return {color: legenddata[i]?.color, label: `${breaks[i]?.toLocaleString('en-US')} - ${breaks[i+1]?.toLocaleString('en-US') || max}`}
   })
-  .filter(d => d);
+  .filter(d => d.color && d.label);
 
   const isShowOtherEnabled = showOther === '#ccc'
   const breakInputs = breaks?.map((breakValue, breakIndex) => {
@@ -758,6 +774,7 @@ function ChoroplethControl({path, params={}}) {
    * minimum value of non-first break, is the value of the prior break + 1
    * max value of non-last break, is the value of the next break - 1
    */
+    // console.log("inside choropleth, categories::", categories)
   const rangeInputs = categories?.map((category, catIndex) => {
     return (
       <div key={`range_input_${catIndex}`}>
@@ -819,7 +836,7 @@ function ChoroplethControl({path, params={}}) {
       </div>
     );
   });
-  
+
   return (
       <div className=' w-full items-center'>
         <div className='flex items-center'>
@@ -874,7 +891,7 @@ function ChoroplethControl({path, params={}}) {
               })}
             >
               <option  value={'ckmeans'}>ck-means</option>
-              <option  value={'pretty'}>Pretty Breaks</option>
+              {/* <option  value={'pretty'}>Pretty Breaks</option> */}
               <option  value={'equalInterval'}>Equal Interval</option>
               <option  value={'custom'}>Custom</option>
              
@@ -933,7 +950,10 @@ function ChoroplethControl({path, params={}}) {
     )
 }
 
-export const AddColumnSelectControl = ({setState, availableColumnNames, label="Add Column"}) => {
+export const AddColumnSelectControl = ({setState, availableColumnNames, selectedColumns, label="Add Column"}) => {
+  console.log("selectedColumns::", selectedColumns)
+  //IDK why but I can't get the array of objects to sort. So we make a sorted array of labels and then look stuff up later
+  const sortedColNames = availableColumnNames.map(d => d.label).sort();
   return (
     <>
       <div className='text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center ml-4'>
@@ -941,7 +961,7 @@ export const AddColumnSelectControl = ({setState, availableColumnNames, label="A
       </div>
       <div className="flex-1 flex items-center mx-4">
         <StyledControl>
-        <label className='flex w-full'>
+          <label className='flex w-full'>
             <div className='flex w-full items-center'>
               <select
                 className='w-full py-2 bg-transparent'
@@ -951,9 +971,9 @@ export const AddColumnSelectControl = ({setState, availableColumnNames, label="A
                 }
               >
                 <option key={-1} value={""}></option>
-                {(availableColumnNames || []).map((opt, i) => (
-                  <option key={i} value={opt.value}>
-                    {opt.label}
+                {(sortedColNames || []).map((opt, i) => (
+                  <option key={i} value={availableColumnNames.find(col => col.label === opt)?.value}>
+                    {opt}
                   </option>
                 ))}
               </select>
@@ -967,6 +987,7 @@ export const AddColumnSelectControl = ({setState, availableColumnNames, label="A
 
 export const controlTypes = {
   'color': ColorControl,
+  'hexColor': HexColor,
   'categoricalColor': CategoricalColorControl,
   'rangeColor': ColorRangeControl,
   'categoryControl': CategoryControl,

@@ -166,38 +166,35 @@ function HorizontalLegend({ layer }) {
 }
 
 function CircleLegend({ layer }) {
-  const { minRadius, maxRadius, lowerBound, upperBound } = useMemo(() => {
+  const { minRadius, maxRadius, lowerBound, upperBound, dataColumn } = useMemo(() => {
     return {
       minRadius: get(layer,`['min-radius']`, 8),
       maxRadius: get(layer,`['max-radius']`, 128),
       lowerBound: get(layer,`['lower-bound']`, null),
       upperBound: get(layer,`['upper-bound']`, null),
+      dataColumn: get(layer, `['data-column']`, null)
     };
   }, [layer]);
 
   return (
-    <div
-      className="w-[50%] max-h-[350px] overflow-x-auto scrollbar-sm text-sm"
-    >
-      <div className='flex w-full justify-between'>
-        <div>
-          {minRadius}px
+    <div className="w-[100%] max-h-[350px] overflow-x-auto scrollbar-sm text-sm">
+      <div className="w-[50%] max-h-[350px] overflow-x-auto scrollbar-sm text-sm">
+        <div className="flex w-full justify-between">
+          <div>{minRadius}px</div>
+          <div>{maxRadius}px</div>
         </div>
-        <div>
-          {maxRadius}px
+        <div className="ml-8">
+          <i
+            class="fa-solid fa-arrow-right-long"
+            style={{ transform: "scaleX(3)" }}
+          ></i>
         </div>
-      </div>
-      <div className='ml-8'>
-        <i class="fa-solid fa-arrow-right-long" style={{transform:"scaleX(3)"}}></i>
-      </div>
-      <div className='flex w-full justify-between'>
-        <div>
-          {fnumIndex(lowerBound)}
-        </div>
-        <div>
-          {fnumIndex(upperBound)}
+        <div className="flex w-full justify-between">
+          <div>{fnumIndex(lowerBound)}</div>
+          <div>{fnumIndex(upperBound)}</div>
         </div>
       </div>
+      <div>{dataColumn}</div>
     </div>
   );
 }
