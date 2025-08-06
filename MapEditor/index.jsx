@@ -21,6 +21,7 @@ import { DamaContext } from "../store"
 
 import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
+import PluginSettings from './components/PluginSettings'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
@@ -45,7 +46,7 @@ export const PluginLibrary = {
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
     },
-    settingsPanel: () => <div>Test Plugin</div>,
+    settingsPanel: () => <div className="p-1">Test Plugin Settings Panel</div>,
     controlPanel: () => <div>Controls</div>,
     comp: () => <div>Hello world comp</div>,
     cleanup: (map ,state, setState) => {
@@ -115,9 +116,7 @@ const MapEditor = () => {
       layers: {},
       plugins: {}
     },
-    pluginData : {
-      'testplugin': {}
-    }
+    pluginData : {}
   };
 
 
@@ -779,7 +778,8 @@ const MapEditor = () => {
       })
     }
 
-  }, [baseDataColumn, layerType, viewId, falcorCache])
+  }, [baseDataColumn, layerType, viewId, falcorCache]);
+
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>
@@ -822,8 +822,11 @@ const MapEditor = () => {
           rightSidebar={ false }
         />
         <div className={'absolute inset-0 flex pointer-events-none'}>
-          <LayerManager />
-          <div className='flex-1'/>
+          <div>
+            <LayerManager />
+            {Object.keys(state.symbology.plugins).length > 0 && <PluginSettings />}
+          </div>
+          <div className='flex-1' />
           <LayerEditor />
         </div>
       </div>

@@ -17,7 +17,6 @@ function PluginManager(props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const layers = useMemo(() => state.symbology?.layers || {}, [state]);
   //console.log('layers', layers)
-  const activePlugins = ["testplugin"];
   console.log("plugin manager state", state);
   return (
     <>
