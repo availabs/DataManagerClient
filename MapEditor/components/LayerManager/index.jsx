@@ -6,6 +6,7 @@ import { Fill, Line, Circle, Eye, EyeClosed, MenuDots , CaretDown} from '../icon
 
 import LegendPanel from './LegendPanel'
 import LayerPanel from './LayerPanel'
+import PluginPanel from './PluginPanel'
 import SymbologyControl from './SymbologyControl'
 import SourceSelector from './SourceSelector'
 
@@ -42,6 +43,7 @@ function LayerManager () {
           <Tab.Panels>
             <Tab.Panel><LegendPanel /></Tab.Panel>
             <Tab.Panel><LayerPanel /></Tab.Panel>
+            <Tab.Panel><PluginPanel /></Tab.Panel>
           </Tab.Panels>
         </Tab.Group>}
       </div>

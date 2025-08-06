@@ -29,6 +29,8 @@ export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
+
+//TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   'testplugin': {
     mapRegister: (map, state, setState) => {
@@ -38,7 +40,8 @@ export const PluginLibrary = {
       console.log('plugin Data gets updated')
     },
     settingsPanel: () => <div>Test Plugin</div>,
-    controlPanel: () => <div>Controls</div>
+    controlPanel: () => <div>Controls</div>,
+    comp: () => <div>Hello world comp</div>
   } 
 }
 
