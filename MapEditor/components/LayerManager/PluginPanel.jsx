@@ -40,7 +40,6 @@ function PluginManager(props) {
                       onClick={() => {
                         console.log("remove clicked", d);
                         setState((draft) => {
-                          console.log("inside set state", JSON.parse(JSON.stringify(draft.symbology.plugins)))
                           draft.symbology.plugins = omit(draft.symbology.plugins, d);
                         });
                       }}

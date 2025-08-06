@@ -33,20 +33,24 @@ export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 const PLUGIN_TYPE = 'plugin'
 
 //TODO -- eventually, this pulls from file directory, or something else dynamic
+const MAP_CLICK = () => console.log('mapClick');
 export const PluginLibrary = {
   'testplugin': {
     id: 'testplugin',
     type:'plugin',
     mapRegister: (map, state, setState) => {
       console.log("look I am registered")
-      map.on("click", () => console.log('mapClick'));
+      map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
     },
     settingsPanel: () => <div>Test Plugin</div>,
     controlPanel: () => <div>Controls</div>,
-    comp: () => <div>Hello world comp</div>
+    comp: () => <div>Hello world comp</div>,
+    cleanup: (map ,state, setState) => {
+      map.off("click", MAP_CLICK)
+    }
   } 
 }
 

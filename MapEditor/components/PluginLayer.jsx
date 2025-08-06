@@ -16,8 +16,12 @@ const PluginLayerRender = ({
   // On Load Unload
   // ---------------
   useEffect(() => {  
-    layer.mapRegister(maplibreMap, state, setState)
-  }, [])
+    layer.mapRegister(maplibreMap, state, setState);
+
+    return () => {
+      layer.cleanup(maplibreMap, state, setState)
+    }
+  }, []);
 
   // useEffect(() => {
   //   layer.dataUpdate(maplibreMap, state, setState)
