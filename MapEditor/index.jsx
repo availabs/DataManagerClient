@@ -23,18 +23,23 @@ import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
+import PluginLayer from './components/PluginLayer'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
+const PLUGIN_TYPE = 'plugin'
 
 //TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   'testplugin': {
+    id: 'testplugin',
+    type:'plugin',
     mapRegister: (map, state, setState) => {
-      map.onClick(() => console.log('mapClick'))
+      console.log("look I am registered")
+      map.on("click", () => console.log('mapClick'));
     },
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
@@ -202,10 +207,10 @@ const MapEditor = () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
 
-            //console.log('hola', draftMapLayers)
+            console.log('hola', JSON.parse(JSON.stringify(draftMapLayers)))
             let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
             //console.log('draftMapLayers', draftMapLayers?.[0]?.layerType, currentLayerIds)
-
+            console.log("plugins in update layers",state.symbology.plugins)
             let newLayers = [
               ...Object.values(state?.symbology?.layers || {}),
               ...Object.values(state?.symbology?.plugins || {})
@@ -214,8 +219,11 @@ const MapEditor = () => {
               .filter(d => !currentLayerIds.includes(d.id))
               .sort((a,b) => b.order - a.order)
               .map(l => {
-                // if this is a plugin, ? pluginViewLayer(l) : SymbologyViewLayer(l) do the spltubng
-                return new SymbologyViewLayer(l)
+                if(l.type === PLUGIN_TYPE) {
+                  return new PluginLayer(l)
+                } else {
+                  return new SymbologyViewLayer(l)
+                }
               })
             let oldLayers = draftMapLayers.filter(d => Object.keys(state?.symbology?.layers || {}).includes(d.id))
             
@@ -235,10 +243,10 @@ const MapEditor = () => {
       }
     }
     updateLayers()
-  }, [state?.symbology?.layers, state?.symbology?.zoomToFit])
+  }, [state?.symbology?.layers, state?.symbology?.plugins, state?.symbology?.zoomToFit])
   
 
-  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
   const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
     const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`, 0);

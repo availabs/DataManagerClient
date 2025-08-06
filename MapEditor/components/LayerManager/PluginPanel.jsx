@@ -33,15 +33,15 @@ function PluginManager(props) {
             Object.keys(state?.symbology?.plugins).map((d) => {
               let Comp = PluginLibrary[d].comp || (() => <></>);
               return (
-                <div>
-                  <div class="flex justify-between">
+                <div key={`plugin_${d}`}>
+                  <div className="flex justify-between">
                     <div className="p-1"><b>{d}</b></div>
                     <div
                       onClick={() => {
                         console.log("remove clicked", d);
                         setState((draft) => {
                           console.log("inside set state", JSON.parse(JSON.stringify(draft.symbology.plugins)))
-                         draft.symbology.plugins = omit(draft.symbology.plugins, d);
+                          draft.symbology.plugins = omit(draft.symbology.plugins, d);
                         });
                       }}
                     >

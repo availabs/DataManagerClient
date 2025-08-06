@@ -21,6 +21,7 @@ export const PluginSelector = ({ state, setState }) => {
           if (!draft.symbology.plugins) {
             draft.symbology.plugins = {};
           }
+          console.log("add plug library value::",PluginLibrary[e.target.value])
           draft.symbology.plugins[e.target.value] =
             PluginLibrary[e.target.value];
         });
