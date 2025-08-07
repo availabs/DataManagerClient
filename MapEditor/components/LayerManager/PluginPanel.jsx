@@ -9,15 +9,11 @@ import { PluginSelector } from "./PluginSelector";
 import { SymbologyContext, PluginLibrary } from "../../";
 import get from "lodash/get";
 import omit from "lodash/omit";
-/**
- * TODO
- * - Remove plugin button
- */
-function PluginManager(props) {
+function PluginPanel(props) {
   const { state, setState } = React.useContext(SymbologyContext);
   const layers = useMemo(() => state.symbology?.layers || {}, [state]);
   //console.log('layers', layers)
-  console.log("plugin manager state", state);
+  console.log("PluginPanel (enable/disable plugins) state", state);
   return (
     <>
       {/* ------Layer Pane ----------- */}
@@ -30,7 +26,7 @@ function PluginManager(props) {
           Active Plugins
           {state?.symbology?.plugins &&
             Object.keys(state?.symbology?.plugins).map((d) => {
-              let Comp = PluginLibrary[d].comp || (() => <></>);
+              const Comp = PluginLibrary[d].comp || (() => <></>);
               return (
                 <div key={`plugin_${d}`}>
                   <div className="flex justify-between">
@@ -56,4 +52,4 @@ function PluginManager(props) {
   );
 }
 
-export default PluginManager;
+export default PluginPanel;

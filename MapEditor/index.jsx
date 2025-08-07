@@ -33,8 +33,9 @@ export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
 const PLUGIN_TYPE = 'plugin'
 
-//TODO -- eventually, this pulls from file directory, or something else dynamic
+
 const MAP_CLICK = () => console.log('mapClick');
+//TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   'testplugin': {
     id: 'testplugin',
@@ -46,8 +47,13 @@ export const PluginLibrary = {
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
     },
-    settingsPanel: () => <div className="p-1">Test Plugin Settings Panel</div>,
-    controlPanel: () => <div>Controls</div>,
+    settingsPanel:  ({map, state, setState}) => {
+      console.log("testplugin settings panel props::", {map, state, setState})
+      return (
+        <div className="p-1">Test Plugin Settings Panel</div>
+      )
+    },
+    controlPanel:  (map ,state, setState) => <div>Controls</div>,
     comp: () => <div>Hello world comp</div>,
     cleanup: (map ,state, setState) => {
       map.off("click", MAP_CLICK)
@@ -210,10 +216,9 @@ const MapEditor = () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
 
-            console.log('hola', JSON.parse(JSON.stringify(draftMapLayers)))
             let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
             //console.log('draftMapLayers', draftMapLayers?.[0]?.layerType, currentLayerIds)
-            console.log("plugins in update layers",state.symbology.plugins)
+            //console.log("plugins in update layers",state.symbology.plugins)
             let newLayers = [
               ...Object.values(state?.symbology?.layers || {}),
               ...Object.values(state?.symbology?.plugins || {})
@@ -228,7 +233,12 @@ const MapEditor = () => {
                   return new SymbologyViewLayer(l)
                 }
               })
-            let oldLayers = draftMapLayers.filter(d => Object.keys(state?.symbology?.layers || {}).includes(d.id))
+
+            let oldLayers = draftMapLayers.filter(
+              (d) =>
+                Object.keys(state?.symbology?.layers || {}).includes(d.id) ||
+                Object.keys(state?.symbology?.plugins || {}).includes(d.id)
+            );
             
 
 
