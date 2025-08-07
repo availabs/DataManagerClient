@@ -22,6 +22,7 @@ import { DamaContext } from "../store"
 import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
 import PluginSettings from './components/PluginSettings'
+import PluginControls from './components/PluginControls'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
@@ -34,14 +35,14 @@ export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 const PLUGIN_TYPE = 'plugin'
 
 
-const MAP_CLICK = () => console.log('mapClick');
+const MAP_CLICK = () => console.log("map was clicked");
 //TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   'testplugin': {
     id: 'testplugin',
     type:'plugin',
     mapRegister: (map, state, setState) => {
-      console.log("look I am registered")
+      console.log("look I am registered, state::", state)
       map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
@@ -53,7 +54,28 @@ export const PluginLibrary = {
         <div className="p-1">Test Plugin Settings Panel</div>
       )
     },
-    controlPanel:  (map ,state, setState) => <div>Controls</div>,
+    controlPanel:  (map ,state, setState) => <div className="p-1">Controls 1</div>,
+    comp: () => <div>Hello world comp</div>,
+    cleanup: (map ,state, setState) => {
+      map.off("click", MAP_CLICK)
+    }
+  },
+  'second_testplugin': {
+    id: 'second_testplugin',
+    type: 'plugin',
+    mapRegister: (map, state, setState) => {
+      console.log("SECOND register")
+      map.on("click", MAP_CLICK);
+    },
+    dataUpdate: (map, state, setState) => {
+      console.log('plugin Data gets updated')
+    },
+    settingsPanel:  ({map, state, setState}) => {
+      return (
+        <div className="p-1">SECOND Test Settings Panel</div>
+      )
+    },
+    controlPanel:  (map ,state, setState) => <div className="p-1">Control Panel 2</div>,
     comp: () => <div>Hello world comp</div>,
     cleanup: (map ,state, setState) => {
       map.off("click", MAP_CLICK)
@@ -834,10 +856,13 @@ const MapEditor = () => {
         <div className={'absolute inset-0 flex pointer-events-none'}>
           <div>
             <LayerManager />
-            {Object.keys(state.symbology.plugins).length > 0 && <PluginSettings />}
+            {Object.keys(state.symbology.plugins).length > 0 && <PluginControls />}
           </div>
           <div className='flex-1' />
-          <LayerEditor />
+          <div>
+            <LayerEditor />
+            {Object.keys(state.symbology.plugins).length > 0 && <PluginSettings />}
+          </div>
         </div>
       </div>
     </SymbologyContext.Provider>

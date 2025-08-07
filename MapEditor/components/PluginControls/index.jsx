@@ -3,7 +3,7 @@ import { SymbologyContext, PluginLibrary } from "../../";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 
-function PluginSettings() {
+function PluginControls() {
   const { state, setState } = React.useContext(SymbologyContext);
   const tabs = Object.keys(state.symbology.plugins)
   return (
@@ -29,7 +29,7 @@ function PluginSettings() {
           </Tab.List>
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const SettingsComp = PluginLibrary[pluginName].settingsPanel;
+              const SettingsComp = PluginLibrary[pluginName].controlPanel;
 
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
@@ -44,4 +44,4 @@ function PluginSettings() {
   );
 }
 
-export default PluginSettings;
+export default PluginControls;
