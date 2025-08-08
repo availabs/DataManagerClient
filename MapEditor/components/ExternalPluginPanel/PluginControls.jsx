@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, Fragment, useState }from 'react'
-import {SymbologyContext} from '../../'
+import {SymbologyContext} from '../..'
 import get from 'lodash/get'
 import set from 'lodash/set'
 

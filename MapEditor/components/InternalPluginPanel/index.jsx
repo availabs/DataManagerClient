@@ -1,11 +1,11 @@
 import React, { useContext, Fragment, useRef } from "react";
-import { SymbologyContext, PluginLibrary } from "../../";
+import { SymbologyContext, PluginLibrary } from "../..";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 
-import { wrapperTypes } from '../PluginControls/PluginControlWrappers'
+import { wrapperTypes } from '../ExternalPluginPanel/PluginControlWrappers'
 
-function PluginSettings() {
+function InternalPluginPanel() {
   const { state, setState } = React.useContext(SymbologyContext);
   const tabs = Object.keys(state.symbology.plugins)
   return (
@@ -59,4 +59,4 @@ function PluginSettings() {
   );
 }
 
-export default PluginSettings;
+export default InternalPluginPanel;

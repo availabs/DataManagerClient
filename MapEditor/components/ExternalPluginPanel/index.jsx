@@ -1,11 +1,11 @@
 import React, { useContext, Fragment, useRef } from "react";
-import { SymbologyContext, PluginLibrary } from "../../";
+import { SymbologyContext, PluginLibrary } from "../..";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 
 //TODO -- this MAYBE needs some combination of these changes:
 //Use MapContext if available (otherwise, use SymbologyContext)
-function PluginControls() {
+function ExternalPluginPanel() {
   const { state, setState } = React.useContext(SymbologyContext);
   const tabs = Object.keys(state.symbology.plugins)
   return (
@@ -46,4 +46,4 @@ function PluginControls() {
   );
 }
 
-export default PluginControls;
+export default ExternalPluginPanel;

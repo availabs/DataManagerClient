@@ -20,8 +20,8 @@ import { DamaContext } from "../store"
 
 import LayerManager from './components/LayerManager'
 import LayerEditor from './components/LayerEditor'
-import PluginSettings from './components/PluginSettings'
-import PluginControls from './components/PluginControls'
+import InternalPluginPanel from './components/InternalPluginPanel'
+import ExternalPluginPanel from './components/ExternalPluginPanel'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
@@ -860,12 +860,12 @@ const MapEditor = () => {
         <div className={'absolute inset-0 flex pointer-events-none'}>
           <div>
             <LayerManager />
-            {Object.keys(state.symbology?.plugins || {}).length > 0 && <PluginControls />}
+            {Object.keys(state.symbology?.plugins || {}).length > 0 && <ExternalPluginPanel />}
           </div>
           <div className='flex-1' />
           <div>
             <LayerEditor />
-            {Object.keys(state.symbology?.plugins || {}).length > 0 && <PluginSettings />}
+            {Object.keys(state.symbology?.plugins || {}).length > 0 && <InternalPluginPanel />}
           </div>
         </div>
       </div>
