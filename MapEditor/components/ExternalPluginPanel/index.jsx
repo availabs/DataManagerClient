@@ -2,6 +2,7 @@ import React, { useContext, Fragment, useRef } from "react";
 import { SymbologyContext, PluginLibrary } from "../..";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
+import { wrapperTypes } from '../PluginControls/PluginControlWrappers'
 
 //TODO -- this MAYBE needs some combination of these changes:
 //Use MapContext if available (otherwise, use SymbologyContext)
@@ -31,11 +32,24 @@ function ExternalPluginPanel() {
           </Tab.List>
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const ControlPanelComp = PluginLibrary[pluginName]?.controlPanel;
-
+              const externalControls = PluginLibrary[pluginName]?.externalPanel({state, setState});
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
-                  <ControlPanelComp state={state} setState={setState} />
+                  {externalControls?.map((control, i) => {
+                    let ControlWrapper =
+                      wrapperTypes[control.type] || wrapperTypes["inline"];
+                    return (
+                      <div className="flex flex-wrap" key={i}>
+                        <ControlWrapper
+                          label={control.label}
+                          controls={control.controls.map(control => ({
+                            ...control,
+                            path: `symbology.pluginData['${pluginName}']${control.path}`
+                          }))}
+                        />
+                      </div>
+                    );
+                  })}
                 </Tab.Panel>
               );
             })}

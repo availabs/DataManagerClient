@@ -47,7 +47,7 @@ export const PluginLibrary = {
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
     },
-    settingsPanel:  ({state, setState}) => {
+    internalPanel:  ({state, setState}) => {
       //TODO
       //THIS FUNCTION should return a JSON only
 
@@ -74,11 +74,96 @@ export const PluginLibrary = {
         },
       ];
     },
-    controlPanel:  ({state, setState}) => {
+    externalPanel:  ({state, setState}) => {
       console.log("plugin control")
-      return (
-        <div className="p-1">Controls 1</div>
-      )
+      //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
+      //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
+      const pathBase = `symbology.pluginData.testplugin`
+      //TODO -- kind of annoying that the developer has to do the path like this
+      //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
+      const pm1 = useMemo(() => {
+        console.log(`${pathBase}['pm-1']`)
+        return get(state, `${pathBase}['pm-1']`, null )
+      },[state.symbology.pluginData, pathBase]);
+
+      const perfMeasureOptions = [
+        {
+          value: "lottr",
+          name: "Level of Travel Time Reliability (LOTTR)",
+        },
+        {
+          value: "phed",
+          name: "PHED (person hours)",
+        },
+        {
+          value: "ted",
+          name: "TED (person hours)",
+        },
+      ];
+
+      const controls = [
+        {
+          label: "Performance Measure",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: perfMeasureOptions,
+                default:'',
+              },
+              path: `['pm-1']`,
+            },
+          ],
+        },
+      ];
+
+      //peak selector control
+      if(pm1 === 'lottr') {
+        const peakSelectorOptions = [
+          {
+            value: "none",
+            name: "No Peak",
+          },
+          {
+            value: "am",
+            name: "AM Peak",
+          },
+          {
+            value: "off",
+            name: "OFF Peak",
+          },
+          {
+            value: "pm",
+            name: "PM Peak",
+          },
+          {
+            value: "WEEKEND",
+            name: "Weekend",
+          },
+        ];
+        const peakSelector = {
+          label: "Peak Selector",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: peakSelectorOptions,
+                default: "",
+              },
+              path: `['peak']`,
+            },
+          ],
+        };
+      
+
+        controls.push(peakSelector);
+
+
+      }
+
+      console.log("external panel, state::", state)
+      console.log({pm1})
+      return controls;
     },
     comp: () => <div>Hello world comp</div>,
     cleanup: (map, state, setState) => {

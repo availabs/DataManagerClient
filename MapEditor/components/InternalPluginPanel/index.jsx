@@ -3,7 +3,7 @@ import { SymbologyContext, PluginLibrary } from "../..";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 
-import { wrapperTypes } from '../ExternalPluginPanel/PluginControlWrappers'
+import { wrapperTypes } from '../PluginControls/PluginControlWrappers'
 
 function InternalPluginPanel() {
   const { state, setState } = React.useContext(SymbologyContext);
@@ -31,10 +31,10 @@ function InternalPluginPanel() {
           </Tab.List>
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const SettingsComp = PluginLibrary[pluginName]?.settingsPanel({state, setState});
+              const internalControls = PluginLibrary[pluginName]?.internalPanel({state, setState});
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
-                  {SettingsComp?.map((control, i) => {
+                  {internalControls?.map((control, i) => {
                     let ControlWrapper =
                       wrapperTypes[control.type] || wrapperTypes["inline"];
                     return (
