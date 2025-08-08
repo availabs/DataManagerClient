@@ -36,6 +36,7 @@ function PluginPanel(props) {
                         console.log("remove clicked", d);
                         setState((draft) => {
                           draft.symbology.plugins = omit(draft.symbology.plugins, d);
+                          draft.symbology.pluginData = omit(draft.symbology.pluginData, d);
                         });
                       }}
                     >

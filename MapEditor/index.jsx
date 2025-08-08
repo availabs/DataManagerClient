@@ -16,7 +16,6 @@ import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './components
 import cloneDeep from 'lodash/cloneDeep'
 import colorbrewer from './components/LayerManager/colors'//"colorbrewer"
 import { ViewAttributes } from "../Source/attributes"
-
 import { DamaContext } from "../store"
 
 import LayerManager from './components/LayerManager'
@@ -42,45 +41,50 @@ export const PluginLibrary = {
     id: 'testplugin',
     type:'plugin',
     mapRegister: (map, state, setState) => {
-      console.log("look I am registered, state::", state)
+      console.log("look I am registered")
       map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
       console.log('plugin Data gets updated')
     },
-    settingsPanel:  ({map, state, setState}) => {
-      console.log("testplugin settings panel props::", {map, state, setState})
+    settingsPanel:  ({state, setState}) => {
+      //TODO
+      //THIS FUNCTION should return a JSON only
+
+      //using pm3 as example
+      //developer wants to make control to let geoplanner select the correct layer in map editor
+      return [
+        {
+          label: "PM3 Layer",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: Object.keys(state.symbology.layers).map(
+                  (layerKey, i) => ({
+                    value: layerKey,
+                    name: state.symbology.layers[layerKey].name,
+                  })
+                ),
+                default:'',
+              },
+              path: `['pm3-layer']`,
+            },
+          ],
+        },
+      ];
+    },
+    controlPanel:  ({state, setState}) => {
+      console.log("plugin control")
       return (
-        <div className="p-1">Test Plugin Settings Panel</div>
+        <div className="p-1">Controls 1</div>
       )
     },
-    controlPanel:  (map ,state, setState) => <div className="p-1">Controls 1</div>,
     comp: () => <div>Hello world comp</div>,
-    cleanup: (map ,state, setState) => {
+    cleanup: (map, state, setState) => {
       map.off("click", MAP_CLICK)
     }
   },
-  'second_testplugin': {
-    id: 'second_testplugin',
-    type: 'plugin',
-    mapRegister: (map, state, setState) => {
-      console.log("SECOND register")
-      map.on("click", MAP_CLICK);
-    },
-    dataUpdate: (map, state, setState) => {
-      console.log('plugin Data gets updated')
-    },
-    settingsPanel:  ({map, state, setState}) => {
-      return (
-        <div className="p-1">SECOND Test Settings Panel</div>
-      )
-    },
-    controlPanel:  (map ,state, setState) => <div className="p-1">Control Panel 2</div>,
-    comp: () => <div>Hello world comp</div>,
-    cleanup: (map ,state, setState) => {
-      map.off("click", MAP_CLICK)
-    }
-  } 
 }
 
 export const RegisterPlugin = (name, plugin) => {
@@ -142,11 +146,10 @@ const MapEditor = () => {
     description: '',
     symbology: {
       layers: {},
-      plugins: {}
+      plugins: {},
+      pluginData : {}
     },
-    pluginData : {}
   };
-
 
   const numDefaultObjectKeys = Object.keys(DEFAULT_BLANK_SYMBOLOGY).length;
   let initialSymbology = DEFAULT_BLANK_SYMBOLOGY;
@@ -460,7 +463,7 @@ const MapEditor = () => {
       }
       return out
 
-  }, [sourceId,falcorCache])
+  }, [sourceId, falcorCache])
 
 
   //----------------------------------
@@ -812,6 +815,7 @@ const MapEditor = () => {
 
   }, [baseDataColumn, layerType, viewId, falcorCache]);
 
+  console.log("main index state::", state)
 	return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>
@@ -856,12 +860,12 @@ const MapEditor = () => {
         <div className={'absolute inset-0 flex pointer-events-none'}>
           <div>
             <LayerManager />
-            {Object.keys(state.symbology.plugins).length > 0 && <PluginControls />}
+            {Object.keys(state.symbology?.plugins || {}).length > 0 && <PluginControls />}
           </div>
           <div className='flex-1' />
           <div>
             <LayerEditor />
-            {Object.keys(state.symbology.plugins).length > 0 && <PluginSettings />}
+            {Object.keys(state.symbology?.plugins || {}).length > 0 && <PluginSettings />}
           </div>
         </div>
       </div>

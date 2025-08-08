@@ -3,12 +3,14 @@ import { SymbologyContext, PluginLibrary } from "../../";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 
+import { wrapperTypes } from '../PluginControls/PluginControlWrappers'
+
 function PluginSettings() {
   const { state, setState } = React.useContext(SymbologyContext);
   const tabs = Object.keys(state.symbology.plugins)
   return (
     <div className="p-4">
-      <div className="bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] scroll-xs">
+      <div className="bg-white/95 w-[312px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] scroll-xs">
         <Tab.Group>
           <Tab.List>
             {tabs.map(tabName => (
@@ -29,11 +31,24 @@ function PluginSettings() {
           </Tab.List>
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const SettingsComp = PluginLibrary[pluginName].settingsPanel;
-
+              const SettingsComp = PluginLibrary[pluginName]?.settingsPanel({state, setState});
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
-                  <SettingsComp state={state} setState={setState} />
+                  {SettingsComp?.map((control, i) => {
+                    let ControlWrapper =
+                      wrapperTypes[control.type] || wrapperTypes["inline"];
+                    return (
+                      <div className="flex flex-wrap" key={i}>
+                        <ControlWrapper
+                          label={control.label}
+                          controls={control.controls.map(control => ({
+                            ...control,
+                            path: `symbology.pluginData['${pluginName}']${control.path}`
+                          }))}
+                        />
+                      </div>
+                    );
+                  })}
                 </Tab.Panel>
               );
             })}

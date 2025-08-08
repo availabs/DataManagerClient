@@ -22,8 +22,11 @@ export const PluginSelector = ({ state, setState }) => {
             draft.symbology.plugins = {};
           }
           console.log("add plug library value::",PluginLibrary[e.target.value])
-          draft.symbology.plugins[e.target.value] =
-            PluginLibrary[e.target.value];
+          draft.symbology.plugins[e.target.value] = PluginLibrary[e.target.value];
+          if(!draft.symbology.pluginData){
+            draft.symbology.pluginData = {}
+          }
+          draft.symbology.pluginData[e.target.value] = {};
         });
       }}
     >
@@ -31,7 +34,7 @@ export const PluginSelector = ({ state, setState }) => {
       {(Object.keys(PluginLibrary) || [])
         .filter(
           (pluginName) =>
-            !(Object.keys(state?.symbology?.plugins) || []).includes(pluginName)
+            !(Object.keys(state?.symbology?.plugins || {}) || []).includes(pluginName)
         )
         .map((pluginName, i) => (
           <option key={i} value={pluginName}>
