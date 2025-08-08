@@ -1,6 +1,7 @@
 import React, { useEffect, useContext, useMemo } from "react"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { MapContext } from "./dms/MapComponent"
+import { SymbologyContext } from "../"
 
 import {PluginLibrary} from "../"
 
@@ -23,12 +24,15 @@ const PluginLayerRender = ({
   maplibreMap,
   layer,
   layerProps,
-  allLayerProps,
-  pluginName
+  allLayerProps
 }) => {
   const mctx = useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
   //copy from hovercomp, dynamically determine context
-  const { state, setState } = mctx ? mctx : {state: {}, setState:() => {}};
+  const { state, setState } = sctx ? sctx : mctx ? mctx : {state: {}, setState: () => {}};
+
+  console.log("layer render, state::", state)
+  console.log("layer.id", layer.id)
 
   const plugin = useMemo(() => {
     return  PluginLibrary[layer.id]
@@ -44,12 +48,12 @@ const PluginLayerRender = ({
     }
   }, []);
 
-  // useEffect(() => {
-  //   //e.g. Symbology layer selected (internal)
-  //   //e.g. pm3 measure selected (external)
-
-  //   layer.dataUpdate(maplibreMap, state, setState)
-  // }, [state.symbology.pluginData?.[pluginName] ])
+  useEffect(() => {
+    //e.g. Symbology layer selected (internal)
+    //e.g. pm3 measure selected (external)
+    console.log("data update use effecct fire")
+    plugin.dataUpdate(maplibreMap, state, setState)
+  }, [state.symbology.pluginData?.[layer.id] ])
 }
 
 

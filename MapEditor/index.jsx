@@ -37,17 +37,39 @@ const PLUGIN_TYPE = 'plugin'
 const MAP_CLICK = () => console.log("map was clicked");
 //TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
-  'testplugin': {
-    id: 'testplugin',
-    type:'plugin',
+  testplugin: {
+    id: "testplugin",
+    type: "plugin",
     mapRegister: (map, state, setState) => {
-      console.log("look I am registered")
+      console.log("look I am registered");
       map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
-      console.log('plugin Data gets updated')
+      const pluginDataPath = `symbology.pluginData.testplugin`;
+      console.log("plugin Data gets updated", { map, state, setState });
+      const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
+      const peak = get(state, `${pluginDataPath}['peak']`, null);
+      if (pm1 && peak) {
+        setState((draft) => {
+
+          const pluginLayer = get(
+            state,
+            `${pluginDataPath}['pm3-layer']`,
+            null
+          );
+          console.log({ pluginLayer });
+
+          const newDataColumn = `${pm1}_${peak}_${pm1}`;
+          console.log({ newDataColumn });
+          const symbologyPath = `symbology.layers['${pluginLayer}']`;
+
+          set(draft, `${symbologyPath}['choroplethdata']`, {});
+          set(draft, `${symbologyPath}['categories']`, {});
+          set(draft, `${symbologyPath}['data-column']`, newDataColumn);
+        });
+      }
     },
-    internalPanel:  ({state, setState}) => {
+    internalPanel: ({ state, setState }) => {
       //TODO
       //THIS FUNCTION should return a JSON only
 
@@ -66,7 +88,7 @@ export const PluginLibrary = {
                     name: state.symbology.layers[layerKey].name,
                   })
                 ),
-                default:'',
+                default: "",
               },
               path: `['pm3-layer']`,
             },
@@ -74,17 +96,20 @@ export const PluginLibrary = {
         },
       ];
     },
-    externalPanel:  ({state, setState}) => {
-      console.log("plugin control")
+    externalPanel: ({ state, setState }) => {
+      console.log("plugin control");
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
-      const pathBase = `symbology.pluginData.testplugin`
+      const pathBase = `symbology.pluginData.testplugin`;
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
-      const pm1 = useMemo(() => {
-        console.log(`${pathBase}['pm-1']`)
-        return get(state, `${pathBase}['pm-1']`, null )
-      },[state.symbology.pluginData, pathBase]);
+      const { pm1, peak } = useMemo(() => {
+        console.log(`${pathBase}['pm-1']`);
+        return {
+          pm1: get(state, `${pathBase}['pm-1']`, null),
+          peak: get(state, `${pathBase}['peak']`, null),
+        };
+      }, [state.symbology.pluginData, pathBase]);
 
       const perfMeasureOptions = [
         {
@@ -109,7 +134,7 @@ export const PluginLibrary = {
               type: "select",
               params: {
                 options: perfMeasureOptions,
-                default:'',
+                default: "",
               },
               path: `['pm-1']`,
             },
@@ -118,14 +143,14 @@ export const PluginLibrary = {
       ];
 
       //peak selector control
-      if(pm1 === 'lottr') {
+      if (pm1 === "lottr") {
         const peakSelectorOptions = [
           {
             value: "none",
             name: "No Peak",
           },
           {
-            value: "am",
+            value: "amp",
             name: "AM Peak",
           },
           {
@@ -133,11 +158,11 @@ export const PluginLibrary = {
             name: "OFF Peak",
           },
           {
-            value: "pm",
+            value: "pmp",
             name: "PM Peak",
           },
           {
-            value: "WEEKEND",
+            value: "we",
             name: "Weekend",
           },
         ];
@@ -154,23 +179,23 @@ export const PluginLibrary = {
             },
           ],
         };
-      
 
         controls.push(peakSelector);
-
-
       }
 
-      console.log("external panel, state::", state)
-      console.log({pm1})
+      console.log("external panel, state::", state);
+      console.log({ pm1 });
+
+      const dataColumn = `${pm1}_${peak}_${pm1}`;
+      console.log({ dataColumn });
       return controls;
     },
     comp: () => <div>Hello world comp</div>,
     cleanup: (map, state, setState) => {
-      map.off("click", MAP_CLICK)
-    }
+      map.off("click", MAP_CLICK);
+    },
   },
-}
+};
 
 export const RegisterPlugin = (name, plugin) => {
   PluginLibrary[name] = plugin
