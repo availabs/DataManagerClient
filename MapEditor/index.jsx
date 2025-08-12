@@ -14,7 +14,7 @@ import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
 import { rgb2hex, toHex, categoricalColors, rangeColors } from './components/LayerManager/utils'
 import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from './components/LayerEditor/datamaps'
 import cloneDeep from 'lodash/cloneDeep'
-import colorbrewer from './components/LayerManager/colors'//"colorbrewer"
+
 import { ViewAttributes } from "../Source/attributes"
 import { DamaContext } from "../store"
 
@@ -26,6 +26,8 @@ import ExternalPluginPanel from './components/ExternalPluginPanel'
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
+
+import { extractState } from './stateUtils';
 
 export const SymbologyContext = createContext(undefined);
 
@@ -50,24 +52,28 @@ export const PluginLibrary = {
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       if (pm1 && peak) {
-        setState((draft) => {
+        // setState((draft) => {
+        //   console.log("----data update SET STATE FIRE--------")
+        //   const pluginLayer = get(
+        //     state,
+        //     `${pluginDataPath}['pm3-layer']`,
+        //     null
+        //   );
+        //   console.log({ pluginLayer });
 
-          const pluginLayer = get(
-            state,
-            `${pluginDataPath}['pm3-layer']`,
-            null
-          );
-          console.log({ pluginLayer });
 
-          const newDataColumn = `${pm1}_${peak}_${pm1}`;
-          console.log({ newDataColumn });
-          const symbologyPath = `symbology.layers['${pluginLayer}']`;
+        //   console.log({ newDataColumn });
+        //   const symbologyPath = `symbology.layers['${pluginLayer}']`;
 
-          set(draft, `${symbologyPath}['choroplethdata']`, {});
-          set(draft, `${symbologyPath}['categories']`, {});
-          set(draft, `${symbologyPath}['data-column']`, newDataColumn);
-        });
+        //   // set(draft, `${symbologyPath}['choroplethdata']`, {});
+        //   // set(draft, `${symbologyPath}['categories']`, {});
+        //   set(draft, `${symbologyPath}['data-column']`, newDataColumn);
+        // });
+        const newDataColumn = `${pm1}_${peak}_${pm1}`;
+        return {"data-column": newDataColumn}
       }
+      return {}
+
     },
     internalPanel: ({ state, setState }) => {
       //TODO
@@ -90,7 +96,7 @@ export const PluginLibrary = {
                 ),
                 default: "",
               },
-              path: `['pm3-layer']`,
+              path: `['activeLayer']`,
             },
           ],
         },
@@ -393,6 +399,46 @@ const MapEditor = () => {
     updateLayers()
   }, [state?.symbology?.layers, state?.symbology?.plugins, state?.symbology?.zoomToFit])
   
+  let {
+    isInteractiveLayer,
+    pathBase,
+    activeLayerId,
+    activeLayer,
+    layerType,
+    viewId,
+    sourceId,
+    paintValue,
+    breaks,
+    column,
+    categories,
+    categorydata,
+    colors,
+    colorrange,
+    numCategories,
+    numbins,
+    method,
+    showOther,
+    symbology_id,
+    choroplethdata,
+    filterGroupEnabled,
+    filterGroupLegendColumn,
+    viewGroupEnabled,
+    layerPaintPath,
+    viewGroupId,
+    initialViewId,
+    baseDataColumn,
+    legendOrientation,
+    minRadius,
+    maxRadius,
+    lowerBound,
+    upperBound,
+    radiusCurve,
+    curveFactor,
+    legendData,
+    pluginData
+  } = useMemo(() => {
+    return extractState(state)
+  },[state]);
 
   const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
 
@@ -467,90 +513,6 @@ const MapEditor = () => {
         })
     });
   }, [isEqual(interactiveFilterIndicies, prevInteractiveIndicies)])
-  const isInteractiveLayer = state?.symbology?.layers?.[state?.symbology?.activeLayer]?.['layer-type'] === 'interactive';
-  const pathBase = isInteractiveLayer
-      ? `symbology.layers[${state.symbology.activeLayer}]['interactive-filters'][${selectedInteractiveFilterIndex}]`
-      : `symbology.layers[${state.symbology.activeLayer}]`;
-
-  let {
-    layerType,
-    viewId,
-    sourceId,
-    paintValue,
-    breaks,
-    column,
-    categories,
-    categorydata,
-    colors,
-    colorrange,
-    numCategories,
-    numbins,
-    method,
-    showOther,
-    symbology_id,
-    choroplethdata,
-    filterGroupEnabled,
-    filterGroupLegendColumn,
-    viewGroupEnabled,
-    layerPaintPath,
-    viewGroupId,
-    initialViewId,
-    baseDataColumn,
-    legendOrientation,
-    minRadius,
-    maxRadius,
-    lowerBound,
-    upperBound,
-    radiusCurve,
-    curveFactor,
-    legendData
-  } = useMemo(() => {
-    const polygonLayerType = get(state, `${pathBase}['type']`, {});
-    const paintPaths = {
-      'fill':"layers[1].paint['fill-color']",
-      'circle':"layers[0].paint['circle-color']",
-      'line':"layers[1].paint['line-color']"
-    }
-    const layerType =  get(state, `${pathBase}['layer-type']`, {});
-    let layerPaintPath = paintPaths[polygonLayerType];
-   
-    if(layerType === 'circles') {
-      layerPaintPath = "layers[0].paint['circle-radius']"
-    }
-    return {
-      layerPaintPath,
-      layerType,
-      viewId: get(state,`symbology.layers[${state.symbology.activeLayer}].view_id`),
-      sourceId: get(state,`symbology.layers[${state.symbology.activeLayer}].source_id`),
-      paintValue: get(state, `${pathBase}.${layerPaintPath}`, {}),
-      baseDataColumn: get(state, `symbology.layers[${state.symbology.activeLayer}]['data-column']`, ''),
-      breaks: get(state, `${pathBase}['choroplethdata']['breaks']`, []),
-      column: get(state, `${pathBase}['data-column']`, ''),
-      categories: get(state, `${pathBase}['categories']`, {}),
-      categorydata: get(state, `${pathBase}['category-data']`, {}),
-      choroplethdata: get(state, `${pathBase}['choroplethdata']`),
-      colors: get(state, `${pathBase}['color-set']`, categoricalColors['cat1']),
-      colorrange: get(state, `${pathBase}['color-range']`, colorbrewer['seq1'][9]),
-      numbins: get(state, `${pathBase}['num-bins']`, 9),
-      method: get(state, `${pathBase}['bin-method']`, 'ckmeans'),
-      numCategories: get(state, `${pathBase}['num-categories']`, 10),
-      showOther: get(state, `${pathBase}['category-show-other']`, '#ccc'),
-      symbology_id: get(state, `symbology_id`),
-      filterGroupEnabled: get(state,`${pathBase}['filterGroupEnabled']`, false),
-      filterGroupLegendColumn:get(state,`${pathBase}['filter-group-legend-column']`),
-      viewGroupEnabled: get(state,`${pathBase}['viewGroupEnabled']`, false),
-      viewGroupId: get(state,`${pathBase}['view-group-id']`),
-      initialViewId: get(state,`${pathBase}['initial-view-id']`),
-      legendOrientation: get(state,`${pathBase}['legend-orientation']`, 'vertical'),
-      minRadius: get(state,`${pathBase}['min-radius']`, 8),
-      maxRadius: get(state,`${pathBase}['max-radius']`, 128),
-      lowerBound: get(state,`${pathBase}['lower-bound']`, null),
-      upperBound: get(state,`${pathBase}['upper-bound']`, null),
-      radiusCurve: get(state,`${pathBase}['radius-curve']`, 'linear'),
-      curveFactor: get(state,`${pathBase}['curve-factor']`, 1),
-      legendData: get(state,`${pathBase}['legend-data']`),
-    }
-  },[state]);
 
   useEffect(() => {
     //console.log('getmetadat', sourceId)
@@ -602,6 +564,10 @@ const MapEditor = () => {
 
   const prevViewGroupId = usePrevious(viewGroupId);
 
+  // const isActiveLayerPlugin = useMemo(() => {
+  //   return (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayer.id);
+  // }, [pluginData, activeLayer])
+  // console.log({isActiveLayerPlugin})
   useEffect(() => {
     const setPaint = async () => {
       if (layerType === 'categories') {
@@ -736,7 +702,11 @@ const MapEditor = () => {
         })
       }
     }
-    setPaint();
+    //console.log("checking to see if current active layer is being modified by a plugin::", Object.values(state.symbology.pluginData).some(plugData => plugData.activeLayer === activeLayer.id))
+    //TODO -- plugData.activeLayer should be an array
+    if(!(Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayer.id)) {
+      setPaint();
+    }
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
 
   useEffect(() => {
@@ -852,7 +822,6 @@ const MapEditor = () => {
 
     }
   }, [legendOrientation, legendData]);
-  const activeLayer = get(state,`symbology.layers[${state.symbology.activeLayer}]`);
 
   useEffect(() => {
     if(!!activeLayer){

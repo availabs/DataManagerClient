@@ -92,10 +92,10 @@ export function SelectTypeControl({path, datapath, params={}}) {
           value={get(state, `${pathBase}.${path}`, params.default || params?.options?.[0]?.value )}
           onChange={(e) => setState(draft => {
             if(!column && e.target.value === 'categories') {
-              const defaultColorColumn = metadata.filter(col => !['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
+              const defaultColorColumn = metadata?.filter(col => !['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
               set(draft, `${pathBase}['data-column']`, defaultColorColumn)
             } else if (e.target.value === 'choropleth') {
-              const currentColumn = metadata.find(col => col.name === column);
+              const currentColumn = metadata?.find(col => col.name === column);
               if(!['integer', 'number'].includes(currentColumn?.type)) {
                 const defaultColorColumn = metadata.filter(col => ['integer', 'number'].includes(col.type))[0]?.name ?? metadata[0]?.name;
                 set(draft, `${pathBase}['data-column']`, defaultColorColumn)

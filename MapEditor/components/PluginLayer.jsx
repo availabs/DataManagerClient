@@ -2,7 +2,9 @@ import React, { useEffect, useContext, useMemo } from "react"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { MapContext } from "./dms/MapComponent"
 import { SymbologyContext } from "../"
-
+import get from "lodash/get"
+import set from "lodash/set"
+import omit from "lodash/omit"
 import {PluginLibrary} from "../"
 
 //CURRENTLY
@@ -49,11 +51,30 @@ const PluginLayerRender = ({
   }, []);
 
   useEffect(() => {
+    const pluginDataPath = `symbology.pluginData.${layer.id}`;
     //e.g. Symbology layer selected (internal)
     //e.g. pm3 measure selected (external)
     console.log("data update use effecct fire")
-    plugin.dataUpdate(maplibreMap, state, setState)
-  }, [state.symbology.pluginData?.[layer.id] ])
+    console.log({pluginDataPath})
+
+    //TODO -- do we want the plugin to return only changed fields? All fields? 
+    const updatedState = plugin.dataUpdate(maplibreMap, state, setState);
+    const pluginLayer = get(
+      state,
+      `${pluginDataPath}['activeLayer']`,
+      null
+    );
+    if(updatedState["data-column"]) {
+      const symbologyPath = `symbology.layers['${pluginLayer}']`;
+      console.log("---in pluginlayer, new data-column, updating---");
+
+      setState((draft) => {
+          set(draft, `${symbologyPath}['choroplethdata']`, {});
+          set(draft, `${symbologyPath}['categories']`, {});
+          set(draft, `${symbologyPath}['data-column']`, updatedState["data-column"]);
+      })
+    }
+  }, [state.symbology?.pluginData?.[layer.id] ])
 }
 
 
