@@ -12,7 +12,7 @@ import { pluginControlTypes } from './PluginControls'
 
 export function StyledControl ({children}) {
   return (
-  <div className='rounded-md h-[36px] flex w-full max-w-[216px] p-2 items-center border border-white/50 hover:bg-white cursor-pointer hover:border-slate-200'>
+  <div className='rounded-md h-[36px] flex w-full max-w-[216px] p-2 items-center border  border-slate-100 hover:bg-white cursor-pointer hover:border-slate-200'>
       {children}
     </div>
   )
@@ -83,7 +83,7 @@ function SimpleControlWrapper ({label, controls}) {
   console.log({pluginControlTypes})
   return (
     <>
-      <div className='w-16 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
+      <div className='w-24 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
       <div className='flex-1 flex items-center'>
         <StyledControl>
           {controls

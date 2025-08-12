@@ -121,6 +121,7 @@ export const PluginLibrary = {
                 ),
                 default: "",
               },
+              //the layer the plugin controls MUST use the `activeLayer` path/field
               path: `['activeLayer']`,
             },
           ],
@@ -165,6 +166,18 @@ export const PluginLibrary = {
               type: "select",
               params: {
                 options: perfMeasureOptions,
+                default: "",
+              },
+              path: `['pm-1']`,
+            },
+          ],
+        },
+        {
+          label: "Test Input",
+          controls: [
+            {
+              type: "text",
+              params: {
                 default: "",
               },
               path: `['pm-1']`,

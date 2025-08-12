@@ -39,6 +39,34 @@ export function SelectControl({ path, params = {} }) {
   );
 }
 
+export function InputControl({ path, params = {} }) {
+  //console.log("input control path::", path)
+  const { state, setState } = React.useContext(SymbologyContext);
+  //console.log('input control', params)
+
+  const defaultValue =
+    params.default !== null && params.default !== undefined
+      ? params.default
+      : params?.options?.[0]?.value;
+      
+  return (
+    <label className="flex w-full">
+      <div className="flex w-full items-center">
+        <input
+          className="w-full py-2 bg-transparent"
+          value={get(state, `${path}`, defaultValue)}
+          onChange={(e) =>
+            setState((draft) => {
+              set(draft, `${path}`, e.target.value);
+            })
+          }
+        />
+      </div>
+    </label>
+  );
+}
+
 export const pluginControlTypes = {
   select: SelectControl,
+  text: InputControl,
 };

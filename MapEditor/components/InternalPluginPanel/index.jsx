@@ -38,7 +38,7 @@ function InternalPluginPanel() {
                     let ControlWrapper =
                       wrapperTypes[control.type] || wrapperTypes["inline"];
                     return (
-                      <div className="flex flex-wrap" key={i}>
+                      <div className="flex flex-wrap p-1" key={i}>
                         <ControlWrapper
                           label={control.label}
                           controls={control.controls.map(control => ({

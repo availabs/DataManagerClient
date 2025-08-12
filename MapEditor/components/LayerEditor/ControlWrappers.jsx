@@ -12,7 +12,7 @@ import {controlTypes } from './Controls'
 
 export function StyledControl ({children}) {
   return (
-  <div className='rounded-md h-[36px] flex w-full max-w-[216px] p-2 items-center border border-white/50 hover:bg-white cursor-pointer hover:border-slate-200'>
+    <div className='rounded-md h-[36px] flex w-full max-w-[216px] p-2 items-center border border-white/50 hover:bg-white cursor-pointer hover:border-slate-200'>
       {children}
     </div>
   )
