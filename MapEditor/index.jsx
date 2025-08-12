@@ -47,38 +47,63 @@ export const PluginLibrary = {
       map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
+      const { pathBase, layerPaintPath } = extractState(state);
       const pluginDataPath = `symbology.pluginData.testplugin`;
       //console.log("plugin Data gets updated", { map, state, setState });
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       if (pm1 && peak) {
-        // setState((draft) => {
-        //   console.log("----data update SET STATE FIRE--------")
-        //   const pluginLayer = get(
-        //     state,
-        //     `${pluginDataPath}['pm3-layer']`,
-        //     null
-        //   );
-        //   console.log({ pluginLayer });
-
-
-        //   console.log({ newDataColumn });
-        //   const symbologyPath = `symbology.layers['${pluginLayer}']`;
-
-        //   // set(draft, `${symbologyPath}['choroplethdata']`, {});
-        //   // set(draft, `${symbologyPath}['categories']`, {});
-        //   set(draft, `${symbologyPath}['data-column']`, newDataColumn);
-        // });
         const newDataColumn = `${pm1}_${peak}_${pm1}`;
-        return {"data-column": newDataColumn}
-      }
-      return {}
 
+        const newPaint = [
+          "case",
+          ["==", ["get", newDataColumn], null],
+          "#ccc",
+          [
+            "step",
+            ["to-number", ["get", newDataColumn]],
+            "#e8e873",
+            1,
+            "#e8e873",
+            1.32,
+            "#2cbaa8",
+            2.06,
+            "#4b5899",
+          ],
+        ];
+
+        const newLegend = [
+          {
+            color: "#e8e873",
+            label: "test123",
+          },
+          {
+            color: "#2cbaa8",
+            label: "1.32 - 2.06",
+          },
+          {
+            color: "#4b5899",
+            label: "2.06 - 6.55",
+          },
+        ];
+
+        setState((draft) => {
+            set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+            set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
+            set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
+
+            //SHAPE OF layerFilter --  
+            // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
+            //value can be an array of 2 numbers, if operator === 'between'
+            //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
+            const testFilter = {
+              [newDataColumn]: { operator: ">", value: 1.2 },
+            };
+            set(draft, `${pathBase}['filter']`, testFilter); //eventually consumed by mapbox, but formatted/parsed by AVAIL code
+          })
+      }
     },
     internalPanel: ({ state, setState }) => {
-      //TODO
-      //THIS FUNCTION should return a JSON only
-
       //using pm3 as example
       //developer wants to make control to let geoplanner select the correct layer in map editor
       return [
@@ -106,16 +131,16 @@ export const PluginLibrary = {
       console.log("plugin control");
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
-      const pathBase = `symbology.pluginData.testplugin`;
+      const pluginPathBase = `symbology.pluginData.testplugin`;
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       const { pm1, peak } = useMemo(() => {
-        console.log(`${pathBase}['pm-1']`);
+        console.log(`${pluginPathBase}['pm-1']`);
         return {
-          pm1: get(state, `${pathBase}['pm-1']`, null),
-          peak: get(state, `${pathBase}['peak']`, null),
+          pm1: get(state, `${pluginPathBase}['pm-1']`, null),
+          peak: get(state, `${pluginPathBase}['peak']`, null),
         };
-      }, [state.symbology.pluginData, pathBase]);
+      }, [state.symbology.pluginData, pluginPathBase]);
 
       const perfMeasureOptions = [
         {
@@ -189,11 +214,6 @@ export const PluginLibrary = {
         controls.push(peakSelector);
       }
 
-      console.log("external panel, state::", state);
-      console.log({ pm1 });
-
-      const dataColumn = `${pm1}_${peak}_${pm1}`;
-      console.log({ dataColumn });
       return controls;
     },
     comp: () => <div>Hello world comp</div>,
@@ -641,6 +661,7 @@ const MapEditor = () => {
         }
         //console.log("colorBreaks['breaks']",colorBreaks['breaks'])
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
+        console.log({paint, legend})
         //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
         //this will fix a problem with the custom scale 
         if(!regenerateLegend && legendData.length > 0) {

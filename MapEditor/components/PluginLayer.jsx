@@ -54,26 +54,8 @@ const PluginLayerRender = ({
     const pluginDataPath = `symbology.pluginData.${layer.id}`;
     //e.g. Symbology layer selected (internal)
     //e.g. pm3 measure selected (external)
-    console.log("data update use effecct fire")
-    console.log({pluginDataPath})
 
-    //TODO -- do we want the plugin to return only changed fields? All fields? 
-    const updatedState = plugin.dataUpdate(maplibreMap, state, setState);
-    const pluginLayer = get(
-      state,
-      `${pluginDataPath}['activeLayer']`,
-      null
-    );
-    if(updatedState["data-column"]) {
-      const symbologyPath = `symbology.layers['${pluginLayer}']`;
-      console.log("---in pluginlayer, new data-column, updating---");
-
-      setState((draft) => {
-          set(draft, `${symbologyPath}['choroplethdata']`, {});
-          set(draft, `${symbologyPath}['categories']`, {});
-          set(draft, `${symbologyPath}['data-column']`, updatedState["data-column"]);
-      })
-    }
+    plugin.dataUpdate(maplibreMap, state, setState);
   }, [state.symbology?.pluginData?.[layer.id] ])
 }
 
