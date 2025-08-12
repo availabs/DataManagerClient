@@ -48,7 +48,7 @@ export const PluginLibrary = {
     },
     dataUpdate: (map, state, setState) => {
       const pluginDataPath = `symbology.pluginData.testplugin`;
-      console.log("plugin Data gets updated", { map, state, setState });
+      //console.log("plugin Data gets updated", { map, state, setState });
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       if (pm1 && peak) {
@@ -435,7 +435,8 @@ const MapEditor = () => {
     radiusCurve,
     curveFactor,
     legendData,
-    pluginData
+    pluginData,
+    isActiveLayerPlugin
   } = useMemo(() => {
     return extractState(state)
   },[state]);
@@ -564,10 +565,7 @@ const MapEditor = () => {
 
   const prevViewGroupId = usePrevious(viewGroupId);
 
-  // const isActiveLayerPlugin = useMemo(() => {
-  //   return (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayer.id);
-  // }, [pluginData, activeLayer])
-  // console.log({isActiveLayerPlugin})
+  console.log({pluginData, state, isActiveLayerPlugin})
   useEffect(() => {
     const setPaint = async () => {
       if (layerType === 'categories') {
@@ -704,13 +702,13 @@ const MapEditor = () => {
     }
     //console.log("checking to see if current active layer is being modified by a plugin::", Object.values(state.symbology.pluginData).some(plugData => plugData.activeLayer === activeLayer.id))
     //TODO -- plugData.activeLayer should be an array
-    if(!(Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayer.id)) {
+    if(!isActiveLayerPlugin) {
       setPaint();
     }
-  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn])
+  }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
 
   useEffect(() => {
-    if(method === "custom") {
+    if(method === "custom" && !isActiveLayerPlugin) {
       console.log("custom breaks changed")
       const colorBreaks = choroplethdata;
       let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, breaks, showOther, legendOrientation);
@@ -760,7 +758,7 @@ const MapEditor = () => {
         })
       }
     }  
-  }, [breaks])
+  }, [breaks, isActiveLayerPlugin])
 
   useEffect(() => {
     const setLegendAndPaint = () => {
@@ -793,13 +791,13 @@ const MapEditor = () => {
       }
     }
 
-    if(layerType !== 'simple' && typeof paintValue !== 'string') {
+    if(layerType !== 'simple' && typeof paintValue !== 'string' && !isActiveLayerPlugin) {
       setLegendAndPaint();
     }
-  }, [colorrange]);
+  }, [colorrange, isActiveLayerPlugin]);
 
   useEffect(() => {
-    if(choroplethdata && !legendData) {
+    if(choroplethdata && !legendData && !isActiveLayerPlugin) {
       console.log("---NEW LEGEND, switching legend orientation----");
       let { legend } = choroplethPaint(baseDataColumn, choroplethdata['max'], colorrange, numbins, method, choroplethdata['breaks'], showOther, legendOrientation);
       if(legend) {
@@ -821,7 +819,7 @@ const MapEditor = () => {
       }
 
     }
-  }, [legendOrientation, legendData]);
+  }, [legendOrientation, legendData, isActiveLayerPlugin]);
 
   useEffect(() => {
     if(!!activeLayer){
@@ -865,7 +863,7 @@ const MapEditor = () => {
   }, [viewGroupEnabled])
 
   useEffect(() => {
-    if(baseDataColumn && layerType === 'categories') {
+    if(baseDataColumn && layerType === 'categories' && !isActiveLayerPlugin) {
       const options = JSON.stringify({
         groupBy: [(baseDataColumn).split('AS ')[0]],
         exclude: {[(baseDataColumn).split('AS ')[0]]: ['null']},
@@ -875,10 +873,10 @@ const MapEditor = () => {
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[baseDataColumn, 'count(1)::int as count']
       ])      
     }
-  },[baseDataColumn, layerType, viewId])
+  },[baseDataColumn, layerType, viewId, isActiveLayerPlugin])
 
   useEffect(() => {
-    if(baseDataColumn && layerType === 'categories') {
+    if(baseDataColumn && layerType === 'categories' && !isActiveLayerPlugin) {
       const options = JSON.stringify({
         groupBy: [(baseDataColumn).split('AS ')[0]],
         exclude: {[(baseDataColumn).split('AS ')[0]]: ['null']},
@@ -891,11 +889,10 @@ const MapEditor = () => {
         set(draft, `${pathBase}['category-data']`, data)
       })
     }
+  }, [baseDataColumn, layerType, viewId, falcorCache, isActiveLayerPlugin]);
 
-  }, [baseDataColumn, layerType, viewId, falcorCache]);
-
-  console.log("main index state::", state)
-	return (
+  //console.log("main index state::", state)
+  return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>
         <AvlMap2

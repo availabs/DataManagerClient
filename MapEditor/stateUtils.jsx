@@ -33,6 +33,8 @@ const extractState = (state) => {
   if (layerType === "circles") {
     layerPaintPath = "layers[0].paint['circle-radius']";
   }
+  const pluginData = get(state, `symbology.pluginData`, {});
+  const isActiveLayerPlugin = (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayerId)
   return {
     pathBase,
     isInteractiveLayer,
@@ -90,7 +92,8 @@ const extractState = (state) => {
     radiusCurve: get(state, `${pathBase}['radius-curve']`, "linear"),
     curveFactor: get(state, `${pathBase}['curve-factor']`, 1),
     legendData: get(state, `${pathBase}['legend-data']`),
-    pluginData: get(state, `${pathBase}['pluginData']`, {}),
+    pluginData,
+    isActiveLayerPlugin
   };
 };
 
