@@ -4,6 +4,8 @@ import { Plus, Close, MenuDots } from '../icons'
 import { LayerMenu } from '../LayerManager/LayerPanel'
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 
+import { extractState } from '../../stateUtils';
+
 import StyleEditor from './StyleEditor'
 import PopoverEditor from './PopoverEditor'
 import LegendEditor from './LegendEditor'
@@ -12,7 +14,9 @@ import FilterEditor from './FilterEditor'
 
 function LayerManager (props) {
   const { state, setState } = React.useContext(SymbologyContext);
-  const activeLayer = useMemo(() => state?.symbology?.layers?.[state?.symbology?.activeLayer] || null, [state])
+  const { activeLayer, isActiveLayerPlugin, controllingPluginName } = useMemo(() => {
+    return extractState(state);
+  }, [state]);
 
   const tabs = ['Style', 'Legend','Popup','Filter']
   return activeLayer && (
@@ -45,35 +49,46 @@ function LayerManager (props) {
               <Close className='fill-slate-500' /> 
           </div>
         </div>
-        <div className='min-h-20 relative'>
-         <Tab.Group>
-          <div className='flex justify-between items-center border-b'>
-            <Tab.List>
-              {tabs.map(tabName => (
-                <Tab  key={tabName} as={Fragment}>
-                  {({ selected }) => (
-                    <button
-                      className={`
-                        ${selected ? 
-                          'text-slate-600 border-b font-medium border-slate-600' : 
-                          'text-slate-400'} mx-1 text-sm p-2 cursor-pointer
-                      `}
-                    >
-                      {tabName}
-                    </button>
-                  )}
-                </Tab>
-              ))}
-            </Tab.List>
-          </div>
-          <Tab.Panels>
-            <Tab.Panel><StyleEditor /></Tab.Panel>
-            <Tab.Panel><LegendEditor /></Tab.Panel>
-            <Tab.Panel><PopoverEditor /></Tab.Panel>
-            <Tab.Panel><FilterEditor /></Tab.Panel>
-          </Tab.Panels>
-        </Tab.Group>
-        </div>
+        {
+          isActiveLayerPlugin ? 
+            <div className="min-h-[400px] bg-gray-200 flex flex-col justify-center content-center text-center">
+              <div className="text-md">
+                Layer is controlled by Plugin
+              </div>
+              <div className="text-sm">
+                To enable this panel, remove the <b>"{controllingPluginName}" plugin</b>, or link it to a different layer
+                </div>
+            </div> :
+            <div className='min-h-20 relative'>
+              <Tab.Group>
+                <div className='flex justify-between items-center border-b'>
+                  <Tab.List>
+                    {tabs.map(tabName => (
+                      <Tab  key={tabName} as={Fragment}>
+                        {({ selected }) => (
+                          <button
+                            className={`
+                              ${selected ? 
+                                'text-slate-600 border-b font-medium border-slate-600' : 
+                                'text-slate-400'} mx-1 text-sm p-2 cursor-pointer
+                            `}
+                          >
+                            {tabName}
+                          </button>
+                        )}
+                      </Tab>
+                    ))}
+                  </Tab.List>
+                </div>
+                <Tab.Panels>
+                  <Tab.Panel><StyleEditor /></Tab.Panel>
+                  <Tab.Panel><LegendEditor /></Tab.Panel>
+                  <Tab.Panel><PopoverEditor /></Tab.Panel>
+                  <Tab.Panel><FilterEditor /></Tab.Panel>
+                </Tab.Panels>
+              </Tab.Group>
+            </div>
+        }
       </div>
     </div>
   )

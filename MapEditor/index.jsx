@@ -400,7 +400,6 @@ const MapEditor = () => {
   }, [state?.symbology?.layers, state?.symbology?.plugins, state?.symbology?.zoomToFit])
   
   let {
-    isInteractiveLayer,
     pathBase,
     activeLayerId,
     activeLayer,

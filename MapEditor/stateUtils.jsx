@@ -93,7 +93,8 @@ const extractState = (state) => {
     curveFactor: get(state, `${pathBase}['curve-factor']`, 1),
     legendData: get(state, `${pathBase}['legend-data']`),
     pluginData,
-    isActiveLayerPlugin
+    isActiveLayerPlugin,
+    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => pluginData[pluginName].activeLayer === activeLayerId)
   };
 };
 
