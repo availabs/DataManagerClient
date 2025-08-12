@@ -176,9 +176,9 @@ export const PluginLibrary = {
           label: "Test Input",
           controls: [
             {
-              type: "text",
+              type: "radio",
               params: {
-                default: "",
+                options: perfMeasureOptions
               },
               path: `['pm-1']`,
             },
