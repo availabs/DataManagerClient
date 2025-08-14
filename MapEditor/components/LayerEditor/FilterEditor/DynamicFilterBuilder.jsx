@@ -5,6 +5,7 @@ import { StyledControl } from '../ControlWrappers'
 import {AddColumnSelectControl, controlTypes } from '../Controls'
 import get from 'lodash/get'
 import set from 'lodash/set'
+import { Switch } from '@headlessui/react'
 import { DndList } from '~/modules/avl-components/src'
 import { Close } from '../../icons'
 const DEFAULT_STRING_FILTER = {
@@ -159,6 +160,21 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
                 );
               })
             }}
+            setZoomToFilterBounds={(columnName, zoomToFilterBounds) => {
+              const newColumns = [...existingDynamicFilter];
+              const columnIndex = newColumns.findIndex(colObj => colObj.column_name === columnName);
+              const [item] = newColumns.splice(columnIndex, 1);
+              const newItem = {...item};
+              newItem.zoomToFilterBounds = zoomToFilterBounds;
+              newColumns.splice(columnIndex, 0, newItem);
+              setState((draft) => {
+                set(
+                  draft,
+                  `symbology.layers[${state.symbology.activeLayer}]${path}`,
+                  newColumns
+                );
+              })
+            }}
           />
         </div>}
       </div>
@@ -172,15 +188,19 @@ export const ExistingColumnList = ({
   reorderAttrs,
   removeAttr,
   renameAttr,
+  setZoomToFilterBounds,
 }) => {
   return (
     <>
       <div className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-20">
-        <div className="truncate  col-span-4 px-2 py-1 border-r">
-          <div className=" p-1 text-sm text-slate-700 font-bold">Column name</div>
+        <div className="truncate  col-span-3 px-1 py-1 border-r">
+          <div className=" p-1 text-sm text-slate-700 font-bold">Name</div>
         </div>
-        <div className="truncate  col-span-4 px-2 py-1">
+        <div className="truncate  col-span-3 px-1 py-1 border-r">
           <div className=" p-1 text-sm text-slate-700 font-bold">Display name</div>
+        </div>
+        <div className="truncate  col-span-2 px-1 py-1">
+          <div className=" p-1 text-sm text-slate-700 font-bold">Zoom</div>
         </div>
       </div>
       <DndList onDrop={reorderAttrs}>
@@ -190,16 +210,16 @@ export const ExistingColumnList = ({
               key={i}
               className="group/title w-full text-sm grid grid-cols-9 cursor-grab border-t border-slate-20"
             >
-              <div className="truncate  col-span-4 px-2 py-1 border-r">
+              <div className="truncate  col-span-3 px-1 py-1 border-r">
                 <div className=" p-1 text-sm text-slate-700">
                   {selectedColumn.column_name}
                 </div>
               </div>
-              <div className="truncate  col-span-4 py-1">
+              <div className="truncate  col-span-3 py-1 border-r">
                 <div className=" p-1 text-sm text-slate-700">
                   <input
                     type="text"
-                    className="w-full px-2 border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6"
+                    className="w-full px-1 border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6 "
                     value={selectedColumn.display_name}
                     onChange={(e) => {
                       renameAttr({
@@ -210,7 +230,16 @@ export const ExistingColumnList = ({
                   />
                 </div>
               </div>
-
+              <div className="truncate  col-span-2 py-1 items-center content-center justify-center flex">
+                <input
+                  value={selectedColumn.zoomToFilterBounds}
+                  type="checkbox"
+                  onChange={(e) => {
+                    setZoomToFilterBounds(selectedColumn.column_name, !selectedColumn.zoomToFilterBounds)
+                  }}
+                >
+                </input>
+              </div>
               <div
                 className="flex items-center  cursor-pointer fill-white group-hover/title:fill-slate-300 hover:bg-slate-100 rounded group/icon col-span-1 p-0.5"
                 onClick={() => {

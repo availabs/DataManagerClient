@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, createContext, useRef } from "react"
 import { useImmer } from 'use-immer';
+import mapboxgl from "maplibre-gl";
 import { useSearchParams, Link, useNavigate, useParams } from "react-router";
 import get from "lodash/get"
 import set from "lodash/set"
@@ -27,7 +28,7 @@ import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
-import { extractState } from './stateUtils';
+import { extractState, fetchBoundsForFilter } from './stateUtils';
 
 export const SymbologyContext = createContext(undefined);
 
@@ -47,9 +48,13 @@ export const PluginLibrary = {
       map.on("click", MAP_CLICK);
     },
     dataUpdate: (map, state, setState) => {
+      console.log("---data update-----")
       const { pathBase, layerPaintPath } = extractState(state);
       const pluginDataPath = `symbology.pluginData.testplugin`;
       //console.log("plugin Data gets updated", { map, state, setState });
+      const hover = get(state, `${pluginDataPath}['hover']`, "");
+      console.log("new hover val", {hover})
+      console.log( `${pluginDataPath}['hover']`)
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       if (pm1 && peak) {
@@ -88,19 +93,21 @@ export const PluginLibrary = {
         ];
 
         setState((draft) => {
-            set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
-            set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
-            set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
+          console.log({pathBase})
+          set(draft,`${pathBase}['hover']` , hover)
+          set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+          set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
+          set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
 
-            //SHAPE OF layerFilter --  
-            // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
-            //value can be an array of 2 numbers, if operator === 'between'
-            //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
-            const testFilter = {
-              [newDataColumn]: { operator: ">", value: 1.2 },
-            };
-            set(draft, `${pathBase}['filter']`, testFilter); //eventually consumed by mapbox, but formatted/parsed by AVAIL code
-          })
+          //SHAPE OF layerFilter --  
+          // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
+          //value can be an array of 2 numbers, if operator === 'between'
+          //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
+          const testFilter = {
+            [newDataColumn]: { operator: ">", value: 1.2 },
+          };
+          set(draft, `${pathBase}['filter']`, testFilter); //eventually consumed by mapbox, but formatted/parsed by AVAIL code
+        })
       }
     },
     internalPanel: ({ state, setState }) => {
@@ -123,6 +130,20 @@ export const PluginLibrary = {
               },
               //the layer the plugin controls MUST use the `activeLayer` path/field
               path: `['activeLayer']`,
+            },
+          ],
+        },
+        {
+          label: "Hover Popup",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: [{value: "hover", name: "Enabled"}, {value: false, name: "Disabled"}],
+                default: "",
+              },
+              //the layer the plugin controls MUST use the `activeLayer` path/field
+              path: `['hover']`,
             },
           ],
         },
@@ -468,12 +489,13 @@ const MapEditor = () => {
     curveFactor,
     legendData,
     pluginData,
-    isActiveLayerPlugin
+    isActiveLayerPlugin,
+    existingDynamicFilter
   } = useMemo(() => {
     return extractState(state)
   },[state]);
 
-  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit, zoomToFilterBounds: state.symbology?.zoomToFilterBounds } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit, state.symbology?.zoomToFilterBounds]);
 
   const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
     const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`, 0);
@@ -596,8 +618,6 @@ const MapEditor = () => {
   }, [falcorCache, sourceId, pgEnv]);
 
   const prevViewGroupId = usePrevious(viewGroupId);
-
-  console.log({pluginData, state, isActiveLayerPlugin})
   useEffect(() => {
     const setPaint = async () => {
       if (layerType === 'categories') {
@@ -740,6 +760,28 @@ const MapEditor = () => {
     }
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
 
+  useEffect(() => {
+    const getFilterBounds = async () => {
+      for(const existingFilter of existingDynamicFilter) {
+        console.log(existingFilter.zoomToFilterBounds)
+        if(existingFilter.zoomToFilterBounds && existingFilter?.values?.length > 0) {
+          const newExtent = await fetchBoundsForFilter(state, falcor, pgEnv, existingFilter);
+
+          setState((draft) => {
+            const parsedExtent = JSON.parse(newExtent);
+
+            const coordinates = parsedExtent.coordinates[0];
+            const mapGeom = coordinates.reduce((bounds, coord) => {
+              return bounds.extend(coord);
+            }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+            draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+          })
+        }
+      }
+    }
+    getFilterBounds()
+  }, [existingDynamicFilter])
   useEffect(() => {
     if(method === "custom" && !isActiveLayerPlugin) {
       console.log("custom breaks changed")

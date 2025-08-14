@@ -286,6 +286,14 @@ const ViewLayerRender = (props) => {
       });
     }
   }, [maplibreMap, allLayerProps?.zoomToFit]);
+  //TODO maybe use `zoomToFit` for both of these zooms?
+  useEffect(() => {
+    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0){
+      maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
+        duration: 400
+      });
+    }
+  }, [maplibreMap, allLayerProps?.zoomToFilterBounds]);
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {

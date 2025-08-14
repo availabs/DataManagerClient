@@ -6,6 +6,7 @@ import {
   rangeColors,
 } from "./components/LayerManager/utils";
 import colorbrewer from "./components/LayerManager/colors"; //"colorbrewer"
+
 const extractState = (state) => {
   const activeLayerId = state?.symbology?.activeLayer;
   const selectedInteractiveFilterIndex = get(
@@ -94,8 +95,25 @@ const extractState = (state) => {
     legendData: get(state, `${pathBase}['legend-data']`),
     pluginData,
     isActiveLayerPlugin,
-    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => pluginData[pluginName].activeLayer === activeLayerId)
+    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => pluginData[pluginName].activeLayer === activeLayerId),
+    existingDynamicFilter: get(
+      state,
+      `symbology.layers[${state.symbology.activeLayer}]['dynamic-filters']`,
+      []
+    ),
   };
 };
 
-export { extractState };
+const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
+  const {viewId} = extractState(state)
+  //dont need to do change detection here. This function is called from inside a use-effect
+  const newOptions = JSON.stringify({
+    filter: { [dynamicFilter.column_name]: dynamicFilter.values}
+  })
+  const resp = await falcor.get([
+    'dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',{ },['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent']
+  ]);
+  const newExtent = get(resp, ['json','dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',0,['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent'] ])
+  return newExtent;
+}
+export { extractState, fetchBoundsForFilter };
