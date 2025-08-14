@@ -212,7 +212,6 @@ export const ExistingColumnList = ({
       </div>
       <DndList onDrop={reorderAttrs}>
         {selectedColumns?.map((selectedColumn, i) => {
-          console.log(selectedColumn)
           return (
             <div
               key={i}

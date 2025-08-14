@@ -951,7 +951,6 @@ function ChoroplethControl({path, params={}}) {
 }
 
 export const AddColumnSelectControl = ({setState, availableColumnNames, selectedColumns, label="Add Column"}) => {
-  console.log("selectedColumns::", selectedColumns)
   //IDK why but I can't get the array of objects to sort. So we make a sorted array of labels and then look stuff up later
   const sortedColNames = availableColumnNames.map(d => d.label).sort();
   return (
