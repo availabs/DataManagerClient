@@ -473,6 +473,7 @@ const MapEditor = () => {
     showOther,
     symbology_id,
     choroplethdata,
+    filter,
     filterGroupEnabled,
     filterGroupLegendColumn,
     viewGroupEnabled,
@@ -762,26 +763,23 @@ const MapEditor = () => {
 
   useEffect(() => {
     const getFilterBounds = async () => {
-      for(const existingFilter of existingDynamicFilter) {
-        console.log(existingFilter.zoomToFilterBounds)
-        if(existingFilter.zoomToFilterBounds && existingFilter?.values?.length > 0) {
-          const newExtent = await fetchBoundsForFilter(state, falcor, pgEnv, existingFilter);
+      const newExtent = await fetchBoundsForFilter(state, falcor, pgEnv, existingDynamicFilter);
 
-          setState((draft) => {
-            const parsedExtent = JSON.parse(newExtent);
+      setState((draft) => {
+        const parsedExtent = JSON.parse(newExtent);
 
-            const coordinates = parsedExtent.coordinates[0];
-            const mapGeom = coordinates.reduce((bounds, coord) => {
-              return bounds.extend(coord);
-            }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+        const coordinates = parsedExtent.coordinates[0];
+        const mapGeom = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-            draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
-          })
-        }
-      }
+        draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+      })
     }
-    getFilterBounds()
-  }, [existingDynamicFilter])
+    if(existingDynamicFilter.length > 0) {
+      getFilterBounds()
+    }
+  }, [existingDynamicFilter, filter])
   useEffect(() => {
     if(method === "custom" && !isActiveLayerPlugin) {
       console.log("custom breaks changed")

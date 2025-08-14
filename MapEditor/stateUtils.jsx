@@ -73,6 +73,7 @@ const extractState = (state) => {
     numCategories: get(state, `${pathBase}['num-categories']`, 10),
     showOther: get(state, `${pathBase}['category-show-other']`, "#ccc"),
     symbology_id: get(state, `symbology_id`),
+    filter: get(state, `${pathBase}['filter']`, false),
     filterGroupEnabled: get(state, `${pathBase}['filterGroupEnabled']`, false),
     filterGroupLegendColumn: get(
       state,
@@ -105,10 +106,53 @@ const extractState = (state) => {
 };
 
 const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
-  const {viewId} = extractState(state)
+  const {viewId, filter} = extractState(state)
   //dont need to do change detection here. This function is called from inside a use-effect
+  const filterEqualOptions = {};
+  dynamicFilter.reduce((acc, curr) => {
+    acc[curr.column_name] = curr.values;
+    return acc;
+  }, filterEqualOptions)
+  
+  Object.keys(filter)
+    .filter((filtKey) => filter[filtKey].operator === "==")
+    .reduce((acc, curr) => {
+      acc[curr] = filter[curr].value;
+      return acc;
+    }, filterEqualOptions);
+
+  const filterOtherOptions = {};
+
+  //TODO -- how to pass `!=`, or `between`
+  Object.keys(filter)
+    .reduce((acc, filtKey) => {
+      if(filter[filtKey].operator === ">=") {
+        if(!acc["gte"]) {
+          acc['gte'] = {};
+        }
+        acc['gte'] = {...acc['gte'], [filter[filtKey].columnName]: filter[filtKey].value}
+      } else if(filter[filtKey].operator === ">") {
+        if(!acc["gt"]) {
+          acc['gt'] = {};
+        }
+        acc['gt'] = {...acc['gt'], [filter[filtKey].columnName]: filter[filtKey].value}
+      } else if(filter[filtKey].operator === "<=") {
+        if(!acc["lte"]) {
+          acc['lte'] = {};
+        }
+        acc['lte'] = {...acc['lte'], [filter[filtKey].columnName]: filter[filtKey].value}
+      } else if(filter[filtKey].operator === "<") {
+        if(!acc["lt"]) {
+          acc['lt'] = {};
+        }
+        acc['lt'] = {...acc['lt'], [filter[filtKey].columnName]: filter[filtKey].value}
+      }
+      return acc;
+    }, filterOtherOptions);
+
   const newOptions = JSON.stringify({
-    filter: { [dynamicFilter.column_name]: dynamicFilter.values}
+    filter: { ...filterEqualOptions },
+    ...filterOtherOptions
   })
   const resp = await falcor.get([
     'dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',{ },['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent']
