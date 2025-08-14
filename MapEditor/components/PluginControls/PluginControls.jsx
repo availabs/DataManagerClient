@@ -12,7 +12,6 @@ export function SelectControl({ path, params = {} }) {
     params.default !== null && params.default !== undefined
       ? params.default
       : params?.options?.[0]?.value;
-      
   return (
     <label className="flex w-full">
       <div className="flex w-full items-center">

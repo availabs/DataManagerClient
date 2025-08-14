@@ -173,6 +173,13 @@ export const DynamicFilterBuilder = ({path, params={}}) => {
                   `symbology.layers[${state.symbology.activeLayer}]${path}`,
                   newColumns
                 );
+                if(!zoomToFilterBounds) {
+                  set(
+                    draft,
+                    `symbology.layers.zoomToFilterBounds`,
+                    []
+                  );
+                }
               })
             }}
           />
@@ -205,6 +212,7 @@ export const ExistingColumnList = ({
       </div>
       <DndList onDrop={reorderAttrs}>
         {selectedColumns?.map((selectedColumn, i) => {
+          console.log(selectedColumn)
           return (
             <div
               key={i}
@@ -233,6 +241,7 @@ export const ExistingColumnList = ({
               <div className="truncate  col-span-2 py-1 items-center content-center justify-center flex">
                 <input
                   value={selectedColumn.zoomToFilterBounds}
+                  checked={selectedColumn.zoomToFilterBounds}
                   type="checkbox"
                   onChange={(e) => {
                     setZoomToFilterBounds(selectedColumn.column_name, !selectedColumn.zoomToFilterBounds)

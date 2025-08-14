@@ -776,7 +776,7 @@ const MapEditor = () => {
         draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
       })
     }
-    if(existingDynamicFilter.length > 0) {
+    if(existingDynamicFilter.length > 0 && existingDynamicFilter.some(dynFilter => dynFilter.zoomToFilterBounds)) {
       getFilterBounds()
     }
   }, [existingDynamicFilter, filter])
