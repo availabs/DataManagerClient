@@ -282,6 +282,7 @@ const ViewLayerRender = (props) => {
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
       maplibreMap.fitBounds(allLayerProps.zoomToFit, {
+        padding: { top: 20, bottom: 20, left: 20, right: 20 },
         duration: 400
       });
     }
@@ -290,6 +291,7 @@ const ViewLayerRender = (props) => {
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0){
       maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
+        padding: { top: 20, bottom: 20, left: 20, right: 20 },
         duration: 400
       });
     }
