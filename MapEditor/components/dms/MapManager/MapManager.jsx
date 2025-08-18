@@ -309,9 +309,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       </div>
     );
   }
-  if(dynamicFilters.length > 0) {
-    groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer} symbology_id={row.symbologyId}/>)
-  }
+  // if(dynamicFilters.length > 0) {
+  //   groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer} symbology_id={row.symbologyId}/>)
+  // }
   useEffect(() => {
     if(layer) {
       setState((draft => {
@@ -339,35 +339,35 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       }))
     }
   }, [dataColumn]);
-  useEffect(() => {
-    const getFilterBounds = async () => {
-      const newExtent = await fetchBoundsForFilter(state.symbologies[row.symbologyId], falcor, pgEnv, dynamicFilters);
+  // useEffect(() => {
+  //   const getFilterBounds = async () => {
+  //     const newExtent = await fetchBoundsForFilter(state.symbologies[row.symbologyId], falcor, pgEnv, dynamicFilters);
 
-      setState((draft) => {
-        const parsedExtent = JSON.parse(newExtent);
+  //     setState((draft) => {
+  //       const parsedExtent = JSON.parse(newExtent);
 
-        const coordinates = parsedExtent.coordinates[0];
-        const mapGeom = coordinates.reduce((bounds, coord) => {
-          return bounds.extend(coord);
-        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+  //       const coordinates = parsedExtent.coordinates[0];
+  //       const mapGeom = coordinates.reduce((bounds, coord) => {
+  //         return bounds.extend(coord);
+  //       }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-        draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
-      })
-    }
-    if (
-      dynamicFilters.length > 0 &&
-      dynamicFilters.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
-      dynamicFilters.some((dynFilter) => dynFilter?.values?.length > 0)
-    ) {
-      getFilterBounds();
-    } else {
-      if(state.symbologies[row.symbologyId].symbology.zoomToFilterBounds.length > 0) { 
-        setState((draft) => {
-          draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
-        });
-      }
-    }
-  }, [dynamicFilters])
+  //       draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+  //     })
+  //   }
+  //   if (
+  //     dynamicFilters.length > 0 &&
+  //     dynamicFilters.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
+  //     dynamicFilters.some((dynFilter) => dynFilter?.values?.length > 0)
+  //   ) {
+  //     getFilterBounds();
+  //   } else {
+  //     if(state.symbologies[row.symbologyId].symbology.zoomToFilterBounds.length > 0) { 
+  //       setState((draft) => {
+  //         draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
+  //       });
+  //     }
+  //   }
+  // }, [dynamicFilters])
   return (
     <div className='border-white/85 border hover:border-pink-500 group'>
       <div className={`w-full  px-2 flex  items-center`}>

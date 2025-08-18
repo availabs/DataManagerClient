@@ -30,7 +30,7 @@ import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 import { extractState, fetchBoundsForFilter } from './stateUtils';
 
-import { MacroviewPlugin } from "./macroview.plugin";
+import { MacroviewPlugin } from "./plugins/macroview/macroview.plugin";
 
 export const SymbologyContext = createContext(undefined);
 

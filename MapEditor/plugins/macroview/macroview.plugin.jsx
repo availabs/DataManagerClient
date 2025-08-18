@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, createContext, useRef } from "reac
 import get from "lodash/get"
 import set from "lodash/set"
 import omit from "lodash/omit"
-import { extractState } from './stateUtils';
-
+import { extractState } from '../../stateUtils';
+import {filters, updateSubMeasures} from "./updateFilters"
 const MAP_CLICK = () => console.log("map was clicked");
 export const MacroviewPlugin = {
     id: "macroview",
@@ -14,6 +14,10 @@ export const MacroviewPlugin = {
     },
     dataUpdate: (map, state, setState) => {
       console.log("---data update-----")
+      //console.log("testing old filters and json code")
+
+      //console.log({filters})
+      //updateSubMeasures(this.filters.measure.value, this.filters, falcor);
       const { pathBase, layerPaintPath } = extractState(state);
       const pluginDataPath = `symbology.pluginData.macroview`;
       //console.log("plugin Data gets updated", { map, state, setState });
@@ -157,19 +161,7 @@ export const MacroviewPlugin = {
               path: `['pm-1']`,
             },
           ],
-        },
-        {
-          label: "Test Input",
-          controls: [
-            {
-              type: "radio",
-              params: {
-                options: perfMeasureOptions
-              },
-              path: `['pm-1']`,
-            },
-          ],
-        },
+        }
       ];
 
       //peak selector control
