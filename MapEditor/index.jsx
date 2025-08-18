@@ -783,7 +783,7 @@ const MapEditor = () => {
     ) {
       getFilterBounds();
     } else {
-      if(state.symbology.zoomToFilterBounds.length > 0) { 
+      if(state?.symbology?.zoomToFilterBounds?.length > 0) { 
         setState((draft) => {
           draft.symbology.zoomToFilterBounds = [];
         });
