@@ -24,7 +24,6 @@ export function SelectControl({ path, params = {} }) {
             })
           }
         >
-          <option value={""}></option>
           {(params?.options || []).map((opt, i) => {
             return (
               <option key={i} value={opt.value}>

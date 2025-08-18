@@ -413,7 +413,6 @@ export default ViewLayer;
 
 
 const HoverComp = ({ data, layer }) => {
-  //console.log("inside hover comp, layer::", layer)
   if(!layer.props.hover) return
   const { source_id, view_id } = layer;
   const dctx = React.useContext(DamaContext);
