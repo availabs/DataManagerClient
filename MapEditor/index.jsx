@@ -776,8 +776,18 @@ const MapEditor = () => {
         draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
       })
     }
-    if(existingDynamicFilter.length > 0 && existingDynamicFilter.some(dynFilter => dynFilter.zoomToFilterBounds)) {
-      getFilterBounds()
+    if (
+      existingDynamicFilter.length > 0 &&
+      existingDynamicFilter.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
+      existingDynamicFilter.some((dynFilter) => dynFilter?.values?.length > 0)
+    ) {
+      getFilterBounds();
+    } else {
+      if(state.symbology.zoomToFilterBounds.length > 0) { 
+        setState((draft) => {
+          draft.symbology.zoomToFilterBounds = [];
+        });
+      }
     }
   }, [existingDynamicFilter, filter])
   useEffect(() => {

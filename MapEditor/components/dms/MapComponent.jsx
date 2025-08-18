@@ -124,7 +124,7 @@ const Edit = ({value, onChange, size}) => {
 
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
-            return {...out, ...(curr?.symbology?.layers || {})}
+          return {...out, ...(curr?.symbology?.layers || {}), zoomToFilterBounds: curr?.symbology.zoomToFilterBounds }
         },{}) 
     }, [state?.symbologies]);
 

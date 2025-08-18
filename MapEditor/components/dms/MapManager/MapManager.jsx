@@ -1,9 +1,10 @@
 import React, { useContext, useMemo, Fragment, useRef, useEffect} from 'react'
 import { MapContext } from '../MapComponent'
+import mapboxgl from "maplibre-gl";
 import isEqual from "lodash/isEqual"
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
-import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, Plus, Eye, EyeSlashed,EyeClosed} from '../../icons'
+import { Fill, Line, Circle, MenuDots , CaretUpSolid, CaretDownSolid, CaretDown,  Plus, Eye, EyeSlashed,EyeClosed} from '../../icons'
 import get from 'lodash/get'
 import { SelectSymbology } from './SymbologySelector'
 import set from 'lodash/set'
@@ -19,6 +20,7 @@ const getAttributes = (data) => {
     return out;
   }, {});
 };
+import { fetchBoundsForFilter } from '../../../stateUtils';
 import { ViewAttributes } from "~/pages/DataManager/Source/attributes"
 const typeIcons = {
   'fill': Fill,
@@ -99,7 +101,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   const [views, setViews] = React.useState([])
   const falcorCache = falcor.getCache();
 
-  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, } = useMemo(() => {
+  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, dynamicFilters} = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
     const layer = get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {});
     return {
@@ -117,6 +119,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       viewGroupEnabled: get(layer, `['viewGroupEnabled']`),
       viewGroup: get(layer, `['filter-source-views']`, []),
       viewGroupName: get(layer, `['view-group-name']`, ''),
+      dynamicFilters:get(layer, `['dynamic-filters']`, []),
     }
   },[row, state])
 
@@ -162,7 +165,6 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       .filter(v => Object.keys(v).length > 0);
   }, [falcorCache, pgEnv]);
 
-  console.log({falcorCache})
   const numRows = useMemo(() => {
     return state.tabs[tabIndex].rows.length;
   }, [state.tabs[tabIndex].length]);
@@ -307,7 +309,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       </div>
     );
   }
-
+  if(dynamicFilters.length > 0) {
+    groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer} symbology_id={row.symbologyId}/>)
+  }
   useEffect(() => {
     if(layer) {
       setState((draft => {
@@ -334,8 +338,36 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
         }
       }))
     }
-  }, [dataColumn])
+  }, [dataColumn]);
+  useEffect(() => {
+    const getFilterBounds = async () => {
+      const newExtent = await fetchBoundsForFilter(state.symbologies[row.symbologyId], falcor, pgEnv, dynamicFilters);
 
+      setState((draft) => {
+        const parsedExtent = JSON.parse(newExtent);
+
+        const coordinates = parsedExtent.coordinates[0];
+        const mapGeom = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+      })
+    }
+    if (
+      dynamicFilters.length > 0 &&
+      dynamicFilters.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
+      dynamicFilters.some((dynFilter) => dynFilter?.values?.length > 0)
+    ) {
+      getFilterBounds();
+    } else {
+      if(state.symbologies[row.symbologyId].symbology.zoomToFilterBounds.length > 0) { 
+        setState((draft) => {
+          draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
+        });
+      }
+    }
+  }, [dynamicFilters])
   return (
     <div className='border-white/85 border hover:border-pink-500 group'>
       <div className={`w-full  px-2 flex  items-center`}>
@@ -849,6 +881,148 @@ function MapManager () {
   )
 }
 
+const DynamicFilter = ({layer, symbology_id}) => {
+  const { state, setState, falcor, pgEnv  } = React.useContext(MapContext);
+  const falcorCache = falcor.getCache();
+  let { layerType, dynamicFilters, viewId } = useMemo(() => {
+    return {
+      viewId:get(layer,`view_id`),
+      layerType : get(layer, `['layer-type']`),
+      dynamicFilters:get(layer, `['dynamic-filters']`, []),
+    }
+  },[state, layer]);
 
+  const selectedColumnNames = dynamicFilters?.map(dynamicF => dynamicF.column_name);
+
+  React.useEffect(() => {
+    if(selectedColumnNames.length > 0) {
+      selectedColumnNames.forEach(colName => {
+        const options = JSON.stringify({
+          groupBy: [(colName).split('AS ')[0]],
+          exclude: {[(colName).split('AS ')[0]]: ['null']},
+          orderBy: {"2": 'desc'}
+        })
+        falcor.get([
+          'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 200},[colName, 'count(1)::int as count']
+        ]) 
+      })
+    }
+  },[selectedColumnNames, layerType, viewId]);
+  return (
+    <div className="text-slate-600 font-medium text-xs  truncate flex-1 pl-3 pr-1 pb-1 w-full">
+      <div className='text-black'>Dynamic Filters:</div>
+      {
+        dynamicFilters.map((dFilter, i) => {
+          const colName  = dFilter.column_name;
+          const options = JSON.stringify({
+            groupBy: [(colName).split('AS ')[0]],
+            exclude: {[(colName).split('AS ')[0]]: ['null']},
+            orderBy: {"2": 'desc'}
+          })
+          const sampleData =  Object.values(
+            get(falcorCache, [
+              'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex'], [])
+          ).map(v =>  v?.[colName]).filter(val => typeof val !== "object");
+
+          sampleData.sort();
+          return (
+            <div key={`${colName}_${i}_legend_filter_option_row`} className="text-slate-600 font-medium text-xs flex-1 pl-3 pr-1 pb-1 w-full">
+              <DynamicFilterControl
+                layer={layer}
+                symbology_id={symbology_id}
+                filterIndex={i}
+                sampleData={sampleData}
+                button={
+                  <div className='text-black rounded-md h-[36px] pl-0 pr-1 flex w-full items-center border border-transparent cursor-pointer hover:border-slate-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
+                } 
+              />
+            </div> 
+          )
+        })
+      }
+    </div>
+  )
+}
+
+
+
+function DynamicFilterControl({button, layer, sampleData, filterIndex, symbology_id}) {
+  const { state, setState, falcor, pgEnv  } = React.useContext(MapContext);
+  const falcorCache = falcor.getCache();
+
+  const {filterValues} = useMemo(() => {
+    return {
+      filterValues:get(layer, `['dynamic-filters'][${filterIndex}].values`, []),
+    }
+  }, [state, filterIndex]);
+  
+  return (
+    <Menu as="div" className="relative inline-block text-left w-full">
+      <Menu.Button as="div">{button}</Menu.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items
+          anchor="right"
+          className="absolute w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+        >
+          <div className=" p-2 max-h-[250px] overflow-auto ">
+            {sampleData.map((datum) => {
+              return (
+                <Menu.Item key={`menu_item_${datum}`}>
+                  {({ active }) => (
+                    <div
+                      className={`${
+                        active ? "bg-pink-50 " : ""
+                      } group flex w-full items-center rounded-md px-1 py-1 text-sm`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filterValues.includes(datum)}
+                        onChange={(e) => {
+                          if (filterValues.includes(datum)) {
+                            setState((draft) => {
+                              draft.symbologies[symbology_id].symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = filterValues.filter(
+                                (val) => val !== datum
+                              );
+                            });
+                          } else {
+                            const newValues = [...filterValues];
+                            newValues.push(datum);
+
+                            setState((draft) => {
+                              draft.symbologies[symbology_id].symbology.layers[layer.id][
+                                "dynamic-filters"
+                              ][filterIndex].values = newValues;
+                            });
+                          }
+                        }}
+                      />
+                      <div className="truncate flex items-center text-[15px] px-4 py-1">
+                        {datum}
+                      </div>
+                    </div>
+                  )}
+                </Menu.Item>
+              );
+            })}
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
+} 
 
 export default MapManager

@@ -106,7 +106,7 @@ const extractState = (state) => {
 };
 
 const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
-  const {viewId, filter} = extractState(state)
+  const { viewId, filter } = extractState(state)
   //dont need to do change detection here. This function is called from inside a use-effect
   const filterEqualOptions = {};
   dynamicFilter.reduce((acc, curr) => {
