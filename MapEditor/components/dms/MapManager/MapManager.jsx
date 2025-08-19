@@ -444,7 +444,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                     <div 
                       className={`${
                         active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+                      } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
                       onClick={() => {
                         setState(draft => {
                           delete draft.symbologies[symbology.symbology_id]
@@ -461,7 +461,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                     <div 
                       className={`${
                         active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                      } group flex w-full items-center rounded-md p-1 text-sm`}
                       onClick={async () => {
                         console.log("updating symbology for::", row.symbologyId);
                         setState(draft => {
@@ -559,7 +559,7 @@ function TabPanel ({tabIndex, tab}) {
                     <div 
                       className={`${
                         active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
+                      } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
                       onClick={() => {
                         setState(draft => {
                           console.log('remove tab', state, tabIndex)
@@ -576,7 +576,7 @@ function TabPanel ({tabIndex, tab}) {
                     <div 
                       className={`${
                         active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      } group flex w-full items-center  rounded-md p-1 text-sm`}
                       onClick={() => {
                         setState(draft => {
                           arraymove(draft.tabs, tabIndex, tabIndex-1);
@@ -592,7 +592,7 @@ function TabPanel ({tabIndex, tab}) {
                     <div  
                       className={`${
                         active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center  rounded-md px-2 py-2 text-sm`}
+                      } group flex w-full items-center  rounded-md p-1 text-sm`}
                       onClick={() => {
                         setState(draft => {
                           arraymove(draft.tabs, tabIndex, tabIndex+1);
@@ -693,7 +693,7 @@ function MapManager () {
       <div className={`bg-white/95 w-[340px] ${containerOverflow} rounded-lg drop-shadow-lg pointer-events-auto  min-h-[400px] max-h-[calc(100vh_-_111px)] scrollbar-sm `}>
         <Tab.Group className='flex'>
           <div className='flex flex-col justify-between items-center border-r'>
-            <Tab.List className='flex w-[40px] flex-1 flex-col '>
+            <Tab.List className='flex w-[45px] flex-1 flex-col '>
               {tabs.map((tab,i) => (
                 <Tab  key={tab.name} as={Fragment}>
                   {({ selected }) => (
@@ -731,7 +731,7 @@ function MapManager () {
                         <div 
                           className={`${
                             active ? 'bg-pink-50 ' : ''
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                          } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
                           Height:
                           <select
@@ -762,14 +762,17 @@ function MapManager () {
                         <div 
                           className={`${
                             active ? 'bg-pink-50 ' : ''
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                          onClick={() => {
-                            setState(draft => {
-                              draft.hideControls = !draft.hideControls;
-                            })
-                          }}
+                          } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
-                          {hideControls ? "Display Map Controls" : "Hide Map Controls"}
+                          <button
+                            onClick={() => {
+                              setState(draft => {
+                                draft.hideControls = !hideControls;
+                              })
+                            }}
+                          >
+                            {hideControls ? "Show Map Controls" : "Hide Map Controls"}
+                          </button>
                         </div>
                       )}
                     </Menu.Item>
@@ -780,14 +783,16 @@ function MapManager () {
                         <div 
                           className={`${
                             active ? 'bg-pink-50 ' : ''
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                          onClick={() => {
-                            setState(draft => {
-                              draft.zoomPan = !draft.zoomPan;
-                            })
-                          }}
+                          } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
-                          {zoomPan ? "Disable zoom/pan" : "Enable zoom/pan"}
+                          <button 
+                            onClick={() => {
+                            setState(draft => {
+                              draft.zoomPan = !zoomPan;
+                            })
+                          }}>
+                            {zoomPan ? "Disable zoom/pan" : "Enable zoom/pan"}
+                          </button>
                         </div>
                       )}
                     </Menu.Item>
@@ -798,15 +803,17 @@ function MapManager () {
                         <div 
                           className={`${
                             active ? 'bg-pink-50 ' : ''
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-
-                          onClick={() => {
-                            setState(draft => {
-                              draft.setInitialBounds = true;
-                            })
-                          }}
+                          } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
-                          Set Initial Viewport
+                          <button
+                            onClick={() => {
+                              setState(draft => {
+                                draft.setInitialBounds = true;
+                              })
+                            }}
+                          >
+                            Set Initial Viewport
+                          </button>
                         </div>
                       )}
                     </Menu.Item>
@@ -819,16 +826,18 @@ function MapManager () {
                             <div 
                               className={`${
                                 active ? 'bg-pink-50 ' : ''
-                              } group flex w-full items-center text-red-400 rounded-md px-2 py-2 text-sm`}
-    
-                              onClick={() => {
-                                setState(draft => {
-                                  draft.setInitialBounds = false;
-                                  draft.initialBounds = null;
-                                })
-                              }}
+                              } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
                             >
-                              Remove Initial Viewport
+                              <button
+                                onClick={() => {
+                                  setState(draft => {
+                                    draft.setInitialBounds = false;
+                                    draft.initialBounds = null;
+                                  })
+                                }}
+                              >
+                                Remove Initial Viewport
+                              </button>
                             </div>
                           )}
                         </Menu.Item>
@@ -841,16 +850,17 @@ function MapManager () {
                         <div 
                           className={`${
                             active ? 'bg-pink-50 ' : ''
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-
-                          onClick={() => {
-                            setState(draft => {
-                              draft.blankBaseMap = !draft.blankBaseMap;
-                              console.log("Settting draft.blankBaseMap::", draft.blankBaseMap)
-                            })
-                          }}
+                          } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
-                          {blankBaseMap ? "Reset base map layer" : "Use blank basemap"}
+                          <button
+                            onClick={() => {
+                              setState(draft => {
+                                draft.blankBaseMap = !draft.blankBaseMap;
+                              })
+                            }}
+                          >
+                            {blankBaseMap ? "Reset base map layer" : "Use blank basemap"}
+                          </button>
                         </div>
                       )}
                     </Menu.Item>
