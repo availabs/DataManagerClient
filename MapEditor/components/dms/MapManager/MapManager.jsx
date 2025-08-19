@@ -101,7 +101,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   const [views, setViews] = React.useState([])
   const falcorCache = falcor.getCache();
 
-  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, dynamicFilters} = useMemo(() => {
+  const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, dynamicFilters, dynamicFilterDisplay} = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
     const layer = get(symbology,`symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]`, {});
     return {
@@ -120,6 +120,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       viewGroup: get(layer, `['filter-source-views']`, []),
       viewGroupName: get(layer, `['view-group-name']`, ''),
       dynamicFilters:get(layer, `['dynamic-filters']`, []),
+      dynamicFilterDisplay:get(layer, `['dynamic-filter-display']`, false),
     }
   },[row, state])
 
@@ -309,9 +310,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       </div>
     );
   }
-  // if(dynamicFilters.length > 0) {
-  //   groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer} symbology_id={row.symbologyId}/>)
-  // }
+  if(dynamicFilters.length > 0 && dynamicFilterDisplay) {
+    groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer} symbology_id={row.symbologyId}/>)
+  }
   useEffect(() => {
     if(layer) {
       setState((draft => {
@@ -339,35 +340,35 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       }))
     }
   }, [dataColumn]);
-  // useEffect(() => {
-  //   const getFilterBounds = async () => {
-  //     const newExtent = await fetchBoundsForFilter(state.symbologies[row.symbologyId], falcor, pgEnv, dynamicFilters);
+  useEffect(() => {
+    const getFilterBounds = async () => {
+      const newExtent = await fetchBoundsForFilter(state.symbologies[row.symbologyId], falcor, pgEnv, dynamicFilters);
 
-  //     setState((draft) => {
-  //       const parsedExtent = JSON.parse(newExtent);
+      setState((draft) => {
+        const parsedExtent = JSON.parse(newExtent);
 
-  //       const coordinates = parsedExtent.coordinates[0];
-  //       const mapGeom = coordinates.reduce((bounds, coord) => {
-  //         return bounds.extend(coord);
-  //       }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+        const coordinates = parsedExtent.coordinates[0];
+        const mapGeom = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-  //       draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
-  //     })
-  //   }
-  //   if (
-  //     dynamicFilters.length > 0 &&
-  //     dynamicFilters.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
-  //     dynamicFilters.some((dynFilter) => dynFilter?.values?.length > 0)
-  //   ) {
-  //     getFilterBounds();
-  //   } else {
-  //     if(state.symbologies[row.symbologyId].symbology.zoomToFilterBounds.length > 0) { 
-  //       setState((draft) => {
-  //         draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
-  //       });
-  //     }
-  //   }
-  // }, [dynamicFilters])
+        draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+      })
+    }
+    if (
+      dynamicFilters?.length > 0 &&
+      dynamicFilters?.some((dynFilter) => dynFilter?.zoomToFilterBounds) &&
+      dynamicFilters?.some((dynFilter) => dynFilter?.values?.length > 0)
+    ) {
+      getFilterBounds();
+    } else {
+      if(state?.symbologies?.[row.symbologyId]?.symbology?.zoomToFilterBounds?.length > 0) { 
+        setState((draft) => {
+          draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
+        });
+      }
+    }
+  }, [dynamicFilters])
   return (
     <div className='border-white/85 border hover:border-pink-500 group'>
       <div className={`w-full  px-2 flex  items-center`}>
@@ -438,6 +439,29 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           <SymbologyMenu 
             button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
           >
+            {dynamicFilters && dynamicFilters.length > 0 && <div className="px-1 py-1 ">
+              <Menu.Item >
+                {({ active }) => (
+                  <div 
+                    className={`${
+                      active ? 'bg-pink-50 ' : ''
+                    } group flex w-full items-center rounded-md p-1 text-sm`}
+                  >
+                    <button
+                      onClick={() => {
+                        console.log("setting dynamic controls")
+                        setState(draft => {
+                          set(draft,`symbologies[${row.symbologyId}].symbology.layers[${Object.keys(symbology?.symbology?.layers || {})[0]}]['dynamic-filter-display']`, !dynamicFilterDisplay);
+                          //draft.symbologies[symbology.symbology_id]['dynamic-filter-display'] = !dynamicFilterDisplay
+                        })
+                      }}
+                    >
+                      {dynamicFilterDisplay ? "Hide filter controls" : "Show filter controls"}
+                    </button>
+                  </div>
+                )}
+              </Menu.Item>
+            </div>}
             <div className="px-1 py-1 ">
                 <Menu.Item >
                   {({ active }) => (
@@ -455,32 +479,32 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                   )}
                 </Menu.Item>
               </div>
-              <div className="px-1 py-1 ">
-                <Menu.Item >
-                  {({ active }) => (
-                    <div 
-                      className={`${
-                        active ? 'bg-pink-50 ' : ''
-                      } group flex w-full items-center rounded-md p-1 text-sm`}
-                      onClick={async () => {
-                        console.log("updating symbology for::", row.symbologyId);
-                        setState(draft => {
-                          let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
-                          Object.keys(newSymbology.symbology.layers).forEach(layerId => {
-                            newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
-                              const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
-                              newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
-                            })
+            <div className="px-1 py-1 ">
+              <Menu.Item >
+                {({ active }) => (
+                  <div 
+                    className={`${
+                      active ? 'bg-pink-50 ' : ''
+                    } group flex w-full items-center rounded-md p-1 text-sm`}
+                    onClick={async () => {
+                      console.log("updating symbology for::", row.symbologyId);
+                      setState(draft => {
+                        let newSymbology = cloneDeep(symbologies.find(d => +d.symbology_id === +row.symbologyId))
+                        Object.keys(newSymbology.symbology.layers).forEach(layerId => {
+                          newSymbology.symbology.layers[layerId].layers.forEach((d,i) => {
+                            const val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
+                            newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
                           })
-                    
-                          draft.symbologies[''+row.symbologyId] = newSymbology;
-                          draft.symbologies[symbology.symbology_id].isVisible = visible;
                         })
-                      }}
-                    >Update symbology</div>
-                  )}
-                </Menu.Item>
-              </div>
+                  
+                        draft.symbologies[''+row.symbologyId] = newSymbology;
+                        draft.symbologies[symbology.symbology_id].isVisible = visible;
+                      })
+                    }}
+                  >Update symbology</div>
+                )}
+              </Menu.Item>
+            </div>
           </SymbologyMenu>
         </div>)}
       </div>
@@ -943,7 +967,7 @@ const DynamicFilter = ({layer, symbology_id}) => {
                 filterIndex={i}
                 sampleData={sampleData}
                 button={
-                  <div className='text-black rounded-md h-[36px] pl-0 pr-1 flex w-full items-center border border-transparent cursor-pointer hover:border-slate-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
+                  <div className='text-black rounded-md h-[36px] pl-1 pr-1 flex w-full items-center border border-transparent cursor-pointer hover:border-slate-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
                 } 
               />
             </div> 
