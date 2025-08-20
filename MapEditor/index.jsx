@@ -554,12 +554,14 @@ const MapEditor = () => {
       setState((draft) => {
         const parsedExtent = JSON.parse(newExtent);
 
-        const coordinates = parsedExtent.coordinates[0];
-        const mapGeom = coordinates.reduce((bounds, coord) => {
+        const coordinates = parsedExtent?.coordinates[0];
+        const mapGeom = coordinates?.reduce((bounds, coord) => {
           return bounds.extend(coord);
         }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-        draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+        if(mapGeom && Object.keys(mapGeom).length > 0) {
+          draft.symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+        }
       })
     }
     if (
@@ -760,7 +762,7 @@ const MapEditor = () => {
     }
   }, [baseDataColumn, layerType, viewId, falcorCache, isActiveLayerPlugin]);
 
-  //console.log("main index state::", state)
+  // console.log("main index state::", state)
   return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>

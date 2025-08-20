@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, createContext, useRef } from "reac
 import get from "lodash/get"
 import set from "lodash/set"
 import omit from "lodash/omit"
-import { extractState } from '../../stateUtils';
+import mapboxgl from "maplibre-gl";
+import { extractState, fetchBoundsForFilter } from '../../stateUtils';
 import {filters, updateSubMeasures} from "./updateFilters"
 import { DamaContext } from "../../../store"
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
@@ -31,28 +32,29 @@ export const MacroviewPlugin = {
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       const viewId = get(state, `${pluginDataPath}['viewId']`, null);
+      const geography = get(state, `${pluginDataPath}['geography']`, null);
       const activeLayerId = get(state, `${pluginDataPath}['activeLayer']`, null);
       const activeLayer = get(state, `symbology.layers[${activeLayerId}]`, null);
-      setState(draft => {
-        const newLayer = JSON.parse(
-          JSON.stringify(draft.symbology.layers[activeLayerId].layers).replaceAll(
-            activeLayer.view_id,
-            viewId
-          )
-        );
-        draft.symbology.layers[activeLayerId].layers = newLayer;
-        // //sources[0].id
-        // //sources[0].source.tiles
-        const newSources = JSON.parse(
-          JSON.stringify(
-            draft.symbology.layers[activeLayerId].sources
-          ).replaceAll(activeLayer.view_id, viewId)
-        );
-        draft.symbology.layers[activeLayerId].sources = newSources;
 
-        draft.symbology.layers[activeLayerId].view_id = viewId
-
-      })
+      if(activeLayerId && viewId) { 
+        //Update map with new viewId
+        setState(draft => {
+          const newLayer = JSON.parse(
+            JSON.stringify(draft.symbology.layers[activeLayerId].layers).replaceAll(
+              activeLayer.view_id,
+              viewId
+            )
+          );
+          draft.symbology.layers[activeLayerId].layers = newLayer;
+          const newSources = JSON.parse(
+            JSON.stringify(
+              draft.symbology.layers[activeLayerId].sources
+            ).replaceAll(activeLayer.view_id, viewId)
+          );
+          draft.symbology.layers[activeLayerId].sources = newSources;
+          draft.symbology.layers[activeLayerId].view_id = viewId
+        })
+      }
 
       if (pm1 && peak) {
         const newDataColumn = `${pm1}_${peak}_${pm1}`;
@@ -99,10 +101,6 @@ export const MacroviewPlugin = {
           // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
           //value can be an array of 2 numbers, if operator === 'between'
           //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
-          const testFilter = {
-            [newDataColumn]: { operator: ">", value: 1.2 },
-          };
-          set(draft, `${pathBase}['filter']`, testFilter); //eventually consumed by mapbox, but formatted/parsed by AVAIL code
         })
       }
     },
@@ -242,13 +240,14 @@ export const MacroviewPlugin = {
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
-      const { pm1, peak, views, viewId } = useMemo(() => {
+      const { pm1, peak, views, viewId, geography, activeLayerId } = useMemo(() => {
         return {
           pm1: get(state, `${pluginPathBase}['pm-1']`, null),
           peak: get(state, `${pluginPathBase}['peak']`, null),
-          views: get(state, `${pluginPathBase}['views']`, null),
-          viewId: get(state, `${pluginPathBase}['viewId']`, null)
-
+          views: get(state, `${pluginPathBase}['views']`, []),
+          viewId: get(state, `${pluginPathBase}['viewId']`, null),
+          geography: get(state, `${pluginPathBase}['geography']`, null),
+          activeLayerId: get(state, `${pluginPathBase}['activeLayer']`, null)
         };
       }, [state.symbology.pluginData, pluginPathBase]);
 
@@ -266,6 +265,87 @@ export const MacroviewPlugin = {
           name: "TED (person hours)",
         },
       ];
+
+      useEffect(() => {
+        const getFilterBounds = async () => {
+          //need array of [{column_name:foo, values:['bar', 'baz']}]
+          //geography is currently [{name: foo, value: 'bar', type:'baz'}]
+
+          //loop thru, gather like terms
+          const selectedGeographyByType = geography.reduce((acc, curr) => {
+            if (!acc[curr.type]) {
+              acc[curr.type] = [];
+            }
+            acc[curr.type].push(curr.value);
+            return acc;
+          }, {});
+          console.log({selectedGeographyByType})
+          const geographyFilter = Object.keys(selectedGeographyByType).map(
+            (column_name) => {
+              return {
+                display_name: column_name,
+                column_name,
+                values: selectedGeographyByType[column_name],
+                zoomToFilterBounds: true,
+              };
+            }
+          );
+            setState((draft) => {
+              set(
+                draft,
+                `symbology.layers[${activeLayerId}]['dynamic-filters']`,
+                geographyFilter
+              );
+
+              set(draft, `symbology.layers[${activeLayerId}]['filterMode']`, 'any')
+            });
+          // const newExtent = await fetchBoundsForFilter(
+          //   state,
+          //   falcor,
+          //   pgEnv,
+          //   geographyFilter
+          // );
+          // console.log({ newExtent });
+          // if(newExtent) {
+          //           setState((draft) => {
+          //             const parsedExtent = JSON.parse(newExtent);
+
+          //             const coordinates = parsedExtent?.coordinates[0];
+          //             const mapGeom = coordinates?.reduce((bounds, coord) => {
+          //               return bounds.extend(coord);
+          //             }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+          //             if (mapGeom && Object.keys(mapGeom).length > 0) {
+          //               draft.symbology.zoomToFilterBounds = [
+          //                 mapGeom["_sw"],
+          //                 mapGeom["_ne"],
+          //               ];
+          //             }
+          //             // set(
+          //             //   draft,
+          //             //   `symbology.layers[${activeLayerId}]['dynamic-filters']`,
+          //             //   geographyFilter
+          //             // );
+          //           });
+          // }
+
+        };
+        if (geography?.length > 0) {
+          getFilterBounds();
+        } else {
+          //resets dynamic filter if there are no geographies selected
+          if (state?.symbology?.zoomToFilterBounds?.length > 0) {
+            setState((draft) => {
+              draft.symbology.zoomToFilterBounds = [];
+              set(
+                draft,
+                `symbology.layers[${activeLayerId}]['dynamic-filters']`,
+                []
+              );
+            });
+          }
+        }
+      }, [geography]);
 
       //geography selector
       //mpos/regions/counties/ua/state
@@ -285,39 +365,50 @@ export const MacroviewPlugin = {
       },[viewId])
 
       const geomControlOptions = useMemo(() => {
-        const data = get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'options', geomOptions, 'databyIndex'])
+        const geomData = get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'options', geomOptions, 'databyIndex'])
 
-        const geoms = {
-          ua_name: [],
-          region_code: [],
-          mpo_name: [],
-          county: [],
-          state: 'NY'
-        };
+        if(geomData) {
+          const geoms = {
+            ua_name: [],
+            region_code: [],
+            mpo_name: [],
+            county: [],
+            state: 'NY'
+          };
 
-        Object.values(data).forEach(da => {
-          geoms.ua_name.push(da.ua_name);
-          geoms.region_code.push(da.region_code);
-          geoms.mpo_name.push(da.mpo_name);
-          geoms.county.push(da.county);
-        });
+          Object.values(geomData).forEach(da => {
+            geoms.ua_name.push(da.ua_name);
+            geoms.region_code.push(da.region_code);
+            geoms.mpo_name.push(da.mpo_name);
+            geoms.county.push(da.county);
+          });
 
-        geoms.ua_name = geoms.ua_name.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'ua_name'}))
-        geoms.region_code = geoms.region_code.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'region_code'}))
-        geoms.mpo_name = geoms.mpo_name.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'mpo_name'}))
-        geoms.county = geoms.county.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da.toLowerCase() + " County", value: da, type:'county'}))
+          const nameSort = (a, b) => {
+            if (a.name < b.name) {
+              return -1;
+            } else {
+              return 1;
+            }
+          };
+          const objectFilter = (da => typeof da !== 'object');
+          const truthyFilter = (val => !!val)
+          geoms.ua_name = geoms.ua_name.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da + " UA", value: da, type:'ua_name'})).sort(nameSort)
+          geoms.region_code = geoms.region_code.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da, value: da, type:'region_code'})).sort(nameSort)
+          geoms.mpo_name = geoms.mpo_name.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da, value: da, type:'mpo_name'})).sort(nameSort)
+          geoms.county = geoms.county.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da.toLowerCase() + " County", value: da, type:'county'})).sort(nameSort)
 
-        return [...geoms.county, ...geoms.mpo_name, ...geoms.ua_name, ...geoms.region_code];
+          return [...geoms.county, ...geoms.mpo_name, ...geoms.ua_name, ...geoms.region_code];
+        } else {
+          return []
+        }
       },[falcorCache])
-
-      console.log({geomControlOptions})
       
       const controls = [
         {
           label: "Geography",
           controls: [
             {
-              type: "select",
+              type: "multiselect",
               params: {
                 options: [BLANK_OPTION, ...geomControlOptions],
                 default: "",
@@ -345,8 +436,8 @@ export const MacroviewPlugin = {
             {
               type: "select",
               params: {
-                options: [...views],
-              default: views[0],
+                options: [BLANK_OPTION, ...views],
+                default: views[0],
               },
               path: `['viewId']`,
             },

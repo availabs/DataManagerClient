@@ -4,6 +4,7 @@ import { SymbologyContext } from "../../../";
 import { ExistingFilterList, FilterBuilder } from "./FilterControls";
 import { DynamicFilterBuilder } from "./DynamicFilterBuilder"
 import { InteractiveFilterControl } from "../InteractiveFilterControl";
+import { StyledControl } from '../ControlWrappers'
 import get from "lodash/get";
 import set from "lodash/set";
 
@@ -13,7 +14,7 @@ function FilterEditor(props) {
   const [displayDynamicBuilder, setDisplayDynamicBuilder] = useState(false);
   const [activeFilterColumn, setActiveFilterColumn] = useState();
 
-  const { existingFilter, existingDynamicFilter, layerType, pathBase } = useMemo(() => {
+  const { existingFilter, existingDynamicFilter, layerType, pathBase, filterMode } = useMemo(() => {
     const layerType = get(
       state,
       `symbology.layers[${state.symbology.activeLayer}]['layer-type']`
@@ -43,6 +44,11 @@ function FilterEditor(props) {
       sourceId: get(
         state,
         `symbology.layers[${state.symbology.activeLayer}].source_id`
+      ),
+      filterMode: get(
+        state,
+        `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filterMode`,
+        'all'
       )
     }
   }, [state, props])
@@ -57,6 +63,31 @@ function FilterEditor(props) {
           <InteractiveFilterControl path={"['interactive-filters']"} params={{enableBuilder: false}}/>
         </div>
       }
+      <div className="flex-1 flex items-center mx-4">
+        <div className="pr-1">Mode:</div>
+        <StyledControl>
+          <label className='flex w-full'>
+            <div className='flex w-full items-center'>
+              <select
+                className='w-full py-2 bg-transparent'
+                onChange={(e) => {
+                  setState(draft => {
+                    set(
+                      draft,
+                      `symbology.layers[${state.symbology.activeLayer}]${pathBase}.filterMode`,
+                      e.target.value
+                    );
+                  })
+                }}
+                value={filterMode}
+              >
+                <option value="all">All</option>
+                <option value="any">Any</option>
+              </select>
+            </div>
+          </label>
+        </StyledControl>
+      </div>
       <div className="mx-4">
         <ExistingFilterList
           removeFilter={(columnName) => {

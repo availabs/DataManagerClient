@@ -102,11 +102,12 @@ const extractState = (state) => {
       `symbology.layers[${state.symbology.activeLayer}]['dynamic-filters']`,
       []
     ),
+    filterMode: get(state, `${pathBase}['filterMode']`),
   };
 };
 
 const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
-  const { viewId, filter } = extractState(state)
+  const { viewId, filter, filterMode } = extractState(state)
   //dont need to do change detection here. This function is called from inside a use-effect
   const filterEqualOptions = {};
   dynamicFilter.reduce((acc, curr) => {
@@ -152,7 +153,8 @@ const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
 
   const newOptions = JSON.stringify({
     filter: { ...filterEqualOptions },
-    ...filterOtherOptions
+    ...filterOtherOptions,
+    filterRelation: filterMode === "any" ? "or" : "all"
   })
   const resp = await falcor.get([
     'dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',{ },['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent']

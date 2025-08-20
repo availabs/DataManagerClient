@@ -53,7 +53,7 @@ export function MultiSelectControl({ path, params = {} }) {
 
   return (
     <label className="flex w-full">
-      <div className="flex w-full items-center">
+      <div className="flex w-full items-center capitalize">
         <MultiLevelSelect
           isMulti={true}
           placeholder={params.placeholder || "Select a value..."}

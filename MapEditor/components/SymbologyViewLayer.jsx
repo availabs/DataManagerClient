@@ -274,7 +274,7 @@ const ViewLayerRender = (props) => {
               return mapFilter;
             });
         }
-        maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
+        maplibreMap.setFilter(l.id, [layerProps.filterMode || 'all', ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
   }, [doesSourceExistOnMap, layerProps]);
@@ -289,7 +289,7 @@ const ViewLayerRender = (props) => {
   }, [maplibreMap, allLayerProps?.zoomToFit]);
   //TODO maybe use `zoomToFit` for both of these zooms?
   useEffect(() => {
-    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0){
+    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0 &&  allLayerProps?.zoomToFilterBounds[0] !== null){
       maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
         padding: { top: 20, bottom: 20, left: 20, right: 20 },
         duration: 400
