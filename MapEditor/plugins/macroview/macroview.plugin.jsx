@@ -7,7 +7,9 @@ import {filters, updateSubMeasures} from "./updateFilters"
 import { DamaContext } from "../../../store"
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { ViewAttributes } from "../../../Source/attributes"
-
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
 const BLANK_OPTION = { value: "", name: "" };
 const MAP_CLICK = () => console.log("map was clicked");
 export const MacroviewPlugin = {
@@ -233,16 +235,20 @@ export const MacroviewPlugin = {
       ];
     },
     externalPanel: ({ state, setState }) => {
+      const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
       const pluginPathBase = `symbology.pluginData.macroview`;
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
-      const { pm1, peak, views } = useMemo(() => {
+      //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
+      const { pm1, peak, views, viewId } = useMemo(() => {
         return {
           pm1: get(state, `${pluginPathBase}['pm-1']`, null),
           peak: get(state, `${pluginPathBase}['peak']`, null),
           views: get(state, `${pluginPathBase}['views']`, null),
+          viewId: get(state, `${pluginPathBase}['viewId']`, null)
+
         };
       }, [state.symbology.pluginData, pluginPathBase]);
 
@@ -261,14 +267,72 @@ export const MacroviewPlugin = {
         },
       ];
 
+      //geography selector
+      //mpos/regions/counties/ua/state
+      const geomOptions = JSON.stringify({
+        groupBy: ['ua_name', 'region_code', 'mpo_name', 'county'],
+      })
+      useEffect(() => {
+        const getGeoms = async () => {
+          await falcor.get([
+            'dama',pgEnv,'viewsbyId', viewId, 'options', geomOptions, 'databyIndex',{ from: 0, to: 200 },['ua_name', 'region_code', 'mpo_name', 'county']
+          ])
+        }
+
+        if(viewId) {
+          getGeoms();
+        }
+      },[viewId])
+
+      const geomControlOptions = useMemo(() => {
+        const data = get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'options', geomOptions, 'databyIndex'])
+
+        const geoms = {
+          ua_name: [],
+          region_code: [],
+          mpo_name: [],
+          county: [],
+          state: 'NY'
+        };
+
+        Object.values(data).forEach(da => {
+          geoms.ua_name.push(da.ua_name);
+          geoms.region_code.push(da.region_code);
+          geoms.mpo_name.push(da.mpo_name);
+          geoms.county.push(da.county);
+        });
+
+        geoms.ua_name = geoms.ua_name.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'ua_name'}))
+        geoms.region_code = geoms.region_code.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'region_code'}))
+        geoms.mpo_name = geoms.mpo_name.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da, value: da, type:'mpo_name'}))
+        geoms.county = geoms.county.filter(onlyUnique).filter(da => typeof da !== 'object').filter(val => !!val).map(da => ({name: da.toLowerCase() + " County", value: da, type:'county'}))
+
+        return [...geoms.county, ...geoms.mpo_name, ...geoms.ua_name, ...geoms.region_code];
+      },[falcorCache])
+
+      console.log({geomControlOptions})
+      
       const controls = [
+        {
+          label: "Geography",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: [BLANK_OPTION, ...geomControlOptions],
+                default: "",
+              },
+              path: `['geography']`,
+            },
+          ],
+        },
         {
           label: "Performance Measure",
           controls: [
             {
               type: "select",
               params: {
-                options: perfMeasureOptions,
+                options: [BLANK_OPTION, ...perfMeasureOptions],
                 default: "",
               },
               path: `['pm-1']`,

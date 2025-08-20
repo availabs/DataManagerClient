@@ -18,7 +18,7 @@ export function SelectControl({ path, params = {} }) {
     <label className="flex w-full">
       <div className="flex w-full items-center">
         <select
-          className="w-full py-2 bg-transparent"
+          className="w-full py-2 bg-transparent capitalize"
           value={get(state, `${path}`, defaultValue)}
           onChange={(e) =>
             setState((draft) => {
