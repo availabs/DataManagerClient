@@ -41,7 +41,7 @@ function InternalPluginPanel() {
                       <div className="flex flex-wrap p-1" key={i}>
                         <ControlWrapper
                           label={control.label}
-                          controls={control.controls.map(control => ({
+                          controls={control?.controls?.map(control => ({
                             ...control,
                             path: `symbology.pluginData['${pluginName}']${control.path}`
                           }))}

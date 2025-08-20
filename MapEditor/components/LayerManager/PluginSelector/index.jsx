@@ -9,7 +9,7 @@ import { Dialog } from "@headlessui/react";
 export const PluginSelector = ({ state, setState }) => {
   const { baseUrl } = useContext(DamaContext);
   const navigate = useNavigate();
-  console.log("PluginSelector",state);
+  //console.log("PluginSelector",state);
   return (
     <select
       className="w-full py-2 bg-transparent"

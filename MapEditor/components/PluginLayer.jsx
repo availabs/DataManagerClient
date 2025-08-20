@@ -33,9 +33,6 @@ const PluginLayerRender = ({
   //copy from hovercomp, dynamically determine context
   const { state, setState } = sctx ? sctx : mctx ? mctx : {state: {}, setState: () => {}};
 
-  console.log("layer render, state::", state)
-  console.log("layer.id", layer.id)
-
   const plugin = useMemo(() => {
     return  PluginLibrary[layer.id]
   }, [layer.id]);
@@ -54,8 +51,11 @@ const PluginLayerRender = ({
     const pluginDataPath = `symbology.pluginData.${layer.id}`;
     //e.g. Symbology layer selected (internal)
     //e.g. pm3 measure selected (external)
-
-    plugin.dataUpdate(maplibreMap, state, setState);
+    if(!plugin?.dataUpdate) {
+      console.error("no data update provided for plugin");
+    } else {
+      plugin.dataUpdate(maplibreMap, state, setState);
+    }
   }, [state.symbology?.pluginData?.[layer.id] ])
 }
 

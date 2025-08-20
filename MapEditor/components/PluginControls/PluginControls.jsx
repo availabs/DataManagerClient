@@ -3,6 +3,8 @@ import { SymbologyContext } from "../..";
 import get from "lodash/get";
 import set from "lodash/set";
 
+import { MultiLevelSelect } from "~/modules/avl-map-2/src"
+
 export function SelectControl({ path, params = {} }) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
@@ -32,6 +34,39 @@ export function SelectControl({ path, params = {} }) {
             );
           })}
         </select>
+      </div>
+    </label>
+  );
+}
+
+export function MultiSelectControl({ path, params = {} }) {
+  const { state, setState } = React.useContext(SymbologyContext);
+
+  const defaultValue =
+    params.default !== null && params.default !== undefined
+      ? params.default
+      : params?.options?.[0]?.value;
+
+  const curValue = useMemo(() => {
+    return get(state, `${path}`, defaultValue);
+  }, [state]);
+
+  return (
+    <label className="flex w-full">
+      <div className="flex w-full items-center">
+        <MultiLevelSelect
+          isMulti={true}
+          placeholder={params.placeholder || "Select a value..."}
+          options={params?.options}
+          displayAccessor={(s) => s.name}
+          // valueAccessor={(s) => s.value}
+          value={curValue}
+          onChange={(e) =>
+            setState((draft) => {
+              set(draft, `${path}`, e)
+            })
+          }
+        />
       </div>
     </label>
   );
@@ -105,5 +140,6 @@ export function RadioControl({ path, params = {} }) {
 export const pluginControlTypes = {
   select: SelectControl,
   text: InputControl,
-  radio: RadioControl
+  radio: RadioControl,
+  multiselect: MultiSelectControl
 };

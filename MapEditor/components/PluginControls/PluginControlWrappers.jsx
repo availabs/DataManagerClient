@@ -79,15 +79,13 @@ function PopoverControl ({values,title='',children}) {
 
 function SimpleControlWrapper ({label, controls}) {
   const { state, setState } = React.useContext(SymbologyContext);
-  console.log({label, controls})
-  console.log({pluginControlTypes})
   return (
     <>
       <div className='w-24 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>
       <div className='flex-1 flex items-center'>
         <StyledControl>
           {controls
-            .map((c,i) => {
+            ?.map((c,i) => {
               const Control = pluginControlTypes[c.type] || pluginControlTypes['simple'];
               return <Control key={i} path={c.path} datapath={c.datapath} params={c.params} />
           })}
@@ -101,7 +99,7 @@ function FullWidthWrapper({ label, controls }) {
   return (
     <>
       <div className="flex-1 flex items-center">
-          {controls.map((c, i) => {
+          {controls?.map((c, i) => {
             const Control = pluginControlTypes[c.type] || pluginControlTypes["simple"];
             return (
               <Control
