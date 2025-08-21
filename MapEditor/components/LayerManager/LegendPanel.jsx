@@ -267,8 +267,11 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   const { falcor, falcorCache, pgEnv, baseUrl } = useContext(DamaContext);
   const { activeLayer } = state.symbology;
 
-  let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters } = useMemo(() => {
+  let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters, isLayerControlledByPlugin } = useMemo(() => {
+    const pluginData = get(state, `symbology.pluginData`, {});
+    const isLayerControlledByPlugin = (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === layer.id)
     return {
+      isLayerControlledByPlugin,
       initialViewId: get(layer,`initial-view-id`),
       sourceId: get(layer,`source_id`),
       legendOrientation: get(layer, `['legend-orientation']`, 'vertical'),
@@ -285,9 +288,6 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
     }
   },[state, layer]);
 
-  const { isActiveLayerPlugin } = useMemo(() => {
-    return extractState(state);
-  }, [state]);
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
@@ -370,7 +370,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   }, [falcorCache, sourceId, pgEnv]);
 
   const groupSelectorElements = [];
-  if (type === "interactive" && !isActiveLayerPlugin) {
+  if (type === "interactive" && !isLayerControlledByPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_interactive`}
@@ -401,7 +401,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     )
   } 
-  if(layer.filterGroupEnabled && !isActiveLayerPlugin) {
+  if(layer.filterGroupEnabled && !isLayerControlledByPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_filtergroup`}
@@ -448,7 +448,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
-  if(layer.viewGroupEnabled && !isActiveLayerPlugin) {
+  if(layer.viewGroupEnabled && !isLayerControlledByPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_viewgroup`}
@@ -499,7 +499,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
-  if(dynamicFilters.length > 0 && !isActiveLayerPlugin) {
+  if(dynamicFilters.length > 0 && !isLayerControlledByPlugin) {
     groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer}/>)
   }
   return (

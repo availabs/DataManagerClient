@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useMemo, createContext, useRef } from "react"
 import get from "lodash/get"
 import set from "lodash/set"
+import isEqual from "lodash/isEqual"
 import omit from "lodash/omit"
 import mapboxgl from "maplibre-gl";
 import { extractState, fetchBoundsForFilter } from '../../stateUtils';
-import {filters, updateSubMeasures} from "./updateFilters"
+import {filters, updateSubMeasures, getMeasure} from "./updateFilters"
 import { DamaContext } from "../../../store"
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { ViewAttributes } from "../../../Source/attributes"
+import { usePrevious } from "../../components/LayerManager/utils";
+
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
@@ -18,6 +21,12 @@ export const MacroviewPlugin = {
     type: "plugin",
     mapRegister: (map, state, setState) => {
       map.on("click", MAP_CLICK);
+      const pluginPathBase = `symbology.pluginData.macroview`;
+      const newFilters = updateSubMeasures(filters);
+
+      setState(draft => {
+        set(draft, `${pluginPathBase}['measureFilters']`, newFilters);
+      })
     },
     dataUpdate: (map, state, setState) => {
       //console.log("---data update-----")
@@ -240,31 +249,20 @@ export const MacroviewPlugin = {
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
-      const { pm1, peak, views, viewId, geography, activeLayerId } = useMemo(() => {
+      const { views, viewId, geography, activeLayerId, measureFilters } = useMemo(() => {
         return {
-          pm1: get(state, `${pluginPathBase}['pm-1']`, null),
-          peak: get(state, `${pluginPathBase}['peak']`, null),
           views: get(state, `${pluginPathBase}['views']`, []),
           viewId: get(state, `${pluginPathBase}['viewId']`, null),
           geography: get(state, `${pluginPathBase}['geography']`, null),
-          activeLayerId: get(state, `${pluginPathBase}['activeLayer']`, null)
+          activeLayerId: get(state, `${pluginPathBase}['activeLayer']`, null),
+          measureFilters: get(state, `${pluginPathBase}['measureFilters']`, filters)
         };
       }, [state.symbology.pluginData, pluginPathBase]);
 
-      const perfMeasureOptions = [
-        {
-          value: "lottr",
-          name: "Level of Travel Time Reliability (LOTTR)",
-        },
-        {
-          value: "phed",
-          name: "PHED (person hours)",
-        },
-        {
-          value: "ted",
-          name: "TED (person hours)",
-        },
-      ];
+      const measure = useMemo(() => {
+        return getMeasure(measureFilters);
+      }, [measureFilters])
+      console.log("---external panel measure---",measure)
 
       useEffect(() => {
         const getFilterBounds = async () => {
@@ -299,36 +297,6 @@ export const MacroviewPlugin = {
 
               set(draft, `symbology.layers[${activeLayerId}]['filterMode']`, 'any')
             });
-          // const newExtent = await fetchBoundsForFilter(
-          //   state,
-          //   falcor,
-          //   pgEnv,
-          //   geographyFilter
-          // );
-          // console.log({ newExtent });
-          // if(newExtent) {
-          //           setState((draft) => {
-          //             const parsedExtent = JSON.parse(newExtent);
-
-          //             const coordinates = parsedExtent?.coordinates[0];
-          //             const mapGeom = coordinates?.reduce((bounds, coord) => {
-          //               return bounds.extend(coord);
-          //             }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-
-          //             if (mapGeom && Object.keys(mapGeom).length > 0) {
-          //               draft.symbology.zoomToFilterBounds = [
-          //                 mapGeom["_sw"],
-          //                 mapGeom["_ne"],
-          //               ];
-          //             }
-          //             // set(
-          //             //   draft,
-          //             //   `symbology.layers[${activeLayerId}]['dynamic-filters']`,
-          //             //   geographyFilter
-          //             // );
-          //           });
-          // }
-
         };
         if (geography?.length > 0) {
           getFilterBounds();
@@ -402,7 +370,42 @@ export const MacroviewPlugin = {
           return []
         }
       },[falcorCache])
-      
+
+      //transform from filters into plugin inputs
+      const measureControls = Object.keys(measureFilters)
+        .filter((mFilterKey) => measureFilters[mFilterKey].active)
+        .sort((keyA, keyB) => {
+          const {order: orderA} = measureFilters[keyA];
+          const {order: orderB} = measureFilters[keyB];
+          if(!orderA && !orderB) {
+            return 0
+          } else if (!orderA) {
+            return -1
+          } else if (!orderB) {
+            return 1
+          } else {
+            return orderA - orderB
+          }
+        })
+        .map((mFilterKey) => {
+          const mFilter = measureFilters[mFilterKey];
+
+          return {
+            label: mFilter.name,
+            controls: [
+              {
+                type: mFilter.multi ? "multiselect" : mFilter.type,
+                params: {
+                  options: mFilter.domain,
+                },
+                path: `['measureFilters']['${mFilterKey}'].value`,
+              },
+            ],
+          };
+        });
+
+      // console.log({measureControls})
+      // console.log({state})
       const controls = [
         {
           label: "Geography",
@@ -418,19 +421,6 @@ export const MacroviewPlugin = {
           ],
         },
         {
-          label: "Performance Measure",
-          controls: [
-            {
-              type: "select",
-              params: {
-                options: [BLANK_OPTION, ...perfMeasureOptions],
-                default: "",
-              },
-              path: `['pm-1']`,
-            },
-          ],
-        },
-        {
           label: "Year",
           controls: [
             {
@@ -442,49 +432,20 @@ export const MacroviewPlugin = {
               path: `['viewId']`,
             },
           ],
-        }
+        },
+        ...measureControls
       ];
 
-      //peak selector control
-      if (pm1 === "lottr") {
-        const peakSelectorOptions = [
-          {
-            value: "none",
-            name: "No Peak",
-          },
-          {
-            value: "amp",
-            name: "AM Peak",
-          },
-          {
-            value: "off",
-            name: "OFF Peak",
-          },
-          {
-            value: "pmp",
-            name: "PM Peak",
-          },
-          {
-            value: "we",
-            name: "Weekend",
-          },
-        ];
-        const peakSelector = {
-          label: "Peak Selector",
-          controls: [
-            {
-              type: "select",
-              params: {
-                options: peakSelectorOptions,
-                default: "",
-              },
-              path: `['peak']`,
-            },
-          ],
-        };
+      const prevMeasureFilters = usePrevious(measureFilters['measure']);
 
-        controls.push(peakSelector);
-      }
+      useEffect(() => {
+        //this is probably infinity render
+        setState(draft => {
+          set(draft, `${pluginPathBase}['measureFilters']`, updateSubMeasures(measureFilters))
+        })
+      }, [isEqual(measureFilters['measure'], prevMeasureFilters)])
+
+
 
       return controls;
     },

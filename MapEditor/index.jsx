@@ -577,7 +577,7 @@ const MapEditor = () => {
         });
       }
     }
-  }, [existingDynamicFilter, filter])
+  }, [existingDynamicFilter, filter]);
   useEffect(() => {
     if(method === "custom" && !isActiveLayerPlugin) {
       console.log("custom breaks changed")
@@ -762,7 +762,7 @@ const MapEditor = () => {
     }
   }, [baseDataColumn, layerType, viewId, falcorCache, isActiveLayerPlugin]);
 
-  // console.log("main index state::", state)
+  //console.log("---mapeditor index state::", state)
   return (
     <SymbologyContext.Provider value={{state, setState, symbologies}}>
       <div className="w-full h-full relative" ref={mounted}>

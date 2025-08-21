@@ -8,7 +8,9 @@ import { MultiLevelSelect } from "~/modules/avl-map-2/src"
 export function SelectControl({ path, params = {} }) {
   //console.log("select control path::", path)
   const { state, setState } = React.useContext(SymbologyContext);
-  //console.log('select control', params)
+  // console.log('select control params::', params)
+  // console.log("select control state::", state)
+  // console.log("select control value::", get(state, `${path}`))
 
   const defaultValue =
     params.default !== null && params.default !== undefined
