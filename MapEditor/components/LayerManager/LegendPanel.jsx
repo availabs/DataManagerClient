@@ -8,7 +8,7 @@ import { LayerMenu, LayerInfo } from './LayerPanel'
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../Source/attributes"
 import { Menu, Transition, Tab, Dialog } from '@headlessui/react'
 import { fnumIndex } from '../LayerEditor/datamaps'
-
+import { extractState } from '../../stateUtils'
 function VisibilityButton ({layer}) {
   const { state, setState  } = React.useContext(SymbologyContext);
   const { activeLayer } = state.symbology;
@@ -284,6 +284,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       dynamicFilters:get(layer, `['dynamic-filters']`, []),
     }
   },[state, layer]);
+
+  const { isActiveLayerPlugin } = useMemo(() => {
+    return extractState(state);
+  }, [state]);
   const toggleSymbology = () => {
     setState(draft => {
         draft.symbology.activeLayer = activeLayer === layer.id ? '' : layer.id
@@ -366,7 +370,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
   }, [falcorCache, sourceId, pgEnv]);
 
   const groupSelectorElements = [];
-  if (type === "interactive") {
+  if (type === "interactive" && !isActiveLayerPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_interactive`}
@@ -397,7 +401,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     )
   } 
-  if(layer.filterGroupEnabled) {
+  if(layer.filterGroupEnabled && !isActiveLayerPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_filtergroup`}
@@ -444,7 +448,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
-  if(layer.viewGroupEnabled) {
+  if(layer.viewGroupEnabled && !isActiveLayerPlugin) {
     groupSelectorElements.push(
       <div
         key={`symbrow_${layer.id}_viewgroup`}
@@ -495,7 +499,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
       </div>
     );
   }
-  if(dynamicFilters.length > 0) {
+  if(dynamicFilters.length > 0 && !isActiveLayerPlugin) {
     groupSelectorElements.push(<DynamicFilter key={`${layer.id}_dynamic_filter`} layer={layer}/>)
   }
   return (
