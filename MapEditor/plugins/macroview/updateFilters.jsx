@@ -1,6 +1,7 @@
 import get from "lodash/get"
 import set from "lodash/set"
 import omit from "lodash/omit"
+import cloneDeep from 'lodash/cloneDeep'
 
 const AM_PEAK_KEY = 'amp';
 const PM_PEAK_KEY = 'pmp';
@@ -9,74 +10,89 @@ const MIDDAY_KEY = 'midd';
 const OVERNIGHT_KEY = 'ovn';
 const NO_PEAK_KEY = 'all';
 
-const YEARS = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016];
+const PHRS = 'all_xdelay_phrs';
+const VHRS = 'all_xdelay_vhrs';
+const HRS = 'xdelay_hrs';
+
 const filters = {
-  geography: {
-    name: 'Geography',
-    type: 'select',
-    domain: [],
-    value: [],
-    searchable: true,
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
-    multi: true,
-  },
-  network: {
-    name: "Network",
-    type: "select",
-    value: "tmc",
-    multi: false,
-    searchable: false,
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
-    domain: [
-      { name: "TMC", value: "tmc" },
-      { name: "Conflation", value: "con" },
-      // { name: "RIS", value: "ris" }
-    ]
-  },
-  conflation: {
-    name: "Conflation",
-    type: "select",
-    value: "tmc",
-    multi: false,
-    searchable: false,
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
-    active: false,
-    domain: [
-      { name: "TMC", value: "tmc" },
-      { name: "RIS", value: "ris" },
-      { name: "OSM", value: "osm" }
-    ]
-  },
+  // geography: {
+  //   name: 'Geography',
+  //   type: 'select',
+  //   domain: [],
+  //   value: [],
+  //   searchable: true,
+  //   accessor: d => d.name,
+  //   valueAccessor: d => d.value,
+  //   multi: true,
+  // },
+  // network: {
+  //   name: "Network",
+  //   type: "select",
+  //   value: "tmc",
+  //   multi: false,
+  //   searchable: false,
+  //   accessor: d => d.name,
+  //   valueAccessor: d => d.value,
+  //   domain: [
+  //     { name: "TMC", value: "tmc" },
+  //     { name: "Conflation", value: "con" },
+  //     // { name: "RIS", value: "ris" }
+  //   ]
+  // },
+  // conflation: {
+  //   name: "Conflation",
+  //   type: "select",
+  //   value: "tmc",
+  //   multi: false,
+  //   searchable: false,
+  //   accessor: d => d.name,
+  //   valueAccessor: d => d.value,
+  //   active: false,
+  //   domain: [
+  //     { name: "TMC", value: "tmc" },
+  //     { name: "RIS", value: "ris" },
+  //     { name: "OSM", value: "osm" }
+  //   ]
+  // },
 
-  year: {
-    name: 'Year',
-    type: "select",
-    multi: false,
-    domain: [...YEARS],
-    value: YEARS[0]
-  },
-  compareYear: {
-    name: 'Compare Year',
-    type: 'select',
-    multi: false,
-    domain: ["none", ...YEARS],
-    value: "none",
+  // year: {
+  //   name: 'Year',
+  //   type: "select",
+  //   multi: false,
+  //   domain: [...YEARS],
+  //   value: YEARS[0]
+  // },
+  // compareYear: {
+  //   name: 'Compare Year',
+  //   type: 'select',
+  //   multi: false,
+  //   domain: ["none", ...YEARS],
+  //   value: "none",
 
-  },
+  // },
   measure: {
+    order: 0,
     name: 'Performance Measure',
     type: 'select',
-    domain: [],
+    domain: [
+      { name: "LOTTR", value: "lottr" },
+      { name: "TTTR", value: "tttr" },
+      { name: "PHED", value: "phed" },
+      { name: "TED", value: "ted" },
+      { name: "Percentile Speed", value: "speed" },
+      //{ name: "Transit AADT", value: "OSM_transit_aadt" },
+      //{ name: "RIS Attributes", value: "RIS" },
+      //{ name: "TMC Attributes", value: "TMC" }
+    ],
     value: 'lottr',
+    active: true,
     searchable: true,
     multi: false,
     accessor: d => d.name,
     valueAccessor: d => d.value
   },
   freeflow: {
+    order: 1,
     name: "Threshold Speed",
     type: "select",
     accessor: d => d.name,
@@ -90,20 +106,21 @@ const filters = {
     searchable: false,
     active: false
   },
-  risAADT: {
-    name: "AADT Source",
-    type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
-    domain: [
-      { name: "RIS", value: true },
-      { name: "NPMRDS", value: false }
-    ],
-    value: false,
-    multi: false,
-    searchable: false,
-    active: false
-  },
+  // risAADT: {
+  //   order: 2,
+  //   name: "AADT Source",
+  //   type: "select",
+  //   accessor: d => d.name,
+  //   valueAccessor: d => d.value,
+  //   domain: [
+  //     { name: "RIS", value: true },
+  //     { name: "NPMRDS", value: false }
+  //   ],
+  //   value: false,
+  //   multi: false,
+  //   searchable: false,
+  //   active: false
+  // },
   fueltype: {
     name: "Fuel Type",
     type: "select",
@@ -152,13 +169,15 @@ const filters = {
   //   active: false
   // },
   vehicleHours: {
+    order: 3,
     name: "Unit",
     type: "select",
     accessor: d => d.name,
     valueAccessor: d => d.value,
     domain: [
-      { name: "Vehicle Hours", value: true },
-      { name: "Person Hours", value: false }
+      { name: "Vehicle Hours", value: VHRS },
+      { name: "Person Hours", value: PHRS },
+      { name: "Xdelay Hours", value: HRS }
     ],
     value: false,
     multi: false,
@@ -166,25 +185,27 @@ const filters = {
     active: false
   },
   percentiles: {
+    order: 6,
     name: "Percentile",
     type: "select",
     accessor: d => d.name,
     valueAccessor: d => d.value,
     multi: false,
     domain: [
-      { name: "5th Percentile", value: "5pctl" },
-      { name: "20th Percentile", value: "20pctl" },
-      { name: "25th Percentile", value: "25pctl" },
-      { name: "50th Percentile", value: "50pctl" },
-      { name: "75th Percentile", value: "75pctl" },
-      { name: "80th Percentile", value: "80pctl" },
-      { name: "85th Percentile", value: "85pctl" },
-      { name: "95th Percentile", value: "95pctl" }
+      { name: "5th Percentile", value: "pctl_5" },
+      { name: "20th Percentile", value: "pctl_20" },
+      { name: "25th Percentile", value: "pctl_25" },
+      { name: "50th Percentile", value: "pctl_50" },
+      { name: "75th Percentile", value: "pctl_75" },
+      { name: "80th Percentile", value: "pctl_80" },
+      { name: "85th Percentile", value: "pctl_85" },
+      { name: "95th Percentile", value: "pctl_95" }
     ],
     value: null,
     active: false
   },
   trafficType: {
+    order: 4,
     name: "Traffic Type",
     type: "select",
     accessor: d => d.name,
@@ -192,13 +213,14 @@ const filters = {
     domain: [
       { name: "All Traffic", value: "all" },
       { name: "All Trucks", value: "truck" },
-      { name: "Single Unit Trucks", value: "singl" },
-      { name: "Combination Trucks", value: "combi" },
+      // { name: "Single Unit Trucks", value: "singl" },
+      // { name: "Combination Trucks", value: "combi" },
     ],
     value: 'all',
     active: false
   },
   peakSelector: {
+    order: 5,
     name: "Peak Selector",
     type: "select",
     accessor: d => d.name,
@@ -220,25 +242,26 @@ const filters = {
   }
 }
 
-const updateSubMeasures = (measure, filters, falcor) => {
+const updateSubMeasures = (filters, falcor) => {
   const {
     // fetchData,
     peakSelector,
     freeflow,
-    risAADT,
+    //risAADT,
     // perMiles,
     vehicleHours,
     attributes,
     percentiles,
     trafficType,
     fueltype,
-    pollutant
-  } = filters;
+    pollutant,
+    measure
+  } = cloneDeep(filters);
 
-  const cache = falcor.getCache();
+  // const cache = falcor.getCache();
 
-  const mIds = get(cache, ["pm3", "measureIds","value"], []);
-  const mInfo = get(cache, ["pm3", "measureInfo"], {});
+  // const mIds = get(cache, ["pm3", "measureIds","value"], []);
+  // const mInfo = get(cache, ["pm3", "measureInfo"], {});
 
   peakSelector.active = false;
   peakSelector.domain = [];
@@ -246,7 +269,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
   trafficType.value = 'all'
 
   freeflow.active = false;
-  risAADT.active = false;
+  //risAADT.active = false;
   // perMiles.active = false;
   vehicleHours.active = false;
   percentiles.active = false;
@@ -255,8 +278,8 @@ const updateSubMeasures = (measure, filters, falcor) => {
 
   fueltype.active = false;
   pollutant.active = false;
-
-  switch (measure) {
+  percentiles.value = null;
+  switch (measure.value) {
     case "emissions":
       peakSelector.active = true;
 
@@ -273,24 +296,24 @@ const updateSubMeasures = (measure, filters, falcor) => {
         { name: "Overnight", value: OVERNIGHT_KEY },
         { name: "Weekend", value: WEEKEND_KEY }
       ]
-      risAADT.active = true;
+      //risAADT.active = true;
       break;
-    case "RIS":
-      attributes.active = true;
-      attributes.domain = mIds.filter(m => /^RIS_/.test(m))
-        .map(id => ({
-          name: get(mInfo, [id, "fullname"], id),
-          value: id.replace("RIS_", "")
-        }));
-      break;
-    case "TMC":
-      attributes.active = true;
-      attributes.domain =  mIds.filter(m => /^TMC_/.test(m)).filter(m => m !== "TMC_tmc")
-        .map(id => ({
-          name: get(mInfo, [id, "fullname"], id),
-          value: id.replace("TMC_", "")
-        }));
-      break;
+    // case "RIS":
+    //   attributes.active = true;
+    //   attributes.domain = mIds.filter(m => /^RIS_/.test(m))
+    //     .map(id => ({
+    //       name: get(mInfo, [id, "fullname"], id),
+    //       value: id.replace("RIS_", "")
+    //     }));
+    //   break;
+    // case "TMC":
+    //   attributes.active = true;
+    //   attributes.domain =  mIds.filter(m => /^TMC_/.test(m)).filter(m => m !== "TMC_tmc")
+    //     .map(id => ({
+    //       name: get(mInfo, [id, "fullname"], id),
+    //       value: id.replace("TMC_", "")
+    //     }));
+    //   break;
     case "lottr":
       peakSelector.active = true;
       peakSelector.domain = [
@@ -301,6 +324,14 @@ const updateSubMeasures = (measure, filters, falcor) => {
         { name: "PM Peak", value: PM_PEAK_KEY },
         { name: "Weekend", value: WEEKEND_KEY }
       ]
+
+      percentiles.domain = [
+        { name : "", value: ""},
+        { name: "80th", value: "80_pct" },
+        { name: "50th", value: "50_pct" }
+      ]
+      percentiles.active = true;
+      peakSelector.value = AM_PEAK_KEY;
       break;
     case "tttr":
       peakSelector.active = true;
@@ -313,6 +344,12 @@ const updateSubMeasures = (measure, filters, falcor) => {
         { name: "Weekend", value: WEEKEND_KEY },
         { name: "Overnight", value: OVERNIGHT_KEY }
       ]
+      percentiles.domain = [
+        { name : "", value: ""},
+        { name: "95th", value: "95_pct" },
+        { name: "50th", value: "50_pct" }
+      ]
+      percentiles.active = true;
       break;
     case "phed":
       peakSelector.active = true;
@@ -322,14 +359,16 @@ const updateSubMeasures = (measure, filters, falcor) => {
         { name: "PM Peak", value: PM_PEAK_KEY }
       ]
       freeflow.active = true;
-      risAADT.active = true;
+      //risAADT.active = true;
       // perMiles.active = true;
       vehicleHours.active = true;
       trafficType.active = true;
+      peakSelector.value = NO_PEAK_KEY;
+      vehicleHours.value = PHRS
       break;
     case "ted":
       freeflow.active = true;
-      risAADT.active = true;
+      //risAADT.active = true;
       // perMiles.active = true;
       vehicleHours.active = true;
       trafficType.active = true;
@@ -366,6 +405,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
         { name: "Weekend", value: WEEKEND_KEY }
       ]
       percentiles.active = true;
+      percentiles.value = "pctl_5"
       break;
     default:
       break;
@@ -387,24 +427,25 @@ const updateSubMeasures = (measure, filters, falcor) => {
 
   freeflow.value = false;
   // perMiles.value = false;
-  vehicleHours.value = false;
-  risAADT.value = false;
+  vehicleHours.value = PHRS;
+  //risAADT.value = false;
 
-  percentiles.value = null;
+
   attributes.value = null;
 
 
   return {
     peakSelector,
     freeflow,
-    risAADT,
+    //risAADT,
     // perMiles,
     vehicleHours,
     attributes,
     percentiles,
     trafficType,
     fueltype,
-    pollutant
+    pollutant,
+    measure
   }
 // console.log("updateSubMeasures:", filters)
 }
@@ -416,7 +457,7 @@ const getMeasure = (filters) => {
     measure,
     peakSelector,
     freeflow,
-    risAADT,
+    //risAADT,
     // perMiles,
     vehicleHours,
     attributes,
@@ -426,24 +467,67 @@ const getMeasure = (filters) => {
     pollutant
   } = filters;
 
-// console.log("getMeasure:", filters)
+  console.log("getMeasure:", filters)
 
-  const out = [
-    measure.value,
-    (trafficType.value !== "all") && trafficType.value,
-     freeflow.value && measure.value !== "freeflow" ? "freeflow" : null,
-        //freeflow.value && measure.value !== "freeflow" ? null : "freeflow",
-    risAADT.value ? "ris" : false,
-    fueltype.active && (fueltype.value !== "total") ? fueltype.value : false,
-    pollutant.active && pollutant.value,
-    fueltype.active && (fueltype.value === "gas") ? "pass" : false,
-    fueltype.active && (fueltype.value === "diesel") ? "truck" : false,
-    // perMiles.value && "per_mi",
-    vehicleHours.value && "vhrs",
-    (measure.value === "speed") && percentiles.value,
-    (peakSelector.value !== "none") && peakSelector.value,
-    attributes.value
-  ].filter(Boolean).join("_")
+  //if lottr/ttr, measure - timeframe - measure
+  //if phed, measure - [truck] - [freeflow] - timeframe 
+  //if phed and `hrs`, measure - [truck] - [freeflow] hrs
+
+  let out;
+
+  switch(measure.value) {
+    case "phed":
+      out = [
+        measure.value, //phed, required
+        (trafficType.value !== "all") && trafficType.value, //truck, optional
+        freeflow.value && measure.value !== "freeflow" ? "freeflow" : null, //freeflow, optional
+        (peakSelector.value !== NO_PEAK_KEY && vehicleHours.value !== HRS) && peakSelector.value, //amp, optional
+        vehicleHours.active && vehicleHours.value,//phrs, required
+      ].filter(Boolean).join("_")
+      break;
+    case "ted":
+      break;
+    case "lottr":
+      out = [
+        measure.value,
+        (peakSelector.value !== "none") && peakSelector.value,
+        measure.value,
+        percentiles.value
+      ].filter(Boolean).join("_")
+      break;
+    case "tttr":
+      out = [
+        measure.value,
+        (peakSelector.value !== "none") && peakSelector.value,
+        measure.value,
+        percentiles.value
+      ].filter(Boolean).join("_")
+      break;
+    case "speed":
+      out = [
+        measure.value,
+        percentiles.value
+      ].filter(Boolean).join("_")
+    default:
+      break;
+  }
+  
+  // out = [
+  //   measure.value,
+  //   (trafficType.value !== "all") && trafficType.value,
+  //   freeflow.value && measure.value !== "freeflow" ? "freeflow" : null,
+  //   //risAADT.value ? "ris" : false,
+  //   fueltype.active && (fueltype.value !== "total") ? fueltype.value : false,
+  //   pollutant.active && pollutant.value,
+  //   fueltype.active && (fueltype.value === "gas") ? "pass" : false,
+  //   fueltype.active && (fueltype.value === "diesel") ? "truck" : false,
+  //   // perMiles.value && "per_mi",
+  //   (peakSelector.value !== "none") && peakSelector.value,
+  //   vehicleHours.active && vehicleHours.value,
+  //   (measure.value === "speed") && percentiles.value,
+  //   (['lottr', 'tttr'].includes(measure.value)) && measure.value,
+  //   attributes.value
+  // ].filter(Boolean).join("_")
 
   const NOT_MEASURES = ["RIS", "TMC", "speed_total"];
 
