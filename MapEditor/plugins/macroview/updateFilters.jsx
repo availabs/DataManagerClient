@@ -1,6 +1,14 @@
 import get from "lodash/get"
 import set from "lodash/set"
 import omit from "lodash/omit"
+
+const AM_PEAK_KEY = 'amp';
+const PM_PEAK_KEY = 'pmp';
+const WEEKEND_KEY = 'we';
+const MIDDAY_KEY = 'midd';
+const OVERNIGHT_KEY = 'ovn';
+const NO_PEAK_KEY = 'all';
+
 const YEARS = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016];
 const filters = {
   geography: {
@@ -77,7 +85,7 @@ const filters = {
       { name: "Freeflow", value: true },
       { name: "Speed Limit", value: false }
     ],
-    value: true,
+    value: false,
     multi: false,
     searchable: false,
     active: false
@@ -129,20 +137,20 @@ const filters = {
     searchable: false,
     active: false
   },
-  perMiles: {
-    name: "Sum By",
-    type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
-    domain: [
-      { name: "Per Mile", value: true },
-      { name: "Total", value: false }
-    ],
-    value: true,
-    multi: false,
-    searchable: false,
-    active: false
-  },
+  // perMiles: {
+  //   name: "Sum By",
+  //   type: "select",
+  //   accessor: d => d.name,
+  //   valueAccessor: d => d.value,
+  //   domain: [
+  //     { name: "Per Mile", value: true },
+  //     { name: "Total", value: false }
+  //   ],
+  //   value: true,
+  //   multi: false,
+  //   searchable: false,
+  //   active: false
+  // },
   vehicleHours: {
     name: "Unit",
     type: "select",
@@ -198,7 +206,7 @@ const filters = {
     domain: [],
     value: null,
     multi: false,
-    active: false
+    active: true
   },
   attributes: {
     name: "Attributes",
@@ -218,7 +226,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
     peakSelector,
     freeflow,
     risAADT,
-    perMiles,
+    // perMiles,
     vehicleHours,
     attributes,
     percentiles,
@@ -239,7 +247,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
 
   freeflow.active = false;
   risAADT.active = false;
-  perMiles.active = false;
+  // perMiles.active = false;
   vehicleHours.active = false;
   percentiles.active = false;
 
@@ -258,12 +266,12 @@ const updateSubMeasures = (measure, filters, falcor) => {
       pollutant.value = "co2";
 
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
+        { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
         { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: "pm" },
-        { name: "Overnight", value: "overnight" },
-        { name: "Weekend", value: "weekend" }
+        { name: "PM Peak", value: PM_PEAK_KEY },
+        { name: "Overnight", value: OVERNIGHT_KEY },
+        { name: "Weekend", value: WEEKEND_KEY }
       ]
       risAADT.active = true;
       break;
@@ -286,41 +294,43 @@ const updateSubMeasures = (measure, filters, falcor) => {
     case "lottr":
       peakSelector.active = true;
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
-        { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: "pm" },
-        { name: "Weekend", value: "weekend" }
+        // { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
+        { name: "Midday", value: MIDDAY_KEY },
+        // { name: "Off Peak", value: "off" },
+        { name: "PM Peak", value: PM_PEAK_KEY },
+        { name: "Weekend", value: WEEKEND_KEY }
       ]
       break;
     case "tttr":
       peakSelector.active = true;
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
-        { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: "pm" },
-        { name: "Overnight", value: "overnight" },
-        { name: "Weekend", value: "weekend" }
+        // { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
+        { name: "Midday", value: MIDDAY_KEY },
+        // { name: "Off Peak", value: "off" },
+        { name: "PM Peak", value: PM_PEAK_KEY },
+        { name: "Weekend", value: WEEKEND_KEY },
+        { name: "Overnight", value: OVERNIGHT_KEY }
       ]
       break;
     case "phed":
       peakSelector.active = true;
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
-        { name: "PM Peak", value: "pm" }
+        { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
+        { name: "PM Peak", value: PM_PEAK_KEY }
       ]
       freeflow.active = true;
       risAADT.active = true;
-      perMiles.active = true;
+      // perMiles.active = true;
       vehicleHours.active = true;
       trafficType.active = true;
       break;
     case "ted":
       freeflow.active = true;
       risAADT.active = true;
-      perMiles.active = true;
+      // perMiles.active = true;
       vehicleHours.active = true;
       trafficType.active = true;
       break;
@@ -328,20 +338,20 @@ const updateSubMeasures = (measure, filters, falcor) => {
     case "tti":
       peakSelector.active = true;
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
-        { name: "PM Peak", value: "pm" }
+        { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
+        { name: "PM Peak", value: PM_PEAK_KEY }
       ]
       break;
     case "pct_bins_reporting":
       peakSelector.active = true;
       peakSelector.domain = [
-        { name: "No Peak", value: "none" },
-        { name: "AM Peak", value: "am" },
+        { name: "No Peak", value: NO_PEAK_KEY },
+        { name: "AM Peak", value: AM_PEAK_KEY },
         { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: "pm" },
-        { name: "Overnight", value: "overnight" },
-        { name: "Weekend", value: "weekend" }
+        { name: "PM Peak", value: PM_PEAK_KEY },
+        { name: "Overnight", value: OVERNIGHT_KEY },
+        { name: "Weekend", value: WEEKEND_KEY }
       ]
       peakSelector.value = 'none';
     break;
@@ -349,11 +359,11 @@ const updateSubMeasures = (measure, filters, falcor) => {
       peakSelector.active = true;
       peakSelector.domain = [
         { name: "No Peak", value: "total" },
-        { name: "AM Peak", value: "am" },
+        { name: "AM Peak", value: AM_PEAK_KEY },
         { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: "pm" },
-        { name: "Overnight", value: "overnight" },
-        { name: "Weekend", value: "weekend" }
+        { name: "PM Peak", value: PM_PEAK_KEY },
+        { name: "Overnight", value: OVERNIGHT_KEY },
+        { name: "Weekend", value: WEEKEND_KEY }
       ]
       percentiles.active = true;
       break;
@@ -376,7 +386,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
   // }
 
   freeflow.value = false;
-  perMiles.value = false;
+  // perMiles.value = false;
   vehicleHours.value = false;
   risAADT.value = false;
 
@@ -388,7 +398,7 @@ const updateSubMeasures = (measure, filters, falcor) => {
     peakSelector,
     freeflow,
     risAADT,
-    perMiles,
+    // perMiles,
     vehicleHours,
     attributes,
     percentiles,
@@ -399,14 +409,15 @@ const updateSubMeasures = (measure, filters, falcor) => {
 // console.log("updateSubMeasures:", filters)
 }
 
-
+//no side effects/mutations/effects/etc.
+//literally just tells you what your `data-column` is
 const getMeasure = (filters) => {
   const {
     measure,
     peakSelector,
     freeflow,
     risAADT,
-    perMiles,
+    // perMiles,
     vehicleHours,
     attributes,
     percentiles,
@@ -420,13 +431,14 @@ const getMeasure = (filters) => {
   const out = [
     measure.value,
     (trafficType.value !== "all") && trafficType.value,
-    freeflow.value && measure.value !== "freeflow" ? "freeflow" : null,
+     freeflow.value && measure.value !== "freeflow" ? "freeflow" : null,
+        //freeflow.value && measure.value !== "freeflow" ? null : "freeflow",
     risAADT.value ? "ris" : false,
     fueltype.active && (fueltype.value !== "total") ? fueltype.value : false,
     pollutant.active && pollutant.value,
     fueltype.active && (fueltype.value === "gas") ? "pass" : false,
     fueltype.active && (fueltype.value === "diesel") ? "truck" : false,
-    perMiles.value && "per_mi",
+    // perMiles.value && "per_mi",
     vehicleHours.value && "vhrs",
     (measure.value === "speed") && percentiles.value,
     (peakSelector.value !== "none") && peakSelector.value,
