@@ -4,37 +4,14 @@ import set from "lodash/set"
 import isEqual from "lodash/isEqual"
 import omit from "lodash/omit"
 import mapboxgl from "maplibre-gl";
-import { extractState, fetchBoundsForFilter } from '../../stateUtils';
-import {filters, updateSubMeasures, getMeasure} from "./updateFilters"
+import { extractState, createFalcorFilterOptions } from '../../stateUtils';
+import { filters, updateSubMeasures, getMeasure, getColorRange, updateLegend } from "./updateFilters"
 import { DamaContext } from "../../../store"
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { ViewAttributes } from "../../../Source/attributes"
 import { usePrevious } from "../../components/LayerManager/utils";
 import { choroplethPaint } from '../../components/LayerEditor/datamaps'
 import { npmrdsPaint } from "./paint"
-import colorbrewer from "colorbrewer"
-const ColorRanges = {};
-for (const type in colorbrewer.schemeGroups) {
-	colorbrewer.schemeGroups[type].forEach(name => {
-		const group = colorbrewer[name];
-		for (const length in group) {
-			if (!(length in ColorRanges)) {
-				ColorRanges[length] = [];
-			}
-			ColorRanges[length].push({
-				type: `${ type[0].toUpperCase() }${ type.slice(1) }`,
-				name,
-				category: "Colorbrewer",
-				colors: group[length]
-			})
-		}
-	})
-}
-
-
-const getColorRange = (size, name) =>
-	get(ColorRanges, [size], [])
-		.reduce((a, c) => c.name === name ? c.colors : a, []).slice();
 
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
@@ -262,10 +239,9 @@ export const MacroviewPlugin = {
         };
       }, [state.symbology.pluginData, pluginDataPath]);
 
-      const { symbology_id, pathBase, layerPaintPath } = useMemo(() => {
+      const { symbology_id, pathBase, layerPaintPath, existingDynamicFilter, filter:dataFilter, filterMode } = useMemo(() => {
         return extractState(state);
       }, [state]);
-
 
       useEffect(() => {
         const getFilterBounds = async () => {
@@ -313,6 +289,7 @@ export const MacroviewPlugin = {
                 `symbology.layers[${activeLayerId}]['dynamic-filters']`,
                 []
               );
+              set(draft, `symbology.layers[${activeLayerId}]['filterMode']`, null)
             });
           }
         }
@@ -450,7 +427,12 @@ export const MacroviewPlugin = {
 
       const newDataColumn = useMemo(() => {
         return getMeasure(measureFilters);
-      }, [measureFilters])
+      }, [measureFilters]);
+
+      const falcorDataFilter = useMemo(()=> {
+        return createFalcorFilterOptions({dynamicFilter:existingDynamicFilter, filterMode, dataFilter});
+      }, [existingDynamicFilter, filterMode, dataFilter]);
+
       useEffect(() => {
         const getColors = async () => {
           const numbins = 7, method = 'ckmeans'
@@ -459,6 +441,7 @@ export const MacroviewPlugin = {
             viewId: parseInt(viewId),
             numbins,
             method,
+            dataFilter:falcorDataFilter
           };
 
           const showOther = '#ccc'
@@ -483,20 +466,23 @@ export const MacroviewPlugin = {
             "options",
             JSON.stringify(domainOptions),
           ]);
-          //console.log({colorBreaks});
           //console.log({newDataColumn, max:colorBreaks['max'], colorange: getColorRange(7, "RdYlBu").reverse(), numbins, method, breaks:colorBreaks['breaks'], showOther, orientation:'vertical'})
-          let {paint, legend} = choroplethPaint(newDataColumn, colorBreaks['max'], getColorRange(7, "RdYlBu").reverse(), numbins, method, colorBreaks['breaks'], showOther, 'vertical');
+          
+          //format is used to format legend labels
+          const {range: paintRange, format} = updateLegend(measureFilters);
+          let { paint, legend } = choroplethPaint(newDataColumn, colorBreaks['max'], paintRange, numbins, method, colorBreaks['breaks'], showOther, 'vertical');
+
           //console.log({paint})
           //console.log({npmrdsPaint})
           setState(draft => {
-            set(draft, `${pathBase}.${layerPaintPath}`, paint); //Mapbox paint
+            set(draft, `${pathBase}['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
             set(draft, `${pathBase}['legend-data']`, legend); //AVAIL-written legend component
           })
 
         };
 
         getColors();
-      }, [newDataColumn]);
+      }, [newDataColumn, falcorDataFilter, viewId]);
 
       return controls;
     },

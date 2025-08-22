@@ -106,47 +106,45 @@ const extractState = (state) => {
   };
 };
 
-const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
-  const { viewId, filter, filterMode } = extractState(state)
-  //dont need to do change detection here. This function is called from inside a use-effect
+const createFalcorFilterOptions = ({dynamicFilter, filterMode, dataFilter}) => {
   const filterEqualOptions = {};
   dynamicFilter.reduce((acc, curr) => {
     acc[curr.column_name] = curr.values;
     return acc;
   }, filterEqualOptions)
   
-  Object.keys(filter)
+  Object.keys(dataFilter)
     .filter((filtKey) => filter[filtKey].operator === "==")
     .reduce((acc, curr) => {
-      acc[curr] = filter[curr].value;
+      acc[curr] = dataFilter[curr].value;
       return acc;
     }, filterEqualOptions);
 
   const filterOtherOptions = {};
 
   //TODO -- how to pass `!=`, or `between`
-  Object.keys(filter)
+  Object.keys(dataFilter)
     .reduce((acc, filtKey) => {
-      if(filter[filtKey].operator === ">=") {
+      if(dataFilter[filtKey].operator === ">=") {
         if(!acc["gte"]) {
           acc['gte'] = {};
         }
-        acc['gte'] = {...acc['gte'], [filter[filtKey].columnName]: filter[filtKey].value}
-      } else if(filter[filtKey].operator === ">") {
+        acc['gte'] = {...acc['gte'], [dataFilter[filtKey].columnName]: dataFilter[filtKey].value}
+      } else if(dataFilter[filtKey].operator === ">") {
         if(!acc["gt"]) {
           acc['gt'] = {};
         }
-        acc['gt'] = {...acc['gt'], [filter[filtKey].columnName]: filter[filtKey].value}
-      } else if(filter[filtKey].operator === "<=") {
+        acc['gt'] = {...acc['gt'], [dataFilter[filtKey].columnName]: dataFilter[filtKey].value}
+      } else if(dataFilter[filtKey].operator === "<=") {
         if(!acc["lte"]) {
           acc['lte'] = {};
         }
-        acc['lte'] = {...acc['lte'], [filter[filtKey].columnName]: filter[filtKey].value}
-      } else if(filter[filtKey].operator === "<") {
+        acc['lte'] = {...acc['lte'], [dataFilter[filtKey].columnName]: dataFilter[filtKey].value}
+      } else if(dataFilter[filtKey].operator === "<") {
         if(!acc["lt"]) {
           acc['lt'] = {};
         }
-        acc['lt'] = {...acc['lt'], [filter[filtKey].columnName]: filter[filtKey].value}
+        acc['lt'] = {...acc['lt'], [dataFilter[filtKey].columnName]: dataFilter[filtKey].value}
       }
       return acc;
     }, filterOtherOptions);
@@ -156,10 +154,21 @@ const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
     ...filterOtherOptions,
     filterRelation: filterMode === "any" ? "or" : "all"
   })
+
+  return newOptions;
+}
+
+const fetchBoundsForFilter = async (state, falcor, pgEnv, dynamicFilter) => {
+  const { viewId, filter, filterMode } = extractState(state)
+  //dont need to do change detection here. This function is called from inside a use-effect
+
+  const filterOptions = createFalcorFilterOptions({dynamicFilter, filterMode, dataFilter: filter});
+  // console.log("new filteroptions---",filterOptions)
+
   const resp = await falcor.get([
-    'dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',{ },['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent']
+    'dama',pgEnv,'viewsbyId', viewId, 'options', filterOptions, 'databyIndex',{ },['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent']
   ]);
-  const newExtent = get(resp, ['json','dama',pgEnv,'viewsbyId', viewId, 'options', newOptions, 'databyIndex',0,['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent'] ])
+  const newExtent = get(resp, ['json','dama',pgEnv,'viewsbyId', viewId, 'options', filterOptions, 'databyIndex',0,['ST_AsGeojson(ST_Extent(wkb_geometry)) as bextent'] ])
   return newExtent;
 }
-export { extractState, fetchBoundsForFilter };
+export { extractState, fetchBoundsForFilter, createFalcorFilterOptions };

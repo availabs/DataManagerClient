@@ -2,6 +2,31 @@ import get from "lodash/get"
 import set from "lodash/set"
 import omit from "lodash/omit"
 import cloneDeep from 'lodash/cloneDeep'
+import { range } from "lodash";
+
+import colorbrewer from "colorbrewer"
+const ColorRanges = {};
+for (const type in colorbrewer.schemeGroups) {
+  colorbrewer.schemeGroups[type].forEach(name => {
+    const group = colorbrewer[name];
+    for (const length in group) {
+      if (!(length in ColorRanges)) {
+        ColorRanges[length] = [];
+      }
+      ColorRanges[length].push({
+        type: `${ type[0].toUpperCase() }${ type.slice(1) }`,
+        name,
+        category: "Colorbrewer",
+        colors: group[length]
+      })
+    }
+  })
+}
+
+
+export const getColorRange = (size, name) =>
+  get(ColorRanges, [size], [])
+    .reduce((a, c) => c.name === name ? c.colors : a, []).slice();
 
 const AM_PEAK_KEY = 'amp';
 const PM_PEAK_KEY = 'pmp';
@@ -472,7 +497,7 @@ const getMeasure = (filters) => {
     pollutant
   } = filters;
 
-  console.log("getMeasure:", filters)
+  //console.log("getMeasure:", filters)
 
   //if lottr/ttr, measure - timeframe - measure
   //if phed, measure - [truck] - [freeflow] - timeframe 
@@ -553,4 +578,60 @@ const getMeasure = (filters) => {
   return out
 }
 
-export {filters, updateSubMeasures, getMeasure}
+const updateLegend = (filters) => {
+  let range, format;
+  console.log("legend filters::", filters)
+  switch (filters.measure.value) {
+    case 'lottr':
+      range = getColorRange(7, "RdYlBu", true).reverse()
+      format = ",.2~f";
+      break;
+      case 'tttr':
+      range = getColorRange(7, "RdYlGn", true).reverse()
+      format = ",.2~f";
+      break;
+    case 'freeflow':
+      range = getColorRange(7, "RdPu", true)
+      format = ",.0~f";
+      break;
+    case 'pti':
+      range = getColorRange(7, "PRGn", true)
+      format = ",.2~f";
+      break;
+    case 'pti':
+      range = getColorRange(7, "PiYG", true)
+      format = ",.2~f";
+      break;
+    case 'phed':
+      range = getColorRange(7, "YlOrRd", true)
+      format = ",.2~s";
+      break;
+    case 'ted':
+      range = getColorRange(7, "YlOrBr", true)
+      format = ",.2~s";
+    case 'emissions':
+      range = getColorRange(7, "Oranges", true)
+      format = ",.2~s";
+      break;
+    case 'speed':
+      range = getColorRange(7, "Spectral", true)
+      format = ",.0~f";
+      break;
+    case 'pct_bins_reporting':
+      range = getColorRange(7, "RdYlGn", true)
+      // domain = [.1,.25,.5, .75, .9]
+      format = ",.2~f";
+      break;
+    default:
+      range = getColorRange(7, "Reds");
+      format = ",.2~s";
+      break;
+  }
+
+
+  return {
+    range,
+    format
+  }
+}
+export { filters, updateSubMeasures, getMeasure, updateLegend }
