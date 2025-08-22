@@ -13,7 +13,17 @@ const NO_PEAK_KEY = 'all';
 const PHRS = 'all_xdelay_phrs';
 const VHRS = 'all_xdelay_vhrs';
 const HRS = 'xdelay_hrs';
-
+const SPEED_PERCENTILE_DOMAIN = [
+  { name: "", value: "" },
+  { name: "5th Percentile", value: "pctl_5" },
+  { name: "20th Percentile", value: "pctl_20" },
+  { name: "25th Percentile", value: "pctl_25" },
+  { name: "50th Percentile", value: "pctl_50" },
+  { name: "75th Percentile", value: "pctl_75" },
+  { name: "80th Percentile", value: "pctl_80" },
+  { name: "85th Percentile", value: "pctl_85" },
+  { name: "95th Percentile", value: "pctl_95" },
+];
 const filters = {
   // geography: {
   //   name: 'Geography',
@@ -191,16 +201,7 @@ const filters = {
     accessor: d => d.name,
     valueAccessor: d => d.value,
     multi: false,
-    domain: [
-      { name: "5th Percentile", value: "pctl_5" },
-      { name: "20th Percentile", value: "pctl_20" },
-      { name: "25th Percentile", value: "pctl_25" },
-      { name: "50th Percentile", value: "pctl_50" },
-      { name: "75th Percentile", value: "pctl_75" },
-      { name: "80th Percentile", value: "pctl_80" },
-      { name: "85th Percentile", value: "pctl_85" },
-      { name: "95th Percentile", value: "pctl_95" }
-    ],
+    domain: SPEED_PERCENTILE_DOMAIN,
     value: null,
     active: false
   },
@@ -331,6 +332,7 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "50th", value: "50_pct" }
       ]
       percentiles.active = true;
+      percentiles.value = "";
       peakSelector.value = AM_PEAK_KEY;
       break;
     case "tttr":
@@ -349,6 +351,7 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "95th", value: "95_pct" },
         { name: "50th", value: "50_pct" }
       ]
+      percentiles.value = "";
       percentiles.active = true;
       break;
     case "phed":
@@ -367,6 +370,7 @@ const updateSubMeasures = (filters, falcor) => {
       vehicleHours.value = PHRS
       break;
     case "ted":
+      peakSelector.value = NO_PEAK_KEY;
       freeflow.active = true;
       //risAADT.active = true;
       // perMiles.active = true;
@@ -392,7 +396,7 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "Overnight", value: OVERNIGHT_KEY },
         { name: "Weekend", value: WEEKEND_KEY }
       ]
-      peakSelector.value = 'none';
+      peakSelector.value = NO_PEAK_KEY;
     break;
     case "speed":
       peakSelector.active = true;
@@ -406,13 +410,14 @@ const updateSubMeasures = (filters, falcor) => {
       ]
       percentiles.active = true;
       percentiles.value = "pctl_5"
+      percentiles.domain = SPEED_PERCENTILE_DOMAIN;
       break;
     default:
       break;
   }
 
   if (!peakSelector.domain.reduce((a, c) => a || (c.value === peakSelector.value), false)) {
-    peakSelector.value = measure === "speed" ? "total" : "none";
+    peakSelector.value = measure === "speed" ? "total" : NO_PEAK_KEY;
   }
 
   // if ((measure !== "phed") && (measure !== "ted")) {
@@ -480,17 +485,24 @@ const getMeasure = (filters) => {
       out = [
         measure.value, //phed, required
         (trafficType.value !== "all") && trafficType.value, //truck, optional
-        freeflow.value && measure.value !== "freeflow" ? "freeflow" : null, //freeflow, optional
+        (freeflow.value && freeflow.value !== "false") && measure.value !== "freeflow" ? "freeflow" : null, //freeflow, optional
         (peakSelector.value !== NO_PEAK_KEY && vehicleHours.value !== HRS) && peakSelector.value, //amp, optional
         vehicleHours.active && vehicleHours.value,//phrs, required
       ].filter(Boolean).join("_")
       break;
     case "ted":
+      out = [
+        measure.value, //ted, required
+        (trafficType.value !== "all") && trafficType.value, //truck, optional
+        (freeflow.value && freeflow.value !== "false") && measure.value !== "freeflow" ? "freeflow" : null, //freeflow, optional
+        (peakSelector.value !== NO_PEAK_KEY && vehicleHours.value !== HRS) && peakSelector.value, //amp, optional
+        vehicleHours.active && vehicleHours.value,//phrs, required
+      ].filter(Boolean).join("_")
       break;
     case "lottr":
       out = [
         measure.value,
-        (peakSelector.value !== "none") && peakSelector.value,
+        (peakSelector.value !== NO_PEAK_KEY) && peakSelector.value,
         measure.value,
         percentiles.value
       ].filter(Boolean).join("_")
@@ -498,7 +510,7 @@ const getMeasure = (filters) => {
     case "tttr":
       out = [
         measure.value,
-        (peakSelector.value !== "none") && peakSelector.value,
+        (peakSelector.value !== NO_PEAK_KEY) && peakSelector.value,
         measure.value,
         percentiles.value
       ].filter(Boolean).join("_")

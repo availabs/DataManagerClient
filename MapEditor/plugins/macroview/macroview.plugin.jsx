@@ -21,11 +21,11 @@ export const MacroviewPlugin = {
     type: "plugin",
     mapRegister: (map, state, setState) => {
       map.on("click", MAP_CLICK);
-      const pluginPathBase = `symbology.pluginData.macroview`;
+      const pluginDataPath = `symbology.pluginData.macroview`;
       const newFilters = updateSubMeasures(filters);
 
       setState(draft => {
-        set(draft, `${pluginPathBase}['measureFilters']`, newFilters);
+        set(draft, `${pluginDataPath}['measureFilters']`, newFilters);
       })
     },
     dataUpdate: (map, state, setState) => {
@@ -43,6 +43,7 @@ export const MacroviewPlugin = {
       const viewId = get(state, `${pluginDataPath}['viewId']`, null);
       const geography = get(state, `${pluginDataPath}['geography']`, null);
       const activeLayerId = get(state, `${pluginDataPath}['activeLayer']`, null);
+      const measureFilters = get(state, `${pluginDataPath}['measureFilters']`, filters)
       const activeLayer = get(state, `symbology.layers[${activeLayerId}]`, null);
 
       if(activeLayerId && viewId) { 
@@ -65,53 +66,58 @@ export const MacroviewPlugin = {
         })
       }
 
-      if (pm1 && peak) {
-        const newDataColumn = `${pm1}_${peak}_${pm1}`;
+      const newDataColumn = getMeasure(measureFilters);
 
-        const newPaint = [
-          "case",
-          ["==", ["get", newDataColumn], null],
-          "#ccc",
-          [
-            "step",
-            ["to-number", ["get", newDataColumn]],
-            "#e8e873",
-            1,
-            "#e8e873",
-            1.32,
-            "#2cbaa8",
-            2.06,
-            "#4b5899",
-          ],
-        ];
+      console.log("---data update newDataColumn measure---",newDataColumn)
 
-        const newLegend = [
-          {
-            color: "#e8e873",
-            label: "test123",
-          },
-          {
-            color: "#2cbaa8",
-            label: "1.32 - 2.06",
-          },
-          {
-            color: "#4b5899",
-            label: "2.06 - 6.55",
-          },
-        ];
 
-        setState((draft) => {
-          set(draft,`${pathBase}['hover']` , hover)
-          set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
-          set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
-          set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
+      const newPaint = [
+        "case",
+        ["==", ["get", newDataColumn], null],
+        "#ccc",
+        [
+          "step",
+          ["to-number", ["get", newDataColumn]],
+          "#e8e873",
+          1,
+          "#e8e873",
+          1.32,
+          "#2cbaa8",
+          2.06,
+          "#4b5899",
+        ],
+      ];
 
-          //SHAPE OF layerFilter --  
-          // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
-          //value can be an array of 2 numbers, if operator === 'between'
-          //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
-        })
-      }
+      const newLegend = [
+        {
+          color: "#e8e873",
+          label: "test123",
+        },
+        {
+          color: "#2cbaa8",
+          label: "1.32 - 2.06",
+        },
+        {
+          color: "#4b5899",
+          label: "2.06 - 6.55",
+        },
+      ];
+
+      setState((draft) => {
+
+
+
+        set(draft,`${pathBase}['hover']` , hover)
+        set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+        set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
+        set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
+
+        //SHAPE OF layerFilter --  
+        // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
+        //value can be an array of 2 numbers, if operator === 'between'
+        //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
+      })
+      
     },
     internalPanel: ({ state, setState }) => {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
@@ -245,24 +251,19 @@ export const MacroviewPlugin = {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
-      const pluginPathBase = `symbology.pluginData.macroview`;
+      const pluginDataPath = `symbology.pluginData.macroview`;
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
       const { views, viewId, geography, activeLayerId, measureFilters } = useMemo(() => {
         return {
-          views: get(state, `${pluginPathBase}['views']`, []),
-          viewId: get(state, `${pluginPathBase}['viewId']`, null),
-          geography: get(state, `${pluginPathBase}['geography']`, null),
-          activeLayerId: get(state, `${pluginPathBase}['activeLayer']`, null),
-          measureFilters: get(state, `${pluginPathBase}['measureFilters']`, filters)
+          views: get(state, `${pluginDataPath}['views']`, []),
+          viewId: get(state, `${pluginDataPath}['viewId']`, null),
+          geography: get(state, `${pluginDataPath}['geography']`, null),
+          activeLayerId: get(state, `${pluginDataPath}['activeLayer']`, null),
+          measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters)
         };
-      }, [state.symbology.pluginData, pluginPathBase]);
-
-      const measure = useMemo(() => {
-        return getMeasure(measureFilters);
-      }, [measureFilters])
-      console.log("---external panel measure---",measure)
+      }, [state.symbology.pluginData, pluginDataPath]);
 
       useEffect(() => {
         const getFilterBounds = async () => {
@@ -441,7 +442,7 @@ export const MacroviewPlugin = {
       useEffect(() => {
         //this is probably infinity render
         setState(draft => {
-          set(draft, `${pluginPathBase}['measureFilters']`, updateSubMeasures(measureFilters))
+          set(draft, `${pluginDataPath}['measureFilters']`, updateSubMeasures(measureFilters))
         })
       }, [isEqual(measureFilters['measure'], prevMeasureFilters)])
 
