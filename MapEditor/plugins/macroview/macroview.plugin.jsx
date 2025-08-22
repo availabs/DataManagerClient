@@ -10,6 +10,31 @@ import { DamaContext } from "../../../store"
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { ViewAttributes } from "../../../Source/attributes"
 import { usePrevious } from "../../components/LayerManager/utils";
+import { choroplethPaint } from '../../components/LayerEditor/datamaps'
+import { npmrdsPaint } from "./paint"
+import colorbrewer from "colorbrewer"
+const ColorRanges = {};
+for (const type in colorbrewer.schemeGroups) {
+	colorbrewer.schemeGroups[type].forEach(name => {
+		const group = colorbrewer[name];
+		for (const length in group) {
+			if (!(length in ColorRanges)) {
+				ColorRanges[length] = [];
+			}
+			ColorRanges[length].push({
+				type: `${ type[0].toUpperCase() }${ type.slice(1) }`,
+				name,
+				category: "Colorbrewer",
+				colors: group[length]
+			})
+		}
+	})
+}
+
+
+const getColorRange = (size, name) =>
+	get(ColorRanges, [size], [])
+		.reduce((a, c) => c.name === name ? c.colors : a, []).slice();
 
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
@@ -21,11 +46,13 @@ export const MacroviewPlugin = {
     type: "plugin",
     mapRegister: (map, state, setState) => {
       map.on("click", MAP_CLICK);
+      const { pathBase, layerPaintPath } = extractState(state);
       const pluginDataPath = `symbology.pluginData.macroview`;
       const newFilters = updateSubMeasures(filters);
 
       setState(draft => {
         set(draft, `${pluginDataPath}['measureFilters']`, newFilters);
+        //set(draft, `${pathBase}.${layerPaintPath}`, npmrdsPaint); //Mapbox paint
       })
     },
     dataUpdate: (map, state, setState) => {
@@ -70,38 +97,8 @@ export const MacroviewPlugin = {
 
       console.log("---data update newDataColumn measure---",newDataColumn)
 
+      
 
-      const newPaint = [
-        "case",
-        ["==", ["get", newDataColumn], null],
-        "#ccc",
-        [
-          "step",
-          ["to-number", ["get", newDataColumn]],
-          "#e8e873",
-          1,
-          "#e8e873",
-          1.32,
-          "#2cbaa8",
-          2.06,
-          "#4b5899",
-        ],
-      ];
-
-      const newLegend = [
-        {
-          color: "#e8e873",
-          label: "test123",
-        },
-        {
-          color: "#2cbaa8",
-          label: "1.32 - 2.06",
-        },
-        {
-          color: "#4b5899",
-          label: "2.06 - 6.55",
-        },
-      ];
 
       setState((draft) => {
 
@@ -109,8 +106,8 @@ export const MacroviewPlugin = {
 
         set(draft,`${pathBase}['hover']` , hover)
         set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
-        set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
-        set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
+        // set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
+        //set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
 
         //SHAPE OF layerFilter --  
         // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
@@ -264,6 +261,11 @@ export const MacroviewPlugin = {
           measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters)
         };
       }, [state.symbology.pluginData, pluginDataPath]);
+
+      const { symbology_id, pathBase, layerPaintPath } = useMemo(() => {
+        return extractState(state);
+      }, [state]);
+
 
       useEffect(() => {
         const getFilterBounds = async () => {
@@ -446,7 +448,55 @@ export const MacroviewPlugin = {
         })
       }, [isEqual(measureFilters['measure'], prevMeasureFilters)])
 
+      const newDataColumn = useMemo(() => {
+        return getMeasure(measureFilters);
+      }, [measureFilters])
+      useEffect(() => {
+        const getColors = async () => {
+          const numbins = 7, method = 'ckmeans'
+          const domainOptions = {
+            column: newDataColumn,
+            viewId: parseInt(viewId),
+            numbins,
+            method,
+          };
 
+          const showOther = '#ccc'
+          const res = await falcor.get([
+            "dama",
+            pgEnv,
+            "symbologies",
+            "byId",
+            [symbology_id],
+            "colorDomain",
+            "options",
+            JSON.stringify(domainOptions),
+          ]);
+          const colorBreaks = get(res, [
+            "json",
+            "dama",
+            pgEnv,
+            "symbologies",
+            "byId",
+            [symbology_id],
+            "colorDomain",
+            "options",
+            JSON.stringify(domainOptions),
+          ]);
+          //console.log({colorBreaks});
+          //console.log({newDataColumn, max:colorBreaks['max'], colorange: getColorRange(7, "RdYlBu").reverse(), numbins, method, breaks:colorBreaks['breaks'], showOther, orientation:'vertical'})
+          let {paint, legend} = choroplethPaint(newDataColumn, colorBreaks['max'], getColorRange(7, "RdYlBu").reverse(), numbins, method, colorBreaks['breaks'], showOther, 'vertical');
+          //console.log({paint})
+          //console.log({npmrdsPaint})
+          setState(draft => {
+            set(draft, `${pathBase}.${layerPaintPath}`, paint); //Mapbox paint
+            set(draft, `${pathBase}['legend-data']`, legend); //AVAIL-written legend component
+          })
+
+        };
+
+        getColors();
+      }, [newDataColumn]);
 
       return controls;
     },
