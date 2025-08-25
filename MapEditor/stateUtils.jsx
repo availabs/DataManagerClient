@@ -35,7 +35,12 @@ const extractState = (state) => {
     layerPaintPath = "layers[0].paint['circle-radius']";
   }
   const pluginData = get(state, `symbology.pluginData`, {});
-  const isActiveLayerPlugin = (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === activeLayerId)
+  //could be -- ryanplugin, macroplguin, etc.
+  //value of each is a bunch of keys, but we want the value of `active-layers` for each
+  //{pm3: 'layerId', mpo: 'layerId2'}, {...}
+  const allPluginActiveLayer = Object.values(pluginData).map(plugData => plugData['active-layers']);
+  const allPluginActiveLayerIds = allPluginActiveLayer.map(pluginActiveLayers => pluginActiveLayers ? Object.values(pluginActiveLayers) : []).flat();
+  const isActiveLayerPlugin = allPluginActiveLayerIds.includes(activeLayerId);
   return {
     pathBase,
     isInteractiveLayer,

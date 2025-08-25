@@ -13,6 +13,9 @@ import { usePrevious } from "../../components/LayerManager/utils";
 import { choroplethPaint } from '../../components/LayerEditor/datamaps'
 import { npmrdsPaint } from "./paint"
 
+const PM3_LAYER_KEY = "pm3";
+const MPO_LAYER_KEY = "mpo";
+
 function onlyUnique(value, index, array) {
   return array.indexOf(value) === index;
 }
@@ -38,7 +41,7 @@ export const MacroviewPlugin = {
 
       //console.log({filters})
       //updateSubMeasures(this.filters.measure.value, this.filters, falcor);
-      const { pathBase, layerPaintPath } = extractState(state);
+      const { layerPaintPath } = extractState(state);
       const pluginDataPath = `symbology.pluginData.macroview`;
       //console.log("plugin Data gets updated", { map, state, setState });
       const hover = get(state, `${pluginDataPath}['hover']`, "");
@@ -46,27 +49,27 @@ export const MacroviewPlugin = {
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       const viewId = get(state, `${pluginDataPath}['viewId']`, null);
       const geography = get(state, `${pluginDataPath}['geography']`, null);
-      const activeLayerId = get(state, `${pluginDataPath}['activeLayer']`, null);
+      const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`, null);
       const measureFilters = get(state, `${pluginDataPath}['measureFilters']`, filters)
-      const activeLayer = get(state, `symbology.layers[${activeLayerId}]`, null);
+      const pm3MapLayer = get(state, `symbology.layers[${pm3LayerId}]`, null);
 
-      if(activeLayerId && viewId) { 
+      if(pm3LayerId && viewId) { 
         //Update map with new viewId
         setState(draft => {
           const newLayer = JSON.parse(
-            JSON.stringify(draft.symbology.layers[activeLayerId].layers).replaceAll(
-              activeLayer.view_id,
+            JSON.stringify(draft.symbology.layers[pm3LayerId].layers).replaceAll(
+              pm3MapLayer.view_id,
               viewId
             )
           );
-          draft.symbology.layers[activeLayerId].layers = newLayer;
+          draft.symbology.layers[pm3LayerId].layers = newLayer;
           const newSources = JSON.parse(
             JSON.stringify(
-              draft.symbology.layers[activeLayerId].sources
-            ).replaceAll(activeLayer.view_id, viewId)
+              draft.symbology.layers[pm3LayerId].sources
+            ).replaceAll(pm3MapLayer.view_id, viewId)
           );
-          draft.symbology.layers[activeLayerId].sources = newSources;
-          draft.symbology.layers[activeLayerId].view_id = viewId
+          draft.symbology.layers[pm3LayerId].sources = newSources;
+          draft.symbology.layers[pm3LayerId].view_id = viewId
         })
       }
 
@@ -78,11 +81,8 @@ export const MacroviewPlugin = {
 
 
       setState((draft) => {
-
-
-
-        set(draft,`${pathBase}['hover']` , hover)
-        set(draft, `${pathBase}['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+        set(draft,`symbology.layers[${pm3LayerId}]['hover']` , hover)
+        set(draft, `symbology.layers[${pm3LayerId}]['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
         // set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
         //set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
 
@@ -97,7 +97,9 @@ export const MacroviewPlugin = {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       // console.log("internal panel state::", state)
       //if a layer is selected, use the source_id to get all the associated views
-      const activeLayer = get(state, `symbology.pluginData.macroview.activeLayer`);
+      const pluginDataPath = `symbology.pluginData.macroview`;
+      const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`);
+
 
       useEffect(() => {
         const getRelatedPm3Views = async (source_id) => {
@@ -126,23 +128,23 @@ export const MacroviewPlugin = {
           ]);
         };
 
-        if (activeLayer) {
+        if (pm3LayerId) {
           const source_id = get(
             state,
-            `symbology.layers[${activeLayer}].source_id`
+            `symbology.layers[${pm3LayerId}].source_id`
           );
 
           if (source_id) {
             getRelatedPm3Views(source_id);
           }
         }
-      }, [activeLayer]);
+      }, [pm3LayerId]);
 
       const views = useMemo(() => {
-        if (activeLayer) {
+        if (pm3LayerId) {
           const source_id = get(
             state,
-            `symbology.layers[${activeLayer}].source_id`
+            `symbology.layers[${pm3LayerId}].source_id`
           );
 
           return Object.values(
@@ -159,7 +161,7 @@ export const MacroviewPlugin = {
         } else {
           return [];
         }
-      }, [falcorCache, activeLayer, pgEnv]);
+      }, [falcorCache, pm3LayerId, pgEnv]);
 
       //using pm3 as example
       //developer wants to make control to let geoplanner select the correct layer in map editor
@@ -180,7 +182,7 @@ export const MacroviewPlugin = {
                 default: "",
               },
               //the layer the plugin controls MUST use the `activeLayer` path/field
-              path: `['activeLayer']`,
+              path: `['active-layers']['pm3']`,
             },
           ],
         },
@@ -201,7 +203,7 @@ export const MacroviewPlugin = {
             },
           ],
         },
-        activeLayer ? {
+        pm3LayerId ? {
           label: "Views",
           controls: [
             {
@@ -229,17 +231,18 @@ export const MacroviewPlugin = {
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
-      const { views, viewId, geography, activeLayerId, measureFilters } = useMemo(() => {
+      const { views, viewId, geography, activeLayerId, measureFilters, pm3LayerId } = useMemo(() => {
         return {
           views: get(state, `${pluginDataPath}['views']`, []),
           viewId: get(state, `${pluginDataPath}['viewId']`, null),
           geography: get(state, `${pluginDataPath}['geography']`, null),
           activeLayerId: get(state, `${pluginDataPath}['activeLayer']`, null),
-          measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters)
+          measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters),
+          pm3LayerId: get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`)
         };
       }, [state.symbology.pluginData, pluginDataPath]);
 
-      const { symbology_id, pathBase, layerPaintPath, existingDynamicFilter, filter:dataFilter, filterMode } = useMemo(() => {
+      const { symbology_id, layerPaintPath, existingDynamicFilter, filter:dataFilter, filterMode, isActiveLayerPlugin } = useMemo(() => {
         return extractState(state);
       }, [state]);
 
@@ -270,11 +273,11 @@ export const MacroviewPlugin = {
             setState((draft) => {
               set(
                 draft,
-                `symbology.layers[${activeLayerId}]['dynamic-filters']`,
+                `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
                 geographyFilter
               );
 
-              set(draft, `symbology.layers[${activeLayerId}]['filterMode']`, 'any')
+              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, 'any')
             });
         };
         if (geography?.length > 0) {
@@ -286,10 +289,10 @@ export const MacroviewPlugin = {
               draft.symbology.zoomToFilterBounds = [];
               set(
                 draft,
-                `symbology.layers[${activeLayerId}]['dynamic-filters']`,
+                `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
                 []
               );
-              set(draft, `symbology.layers[${activeLayerId}]['filterMode']`, null)
+              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null)
             });
           }
         }
@@ -475,14 +478,13 @@ export const MacroviewPlugin = {
           //console.log({paint})
           //console.log({npmrdsPaint})
           setState(draft => {
-            set(draft, `${pathBase}['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
-            set(draft, `${pathBase}['legend-data']`, legend); //AVAIL-written legend component
+            set(draft, `symbology.layers[${pm3LayerId}]['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
+            set(draft, `symbology.layers[${pm3LayerId}]['legend-data']`, legend); //AVAIL-written legend component
           })
-
         };
 
         getColors();
-      }, [newDataColumn, falcorDataFilter, viewId]);
+      }, [newDataColumn, falcorDataFilter, viewId,]);
 
       return controls;
     },
