@@ -33,6 +33,23 @@ export const MacroviewPlugin = {
       setState(draft => {
         set(draft, `${pluginDataPath}['measureFilters']`, newFilters);
         //set(draft, `${pathBase}.${layerPaintPath}`, npmrdsPaint); //Mapbox paint
+
+        // const mpoLayerId = get(state, `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`);
+        // const geography = get(state, `${pluginDataPath}['geography']`, null);
+        // if(mpoLayerId) {
+        //   const selectedMpo = geography.filter(geo => geo.type === "mpo_name");
+        //   if(selectedMpo.length === 0) {
+        //     set(
+        //       draft,
+        //       `symbology.layers[${mpoLayerId}]['isVisible']`,
+        //       false
+        //     );
+        //     draft.symbology.layers[mpoLayerId].layers.forEach((d,i) => {
+        //       draft.symbology.layers[mpoLayerId].layers[i].layout =  { "visibility": 'none' }
+        //     })
+        //   }
+        // }
+        
       })
     },
     dataUpdate: (map, state, setState) => {
@@ -99,7 +116,7 @@ export const MacroviewPlugin = {
       //if a layer is selected, use the source_id to get all the associated views
       const pluginDataPath = `symbology.pluginData.macroview`;
       const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`);
-
+      const mpoLayerId = get(state, `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`);
 
       useEffect(() => {
         const getRelatedPm3Views = async (source_id) => {
@@ -172,9 +189,10 @@ export const MacroviewPlugin = {
             {
               type: "select",
               params: {
+                //TODO -- may need to more creatively filter out layers that are already being used by this/other plugin
                 options: [
                   BLANK_OPTION,
-                  ...Object.keys(state.symbology.layers).map((layerKey, i) => ({
+                  ...Object.keys(state.symbology.layers).filter(layerKey => layerKey !== mpoLayerId).map((layerKey, i) => ({
                     value: layerKey,
                     name: state.symbology.layers[layerKey].name,
                   })),
@@ -182,7 +200,27 @@ export const MacroviewPlugin = {
                 default: "",
               },
               //the layer the plugin controls MUST use the `activeLayer` path/field
-              path: `['active-layers']['pm3']`,
+              path: `['active-layers'][${PM3_LAYER_KEY}]`,
+            },
+          ],
+        },
+        {
+          label: "MPO Layer",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: [
+                  BLANK_OPTION,
+                  ...Object.keys(state.symbology.layers).filter(layerKey => layerKey !== pm3LayerId).map((layerKey, i) => ({
+                    value: layerKey,
+                    name: state.symbology.layers[layerKey].name,
+                  })),
+                ],
+                default: "",
+              },
+              //the layer the plugin controls MUST use the `activeLayer` path/field
+              path: `['active-layers'][${MPO_LAYER_KEY}]`,
             },
           ],
         },
@@ -231,14 +269,15 @@ export const MacroviewPlugin = {
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
-      const { views, viewId, geography, activeLayerId, measureFilters, pm3LayerId } = useMemo(() => {
+      const { views, viewId, geography, activeLayerId, measureFilters, pm3LayerId, mpoLayerId } = useMemo(() => {
         return {
           views: get(state, `${pluginDataPath}['views']`, []),
           viewId: get(state, `${pluginDataPath}['viewId']`, null),
           geography: get(state, `${pluginDataPath}['geography']`, null),
           activeLayerId: get(state, `${pluginDataPath}['activeLayer']`, null),
           measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters),
-          pm3LayerId: get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`)
+          pm3LayerId: get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`),
+          mpoLayerId: get(state, `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`)
         };
       }, [state.symbology.pluginData, pluginDataPath]);
 
@@ -270,18 +309,59 @@ export const MacroviewPlugin = {
               };
             }
           );
+          setState((draft) => {
+            set(
+              draft,
+              `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
+              geographyFilter
+            );
+
+            set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, 'any')
+          });
+        };
+        if (geography?.length > 0) {
+          //get zoom bounds
+          getFilterBounds();
+          //filter and display borders for selected geographies
+
+          // //set "mpo" display to enabled
+          const selectedMpo = geography.filter(geo => geo.type === "mpo_name")
+          if(selectedMpo.length > 0) {
+            setState(draft => {
+              set(
+                draft,
+                `symbology.layers[${mpoLayerId}]['isVisible']`,
+                true
+              );
+
+
+              draft.symbology.layers[mpoLayerId].layers.forEach((d,i) => {
+                draft.symbology.layers[mpoLayerId].layers[i].layout =  { "visibility": 'visible' }
+              })
+              const geographyFilter = {
+                columnName: 'mpo_name',
+                value: selectedMpo.map(mpo => mpo.value),
+                operator: "=="
+              };
+              set(
+                draft,
+                `symbology.layers[${mpoLayerId}]['filter'].mpo_name`,
+                geographyFilter
+              );
+            })
+          } else {
             setState((draft) => {
               set(
                 draft,
-                `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
-                geographyFilter
+                `symbology.layers[${mpoLayerId}]['isVisible']`,
+                false
               );
+              draft.symbology.layers[mpoLayerId].layers.forEach((d,i) => {
+                draft.symbology.layers[mpoLayerId].layers[i].layout =  { "visibility": 'none' }
+              })
+            })
 
-              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, 'any')
-            });
-        };
-        if (geography?.length > 0) {
-          getFilterBounds();
+          }
         } else {
           //resets dynamic filter if there are no geographies selected
           if (state?.symbology?.zoomToFilterBounds?.length > 0) {
@@ -292,9 +372,19 @@ export const MacroviewPlugin = {
                 `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
                 []
               );
-              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null)
             });
           }
+          setState(draft => {
+            set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null);
+            set(
+              draft,
+              `symbology.layers[${mpoLayerId}]['isVisible']`,
+              false
+            );
+            draft.symbology.layers[mpoLayerId].layers.forEach((d,i) => {
+              draft.symbology.layers[mpoLayerId].layers[i].layout =  { "visibility": 'none' }
+            })
+          })
         }
       }, [geography]);
 

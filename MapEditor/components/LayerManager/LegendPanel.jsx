@@ -269,7 +269,8 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters, isLayerControlledByPlugin } = useMemo(() => {
     const pluginData = get(state, `symbology.pluginData`, {});
-    const isLayerControlledByPlugin = (Object.values(pluginData) || []).some(plugData => plugData.activeLayer === layer.id)
+    const isLayerControlledByPlugin = (Object.keys(pluginData) || []).some(pluginName => Object.values(pluginData[pluginName]['active-layers']).includes(layer.id))
+
     return {
       isLayerControlledByPlugin,
       initialViewId: get(layer,`initial-view-id`),

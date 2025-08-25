@@ -101,7 +101,7 @@ const extractState = (state) => {
     legendData: get(state, `${pathBase}['legend-data']`),
     pluginData,
     isActiveLayerPlugin,
-    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => pluginData[pluginName].activeLayer === activeLayerId),
+    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => Object.values(pluginData[pluginName]['active-layers']).includes(activeLayerId)),
     existingDynamicFilter: get(
       state,
       `symbology.layers[${state.symbology.activeLayer}]['dynamic-filters']`,
@@ -119,7 +119,7 @@ const createFalcorFilterOptions = ({dynamicFilter, filterMode, dataFilter}) => {
   }, filterEqualOptions)
   
   Object.keys(dataFilter)
-    .filter((filtKey) => filter[filtKey].operator === "==")
+    .filter((filtKey) => dynamicFilter[filtKey]?.operator === "==")
     .reduce((acc, curr) => {
       acc[curr] = dataFilter[curr].value;
       return acc;
