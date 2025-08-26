@@ -26,7 +26,6 @@ function PluginPanel(props) {
           Active Plugins
           {state?.symbology?.plugins &&
             Object.keys(state?.symbology?.plugins).map((d) => {
-              const Comp = PluginLibrary?.[d]?.comp || (() => <></>);
               return (
                 <div key={`plugin_${d}`}>
                   <div className="flex justify-between">
@@ -43,7 +42,6 @@ function PluginPanel(props) {
                       X
                     </div>
                   </div>
-                  <Comp state={state} setState={setState} />;
                 </div>
               );
             })}

@@ -25,7 +25,7 @@ const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
       `symbology.layers[${layerId}]['isVisible']`,
       true
     );
-    draft.symbology.layers[layerId].layers?.forEach((d,i) => {
+    draft.symbology?.layers?.[layerId]?.layers?.forEach((d,i) => {
       draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'visible' }
     })
     const geographyFilter = {
@@ -51,6 +51,13 @@ const resetGeometryBorderFilter = ({setState, layerId}) => {
       draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
         draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
       })
+  })
+}
+
+const setInitialGeomStyle = ({setState, layerId}) => {
+  setState(draft => {
+    const borderLayer = draft.symbology.layers[layerId].layers.find(mapLayer => mapLayer.type === 'line')
+    borderLayer.paint = {"line-color": '#fff', "line-width": 1}
   })
 }
 
@@ -219,6 +226,23 @@ export const MacroviewPlugin = {
           }
         }
       }, [pm3LayerId]);
+
+      //Set initial styles for geometry borders
+      useEffect(() => {
+        if(mpoLayerId) {
+          setInitialGeomStyle({setState, layerId: mpoLayerId})
+        }
+      }, [mpoLayerId]);
+      useEffect(() => {
+        if(countyLayerId) {
+          setInitialGeomStyle({setState, layerId: countyLayerId})
+        }
+      }, [countyLayerId]);
+      useEffect(() => {
+        if(regionLayerId) {
+          setInitialGeomStyle({setState, layerId: regionLayerId})
+        }
+      }, [regionLayerId]);
 
       const views = useMemo(() => {
         if (pm3LayerId) {
@@ -429,7 +453,7 @@ export const MacroviewPlugin = {
 
           // //set "mpo" display to enabled
           const selectedMpo = geography.filter(geo => geo.type === "mpo_name")
-          if(selectedMpo.length > 0) {
+          if(selectedMpo.length > 0 && mpoLayerId) {
             //SOURCE 997
             setGeometryBorderFilter({
               setState,
@@ -444,7 +468,7 @@ export const MacroviewPlugin = {
           }
 
           const selectedCounty = geography.filter(geo => geo.type === "county")
-          if(selectedCounty.length > 0) {
+          if(selectedCounty.length > 0 && countyLayerId) {
             //SOURCE 1060
             setGeometryBorderFilter({
               setState,
@@ -464,7 +488,7 @@ export const MacroviewPlugin = {
           }
 
           const selectedRegion = geography.filter(geo => geo.type === "region_code")
-          if(selectedRegion.length > 0) {
+          if(selectedRegion.length > 0 && regionLayerId) {
             //SOURCE 1025
             setGeometryBorderFilter({
               setState,
@@ -604,6 +628,7 @@ export const MacroviewPlugin = {
               params: {
                 options: [BLANK_OPTION, ...geomControlOptions],
                 default: "",
+                searchable: true
               },
               path: `['geography']`,
             },
@@ -694,7 +719,9 @@ export const MacroviewPlugin = {
 
       return controls;
     },
-    comp: () => <div>Hello world comp</div>,
+    comp: () => {
+      return <div style={{position:"fixed", top:"-200px", left:"50%"}}>Hello world comp</div>
+    },
     cleanup: (map, state, setState) => {
       map.off("click", MAP_CLICK);
     },

@@ -57,6 +57,7 @@ export function MultiSelectControl({ path, params = {} }) {
     <label className="flex w-full">
       <div className="flex w-full items-center capitalize">
         <MultiLevelSelect
+          searchable={params.searchable ? true : false}
           isMulti={true}
           placeholder={params.placeholder || "Select a value..."}
           options={params?.options}
