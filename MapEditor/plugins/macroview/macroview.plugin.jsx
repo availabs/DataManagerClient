@@ -12,10 +12,11 @@ import { ViewAttributes } from "../../../Source/attributes"
 import { usePrevious } from "../../components/LayerManager/utils";
 import { choroplethPaint } from '../../components/LayerEditor/datamaps'
 import { npmrdsPaint } from "./paint"
-
+import { REGION_CODE_TO_NAME } from "./constants"
 const PM3_LAYER_KEY = "pm3";
 const MPO_LAYER_KEY = "mpo";
 const COUNTY_LAYER_KEY = "county";
+const REGION_LAYER_KEY = 'region'
 
 const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
   setState(draft => {
@@ -24,12 +25,11 @@ const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
       `symbology.layers[${layerId}]['isVisible']`,
       true
     );
-
-    draft.symbology.layers[layerId].layers.forEach((d,i) => {
+    draft.symbology.layers[layerId].layers?.forEach((d,i) => {
       draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'visible' }
     })
     const geographyFilter = {
-      columnName: geomDataKey, //SOURCE 997
+      columnName: geomDataKey,
       value: values,
       operator: "=="
     };
@@ -38,6 +38,19 @@ const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
       `symbology.layers[${layerId}]['filter']['${geomDataKey}']`,
       geographyFilter
     );
+  })
+}
+
+const resetGeometryBorderFilter = ({setState, layerId}) => {
+  setState(draft => {
+      set(
+        draft,
+        `symbology.layers[${layerId}]['isVisible']`,
+        false
+      );
+      draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
+        draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
+      })
   })
 }
 
@@ -139,10 +152,34 @@ export const MacroviewPlugin = {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       // console.log("internal panel state::", state)
       //if a layer is selected, use the source_id to get all the associated views
-      const pluginDataPath = `symbology.pluginData.macroview`;
-      const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`);
-      const mpoLayerId = get(state, `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`);
-      const countyLayerId = get(state, `${pluginDataPath}['active-layers'][${COUNTY_LAYER_KEY}]`);
+      const {
+        pluginDataPath,
+        pm3LayerId,
+        mpoLayerId,
+        countyLayerId,
+        regionLayerId,
+      } = useMemo(() => {
+        const pluginDataPath = `symbology.pluginData.macroview`;
+        return {
+          pluginDataPath,
+          pm3LayerId: get(
+            state,
+            `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`
+          ),
+          mpoLayerId: get(
+            state,
+            `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`
+          ),
+          countyLayerId: get(
+            state,
+            `${pluginDataPath}['active-layers'][${COUNTY_LAYER_KEY}]`
+          ),
+          regionLayerId: get(
+            state,
+            `${pluginDataPath}['active-layers'][${REGION_LAYER_KEY}]`
+          ),
+        };
+      }, [state]);
 
       useEffect(() => {
         const getRelatedPm3Views = async (source_id) => {
@@ -206,10 +243,7 @@ export const MacroviewPlugin = {
         }
       }, [falcorCache, pm3LayerId, pgEnv]);
 
-      //using pm3 as example
-      //developer wants to make control to let geoplanner select the correct layer in map editor
-
-      const borderLayerIds = [mpoLayerId, countyLayerId, pm3LayerId]
+      const borderLayerIds = [mpoLayerId, countyLayerId, pm3LayerId, regionLayerId]
       return [
         {
           label: "PM3 Layer",
@@ -273,6 +307,26 @@ export const MacroviewPlugin = {
           ],
         },
         {
+          label: "Region Layer",
+          controls: [
+            {
+              type: "select",
+              params: {
+                options: [
+                  BLANK_OPTION,
+                  ...Object.keys(state.symbology.layers).filter(layerKey => !borderLayerIds.includes(layerKey) || layerKey === regionLayerId).map((layerKey, i) => ({
+                    value: layerKey,
+                    name: state.symbology.layers[layerKey].name,
+                  })),
+                ],
+                default: "",
+              },
+              //the layer the plugin controls MUST use the `activeLayer` path/field
+              path: `['active-layers'][${REGION_LAYER_KEY}]`,
+            },
+          ],
+        },
+        {
           label: "Hover Popup",
           controls: [
             {
@@ -317,20 +371,20 @@ export const MacroviewPlugin = {
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
-      const { views, viewId, geography, activeLayerId, measureFilters, pm3LayerId, mpoLayerId, countyLayerId } = useMemo(() => {
+      const { views, viewId, geography, measureFilters, pm3LayerId, mpoLayerId, countyLayerId, regionLayerId } = useMemo(() => {
         return {
           views: get(state, `${pluginDataPath}['views']`, []),
           viewId: get(state, `${pluginDataPath}['viewId']`, null),
           geography: get(state, `${pluginDataPath}['geography']`, null),
-          activeLayerId: get(state, `${pluginDataPath}['activeLayer']`, null),
           measureFilters: get(state, `${pluginDataPath}['measureFilters']`, filters),
           pm3LayerId: get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`),
           mpoLayerId: get(state, `${pluginDataPath}['active-layers'][${MPO_LAYER_KEY}]`),
           countyLayerId: get(state, `${pluginDataPath}['active-layers'][${COUNTY_LAYER_KEY}]`),
+          regionLayerId: get(state, `${pluginDataPath}['active-layers'][${REGION_LAYER_KEY}]`),
         };
       }, [state.symbology.pluginData, pluginDataPath]);
 
-      const { symbology_id, layerPaintPath, existingDynamicFilter, filter:dataFilter, filterMode, isActiveLayerPlugin } = useMemo(() => {
+      const { symbology_id, existingDynamicFilter, filter:dataFilter, filterMode } = useMemo(() => {
         return extractState(state);
       }, [state]);
 
@@ -385,16 +439,7 @@ export const MacroviewPlugin = {
             });
           } else {
             if(mpoLayerId) {
-              setState((draft) => {
-                set(
-                  draft,
-                  `symbology.layers[${mpoLayerId}]['isVisible']`,
-                  false
-                );
-                draft.symbology.layers[mpoLayerId]?.layers?.forEach((d,i) => {
-                  draft.symbology.layers[mpoLayerId].layers[i].layout =  { "visibility": 'none' }
-                })
-              })
+              resetGeometryBorderFilter({layerId: mpoLayerId, setState})
             }
           }
 
@@ -412,43 +457,24 @@ export const MacroviewPlugin = {
                 );
               }),
             });
-            setState(draft => {
-              set(
-                draft,
-                `symbology.layers[${countyLayerId}]['isVisible']`,
-                true
-              );
-
-              draft.symbology.layers[countyLayerId].layers.forEach((d,i) => {
-                draft.symbology.layers[countyLayerId].layers[i].layout =  { "visibility": 'visible' }
-              })
-
-              const geographyFilter = {
-                columnName: 'ny_counti_4', //SOURCE 1060
-                value: selectedCounty.map(county => {
-                  const lowCountyString = (county.value).toLowerCase();
-                  return lowCountyString[0].toUpperCase() + lowCountyString.slice(1)
-                }),
-                operator: "=="
-              };
-              set(
-                draft,
-                `symbology.layers[${countyLayerId}]['filter'].ny_counti_4`,
-                geographyFilter
-              );
-            })
           } else {
             if(countyLayerId) {
-              setState((draft) => {
-                set(
-                  draft,
-                  `symbology.layers[${countyLayerId}]['isVisible']`,
-                  false
-                );
-                draft.symbology.layers[countyLayerId]?.layers?.forEach((d,i) => {
-                  draft.symbology.layers[countyLayerId].layers[i].layout =  { "visibility": 'none' }
-                })
-              })
+              resetGeometryBorderFilter({layerId: countyLayerId, setState})
+            }
+          }
+
+          const selectedRegion = geography.filter(geo => geo.type === "region_code")
+          if(selectedRegion.length > 0) {
+            //SOURCE 1025
+            setGeometryBorderFilter({
+              setState,
+              layerId: regionLayerId,
+              geomDataKey: "redc_ed_attn_objectid",
+              values: selectedRegion.map((regionCode) => parseInt(regionCode.value)),
+            });
+          } else {
+            if(regionLayerId) {
+              resetGeometryBorderFilter({layerId: selectedRegion, setState})
             }
           }
         } else {
@@ -466,26 +492,13 @@ export const MacroviewPlugin = {
             set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null);
 
             if (countyLayerId) {
-              set(
-                draft,
-                `symbology.layers[${countyLayerId}]['isVisible']`,
-                false
-              );
-              draft.symbology.layers?.[countyLayerId]?.layers?.forEach(
-                (d, i) => {
-                  draft.symbology.layers[countyLayerId].layers[i].layout = {
-                    visibility: "none",
-                  };
-                }
-              );
+              resetGeometryBorderFilter({layerId: countyLayerId, setState})
             }
             if (mpoLayerId) {
-              set(draft, `symbology.layers[${mpoLayerId}]['isVisible']`, false);
-              draft.symbology.layers[mpoLayerId]?.layers?.forEach((d, i) => {
-                draft.symbology.layers[mpoLayerId].layers[i].layout = {
-                  visibility: "none",
-                };
-              });
+              resetGeometryBorderFilter({layerId: mpoLayerId, setState})
+            }
+            if(regionLayerId) {
+              resetGeometryBorderFilter({layerId: regionLayerId, setState})
             }
           });
         }
@@ -537,8 +550,8 @@ export const MacroviewPlugin = {
           const objectFilter = (da => typeof da !== 'object');
           const truthyFilter = (val => !!val)
           geoms.ua_name = geoms.ua_name.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da + " UA", value: da, type:'ua_name'})).sort(nameSort)
-          geoms.region_code = geoms.region_code.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da, value: da, type:'region_code'})).sort(nameSort)
-          geoms.mpo_name = geoms.mpo_name.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da, value: da, type:'mpo_name'})).sort(nameSort)
+          geoms.region_code = geoms.region_code.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: REGION_CODE_TO_NAME[da], value: da, type:'region_code'})).sort(nameSort)
+          geoms.mpo_name = geoms.mpo_name.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da + " MPO", value: da, type:'mpo_name'})).sort(nameSort)
           geoms.county = geoms.county.filter(onlyUnique).filter(objectFilter).filter(truthyFilter).map(da => ({name: da.toLowerCase() + " County", value: da, type:'county'})).sort(nameSort)
 
           return [...geoms.county, ...geoms.mpo_name, ...geoms.ua_name, ...geoms.region_code];
