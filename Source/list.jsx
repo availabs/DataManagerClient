@@ -6,7 +6,7 @@ import { useParams } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";
-import {dmsDataTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/src"
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
@@ -26,7 +26,7 @@ const SourceThumb = ({ source }) => {
     fetchData();
   }, [falcor, falcorCache, source, pgEnv]);
 
-  const Lexical = dmsDataTypes.lexical.ViewComp;
+  const Lexical = dmsColumnTypes.lexical.ViewComp;
 
   return (
     <div className="w-full p-4 bg-white hover:bg-blue-50 block border shadow flex">

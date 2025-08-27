@@ -99,7 +99,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   const { state, setState, falcor, pgEnv  } = React.useContext(MapContext);
   // const { activeLayer } = state.symbology;
   const [views, setViews] = React.useState([])
-  const falcorCache = falcor.getCache();
+  const [falcorCache, setFalcorCache] = React.useState(falcor.getCache());
 
   const { sourceId, symbology, layer, selectedInteractiveFilterIndex, layerType,dataColumn , interactiveFilters, filterGroupEnabled, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroupEnabled, viewGroup, viewGroupName, dynamicFilters, dynamicFilterDisplay} = useMemo(() => {
     const symbology = get(state, `symbologies[${row.symbologyId}]`, {});
@@ -155,6 +155,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
         "attributes", Object.values(SymbologyAttributes)
       ];
       await falcor.get(symbologyIdsPath);
+      setFalcorCache(falcor.getCache());
     }
 
     fetchAllSymbologies();
@@ -191,6 +192,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
         out = Object.values(out).map(view => view.attributes)
         setViews(out);
       });
+        setFalcorCache(falcor.getCache());
     }
     if(sourceId) {
       fetchData();
