@@ -6,7 +6,6 @@ import { useParams } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";
-import {dmsDataTypes} from "~/modules/dms/src"
 
 export const RenderPagination = ({totalPages, pageSize, currentPage, setVCurrentPage}) => {
     const numNavBtns = Math.ceil(totalPages / pageSize);

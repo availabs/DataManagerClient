@@ -8,7 +8,7 @@ import {VersionEditor} from './Version/components/VersionEditor.jsx'
 import SourceCategories from "./SourceCategories"
 import Metadata from './Metadata/basic.jsx'
 import {RenderLexical, RenderTextArea, RenderTextBox} from "./Metadata/components/Edit.jsx";
-import {dmsDataTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/src"
 import {isJson} from "../../utils/macros.jsx";
 
 export const Edit = ({
@@ -25,7 +25,7 @@ export const Edit = ({
                      }) => {
     const [value, setValue] = useState(startValue && isJson(startValue) ? JSON.parse(startValue) : startValue)
     const {pgEnv, baseUrl, falcor} = React.useContext(DamaContext);
-    const Lexical = dmsDataTypes.lexical.EditComp;
+    const Lexical = dmsColumnTypes.lexical.EditComp;
 
     useEffect(() => {
         setValue(startValue)
@@ -126,7 +126,7 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     const dateOptions = {year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric"}
     const createdTimeStamp = new Date(views.filter(d => d.view_id === activeView)?.[0]?.['_created_timestamp'] || '').toLocaleDateString(undefined, dateOptions);
     const updatedTimeStamp = new Date(views.filter(d => d.view_id === latestView)?.[0]?.['_modified_timestamp'] || '').toLocaleDateString(undefined, dateOptions);
-    const Lexical = dmsDataTypes.lexical.ViewComp;
+    const Lexical = dmsColumnTypes.lexical.ViewComp;
 
     const attrNameMap = {
         'update_interval': 'update interval'

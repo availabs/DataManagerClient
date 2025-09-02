@@ -203,7 +203,7 @@ function LegendRow ({ index, layer, i, symbology_id, baseUrl }) {
   const navigate = useNavigate();
   const  activeLayer  = null
   const Symbol = typeSymbols[layer.type] || typeSymbols['fill']
-  let paintValue = typePaint[layer.type](layer)
+  let paintValue = (typePaint[layer.type] || typePaint.fill)(layer)
 
 
   let { layerType: type, selectedInteractiveFilterIndex, legendOrientation } = useMemo(() => {

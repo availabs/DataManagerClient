@@ -8,7 +8,7 @@ import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
 import {FnSelector} from "./FnSelector.jsx";
 import {TypeSelector} from "./TypeSelector.jsx";
-import {dmsDataTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/src"
 import {IsCurrencySwitch} from "./IsCurrencySwitch.jsx";
 
 
@@ -16,7 +16,7 @@ export const MetadataTable = ({source, colOrigin, ...props}) => {
     const {user} = React.useContext(DamaContext);
     const [metadata, setMetadata] = React.useState([]);
     const [editing, setEditing] = React.useState(null);
-    const Lexical = dmsDataTypes.lexical.ViewComp;
+    const Lexical = dmsColumnTypes.lexical.ViewComp;
 
     const {authLevel} = user;
     const gridCols =

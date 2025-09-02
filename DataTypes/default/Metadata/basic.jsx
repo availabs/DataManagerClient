@@ -1,7 +1,7 @@
 import React from 'react';
 import get from 'lodash/get';
 import { DamaContext } from "~/pages/DataManager/store";
-import {dmsDataTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/src"
 import { Table } from "~/modules/avl-components/src";
 
 
@@ -19,7 +19,7 @@ const MetadataTable = ({ source, ...props }) => {
   const sourceId = source.source_id;
   const [metadata, setMetadata] = React.useState([]);
   const [pageSize, setPageSize] = React.useState(15);
-  const Lexical = dmsDataTypes.lexical.ViewComp;
+  const Lexical = dmsColumnTypes.lexical.ViewComp;
 
   React.useEffect(() => {
     const md = JSON.parse(JSON.stringify(get(source, "metadata", [])));
