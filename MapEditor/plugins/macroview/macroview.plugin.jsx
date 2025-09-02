@@ -43,14 +43,14 @@ const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
 
 const resetGeometryBorderFilter = ({setState, layerId}) => {
   setState(draft => {
-      set(
-        draft,
-        `symbology.layers[${layerId}]['isVisible']`,
-        false
-      );
-      draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
-        draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
-      })
+    set(
+      draft,
+      `symbology.layers[${layerId}]['isVisible']`,
+      false
+    );
+    draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
+      draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
+    })
   })
 }
 
@@ -58,6 +58,10 @@ const setInitialGeomStyle = ({setState, layerId}) => {
   setState(draft => {
     const borderLayer = draft.symbology.layers[layerId].layers.find(mapLayer => mapLayer.type === 'line')
     borderLayer.paint = {"line-color": '#fff', "line-width": 1}
+    
+    draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
+      draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
+    });
   })
 }
 
@@ -110,12 +114,12 @@ export const MacroviewPlugin = {
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
       const peak = get(state, `${pluginDataPath}['peak']`, null);
       const viewId = get(state, `${pluginDataPath}['viewId']`, null);
+      const allPluginViews = get(state, `${pluginDataPath}['views']`, []);
       const geography = get(state, `${pluginDataPath}['geography']`, null);
       const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`, null);
       const measureFilters = get(state, `${pluginDataPath}['measureFilters']`, filters)
       const pm3MapLayer = get(state, `symbology.layers[${pm3LayerId}]`, null);
-
-      if(pm3LayerId && viewId) { 
+      if(pm3LayerId && viewId) {
         //Update map with new viewId
         setState(draft => {
           const newLayer = JSON.parse(
@@ -124,36 +128,25 @@ export const MacroviewPlugin = {
               viewId
             )
           );
-          draft.symbology.layers[pm3LayerId].layers = newLayer;
           const newSources = JSON.parse(
             JSON.stringify(
               draft.symbology.layers[pm3LayerId].sources
             ).replaceAll(pm3MapLayer.view_id, viewId)
           );
-          draft.symbology.layers[pm3LayerId].sources = newSources;
-          draft.symbology.layers[pm3LayerId].view_id = viewId
+          const newDataColumn = getMeasure(measureFilters);
+          set(draft,`symbology.layers[${pm3LayerId}]['layers']` , newLayer)
+          set(draft,`symbology.layers[${pm3LayerId}]['sources']` , newSources)
+          set(draft,`symbology.layers[${pm3LayerId}]['view_id']` , viewId)
+
+          set(draft,`symbology.layers[${pm3LayerId}]['hover']` , hover)
+          set(draft, `symbology.layers[${pm3LayerId}]['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+        })
+      } else if(pm3LayerId && !viewId && allPluginViews?.length > 0) {
+        //if no view is selected, but there is at least 1 element in views, select that 1 element
+        setState(draft => {
+          set(draft, `${pluginDataPath}['viewId']`, allPluginViews[0].value);
         })
       }
-
-      const newDataColumn = getMeasure(measureFilters);
-
-      console.log("---data update newDataColumn measure---",newDataColumn)
-
-      
-
-
-      setState((draft) => {
-        set(draft,`symbology.layers[${pm3LayerId}]['hover']` , hover)
-        set(draft, `symbology.layers[${pm3LayerId}]['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
-        // set(draft, `${pathBase}.${layerPaintPath}`, newPaint); //Mapbox paint
-        //set(draft, `${pathBase}['legend-data']`, newLegend); //AVAIL-written legend component
-
-        //SHAPE OF layerFilter --  
-        // { colToFilterOn: { operator: "==", value: valToCompareAgainst } }
-        //value can be an array of 2 numbers, if operator === 'between'
-        //Allowed FILTER_OPERATORS -- src/pages/DataManager/MapEditor/components/LayerEditor/FilterEditor/FilterControls.jsx
-      })
-      
     },
     internalPanel: ({ state, setState }) => {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
@@ -513,8 +506,9 @@ export const MacroviewPlugin = {
               );
             }
 
-            set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null);
-
+            if(pm3LayerId) {
+              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null);
+            }
             if (countyLayerId) {
               resetGeometryBorderFilter({layerId: countyLayerId, setState})
             }

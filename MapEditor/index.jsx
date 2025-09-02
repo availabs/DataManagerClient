@@ -47,6 +47,10 @@ export const RegisterPlugin = (name, plugin) => {
   PluginLibrary[name] = plugin
 }
 
+export const INITIAL_PLUGIN_DATA_STATE = {
+  'default-legend': true,
+  'active-layers' : {}
+}
 const MapEditor = () => {
   const mounted = useRef(false);
   const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
@@ -184,7 +188,7 @@ const MapEditor = () => {
   // -------------------------
   const [mapLayers, setMapLayers] = useImmer([])
 
- 
+  // console.log("state?.symbology?.layers",state?.symbology?.layers)
 
   useEffect(() => {
     // -----------------------
@@ -197,7 +201,7 @@ const MapEditor = () => {
       if(mounted.current) {
           setMapLayers(draftMapLayers => {
 
-            let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
+            let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => !!d)
             //console.log('draftMapLayers', draftMapLayers?.[0]?.layerType, currentLayerIds)
             //console.log("plugins in update layers",state.symbology.plugins)
             let newLayers = [

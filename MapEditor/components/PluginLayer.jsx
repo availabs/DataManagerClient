@@ -48,11 +48,12 @@ const PluginLayerRender = ({
   }, []);
 
   useEffect(() => {
-    const pluginDataPath = `symbology.pluginData.${layer.id}`;
     //e.g. Symbology layer selected (internal)
     //e.g. pm3 measure selected (external)
     if(!plugin?.dataUpdate) {
       console.error("no data update provided for plugin");
+    } else if(!state.symbology?.pluginData?.[layer.id]) {
+      console.warn(`no pluginData found for layer:: ${layer.id}. cannot perform dataUpdate`)
     } else {
       plugin.dataUpdate(maplibreMap, state, setState);
     }

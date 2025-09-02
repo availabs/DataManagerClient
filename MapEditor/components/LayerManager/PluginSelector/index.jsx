@@ -1,10 +1,9 @@
 import { useState, useMemo, useContext } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "~/modules/avl-components/src";
 import { DamaContext } from "../../../../store";
 import { PluginLibrary } from "../../../";
+import { INITIAL_PLUGIN_DATA_STATE } from '../../../';
 
-import { Dialog } from "@headlessui/react";
 
 export const PluginSelector = ({ state, setState }) => {
   const { baseUrl } = useContext(DamaContext);
@@ -26,7 +25,7 @@ export const PluginSelector = ({ state, setState }) => {
           if(!draft.symbology.pluginData){
             draft.symbology.pluginData = {}
           }
-          draft.symbology.pluginData[e.target.value] = {};
+          draft.symbology.pluginData[e.target.value] = INITIAL_PLUGIN_DATA_STATE;
         });
       }}
     >

@@ -144,7 +144,11 @@ function SaveChangesModal ({ open, setOpen })  {
     return (
       state?.symbology?.layers && 
       dbSymbology && 
-      !isEqual(state?.symbology?.layers, dbSymbology?.symbology?.layers)
+      (
+        !isEqual(state?.symbology?.layers, dbSymbology?.symbology?.layers) ||
+        !isEqual(state?.symbology?.plugins, dbSymbology?.symbology?.plugins) ||
+        !isEqual(state?.symbology?.pluginData, dbSymbology?.symbology?.pluginData)
+      )
     ) || state?.name !== dbSymbology?.name;
   }, [state, dbSymbology]);
 

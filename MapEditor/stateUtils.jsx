@@ -45,7 +45,7 @@ const extractState = (state) => {
     pathBase,
     isInteractiveLayer,
     activeLayerId,
-    activeLayer: get(state,`symbology.layers[${state.symbology.activeLayer}]`),
+    activeLayer: get(state,`symbology.layers[${state?.symbology?.activeLayer}]`, ''),
     layers: get(state,`symbology.layers`),
     layerPaintPath,
     layerType,
