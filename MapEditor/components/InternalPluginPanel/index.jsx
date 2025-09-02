@@ -32,6 +32,21 @@ function InternalPluginPanel() {
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
               const internalControls = PluginLibrary[pluginName]?.internalPanel({state, setState});
+
+              const displayDefaultLegendControl = {
+                label: "Display default legend",
+                controls: [
+                  {
+                    type: 'toggle',
+                    path: `['default-legend']`,
+                    params: {
+                      default : true,
+                    }
+                  },
+                ],
+              }
+
+              internalControls.unshift(displayDefaultLegendControl);
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
                   {internalControls?.map((control, i) => {

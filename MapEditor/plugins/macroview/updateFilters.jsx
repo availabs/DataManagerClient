@@ -598,10 +598,6 @@ const updateLegend = (filters) => {
       range = getColorRange(7, "PRGn", true)
       format = ",.2~f";
       break;
-    case 'pti':
-      range = getColorRange(7, "PiYG", true)
-      format = ",.2~f";
-      break;
     case 'phed':
       range = getColorRange(7, "YlOrRd", true)
       format = ",.2~s";

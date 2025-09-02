@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, Fragment, useState } from "react";
+import { Switch } from '@headlessui/react'
 import { SymbologyContext } from "../..";
 import get from "lodash/get";
 import set from "lodash/set";
@@ -140,9 +141,47 @@ export function RadioControl({ path, params = {} }) {
   );
 }
 
+export function ToggleControl({path, params={title:""}}) {
+  const { state, setState } = React.useContext(SymbologyContext);
+  const defaultValue =
+    params.default !== null && params.default !== undefined
+      ? params.default
+      : params?.options?.[0]?.value;
+
+  const curValue = useMemo(() => {
+    return get(state, `${path}`, defaultValue);
+  }, [state]);
+
+  return (
+    <label className='flex'>
+      <div className='flex items-center'>
+        <Switch
+          checked={curValue}
+          onChange={()=>{
+            setState(draft=> {
+              set(draft, `${path}`,!curValue)
+            })
+          }}
+          className={`${
+            curValue ? 'bg-blue-500' : 'bg-gray-200'
+          } relative inline-flex h-4 w-8 items-center rounded-full `}
+        >
+          <span className="sr-only">{params.title}</span>
+          <div
+            className={`${
+              curValue ? 'translate-x-5' : 'translate-x-0'
+            } inline-block h-4 w-4  transform rounded-full bg-white transition border-[0.5] border-slate-600`}
+          />
+        </Switch>
+      </div>
+    </label>
+  )
+}
+
 export const pluginControlTypes = {
   select: SelectControl,
   text: InputControl,
   radio: RadioControl,
-  multiselect: MultiSelectControl
+  multiselect: MultiSelectControl,
+  toggle: ToggleControl,
 };

@@ -46,6 +46,7 @@ const extractState = (state) => {
     isInteractiveLayer,
     activeLayerId,
     activeLayer: get(state,`symbology.layers[${state.symbology.activeLayer}]`),
+    layers: get(state,`symbology.layers`),
     layerPaintPath,
     layerType,
     viewId: get(
@@ -108,6 +109,7 @@ const extractState = (state) => {
       []
     ),
     filterMode: get(state, `${pathBase}['filterMode']`),
+    allPluginActiveLayerIds
   };
 };
 

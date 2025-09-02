@@ -550,9 +550,10 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
 function LegendPanel (props) {
   const { state, setState  } = React.useContext(SymbologyContext);
-  const layers = useMemo(() => state.symbology?.layers ||  {}, [state])
   //console.log('layers', layers)
-  
+  const { allPluginActiveLayerIds, layers } = useMemo(() => {
+    return extractState(state)
+  }, [state])
   const droppedSection = React.useCallback((start, end) => {
     setState(draft => {
       const sections = Object.values(draft.symbology.layers);
@@ -579,6 +580,23 @@ function LegendPanel (props) {
       <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] scrollbar-sm '>
         {Object.values(layers)
           .sort((a,b) => b.order - a.order)
+          .filter((layer, i) => {
+            const isControlledByPlugin = allPluginActiveLayerIds.includes(layer.id);
+            //which plugin controls this layer? And does it want to show the default legend?
+
+            if(isControlledByPlugin) {
+              const controllingPlugin = Object.keys(state.symbology.pluginData).find((pluginName) => {
+                const pluginData = state.symbology.pluginData[pluginName];
+                console.log({pluginData})
+                return Object.values(pluginData?.['active-layers']).includes(layer.id);
+              });
+
+              return state.symbology.pluginData[controllingPlugin]['default-legend'];
+            } else {
+              //always display legend if layer is not controlled by plugin
+              return true;
+            }
+          })
           .map((layer,i) => <LegendRow key={layer.id} layer={layer} i={i} numLayers={numLayers} onRowMove={droppedSection}/>)}
       </div>
     </>
