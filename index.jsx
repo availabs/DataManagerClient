@@ -45,13 +45,11 @@ const DAMA_Wrapper = (Component, DAMA_ARGS) => {
     useEffect(() => {
         async function initUser(){
             const user = await getUser();
-            console.log('user in DM', user)
             setUser(user)
         }
 
         initUser();
     }, []);
-    console.log('user in DM 2', user)
     return (
       <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user, getUsers, getGroups } }>
         <Component />
