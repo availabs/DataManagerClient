@@ -2,44 +2,49 @@ import { useContext, useState, useEffect, useMemo } from "react";
 import { ThemeContext, Input, Button } from "~/modules/avl-components/src";
 import Select from "~/modules/avl-components/src/components/Inputs/select";
 import { DamaContext } from "~/pages/DataManager/store";
-import { wrappers } from "~/modules/ams/src";
 import { Link } from "react-router";
 import TaskList from "~/pages/DataManager/Tasks/TaskList";
-const amsReduxWrapper = wrappers["ams-redux"];
 const PUBLIC_GROUP = 'Public';
-const ReduxedAdminPage = amsReduxWrapper((props) => {
-  const { user } = useContext(DamaContext);
-  const { groups, source, users, getGroups, getUsers, getUsersPreferences } =
-    props;
+const ReduxedAdminPage = (props) => {
+    const [users, setUsers] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const { user, getUsers, getGroups } = useContext(DamaContext);
+    const {source, getUsersPreferences } = props;
 
-  useEffect(() => {
-    if (user) {
-      getGroups();
-      getUsers();
-    }
-  }, [user]);
+    useEffect(() => {
+        async function load() {
+            if (user) {
+                const groups = await getGroups({user});
+                const users = await getUsers({user});
+                if(Array.isArray(groups?.groups)) setGroups(groups.groups);
+                if(Array.isArray(users?.users)) setUsers(users.users);
+            }
+        }
 
-  useEffect(() => {
-    if (!users?.some((user) => !!user.preferences)) {
-      const userEmails = users?.map((user) => user.email);
-      getUsersPreferences({ userEmails });
-    }
-  }, [users]);
+        load();
+    }, [user]);
 
-  return (
-    <AdminPage
-      groups={groups}
-      users={users}
-      source={source}
-      loggedInUser={user}
-    />
-  );
-});
+    // useEffect(() => {
+    //   if (!users?.some((user) => !!user.preferences)) {
+    //     const userEmails = users?.map((user) => user.email);
+    //     getUsersPreferences({ userEmails });
+    //   }
+    // }, [users]);
 
-const AdminPage = ({ source, users, groups, loggedInUser }) => {
+    return (
+        <AdminPage
+            groups={groups}
+            users={users}
+            source={source}
+            loggedInUser={user}
+        />
+    );
+}
+
+const AdminPage = ({ source, users=[], groups=[], loggedInUser }) => {
   const componentGroups = [...groups];
   const myTheme = useContext(ThemeContext);
-  const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
+  const { falcor, pgEnv, baseUrl, getUsers, getGroups } = useContext(DamaContext);
 
   const { auth: sourceAuth } = source?.statistics ?? {};
 
@@ -347,4 +352,5 @@ const AdminPageTile = ({ children, title = "", tileWidth = "sm:max-w-md" }) => {
   );
 };
 
+// export default AdminPage;
 export default ReduxedAdminPage;

@@ -14,7 +14,7 @@ import { NoMatch } from "../utils/404";
 
 const PUBLIC_GROUP = 'Public';
 
-const computeAuth = ({sourceAuth, user}) => {
+const computeAuth = ({sourceAuth, user={}}) => {
   const { authUsers, authGroups } = {
     authUsers: get(sourceAuth, ["users"], {}),
     authGroups: get(sourceAuth, ["groups"], {}),

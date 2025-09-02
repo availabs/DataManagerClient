@@ -4,11 +4,21 @@ import { getAttributes } from './attributes'
 import { DamaContext } from '../store'
 
 import { Dropdown } from '~/modules/avl-components/src'
-import { Item } from '~/pages/Auth/AuthMenu'
-
 import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
 
+const Item = (to, icon, span, condition) => (
+    condition === undefined || condition ?
+        <Link to={ to } >
+            <div className='px-6 py-1 bg-blue-500 text-white hover:text-blue-100'>
+                <div className='hover:translate-x-2 transition duration-100 ease-out hover:ease-in'>
+                    <i className={`${icon} `} />
+                    <span className='pl-2'>{span}</span>
+                </div>
+            </div>
+        </Link>
+        : null
+)
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
   return (
