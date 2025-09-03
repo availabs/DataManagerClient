@@ -714,7 +714,24 @@ export const MacroviewPlugin = {
       return controls;
     },
     comp: () => {
-      return <div style={{position:"fixed", top:"-200px", left:"50%"}}>Hello world comp</div>
+      return( 
+        <div
+          className="flex flex-col pointer-events-auto drop-shadow-lg bg-neutral-100 p-4"
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            left:"300px",
+            color: "black",
+            width: "500px",
+            height: "500px",
+          }}
+        >
+          <div className="m-2 border-b-4 border-black pb-2" ><div className="pb-2 px-1 bg-gray-300">Legend</div></div>
+          <div className="m-2 border-b-4 border-black pb-2" ><div className="pb-2 px-1 bg-gray-300">TMC Search</div></div>
+          <div className="m-2 border-b-4 border-black pb-2" ><div className="pb-2 px-1 bg-gray-300">Add Infobox</div></div>
+          <div className="m-2 " ><div className="pb-2 px-1 bg-gray-300">INFOBOXES</div></div>
+        </div>
+      )
     },
     cleanup: (map, state, setState) => {
       map.off("click", MAP_CLICK);

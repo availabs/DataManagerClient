@@ -57,7 +57,13 @@ const PluginLayerRender = ({
     } else {
       plugin.dataUpdate(maplibreMap, state, setState);
     }
-  }, [state.symbology?.pluginData?.[layer.id] ])
+  }, [state.symbology?.pluginData?.[layer.id] ]);
+
+  const RenderComp = plugin.comp || <></>;
+
+  return (
+    <RenderComp />
+  );
 }
 
 
