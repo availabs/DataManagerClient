@@ -7,6 +7,7 @@ import mapboxgl from "maplibre-gl";
 import { extractState, createFalcorFilterOptions } from '../../stateUtils';
 import { filters, updateSubMeasures, getMeasure, getColorRange, updateLegend } from "./updateFilters"
 import { DamaContext } from "../../../store"
+import { CMSContext } from '~/modules/dms/src'
 import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { ViewAttributes } from "../../../Source/attributes"
 import { usePrevious } from "../../components/LayerManager/utils";
@@ -75,10 +76,20 @@ export const MacroviewPlugin = {
     type: "plugin",
     mapRegister: (map, state, setState) => {
       map.on("click", MAP_CLICK);
-      const { pathBase, layerPaintPath } = extractState(state);
-      const pluginDataPath = `symbology.pluginData.macroview`;
+      let pluginDataPath = '';
+
+      //state.symbologies indicates that the map context is DMS
+      if(state.symbologies) {
+        const symbName = Object.keys(state.symbologies)[0];
+        const pathBase = `symbologies['${symbName}']`
+        pluginDataPath = `${pathBase}.symbology.pluginData.macroview`
+      } else {
+        pluginDataPath = `symbology.pluginData.macroview`;
+      }
+
       const newFilters = updateSubMeasures(filters);
 
+      ///const pathBase = MapContext ? `symbologies['${symbName}']` : ``
       setState(draft => {
         set(draft, `${pluginDataPath}['measureFilters']`, newFilters);
         //set(draft, `${pathBase}.${layerPaintPath}`, npmrdsPaint); //Mapbox paint
@@ -103,12 +114,24 @@ export const MacroviewPlugin = {
     },
     dataUpdate: (map, state, setState) => {
       //console.log("---data update-----")
+      //9/4 9:02am looks like data update does not fire for DMS map
       //console.log("testing old filters and json code")
 
       //console.log({filters})
       //updateSubMeasures(this.filters.measure.value, this.filters, falcor);
-      const { layerPaintPath } = extractState(state);
-      const pluginDataPath = `symbology.pluginData.macroview`;
+
+      let pluginDataPath = ''
+      let symbologyDataPath = '';
+      if(state.symbologies) {
+        const symbName = Object.keys(state.symbologies)[0];
+        const pathBase = `symbologies['${symbName}']`
+        pluginDataPath = `${pathBase}.symbology.pluginData.macroview`;
+        symbologyDataPath = `${pathBase}.symbology.layers`;
+      } else {
+        pluginDataPath = `symbology.pluginData.macroview`;
+        symbologyDataPath = `symbology.layers`;
+      }
+
       //console.log("plugin Data gets updated", { map, state, setState });
       const hover = get(state, `${pluginDataPath}['hover']`, "");
       const pm1 = get(state, `${pluginDataPath}['pm-1']`, null);
@@ -118,28 +141,35 @@ export const MacroviewPlugin = {
       const geography = get(state, `${pluginDataPath}['geography']`, null);
       const pm3LayerId = get(state, `${pluginDataPath}['active-layers'][${PM3_LAYER_KEY}]`, null);
       const measureFilters = get(state, `${pluginDataPath}['measureFilters']`, filters)
-      const pm3MapLayer = get(state, `symbology.layers[${pm3LayerId}]`, null);
+      const pm3MapLayers = get(state, `${symbologyDataPath}['${pm3LayerId}'].layers`, null);
+      const pm3MapSources = get(state, `${symbologyDataPath}['${pm3LayerId}'].sources`, null);
+      const layerViewId = get(state, `${symbologyDataPath}['${pm3LayerId}'].view_id`, null);
+
       if(pm3LayerId && viewId) {
         //Update map with new viewId
         setState(draft => {
+          //console.log("data update for plugin, draft::", JSON.parse(JSON.stringify(draft)));
+
+          //9/4 9:36am TODO test that `pm3MapLayers[0]` still works in the mapEditor
+          //tbh i am not totally sure how this worked in thefirst place. I prob just references the layers differently.
           const newLayer = JSON.parse(
-            JSON.stringify(draft.symbology.layers[pm3LayerId].layers).replaceAll(
-              pm3MapLayer.view_id,
+            JSON.stringify(pm3MapLayers).replaceAll(
+              layerViewId,
               viewId
             )
           );
           const newSources = JSON.parse(
             JSON.stringify(
-              draft.symbology.layers[pm3LayerId].sources
-            ).replaceAll(pm3MapLayer.view_id, viewId)
+              pm3MapSources
+            ).replaceAll(layerViewId, viewId)
           );
           const newDataColumn = getMeasure(measureFilters);
-          set(draft,`symbology.layers[${pm3LayerId}]['layers']` , newLayer)
-          set(draft,`symbology.layers[${pm3LayerId}]['sources']` , newSources)
-          set(draft,`symbology.layers[${pm3LayerId}]['view_id']` , viewId)
+          set(draft,`${symbologyDataPath}['${pm3LayerId}']['layers']` , newLayer)
+          set(draft,`${symbologyDataPath}['${pm3LayerId}']['sources']` , newSources)
+          set(draft,`${symbologyDataPath}['${pm3LayerId}']['view_id']` , viewId)
 
-          set(draft,`symbology.layers[${pm3LayerId}]['hover']` , hover)
-          set(draft, `symbology.layers[${pm3LayerId}]['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
+          set(draft,`${symbologyDataPath}['${pm3LayerId}']['hover']` , hover)
+          set(draft, `${symbologyDataPath}['${pm3LayerId}']['data-column']`, newDataColumn); //must set data column, or else tiles will not have that data
         })
       } else if(pm3LayerId && !viewId && allPluginViews?.length > 0) {
         //if no view is selected, but there is at least 1 element in views, select that 1 element
@@ -380,11 +410,30 @@ export const MacroviewPlugin = {
         } : {}
       ];
     },
-    externalPanel: ({ state, setState }) => {
-      const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
+    externalPanel: ({ state, setState, pathBase = "" }) => {
+      const dctx = React.useContext(DamaContext);
+      const cctx = React.useContext(CMSContext);
+      const ctx = dctx?.falcor ? dctx : cctx;
+      const { falcor, falcorCache, pgEnv, baseUrl } = ctx;
+      console.log("external panel PLUGIN state::", state)
+      //const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
-      const pluginDataPath = `symbology.pluginData.macroview`;
+      const pluginDataPath = cctx ? `${pathBase}` : `${pathBase}`
+
+      const pluginData = useMemo(() => {
+        return get(state, pluginDataPath, {})
+      }, [state]);
+
+      let symbologyLayerPath = '';
+      if(state.symbologies) {
+        const symbName = Object.keys(state.symbologies)[0];
+        const pathBase = `symbologies['${symbName}']`
+        symbologyLayerPath = `${pathBase}.symbology.layers`;
+      } else {
+        symbologyLayerPath = `symbology.layers`;
+      }
+
       //TODO -- kind of annoying that the developer has to do the path like this
       //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
       //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
@@ -399,13 +448,22 @@ export const MacroviewPlugin = {
           countyLayerId: get(state, `${pluginDataPath}['active-layers'][${COUNTY_LAYER_KEY}]`),
           regionLayerId: get(state, `${pluginDataPath}['active-layers'][${REGION_LAYER_KEY}]`),
         };
-      }, [state.symbology.pluginData, pluginDataPath]);
+      }, [pluginData, pluginDataPath]);
 
       const { symbology_id, existingDynamicFilter, filter:dataFilter, filterMode } = useMemo(() => {
-        return extractState(state);
+        if(dctx) {
+          return extractState(state);
+        } else {
+          const symbName = Object.keys(state.symbologies)[0];
+          const symbPathBase = `symbologies['${symbName}']`;
+          const symbData = get(state, symbPathBase, {})
+          return extractState(symbData);
+        }
       }, [state]);
-
       useEffect(() => {
+        //TODO 9/4 9:51am
+        //need to fix zoom stuff here, wrong path
+
         const getFilterBounds = async () => {
           //need array of [{column_name:foo, values:['bar', 'baz']}]
           //geography is currently [{name: foo, value: 'bar', type:'baz'}]
@@ -418,7 +476,6 @@ export const MacroviewPlugin = {
             acc[curr.type].push(curr.value);
             return acc;
           }, {});
-          console.log({selectedGeographyByType})
           const geographyFilter = Object.keys(selectedGeographyByType).map(
             (column_name) => {
               return {
@@ -498,6 +555,8 @@ export const MacroviewPlugin = {
           //resets dynamic filter if there are no geographies selected
           setState((draft) => {
             if (state?.symbology?.zoomToFilterBounds?.length > 0) {
+
+              
               draft.symbology.zoomToFilterBounds = [];
               set(
                 draft,
@@ -611,8 +670,6 @@ export const MacroviewPlugin = {
           };
         });
 
-      // console.log({measureControls})
-      // console.log({state})
       const controls = [
         {
           label: "Geography",
@@ -700,11 +757,15 @@ export const MacroviewPlugin = {
           const {range: paintRange, format} = updateLegend(measureFilters);
           let { paint, legend } = choroplethPaint(newDataColumn, colorBreaks['max'], paintRange, numbins, method, colorBreaks['breaks'], showOther, 'vertical');
 
+
+          //TODO 9/4 9:51am
+          //this is where you fix the paint stuff -- wrong path
+
           //console.log({paint})
           //console.log({npmrdsPaint})
           setState(draft => {
-            set(draft, `symbology.layers[${pm3LayerId}]['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
-            set(draft, `symbology.layers[${pm3LayerId}]['legend-data']`, legend); //AVAIL-written legend component
+            set(draft, `${symbologyLayerPath}['${pm3LayerId}']['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
+            set(draft, `${symbologyLayerPath}['${pm3LayerId}']['legend-data']`, legend); //AVAIL-written legend component
           })
         };
 

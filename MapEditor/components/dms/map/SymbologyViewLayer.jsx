@@ -92,8 +92,16 @@ const ViewLayerRender = ({
       !layerProps.filterGroupEnabled &&
       layerProps?.["data-column"] !== prevLayerProps?.["data-column"];
 
+
+
   const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
   const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
+// if(layerProps.source_id === 1410) {
+//   //testing only pm3 layer for now
+//     console.log({layerProps, prevLayerProps})
+//     console.log({newViewId: layerProps.view_id, oldViewId: prevLayerProps?.view_id})
+
+// }
 
   useEffect(() => {
     // ------------------------------------------------------
@@ -107,7 +115,6 @@ const ViewLayerRender = ({
 
     if (!sourceReady) return;
 
-    console.log('debug map ue init', didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange)
     if(sourceReady && cachedFilterPropsRef.current) {
       if(maplibreMap.getSource(layerProps?.sources?.[0]?.id)){
         // console.log('debug map if', maplibreMap.getSource(layerProps?.sources?.[0]?.id))
@@ -327,10 +334,20 @@ const ViewLayerRender = ({
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
       maplibreMap.fitBounds(allLayerProps.zoomToFit, {
+        padding: { top: 50, bottom: 50, left: 50, right: 50 },
         duration: 400
       });
     }
   }, [maplibreMap, allLayerProps?.zoomToFit]);
+
+  useEffect(() => {
+    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0 &&  allLayerProps?.zoomToFilterBounds[0] !== null){
+      maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
+        padding: { top: 50, bottom: 50, left: 50, right: 50 },
+        duration: 400
+      });
+    }
+  }, [maplibreMap, allLayerProps?.zoomToFilterBounds]);
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {

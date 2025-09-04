@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useMemo } from "react"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
-import { MapContext } from "./dms/MapComponent"
+import { MapContext } from "./dms/map/MapComponent"
 import { SymbologyContext } from "../"
 import get from "lodash/get"
 import set from "lodash/set"
@@ -28,13 +28,26 @@ const PluginLayerRender = ({
   layerProps,
   allLayerProps
 }) => {
-  const mctx = useContext(MapContext);
+  const mctx = React.useContext(MapContext);
   const sctx = React.useContext(SymbologyContext);
-  //copy from hovercomp, dynamically determine context
-  const { state, setState } = sctx ? sctx : mctx ? mctx : {state: {}, setState: () => {}};
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
+
+  let layerPluginDataPath = '';
+  //console.log("state in plugin layer::", state)
+
+  if(sctx) {
+    layerPluginDataPath =`symbology.pluginData['${layer.id}']`
+  } else {
+    const symbName = Object.keys(state.symbologies)[0];
+    layerPluginDataPath  = `symbologies['${symbName}'].symbology.pluginData['${layer.id}']`;
+        // console.log({layerPluginDataPath, symbName, layerId: layer.id})
+  }
+
+  const layerPluginData = get(state, layerPluginDataPath);
 
   const plugin = useMemo(() => {
-    return  PluginLibrary[layer.id]
+    return PluginLibrary[layer.id]
   }, [layer.id]);
   // ------------
   // On Load Unload
@@ -52,12 +65,12 @@ const PluginLayerRender = ({
     //e.g. pm3 measure selected (external)
     if(!plugin?.dataUpdate) {
       console.error("no data update provided for plugin");
-    } else if(!state.symbology?.pluginData?.[layer.id]) {
+    } else if(!layerPluginData) {
       console.warn(`no pluginData found for layer:: ${layer.id}. cannot perform dataUpdate`)
     } else {
       plugin.dataUpdate(maplibreMap, state, setState);
     }
-  }, [state.symbology?.pluginData?.[layer.id] ]);
+  }, [layerPluginData]);
 
   const RenderComp = plugin.comp || <></>;
 

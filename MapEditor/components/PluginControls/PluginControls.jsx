@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, Fragment, useState } from "react";
 import { Switch } from '@headlessui/react'
 import { SymbologyContext } from "../..";
+import {MapContext} from '../dms/map/MapComponent'
 import get from "lodash/get";
 import set from "lodash/set";
 
@@ -8,11 +9,14 @@ import { MultiLevelSelect } from "~/modules/avl-map-2/src"
 
 export function SelectControl({ path, params = {} }) {
   //console.log("select control path::", path)
-  const { state, setState } = React.useContext(SymbologyContext);
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
   // console.log('select control params::', params)
   // console.log("select control state::", state)
-  // console.log("select control value::", get(state, `${path}`))
-
+//   console.log("select control value::", get(state, `${path}`))
+// console.log("select control, state::", state)
   const defaultValue =
     params.default !== null && params.default !== undefined
       ? params.default
@@ -43,7 +47,10 @@ export function SelectControl({ path, params = {} }) {
 }
 
 export function MultiSelectControl({ path, params = {} }) {
-  const { state, setState } = React.useContext(SymbologyContext);
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
 
   const defaultValue =
     params.default !== null && params.default !== undefined
@@ -78,7 +85,10 @@ export function MultiSelectControl({ path, params = {} }) {
 
 export function InputControl({ path, params = {} }) {
   //console.log("input control path::", path)
-  const { state, setState } = React.useContext(SymbologyContext);
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
   //console.log('input control', params)
 
   const defaultValue =
@@ -104,7 +114,10 @@ export function InputControl({ path, params = {} }) {
 }
 
 export function RadioControl({ path, params = {} }) {
-  const { state, setState } = React.useContext(SymbologyContext);
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
 
   const defaultValue =
     params.default !== null && params.default !== undefined
@@ -142,7 +155,10 @@ export function RadioControl({ path, params = {} }) {
 }
 
 export function ToggleControl({path, params={title:""}}) {
-  const { state, setState } = React.useContext(SymbologyContext);
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  const { state, setState } = ctx;
   const defaultValue =
     params.default !== null && params.default !== undefined
       ? params.default

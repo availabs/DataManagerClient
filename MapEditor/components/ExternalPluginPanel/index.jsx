@@ -1,14 +1,40 @@
 import React, { useContext, Fragment, useRef } from "react";
 import { SymbologyContext, PluginLibrary } from "../..";
+import { MapContext } from "../dms/map/MapComponent";
 // import { DamaContext } from "../../../../../../store"
 import { Menu, Transition, Tab, Dialog } from "@headlessui/react";
 import { wrapperTypes } from '../PluginControls/PluginControlWrappers'
+import { zip } from "lodash";
 
 //TODO -- this MAYBE needs some combination of these changes:
 //Use MapContext if available (otherwise, use SymbologyContext)
+//TODO -- this could break mapEditor plugin stuff
 function ExternalPluginPanel() {
-  const { state, setState } = React.useContext(SymbologyContext);
-  const tabs = Object.keys(state.symbology.plugins)
+  const mctx = React.useContext(MapContext);
+  const sctx = React.useContext(SymbologyContext);
+  const ctx = mctx?.falcor ? mctx : sctx;
+  // console.log({MapContext, SymbologyContext})
+  // console.log("external panel ctx::", ctx)
+  const { state, setState } = ctx
+
+  let tabs;
+  
+  if(mctx) {
+    tabs = Object.values((state.symbologies || {})).map(symb => Object.keys((symb?.symbology?.plugins || {}))).flat();
+  } else {
+    tabs = Object.keys(state.symbology.plugins);
+  }
+
+  //TODO -- based on whether or not we have `MapContext` vs `SymbologyContext`
+  //dynamically figure out tab names
+  //dyanmically set symbology path for controls
+  //TODO make sure this works still in map editor
+  let pathBase = 'symbology.pluginData'
+  if(mctx) { 
+    const symbName = Object.keys(state.symbologies)[0];
+    pathBase = `symbologies['${symbName}'].symbology.pluginData`;
+  }
+
   return (
     <div className="p-4">
       <div className="bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] scroll-xs">
@@ -31,8 +57,8 @@ function ExternalPluginPanel() {
             ))}
           </Tab.List>
           <Tab.Panels>
-            {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const externalControls = PluginLibrary[pluginName]?.externalPanel({state, setState});
+            {tabs.map((pluginName) => {
+              const externalControls = PluginLibrary[pluginName]?.externalPanel({state, setState, pathBase: `${pathBase}['${pluginName}']`});
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>
                   {externalControls?.map((control, i) => {
@@ -42,10 +68,12 @@ function ExternalPluginPanel() {
                       <div className="flex flex-wrap h-fit p-1" key={i}>
                         <ControlWrapper
                           label={control.label}
-                          controls={control.controls.map(control => ({
+                          controls={control.controls.map(control => {
+                            return ({
                             ...control,
-                            path: `symbology.pluginData['${pluginName}']${control.path}`
-                          }))}
+                            path: `${pathBase}['${pluginName}']${control.path}`
+                          })}
+                        )}
                         />
                       </div>
                     );

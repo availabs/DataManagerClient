@@ -11,6 +11,10 @@ import {useSearchParams} from "react-router";
 import FilterControls from "./controls/FilterControls.jsx";
 import {defaultStyles, blankStyles} from "./styles.js";
 import MoreControls from "./controls/MoreControls.jsx";
+import PluginLayer from "../../PluginLayer"
+import { PluginLibrary, PLUGIN_TYPE } from "../../../";
+import ExternalPluginPanel from "../../ExternalPluginPanel";
+
 export const HEIGHT_OPTIONS = {
     "full": 'calc(95vh)',
     1: "900px",
@@ -98,6 +102,8 @@ const Edit = ({value, onChange, size}) => {
         })
     }, [pageState.filters])
 
+    const arePluginsLoaded = Object.values((state.symbologies || {})).some(symb => Object.keys((symb?.symbology?.plugins || {})).length > 0);
+
     useEffect(() => {
         // -----------------------
         // Update map layers on map
@@ -107,28 +113,41 @@ const Edit = ({value, onChange, size}) => {
         // console.log('symbology layers effect')
         const updateLayers = async () => {
             if(isReady) {
-                
                 let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                     let ids = out.map(d => d.id)
-                    let newValues = Object.keys(curr?.symbology?.layers)
+                    let newSymbLayers = Object.keys(curr?.symbology?.layers)
                         .reduce((layerOut, layerKey) => {
                             if( !ids.includes(layerKey) ) {
                                 layerOut[layerKey] = curr?.symbology?.layers?.[layerKey]
                             }
                             return layerOut
                         },{})
+                    let newPlugins = Object.keys(curr?.symbology?.plugins)
+                        .reduce((pluginOut, pluginKey) => {
+                            if( !ids.includes(pluginKey) ) {
+                                pluginOut[pluginKey] = curr?.symbology?.plugins?.[pluginKey]
+                            }
+                            return pluginOut
+                        },{})
+                    
                         
-                    return [...out,  ...Object.values(newValues)]
+                    return [...out,  ...Object.values(newSymbLayers), ...Object.values(newPlugins)]
                     
                 },[]))
-
+ 
                 setMapLayers(draftMapLayers => {
+                    let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => !!d)
                     let newLayers = allLayers
                       .filter(d => d)
-                      // .filter(d => !currentLayerIds.includes(d.id))
+                      .filter(d => !currentLayerIds.includes(d.id))
                       .sort((a,b) => b.order - a.order)
                       .map(l => {
-                        return new SymbologyViewLayer(l)
+                        if(l.type === PLUGIN_TYPE) {
+                            //console.log("plugin layer")
+                            return new PluginLayer(l)
+                        } else {
+                            return new SymbologyViewLayer(l)
+                        }
                       })
 
                     const oldIds = allLayers.map(d => d.id)
@@ -138,7 +157,7 @@ const Edit = ({value, onChange, size}) => {
 
                     const out = [
                         // keep existing layers & filter
-                        // ...oldLayers,
+                        ...oldLayers,
                         // add new layers
                         ...newLayers
                     ].sort((a,b) => b.order - a.order)
@@ -148,6 +167,13 @@ const Edit = ({value, onChange, size}) => {
         }
         updateLayers()
     }, [state.symbologies, isReady])
+
+    //I want to check to see if the data-column is being updated in the symbology
+    //Basically, the data-column update is not making it to the map layer. We need to know why
+    //console.log("DMS Map state.symbologies::", Object.values(state.symbologies))
+    //as of 8:58am 9/4, it is NOT making it to the symbology
+    //HOWEVER -- it is propegating to the `pluginData` field.
+
 
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
@@ -257,6 +283,7 @@ const Edit = ({value, onChange, size}) => {
                 <div className={'absolute inset-0 flex pointer-events-none'}>
                     <div className='flex-1'/>
                     <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
+                    {arePluginsLoaded && <ExternalPluginPanel />}
                 </div>
             </div>
         </MapContext.Provider>

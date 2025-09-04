@@ -78,7 +78,6 @@ function PopoverControl ({values,title='',children}) {
 }
 
 function SimpleControlWrapper ({label, controls}) {
-  const { state, setState } = React.useContext(SymbologyContext);
   return (
     <>
       <div className='w-24 text-slate-500 text-[14px] tracking-wide min-h-[32px] flex items-center'>{label}</div>

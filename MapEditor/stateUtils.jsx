@@ -102,10 +102,10 @@ const extractState = (state) => {
     legendData: get(state, `${pathBase}['legend-data']`),
     pluginData,
     isActiveLayerPlugin,
-    controllingPluginName: (Object.keys(pluginData) || []).find(pluginName => Object.values(pluginData[pluginName]['active-layers']).includes(activeLayerId)),
+    controllingPluginName: (Object.keys(pluginData || {}) || []).find(pluginName => Object.values(pluginData[pluginName]['active-layers'] || {}).includes(activeLayerId)),
     existingDynamicFilter: get(
       state,
-      `symbology.layers[${state.symbology.activeLayer}]['dynamic-filters']`,
+      `symbology.layers[${state?.symbology?.activeLayer}]['dynamic-filters']`,
       []
     ),
     filterMode: get(state, `${pathBase}['filterMode']`),

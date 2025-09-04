@@ -36,7 +36,7 @@ export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
-const PLUGIN_TYPE = 'plugin'
+export const PLUGIN_TYPE = 'plugin'
 
 //TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
