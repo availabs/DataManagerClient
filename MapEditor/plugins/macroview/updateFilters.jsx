@@ -123,15 +123,15 @@ const filters = {
     active: true,
     searchable: true,
     multi: false,
-    accessor: d => d.name,
-    valueAccessor: d => d.value
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value
   },
   freeflow: {
     order: 1,
     name: "Threshold Speed",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [
       { name: "Freeflow", value: true },
       { name: "Speed Limit", value: false }
@@ -159,8 +159,8 @@ const filters = {
   fueltype: {
     name: "Fuel Type",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [
       { name: "Total (Gasoline & Diesel)", value: "total" },
       { name: "Gasoline", value: "gas" },
@@ -174,8 +174,8 @@ const filters = {
   pollutant: {
     name: "Pollutant",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [
       { name: "CO² (Carbon Dioxide)", value: "co2" },
       { name: "CO (Carbon Monoxide)", value: "co" },
@@ -207,8 +207,8 @@ const filters = {
     order: 3,
     name: "Unit",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [
       { name: "Vehicle Hours", value: VHRS },
       { name: "Person Hours", value: PHRS },
@@ -223,8 +223,8 @@ const filters = {
     order: 6,
     name: "Percentile",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     multi: false,
     domain: SPEED_PERCENTILE_DOMAIN,
     value: null,
@@ -234,8 +234,8 @@ const filters = {
     order: 4,
     name: "Traffic Type",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [
       { name: "All Traffic", value: "all" },
       { name: "All Trucks", value: "truck" },
@@ -249,8 +249,8 @@ const filters = {
     order: 5,
     name: "Peak Selector",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [],
     value: null,
     multi: false,
@@ -259,8 +259,8 @@ const filters = {
   attributes: {
     name: "Attributes",
     type: "select",
-    accessor: d => d.name,
-    valueAccessor: d => d.value,
+    // accessor: d => d.name,
+    // valueAccessor: d => d.value,
     domain: [],
     value: null,
     multi: false,

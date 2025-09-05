@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, createContext, useRef } from "reac
 import get from "lodash/get"
 import set from "lodash/set"
 import isEqual from "lodash/isEqual"
+import { format as d3format } from "d3-format"
 import omit from "lodash/omit"
 import mapboxgl from "maplibre-gl";
 import { extractState, createFalcorFilterOptions } from '../../stateUtils';
@@ -19,15 +20,17 @@ const MPO_LAYER_KEY = "mpo";
 const COUNTY_LAYER_KEY = "county";
 const REGION_LAYER_KEY = 'region'
 
-const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
+const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values, layerBasePath}) => {
   setState(draft => {
     set(
       draft,
-      `symbology.layers[${layerId}]['isVisible']`,
+      `${layerBasePath}['${layerId}']['isVisible']`,
       true
     );
-    draft.symbology?.layers?.[layerId]?.layers?.forEach((d,i) => {
-      draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'visible' }
+
+    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
+    draftLayers.forEach((d,i) => {
+      d.layout =  { "visibility": 'visible' }
     })
     const geographyFilter = {
       columnName: geomDataKey,
@@ -36,32 +39,37 @@ const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values}) => {
     };
     set(
       draft,
-      `symbology.layers[${layerId}]['filter']['${geomDataKey}']`,
+      `${layerBasePath}['${layerId}']['filter']['${geomDataKey}']`,
       geographyFilter
     );
   })
 }
 
-const resetGeometryBorderFilter = ({setState, layerId}) => {
+const resetGeometryBorderFilter = ({setState, layerId, layerBasePath}) => {
   setState(draft => {
     set(
       draft,
-      `symbology.layers[${layerId}]['isVisible']`,
+      `${layerBasePath}['${layerId}']['isVisible']`,
       false
     );
-    draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
-      draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
+
+    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
+    draftLayers.forEach((d,i) => {
+      console.log(JSON.parse(JSON.stringify(d)))
+      d.layout =  { "visibility": 'none' }
     })
   })
 }
 
-const setInitialGeomStyle = ({setState, layerId}) => {
+//TODO 9/4 11am -- this mutates directly, not via path
+const setInitialGeomStyle = ({setState, layerId, layerBasePath}) => {
   setState(draft => {
-    const borderLayer = draft.symbology.layers[layerId].layers.find(mapLayer => mapLayer.type === 'line')
+    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
+    const borderLayer = draftLayers.find(mapLayer => mapLayer.type === 'line')
     borderLayer.paint = {"line-color": '#fff', "line-width": 1}
-    
-    draft.symbology.layers[layerId]?.layers?.forEach((d,i) => {
-      draft.symbology.layers[layerId].layers[i].layout =  { "visibility": 'none' }
+
+    draftLayers.forEach((d,i) => {
+      d.layout =  { "visibility": 'none' }
     });
   })
 }
@@ -182,6 +190,14 @@ export const MacroviewPlugin = {
       const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       // console.log("internal panel state::", state)
       //if a layer is selected, use the source_id to get all the associated views
+      let symbologyLayerPath = '';
+      if(state.symbologies) {
+        const symbName = Object.keys(state.symbologies)[0];
+        const pathBase = `symbologies['${symbName}']`
+        symbologyLayerPath = `${pathBase}.symbology.layers`;
+      } else {
+        symbologyLayerPath = `symbology.layers`;
+      }
       const {
         pluginDataPath,
         pm3LayerId,
@@ -253,17 +269,17 @@ export const MacroviewPlugin = {
       //Set initial styles for geometry borders
       useEffect(() => {
         if(mpoLayerId) {
-          setInitialGeomStyle({setState, layerId: mpoLayerId})
+          setInitialGeomStyle({setState, layerId: mpoLayerId, layerBasePath: symbologyLayerPath})
         }
       }, [mpoLayerId]);
       useEffect(() => {
         if(countyLayerId) {
-          setInitialGeomStyle({setState, layerId: countyLayerId})
+          setInitialGeomStyle({setState, layerId: countyLayerId, layerBasePath: symbologyLayerPath})
         }
       }, [countyLayerId]);
       useEffect(() => {
         if(regionLayerId) {
-          setInitialGeomStyle({setState, layerId: regionLayerId})
+          setInitialGeomStyle({setState, layerId: regionLayerId,  layerBasePath: symbologyLayerPath})
         }
       }, [regionLayerId]);
 
@@ -414,8 +430,11 @@ export const MacroviewPlugin = {
       const dctx = React.useContext(DamaContext);
       const cctx = React.useContext(CMSContext);
       const ctx = dctx?.falcor ? dctx : cctx;
-      const { falcor, falcorCache, pgEnv, baseUrl } = ctx;
-      console.log("external panel PLUGIN state::", state)
+      let { falcor, falcorCache, pgEnv, baseUrl } = ctx;
+
+      if(!falcorCache) {
+        falcorCache = falcor.getCache();
+      }
       //const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
       //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
       //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
@@ -426,17 +445,18 @@ export const MacroviewPlugin = {
       }, [state]);
 
       let symbologyLayerPath = '';
+      let symbPath = ''
       if(state.symbologies) {
         const symbName = Object.keys(state.symbologies)[0];
         const pathBase = `symbologies['${symbName}']`
         symbologyLayerPath = `${pathBase}.symbology.layers`;
+
+        symbPath = `${pathBase}.symbology`
       } else {
         symbologyLayerPath = `symbology.layers`;
+        symbPath = `symbology`
       }
 
-      //TODO -- kind of annoying that the developer has to do the path like this
-      //Maybe, we pass {state, setState, pluginData} ? so they don't have to know the full path?
-      //TODO -- `viewId` might initalize to null or something, might need a better default or conditionals
       const { views, viewId, geography, measureFilters, pm3LayerId, mpoLayerId, countyLayerId, regionLayerId } = useMemo(() => {
         return {
           views: get(state, `${pluginDataPath}['views']`, []),
@@ -489,13 +509,14 @@ export const MacroviewPlugin = {
           setState((draft) => {
             set(
               draft,
-              `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
+              `${symbologyLayerPath}['${pm3LayerId}']['dynamic-filters']`,
               geographyFilter
             );
 
-            set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, 'any')
+            set(draft, `${symbologyLayerPath}['${pm3LayerId}']['filterMode']`, 'any')
           });
         };
+
         if (geography?.length > 0) {
           //get zoom bounds
           getFilterBounds();
@@ -510,10 +531,11 @@ export const MacroviewPlugin = {
               layerId: mpoLayerId,
               geomDataKey: "mpo_name",
               values: selectedMpo.map((mpo) => mpo.value),
+              layerBasePath: symbologyLayerPath
             });
           } else {
             if(mpoLayerId) {
-              resetGeometryBorderFilter({layerId: mpoLayerId, setState})
+              resetGeometryBorderFilter({layerId: mpoLayerId, setState, layerBasePath: symbologyLayerPath})
             }
           }
 
@@ -530,10 +552,11 @@ export const MacroviewPlugin = {
                   lowCountyString[0].toUpperCase() + lowCountyString.slice(1)
                 );
               }),
+              layerBasePath: symbologyLayerPath
             });
           } else {
             if(countyLayerId) {
-              resetGeometryBorderFilter({layerId: countyLayerId, setState})
+              resetGeometryBorderFilter({layerId: countyLayerId, setState, layerBasePath: symbologyLayerPath})
             }
           }
 
@@ -545,37 +568,38 @@ export const MacroviewPlugin = {
               layerId: regionLayerId,
               geomDataKey: "redc_ed_attn_objectid",
               values: selectedRegion.map((regionCode) => parseInt(regionCode.value)),
+              layerBasePath: symbologyLayerPath
             });
           } else {
             if(regionLayerId) {
-              resetGeometryBorderFilter({layerId: selectedRegion, setState})
+              resetGeometryBorderFilter({layerId: selectedRegion, setState, layerBasePath: symbologyLayerPath})
             }
           }
         } else {
           //resets dynamic filter if there are no geographies selected
           setState((draft) => {
-            if (state?.symbology?.zoomToFilterBounds?.length > 0) {
+            const zoomToFilterBounds = get(draft, `${symbPath}.zoomToFilterBounds`);
+            if (zoomToFilterBounds?.length > 0) {
+              set(draft, `${symbPath}.zoomToFilterBounds`, [])
 
-              
-              draft.symbology.zoomToFilterBounds = [];
               set(
                 draft,
-                `symbology.layers[${pm3LayerId}]['dynamic-filters']`,
+                `${symbologyLayerPath}['${pm3LayerId}']['dynamic-filters']`,
                 []
               );
             }
 
             if(pm3LayerId) {
-              set(draft, `symbology.layers[${pm3LayerId}]['filterMode']`, null);
+              set(draft, `${symbologyLayerPath}['${pm3LayerId}']['filterMode']`, null);
             }
             if (countyLayerId) {
-              resetGeometryBorderFilter({layerId: countyLayerId, setState})
+              resetGeometryBorderFilter({layerId: countyLayerId, setState, layerBasePath: symbologyLayerPath})
             }
             if (mpoLayerId) {
-              resetGeometryBorderFilter({layerId: mpoLayerId, setState})
+              resetGeometryBorderFilter({layerId: mpoLayerId, setState, layerBasePath: symbologyLayerPath})
             }
             if(regionLayerId) {
-              resetGeometryBorderFilter({layerId: regionLayerId, setState})
+              resetGeometryBorderFilter({layerId: regionLayerId, setState, layerBasePath: symbologyLayerPath})
             }
           });
         }
@@ -600,7 +624,6 @@ export const MacroviewPlugin = {
 
       const geomControlOptions = useMemo(() => {
         const geomData = get(falcorCache, ['dama',pgEnv,'viewsbyId', viewId, 'options', geomOptions, 'databyIndex'])
-
         if(geomData) {
           const geoms = {
             ua_name: [],
@@ -757,15 +780,17 @@ export const MacroviewPlugin = {
           const {range: paintRange, format} = updateLegend(measureFilters);
           let { paint, legend } = choroplethPaint(newDataColumn, colorBreaks['max'], paintRange, numbins, method, colorBreaks['breaks'], showOther, 'vertical');
 
-
-          //TODO 9/4 9:51am
-          //this is where you fix the paint stuff -- wrong path
-
+          const legendFormat = d3format(format);
+          legend = legend.map(legendBreak => ({...legendBreak, label: legendFormat(legendBreak.label.split("- ")[1])}))
           //console.log({paint})
           //console.log({npmrdsPaint})
           setState(draft => {
             set(draft, `${symbologyLayerPath}['${pm3LayerId}']['layers'][1]['paint']`, {...npmrdsPaint, 'line-color':paint}); //Mapbox paint
             set(draft, `${symbologyLayerPath}['${pm3LayerId}']['legend-data']`, legend); //AVAIL-written legend component
+            set(draft, `${symbologyLayerPath}['${pm3LayerId}']['legend-orientation']`, 'horizontal');
+            set(draft, `${symbologyLayerPath}['${pm3LayerId}']['category-show-other']`, '#fff');
+            set(draft, `${symbologyLayerPath}['${mpoLayerId}']['legend-orientation']`, 'none');
+            set(draft, `${symbologyLayerPath}['${countyLayerId}']['legend-orientation']`, 'none');
           })
         };
 
@@ -775,6 +800,7 @@ export const MacroviewPlugin = {
       return controls;
     },
     comp: () => {
+      return <></>
       return( 
         <div
           className="flex flex-col pointer-events-auto drop-shadow-lg bg-neutral-100 p-4"

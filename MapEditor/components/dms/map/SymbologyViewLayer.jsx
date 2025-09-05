@@ -96,10 +96,10 @@ const ViewLayerRender = ({
 
   const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
   const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
-// if(layerProps.source_id === 1410) {
+//if(layerProps.source_id === 1410) {
 //   //testing only pm3 layer for now
 //     console.log({layerProps, prevLayerProps})
-//     console.log({newViewId: layerProps.view_id, oldViewId: prevLayerProps?.view_id})
+//     console.log({newDynamic:layerProps?.['dynamic-filters'], oldDynamic: prevLayerProps?.['dynamic-filters']})
 
 // }
 
@@ -304,7 +304,14 @@ const ViewLayerRender = ({
               return mapFilter;
             });
         }
-        maplibreMap.setFilter(l.id, ["all", ...mapLayerFilter, ...dynamicMapLayerFilters]);
+        const allLayersFilterMode = Object.values(allLayerProps).reduce((acc, oneLayerProp) => {
+          if(oneLayerProp.filterMode && oneLayerProp.filterMode.length > 0) {
+            acc.push(oneLayerProp.filterMode)
+          }
+          return acc;
+        }, []);
+
+        maplibreMap.setFilter(l.id, [allLayersFilterMode[0] || 'all', ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
 
@@ -329,7 +336,7 @@ const ViewLayerRender = ({
         }
       }
     });
-  }, [sourceReady, didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange, layerProps]);
+  }, [sourceReady, didFilterGroupColumnsChange, didDataColumnChange, didFilterChange, didDynamicFilterChange, layerProps, allLayerProps]);
 
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFit?.length > 0){
@@ -341,13 +348,13 @@ const ViewLayerRender = ({
   }, [maplibreMap, allLayerProps?.zoomToFit]);
 
   useEffect(() => {
-    if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0 &&  allLayerProps?.zoomToFilterBounds[0] !== null){
-      maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
+    if (maplibreMap && layerProps && layerProps?.zoomToFilterBounds?.length > 0 &&  layerProps?.zoomToFilterBounds[0] !== null){
+      maplibreMap.fitBounds(layerProps.zoomToFilterBounds, {
         padding: { top: 50, bottom: 50, left: 50, right: 50 },
         duration: 400
       });
     }
-  }, [maplibreMap, allLayerProps?.zoomToFilterBounds]);
+  }, [maplibreMap, allLayerProps]);
 }
 
 const getLayerTileUrl = (tileBase, layerProps) => {

@@ -1,4 +1,6 @@
 import React, {useEffect, useMemo, createContext} from "react";
+import get from "lodash/get"
+import mapboxgl from "maplibre-gl";
 import isEqual from "lodash/isEqual"
 import { AvlMap } from "~/modules/avl-map-2/src"
 import { PMTilesProtocol } from './pmtiles/index'
@@ -14,6 +16,7 @@ import MoreControls from "./controls/MoreControls.jsx";
 import PluginLayer from "../../PluginLayer"
 import { PluginLibrary, PLUGIN_TYPE } from "../../../";
 import ExternalPluginPanel from "../../ExternalPluginPanel";
+import {fetchBoundsForFilter} from '../../../stateUtils';
 
 export const HEIGHT_OPTIONS = {
     "full": 'calc(95vh)',
@@ -62,24 +65,34 @@ const Edit = ({value, onChange, size}) => {
         return Object.values(state.symbologies || {}).some(symb => Object.keys(symb?.symbology?.layers || {}).length > 0);
     }, [state.symbologies]);
 
+    const activeSym = useMemo(() => {
+        return Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
+    }, [state.symbologies])
+    const activeSymSymbology = useMemo(()=> {
+        return state.symbologies[activeSym]?.symbology;
+    }, [state.symbologies[activeSym]])
+    const activeLayer = useMemo(() => {
+        return activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
+    },[activeSymSymbology])
+    const dynamicFilterOptions = useMemo(() => {
+        return (activeLayer?.['dynamic-filters'] || []);
+    },[activeLayer]);
+    const pageFilters = useMemo(() => {
+        return pageState.filters
+    },[pageState])
     useEffect(() => {
-        const activeSym = Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
-        const activeSymSymbology = state.symbologies[activeSym]?.symbology;
-        const activeLayer = activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
         const usePageFilters = activeLayer?.usePageFilters;
         const searchParamKey = activeLayer?.searchParamKey;
 
         const interactiveFilterOptions = (activeLayer?.['interactive-filters'] || []);
         if(!usePageFilters) return;
 
-        const searchParamFilterKey = (pageState?.filters || []).find(f => f.searchKey === searchParamKey)?.values;
+        const searchParamFilterKey = (pageFilters || []).find(f => f.searchKey === searchParamKey)?.values;
 
         const fI = interactiveFilterOptions.findIndex(f => f.searchParamValue === searchParamFilterKey || f.label === searchParamFilterKey)
 
-        const dynamicFilterOptions = (activeLayer?.['dynamic-filters'] || []);
-
         const getSearchParamKey = f => f.searchParamKey || f.column_name;
-        const searchParamValues = dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: (pageState.filters || []).find(f => f.searchKey === getSearchParamKey(curr))?.values}), {});
+        const searchParamValues = dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: (pageFilters || []).find(f => f.searchKey === getSearchParamKey(curr))?.values}), {});
 
         setState(draft => {
             if(fI !== -1){
@@ -100,7 +113,41 @@ const Edit = ({value, onChange, size}) => {
                     })
             }
         })
-    }, [pageState.filters])
+    }, [pageFilters])
+
+    useEffect(() => {
+        const getFilterBounds = async () => {
+            const symbName = Object.keys(state.symbologies)[0];
+            const symbPathBase = `symbologies['${symbName}']`;
+            const symbData = get(state, symbPathBase, {})
+
+            const newExtent = await fetchBoundsForFilter(symbData, falcor, pgEnv, dynamicFilterOptions);
+            setState((draft) => {
+                const parsedExtent = JSON.parse(newExtent);
+                const coordinates = parsedExtent?.coordinates[0];
+                const mapGeom = coordinates?.reduce((bounds, coord) => {
+                return bounds.extend(coord);
+                }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+                if(mapGeom && Object.keys(mapGeom).length > 0) {
+                    draft.symbologies[activeSym].symbology.zoomToFilterBounds = [mapGeom['_sw'], mapGeom['_ne']];
+                }
+            })
+        }
+        if (
+            dynamicFilterOptions.length > 0 &&
+            dynamicFilterOptions.some((dynFilter) => dynFilter.zoomToFilterBounds) &&
+            dynamicFilterOptions.some((dynFilter) => dynFilter?.values?.length > 0)
+        ) {
+            getFilterBounds();
+        } else {
+        if(state?.symbologies[activeSym]?.symbology?.length > 0) { 
+            setState((draft) => {
+                 draft.symbologies[activeSym].symbology.zoomToFilterBounds = [];
+            });
+        }
+        }
+    }, [dynamicFilterOptions, pageFilters]);
 
     const arePluginsLoaded = Object.values((state.symbologies || {})).some(symb => Object.keys((symb?.symbology?.plugins || {})).length > 0);
 
@@ -182,7 +229,7 @@ const Edit = ({value, onChange, size}) => {
                 ...Object.keys((curr?.symbology?.layers || {}))
                     .reduce((acc, layerId) => ({
                             ...acc,
-                            [layerId]: {...(curr?.symbology?.layers?.[layerId] || {}), zoomToFitBounds: state.zoomToFitBounds}}
+                            [layerId]: {...(curr?.symbology?.layers?.[layerId] || {}), zoomToFitBounds: state.zoomToFitBounds, zoomToFilterBounds: curr.symbology.zoomToFilterBounds }}
                         ), {})
             }
         }, {})
@@ -238,9 +285,6 @@ const Edit = ({value, onChange, size}) => {
       }, [interactiveFilterIndicies])
 
     const heightStyle = HEIGHT_OPTIONS[state.height];
-    const activeSym = Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
-    const activeSymSymbology = state.symbologies[activeSym]?.symbology;
-    const activeLayer = activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
     const activeFilter = activeLayer?.selectedInteractiveFilterIndex;
     const { center, zoom } = state.initialBounds ? state.initialBounds : {
         center: [-75.17, 42.85],
