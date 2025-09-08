@@ -14,69 +14,21 @@ import { ViewAttributes } from "../../../Source/attributes"
 import { usePrevious } from "../../components/LayerManager/utils";
 import { choroplethPaint } from '../../components/LayerEditor/datamaps'
 import { npmrdsPaint } from "./paint"
-import { REGION_CODE_TO_NAME } from "./constants"
-const PM3_LAYER_KEY = "pm3";
-const MPO_LAYER_KEY = "mpo";
-const COUNTY_LAYER_KEY = "county";
-const REGION_LAYER_KEY = 'region'
+import {
+  REGION_CODE_TO_NAME,
+  PM3_LAYER_KEY,
+  MPO_LAYER_KEY,
+  COUNTY_LAYER_KEY,
+  REGION_LAYER_KEY,
+} from "./constants";
 
-const setGeometryBorderFilter = ({setState, layerId, geomDataKey, values, layerBasePath}) => {
-  setState(draft => {
-    set(
-      draft,
-      `${layerBasePath}['${layerId}']['isVisible']`,
-      true
-    );
+import {
+  setGeometryBorderFilter,
+  resetGeometryBorderFilter,
+  setInitialGeomStyle,
+  onlyUnique
+} from './utils';
 
-    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
-    draftLayers.forEach((d,i) => {
-      d.layout =  { "visibility": 'visible' }
-    })
-    const geographyFilter = {
-      columnName: geomDataKey,
-      value: values,
-      operator: "=="
-    };
-    set(
-      draft,
-      `${layerBasePath}['${layerId}']['filter']['${geomDataKey}']`,
-      geographyFilter
-    );
-  })
-}
-
-const resetGeometryBorderFilter = ({setState, layerId, layerBasePath}) => {
-  setState(draft => {
-    set(
-      draft,
-      `${layerBasePath}['${layerId}']['isVisible']`,
-      false
-    );
-
-    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
-    draftLayers.forEach((d,i) => {
-      console.log(JSON.parse(JSON.stringify(d)))
-      d.layout =  { "visibility": 'none' }
-    })
-  })
-}
-
-//TODO 9/4 11am -- this mutates directly, not via path
-const setInitialGeomStyle = ({setState, layerId, layerBasePath}) => {
-  setState(draft => {
-    const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
-    const borderLayer = draftLayers.find(mapLayer => mapLayer.type === 'line')
-    borderLayer.paint = {"line-color": '#fff', "line-width": 1}
-
-    draftLayers.forEach((d,i) => {
-      d.layout =  { "visibility": 'none' }
-    });
-  })
-}
-
-function onlyUnique(value, index, array) {
-  return array.indexOf(value) === index;
-}
 const BLANK_OPTION = { value: "", name: "" };
 const MAP_CLICK = () => console.log("map was clicked");
 export const MacroviewPlugin = {
