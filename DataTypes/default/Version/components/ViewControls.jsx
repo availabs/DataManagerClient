@@ -27,11 +27,12 @@ const INITIAL_DELETE_MODAL_STATE = {
   loading: false,
 }
 
-const DownloadModalCheckbox = ({ inputName, checked, onChange }) => {
+const DownloadModalCheckbox = ({ inputName, checked, onChange, disabled=false }) => {
     return (
         <div className="mt-2 flex items-center">
             <input
                 id={inputName}
+                disabled={disabled}
                 name={inputName}
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -126,6 +127,7 @@ const DownloadModalCheckboxGroup = ({
                                         title,
                                     }) => {
 
+    const hasCalcColumn = options.some(opt => opt.includes(" ") ) && title === "Columns"
     return (
         <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
             <div className="flex w-full justify-between items-center w-1/2 text-md leading-6 text-gray-900">
@@ -153,12 +155,14 @@ const DownloadModalCheckboxGroup = ({
                     <XCircleIcon className="ml-2 text-red-700 h-4 w-4" />
                 )}
             </div>
+            {hasCalcColumn ? <div className="flex mt-1 text-xs items-center">(cannot include "Calculated Columns")</div>: ""}
             {options?.map((option) => (
                 <DownloadModalCheckbox
                     key={`${option}_checkbox`}
                     inputName={option}
                     checked={modalState.includes(option)}
                     onChange={onChange}
+                    disabled={hasCalcColumn && option.includes(" ")}
                 />
             ))}
         </div>
@@ -237,7 +241,7 @@ export function ViewControls ({view}) {
     //Should only fire once, when we get the source metadata back from API
     useEffect(() => {
         if (sourceDataColumns) {
-            setModalState({ ...modalState, columns: sourceDataColumns });
+            setModalState({ ...modalState, columns: sourceDataColumns.filter(col => !col.includes(" ")) });
         }
     }, [sourceDataColumns]);
 
@@ -483,7 +487,8 @@ export function ViewControls ({view}) {
                         disabled={
                             modalState.loading ||
                             modalState.fileTypes.length === 0 ||
-                            modalState.columns.length === 0
+                            modalState.columns.length === 0 ||
+                            modalState.columns.some(colName => colName.includes(" "))
                         }
                         className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto m-1"
                         onClick={createDownload}
