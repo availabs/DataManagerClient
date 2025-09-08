@@ -44,7 +44,7 @@ const DAMA_Wrapper = (Component, DAMA_ARGS) => {
 
     useEffect(() => {
         async function initUser(){
-            const user = await getUser();
+            const user = await getUser() || {groups: []};
             setUser(user)
         }
 
