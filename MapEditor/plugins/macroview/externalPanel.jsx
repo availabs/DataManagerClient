@@ -524,12 +524,18 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
       );
 
       const legendFormat = d3format(format);
-      legend = legend.map((legendBreak) => ({
-        ...legendBreak,
-        label: legendFormat(legendBreak.label.split("- ")[1]),
-      }));
-      //console.log({paint})
-      //console.log({npmrdsPaint})
+      legend = legend.map((legendBreak) => {
+        const shouldFormat =
+          !newDataColumn.toLowerCase().includes("phed") &&
+          !newDataColumn.toLowerCase().includes("ted");
+        return {
+          ...legendBreak,
+          label: shouldFormat
+            ? legendFormat(legendBreak.label.split("- ")[1])
+            : legendBreak.label.split("- ")[1],
+        };
+      });
+
       setState((draft) => {
         set(
           draft,
