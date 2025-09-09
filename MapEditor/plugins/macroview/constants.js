@@ -17,10 +17,13 @@ const MPO_LAYER_KEY = "mpo";
 const COUNTY_LAYER_KEY = "county";
 const REGION_LAYER_KEY = 'region'
 
+const BLANK_OPTION = { value: "", name: "" };
+
 export {
   REGION_CODE_TO_NAME,
   PM3_LAYER_KEY,
   MPO_LAYER_KEY,
   COUNTY_LAYER_KEY,
   REGION_LAYER_KEY,
+  BLANK_OPTION
 };
