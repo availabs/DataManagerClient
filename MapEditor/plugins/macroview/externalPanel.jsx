@@ -1,15 +1,27 @@
-import React, { useState, useEffect, useMemo, createContext, useRef } from "react"
-import get from "lodash/get"
-import set from "lodash/set"
-import isEqual from "lodash/isEqual"
-import { format as d3format } from "d3-format"
-import { extractState, createFalcorFilterOptions } from '../../stateUtils';
-import { filters, updateSubMeasures, getMeasure, getColorRange, updateLegend } from "./updateFilters"
-import { DamaContext } from "../../../store"
-import { CMSContext } from '~/modules/dms/src'
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  createContext,
+  useRef,
+} from "react";
+import get from "lodash/get";
+import set from "lodash/set";
+import isEqual from "lodash/isEqual";
+import { format as d3format } from "d3-format";
+import { extractState, createFalcorFilterOptions } from "../../stateUtils";
+import {
+  filters,
+  updateSubMeasures,
+  getMeasure,
+  getColorRange,
+  updateLegend,
+} from "./updateFilters";
+import { DamaContext } from "../../../store";
+import { CMSContext } from "~/modules/dms/src";
 import { usePrevious } from "../../components/LayerManager/utils";
-import { choroplethPaint } from '../../components/LayerEditor/datamaps'
-import { npmrdsPaint } from "./paint"
+import { choroplethPaint } from "../../components/LayerEditor/datamaps";
+import { npmrdsPaint } from "./paint";
 
 import {
   REGION_CODE_TO_NAME,
@@ -17,15 +29,15 @@ import {
   MPO_LAYER_KEY,
   COUNTY_LAYER_KEY,
   REGION_LAYER_KEY,
-  BLANK_OPTION
+  BLANK_OPTION,
 } from "./constants";
 
 import {
   setGeometryBorderFilter,
   resetGeometryBorderFilter,
   setInitialGeomStyle,
-  onlyUnique
-} from './utils';
+  onlyUnique,
+} from "./utils";
 
 const ExternalPanel = ({ state, setState, pathBase = "" }) => {
   const dctx = React.useContext(DamaContext);
@@ -540,21 +552,29 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
           `${symbologyLayerPath}['${pm3LayerId}']['category-show-other']`,
           "#fff"
         );
-        set(
-          draft,
-          `${symbologyLayerPath}['${mpoLayerId}']['legend-orientation']`,
-          "none"
-        );
-        set(
-          draft,
-          `${symbologyLayerPath}['${countyLayerId}']['legend-orientation']`,
-          "none"
-        );
+        if (mpoLayerId) {
+          set(
+            draft,
+            `${symbologyLayerPath}['${mpoLayerId}']['legend-orientation']`,
+            "none"
+          );
+        }
+        if (countyLayerId) {
+          set(
+            draft,
+            `${symbologyLayerPath}['${countyLayerId}']['legend-orientation']`,
+            "none"
+          );
+        }
+
+        //TODO add `no legend` for region, UA layers
       });
     };
 
-    getColors();
-  }, [newDataColumn, falcorDataFilter, viewId]);
+    if (pm3LayerId && viewId) {
+      getColors();
+    }
+  }, [newDataColumn, falcorDataFilter, viewId, pm3LayerId]);
 
   return controls;
 };

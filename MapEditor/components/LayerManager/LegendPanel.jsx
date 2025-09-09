@@ -587,7 +587,6 @@ function LegendPanel (props) {
             if(isControlledByPlugin) {
               const controllingPlugin = Object.keys(state.symbology.pluginData).find((pluginName) => {
                 const pluginData = state.symbology.pluginData[pluginName];
-                console.log({pluginData})
                 return Object.values(pluginData?.['active-layers']).includes(layer.id);
               });
 
