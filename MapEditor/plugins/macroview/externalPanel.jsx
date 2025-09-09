@@ -35,7 +35,6 @@ import {
 import {
   setGeometryBorderFilter,
   resetGeometryBorderFilter,
-  setInitialGeomStyle,
   onlyUnique,
 } from "./utils";
 

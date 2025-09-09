@@ -12,6 +12,9 @@ import {
   REGION_LAYER_KEY,
   BLANK_OPTION
 } from "./constants";
+import {
+  setInitialGeomStyle,
+} from "./utils";
 
 const InternalPanel = ({ state, setState }) => {
   const { falcor, falcorCache, pgEnv, baseUrl } = React.useContext(DamaContext);
