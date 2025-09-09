@@ -91,6 +91,14 @@ const InternalPanel = ({ state, setState }) => {
     }
   }, [pm3LayerId]);
 
+  useEffect(() => {
+    if(pm3LayerId) { 
+      setState(draft => {
+        set(draft, `${symbologyLayerPath}['${pm3LayerId}'].layers[0].paint['line-width']`, 0);
+      })
+    }
+  },[pm3LayerId])
+
   //Set initial styles for geometry borders
   useEffect(() => {
     if (mpoLayerId) {
