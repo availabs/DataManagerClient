@@ -407,7 +407,7 @@ export function ViewControls ({view}) {
                             setDeleteModalState({...deleteModalState, open: true});
                         }}
                     >
-                      <i className="fad fa-trash"/>Delete Download
+                      <i className="fad fa-trash"/> Delete Download
                     </button>}
                     <button
                         className={`${linkClass} bg-green-300 hover:bg-green-600 mb-1`}
