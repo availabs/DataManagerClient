@@ -25,6 +25,16 @@ export const HEIGHT_OPTIONS = {
     "1/3": "300px",
     "1/4": "150px",
 };
+
+export const PANEL_POSITION_OPTIONS = {
+    'top-left':"top-0 left-0",
+    'top':"left-[40%] top-0",
+    'top-right':"top-0 right-0",
+    'bottom-left':"bottom-0 left-0",
+    'bottom':"left-[40%] bottom-0",
+    'bottom-right':"bottom-0 right-0"
+}
+
 const isJson = (str)  => {
     try {
         JSON.parse(str);
@@ -57,7 +67,9 @@ const Edit = ({value, onChange, size}) => {
         blankBaseMap: cachedData.blankBaseMap || false,
         height: cachedData.height || "full",
         zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
-        zoomToFitBounds: cachedData.zoomToFitBounds
+        zoomToFitBounds: cachedData.zoomToFitBounds,
+        legendPosition: cachedData.legendPosition || Object.keys(PANEL_POSITION_OPTIONS)[2], //defaults to `top-right`
+        pluginControlPosition: cachedData.pluginControlPosition || Object.keys(PANEL_POSITION_OPTIONS)[0] //defaults to `top-left`
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -285,6 +297,8 @@ const Edit = ({value, onChange, size}) => {
       }, [interactiveFilterIndicies])
 
     const heightStyle = HEIGHT_OPTIONS[state.height];
+    const legendPositionStyle = PANEL_POSITION_OPTIONS[state.legendPosition];
+    const pluginPositionStyle = PANEL_POSITION_OPTIONS[state.pluginControlPosition];
     const activeFilter = activeLayer?.selectedInteractiveFilterIndex;
     const { center, zoom } = state.initialBounds ? state.initialBounds : {
         center: [-75.17, 42.85],
@@ -324,9 +338,10 @@ const Edit = ({value, onChange, size}) => {
                   leftSidebar={ false }
                   rightSidebar={ false }
                 />
-                <div className={'absolute inset-0 flex pointer-events-none'}>
-                    <div className='flex-1'/>
-                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel /></div>
+                <div className={`absolute ${legendPositionStyle} flex pointer-events-none`}>
+                    <div className={isHorizontalLegendActive ? 'max-w-[350px]' : 'max-w-[300px]'}><LegendPanel position={state.legendPosition}/></div>
+                </div>
+                <div className={`absolute ${pluginPositionStyle} flex pointer-events-none`}>
                     {arePluginsLoaded && <ExternalPluginPanel />}
                 </div>
             </div>

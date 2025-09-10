@@ -3,10 +3,12 @@ import {ArrowDown} from "../tmp-cache-files/icons.jsx"
 import {ToggleControl} from "../tmp-cache-files/controls.jsx";
 import {MapContext} from "../MapComponent.jsx";
 import {useHandleClickOutside} from "../tmp-cache-files/utils.jsx";
+import { HEIGHT_OPTIONS, PANEL_POSITION_OPTIONS } from '../MapComponent.jsx'
 
 export default function MoreControls() {
     const {state, setState} = useContext(MapContext);
-
+    const arePluginsLoaded = Object.values((state.symbologies || {})).some(symb => Object.keys((symb?.symbology?.plugins || {})).length > 0);
+    console.log("morecontrol state, are plugs loaded::", state, arePluginsLoaded)
     const menuRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
     const menuBtnId = 'menu-btn-more-controls'
@@ -16,6 +18,8 @@ export default function MoreControls() {
     * Disable zoom/pan, draft.zoomPan
     * Set Initial Viewport, draft.setInitialBounds, draft.initialBounds
     * Use blank basemap draft.blankBaseMap
+    * Legend position
+    * Plugin position (if applicable)
     * */
     return (
         <div className="relative inline-block text-left">
@@ -33,7 +37,7 @@ export default function MoreControls() {
             >
                 <div key={'more'} className="py-1 max-h-[500px] overflow-auto scrollbar-sm">
                     <div className={`inline-flex w-full justify-between items-center rounded-md px-1.5 py-1 text-sm font-regular 
-            text-gray-900 bg-white hover:bg-gray-50 cursor-pointer`}>
+                            text-gray-900 bg-white hover:bg-gray-50 cursor-pointer`}>
                         <label>Height</label>
                         <select className={'bg-transparent p-1'}
                                 value={state.height}
@@ -42,11 +46,38 @@ export default function MoreControls() {
                                 })}
                         >
                             {
-                                ['full', '1', '2/3', '1/3', '1/4'].map(option =>  <option key={option} value={option}>{option}</option>)
+                                Object.keys(HEIGHT_OPTIONS).map(option =>  <option key={option} value={option}>{option}</option>)
                             }
                         </select>
                     </div>
-
+                    <div className={`inline-flex w-full justify-between items-center rounded-md px-1.5 py-1 text-sm font-regular 
+                            text-gray-900 bg-white hover:bg-gray-50 cursor-pointer`}>
+                        <label>Legend Position</label>
+                        <select className={'bg-transparent p-1'}
+                                value={state.legendPosition}
+                                onChange={e => setState((draft) => {
+                                    draft.legendPosition = e.target.value;
+                                })}
+                        >
+                            {
+                                Object.keys(PANEL_POSITION_OPTIONS).map(option =>  <option key={option} value={option}>{option}</option>)
+                            }
+                        </select>
+                    </div>
+                    {arePluginsLoaded && (<div className={`inline-flex w-full justify-between items-center rounded-md px-1.5 py-1 text-sm font-regular 
+                            text-gray-900 bg-white hover:bg-gray-50 cursor-pointer`}>
+                        <label>Plugin Control Position</label>
+                        <select className={'bg-transparent p-1'}
+                                value={state.pluginControlPosition}
+                                onChange={e => setState((draft) => {
+                                    draft.pluginControlPosition = e.target.value;
+                                })}
+                        >
+                            {
+                                Object.keys(PANEL_POSITION_OPTIONS).map(option =>  <option key={option} value={option}>{option}</option>)
+                            }
+                        </select>
+                    </div>)}
                     <ToggleControl title={'Zoom/pan'} value={state?.zoomPan}
                                    setValue={value => setState((draft) => {
                                        draft.zoomPan = value;

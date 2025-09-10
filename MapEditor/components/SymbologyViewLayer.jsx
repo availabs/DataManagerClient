@@ -291,7 +291,7 @@ const ViewLayerRender = (props) => {
   useEffect(() => {
     if (maplibreMap && allLayerProps && allLayerProps?.zoomToFilterBounds?.length > 0 &&  allLayerProps?.zoomToFilterBounds[0] !== null){
       maplibreMap.fitBounds(allLayerProps.zoomToFilterBounds, {
-        padding: { top: 50, bottom: 50, left: 50, right: 50 },
+        padding: { top: 150, bottom: 150, left: 150, right: 150 },
         duration: 400
       });
     }

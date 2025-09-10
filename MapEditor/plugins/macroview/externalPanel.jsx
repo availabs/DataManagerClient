@@ -571,7 +571,6 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
             "none"
           );
         }
-
         //TODO add `no legend` for region, UA layers
       });
     };
