@@ -50,7 +50,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
   //const {falcor, falcorCache, pgEnv, baseUrl} = React.useContext(DamaContext);
   //performence measure (speed, lottr, tttr, etc.) (External Panel) (Dev hard-code)
   //"second" selection (percentile, amp/pmp) (External Panel) (dependent on first selection, plus dev hard code)
-  const pluginDataPath = cctx ? `${pathBase}` : `${pathBase}`;
+  const pluginDataPath =`${pathBase}`;
 
   const pluginData = useMemo(() => {
     return get(state, pluginDataPath, {});

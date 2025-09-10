@@ -376,6 +376,7 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "95th", value: "95_pct" },
         { name: "50th", value: "50_pct" }
       ]
+      peakSelector.value = AM_PEAK_KEY;
       percentiles.value = "";
       percentiles.active = true;
       break;

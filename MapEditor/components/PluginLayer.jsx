@@ -75,7 +75,7 @@ const PluginLayerRender = ({
   const RenderComp = plugin.comp || <></>;
 
   return (
-    <RenderComp />
+    <RenderComp state={state} setState={setState}/>
   );
 }
 
