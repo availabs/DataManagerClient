@@ -64,12 +64,13 @@ const Edit = ({value, onChange, size}) => {
         setInitialBounds: cachedData.setInitialBounds || false,
         initialBounds: cachedData.initialBounds || null,
         hideControls: cachedData.hideControls || false,
-        blankBaseMap: cachedData.blankBaseMap || false,
+        //blankBaseMap: cachedData.blankBaseMap || false,
         height: cachedData.height || "full",
         zoomPan: typeof cachedData.zoomPan === 'boolean' ? cachedData.zoomPan : true,
         zoomToFitBounds: cachedData.zoomToFitBounds,
         legendPosition: cachedData.legendPosition || Object.keys(PANEL_POSITION_OPTIONS)[2], //defaults to `top-right`
-        pluginControlPosition: cachedData.pluginControlPosition || Object.keys(PANEL_POSITION_OPTIONS)[0] //defaults to `top-left`
+        pluginControlPosition: cachedData.pluginControlPosition || Object.keys(PANEL_POSITION_OPTIONS)[0], //defaults to `top-left`
+        basemapStyle: cachedData.basemapStyle || "Default"
     })
     const [mapLayers, setMapLayers] = useImmer([])
 
@@ -309,6 +310,16 @@ const Edit = ({value, onChange, size}) => {
         onChange && onChange(state)
     },[state])
 
+    defaultStyles.sort((a,b) => {
+        if(a.name === state.basemapStyle) {
+            return -1;
+        } else if (b.name === state.basemapStyle) {
+            return 1
+        } else {
+            return 0
+        }
+    })
+
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
             {
@@ -334,6 +345,11 @@ const Edit = ({value, onChange, size}) => {
                       dragPan: state.zoomPan,
                       scrollZoom: state.zoomPan,
                       dragRotate: state.zoomPan
+                  }}
+                  onMapStyleSelect={(selectedStyle) => {
+                      setState(draft => {
+                        draft.basemapStyle = selectedStyle.name;
+                      })
                   }}
                   leftSidebar={ false }
                   rightSidebar={ false }

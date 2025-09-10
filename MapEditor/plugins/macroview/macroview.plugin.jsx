@@ -114,7 +114,7 @@ export const MacroviewPlugin = {
           </div>}
           {measureEquation.length > 0 && (
             <div className="m-2  pb-2 px-1">
-              <div className="font-light">Equation</div>
+              <div className="font-semibold">Equation</div>
               <div>{measureEquation}</div>
             </div>
           )}

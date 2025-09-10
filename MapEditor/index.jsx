@@ -782,6 +782,9 @@ const MapEditor = () => {
             protocols: [PMTilesProtocol],
             
             styles: [
+              { name: "Dark",
+                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
+              },
               {
                 name: "Default",
                 style: "https://api.maptiler.com/maps/dataviz/style.json?key=mU28JQ6HchrQdneiq6k9"
@@ -795,9 +798,6 @@ const MapEditor = () => {
              
               { name: "Light",
                 style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
-              },
-              { name: "Dark",
-                style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
               },
               // {
               //   name: 'Sattelite 3d ',
