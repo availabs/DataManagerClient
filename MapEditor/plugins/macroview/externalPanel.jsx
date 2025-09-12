@@ -439,7 +439,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
         {
           type: "select",
           params: {
-            options: [BLANK_OPTION, ...views],
+            options: [...views],
             default: views[0],
           },
           path: `['viewId']`,

@@ -88,10 +88,17 @@ export const MacroviewPlugin = {
         measureEquation = equationFunction({period: curPeriod});
       } else if (measure.includes('phed') || measure.includes('ted')) {
         const { definition: definitionFunction, equation: equationFunction } = measure_info['phed'];
-        //equation needs freeflow and trafficType
-        const curFreeflow = measureFilters['freeflow'].value ? 'freeflow' : 'speed limit';
+        //definition needs freeflow and trafficType
+        const curFreeflow = measureFilters['freeflow'].value ? 'the freeflow speed' : 'the posted speed limit';
         const curTrafficType = measureFilters['trafficType'].value;
         measureDefintion = definitionFunction({freeflow: curFreeflow, trafficType: curTrafficType});
+        measureEquation = equationFunction();
+      } else if (measure.includes('speed')) {
+        const { definition: definitionFunction, equation: equationFunction } = measure_info['speed'];
+        //definition needs period
+        // const curPeriod = measureFilters['peakSelector'].value;
+        const curPercentile = measureFilters['percentiles']?.value;
+        measureDefintion = definitionFunction({percentile: curPercentile});
         measureEquation = equationFunction();
       }
 
@@ -109,13 +116,13 @@ export const MacroviewPlugin = {
           }}
         >
           {measureDefintion.length > 0 && <div className="m-2  pb-2 px-1">
-            <div className="font-semibold">Measure Definition</div>
-            <div>{measureDefintion}</div>
+            <div className="font-semibold text-lg">Measure Definition</div>
+            <div className="font-semibold text-sm">{measureDefintion}</div>
           </div>}
           {measureEquation.length > 0 && (
             <div className="m-2  pb-2 px-1">
-              <div className="font-semibold">Equation</div>
-              <div>{measureEquation}</div>
+              <div className="font-semibold text-lg">Equation</div>
+              <div className="font-semibold text-sm">{measureEquation}</div>
             </div>
           )}
         </div>

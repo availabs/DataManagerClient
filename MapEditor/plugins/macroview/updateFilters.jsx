@@ -28,17 +28,17 @@ export const getColorRange = (size, name) =>
   get(ColorRanges, [size], [])
     .reduce((a, c) => c.name === name ? c.colors : a, []).slice();
 
-const AM_PEAK_KEY = 'amp';
-const PM_PEAK_KEY = 'pmp';
-const WEEKEND_KEY = 'we';
-const MIDDAY_KEY = 'midd';
-const OVERNIGHT_KEY = 'ovn';
-const NO_PEAK_KEY = 'all';
+export const AM_PEAK_KEY = 'amp';
+export const PM_PEAK_KEY = 'pmp';
+export const WEEKEND_KEY = 'we';
+export const MIDDAY_KEY = 'midd';
+export const OVERNIGHT_KEY = 'ovn';
+export const NO_PEAK_KEY = 'all';
 
 const PHRS = 'all_xdelay_phrs';
 const VHRS = 'all_xdelay_vhrs';
 const HRS = 'xdelay_hrs';
-const SPEED_PERCENTILE_DOMAIN = [
+export const SPEED_PERCENTILE_DOMAIN = [
   { name: "", value: "" },
   { name: "5th Percentile", value: "pctl_5" },
   { name: "20th Percentile", value: "pctl_20" },
@@ -351,13 +351,13 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "Weekend", value: WEEKEND_KEY }
       ]
 
-      percentiles.domain = [
-        { name : "", value: ""},
-        { name: "80th", value: "80_pct" },
-        { name: "50th", value: "50_pct" }
-      ]
-      percentiles.active = true;
-      percentiles.value = "";
+      // percentiles.domain = [
+      //   { name : "", value: ""},
+      //   { name: "80th", value: "80_pct" },
+      //   { name: "50th", value: "50_pct" }
+      // ]
+      // percentiles.active = true;
+      // percentiles.value = "";
       peakSelector.value = AM_PEAK_KEY;
       break;
     case "tttr":
@@ -371,14 +371,14 @@ const updateSubMeasures = (filters, falcor) => {
         { name: "Weekend", value: WEEKEND_KEY },
         { name: "Overnight", value: OVERNIGHT_KEY }
       ]
-      percentiles.domain = [
-        { name : "", value: ""},
-        { name: "95th", value: "95_pct" },
-        { name: "50th", value: "50_pct" }
-      ]
+      // percentiles.domain = [
+      //   { name : "", value: ""},
+      //   { name: "95th", value: "95_pct" },
+      //   { name: "50th", value: "50_pct" }
+      // ]
+      // percentiles.value = "";
+      // percentiles.active = true;
       peakSelector.value = AM_PEAK_KEY;
-      percentiles.value = "";
-      percentiles.active = true;
       break;
     case "phed":
       peakSelector.active = true;
@@ -425,15 +425,15 @@ const updateSubMeasures = (filters, falcor) => {
       peakSelector.value = NO_PEAK_KEY;
     break;
     case "speed":
-      peakSelector.active = true;
-      peakSelector.domain = [
-        { name: "No Peak", value: "total" },
-        { name: "AM Peak", value: AM_PEAK_KEY },
-        { name: "Off Peak", value: "off" },
-        { name: "PM Peak", value: PM_PEAK_KEY },
-        { name: "Overnight", value: OVERNIGHT_KEY },
-        { name: "Weekend", value: WEEKEND_KEY }
-      ]
+      // peakSelector.active = true;
+      // peakSelector.domain = [
+      //   { name: "No Peak", value: "total" },
+      //   { name: "AM Peak", value: AM_PEAK_KEY },
+      //   { name: "Off Peak", value: "off" },
+      //   { name: "PM Peak", value: PM_PEAK_KEY },
+      //   { name: "Overnight", value: OVERNIGHT_KEY },
+      //   { name: "Weekend", value: WEEKEND_KEY }
+      // ]
       percentiles.active = true;
       percentiles.value = "pctl_5"
       percentiles.domain = SPEED_PERCENTILE_DOMAIN;
@@ -530,7 +530,7 @@ const getMeasure = (filters) => {
         measure.value,
         (peakSelector.value !== NO_PEAK_KEY) && peakSelector.value,
         measure.value,
-        percentiles.value
+        //percentiles.value
       ].filter(Boolean).join("_")
       break;
     case "tttr":
@@ -538,7 +538,7 @@ const getMeasure = (filters) => {
         measure.value,
         (peakSelector.value !== NO_PEAK_KEY) && peakSelector.value,
         measure.value,
-        percentiles.value
+        //percentiles.value
       ].filter(Boolean).join("_")
       break;
     case "speed":

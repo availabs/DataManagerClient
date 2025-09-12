@@ -37,7 +37,7 @@ function ExternalPluginPanel() {
 
   return (
     <div className="p-4">
-      <div className="bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto min-h-[400px] max-h-[calc(100vh_-_111px)] scroll-xs">
+      <div className="bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto max-h-[calc(100vh_-_111px)] scroll-xs">
         <Tab.Group>
           <Tab.List>
             {tabs.map(tabName => (
