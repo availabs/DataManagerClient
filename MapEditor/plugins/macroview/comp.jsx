@@ -86,7 +86,10 @@ const Comp = ({ state, setState }) => {
                   columns: modalState.columns,
                   user_id: user.id,
                   email: user.email,
-                  geographyFilter: geography,
+                  downloadProps:{
+                    geographyFilter: geography,
+                    measure,
+                  },
                   fileTypes:['CSV']
               };
 
