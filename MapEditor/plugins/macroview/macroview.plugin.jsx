@@ -5,9 +5,7 @@ import { filters, updateSubMeasures, getMeasure } from "./updateFilters"
 import { InternalPanel } from "./internalPanel"
 import { ExternalPanel } from "./externalPanel"
 import { DataUpdate } from "./dataUpdate"
-
-import { measure_info } from './measures'
-
+import { Comp } from "./comp";
 
 const MAP_CLICK = () => console.log("map was clicked");
 export const MacroviewPlugin = {
@@ -54,80 +52,7 @@ export const MacroviewPlugin = {
     dataUpdate: DataUpdate,
     internalPanel: InternalPanel,
     externalPanel: ExternalPanel,
-    comp: ({state, setState}) => {
-      //return <></>
-      let layerPluginDataPath = "";
-      if (!state.symbologies) {
-        layerPluginDataPath = `symbology.pluginData['macroview']`;
-      } else {
-        const symbName = Object.keys(state.symbologies)[0];
-        layerPluginDataPath = `symbologies['${symbName}'].symbology.pluginData['macroview']`;
-      }
-
-      const measureFilters  = get(
-            state,
-            `${layerPluginDataPath}['measureFilters']`,
-            filters
-          )
-
-      const measure = getMeasure(measureFilters);
-
-      let measureDefintion = '',
-          measureEquation = '';
-      if(measure.includes('lottr')) {
-        //definition needs period
-        const { definition: definitionFunction, equation: equationFunction } = measure_info['lottr'];
-        const curPeriod = measureFilters['peakSelector'].value;
-        measureDefintion = definitionFunction({period: curPeriod});
-        measureEquation = equationFunction();
-      } else if (measure.includes('tttr')) {
-        const { definition: definitionFunction, equation: equationFunction } = measure_info['tttr'];
-        //equation needs period
-        const curPeriod = measureFilters['peakSelector'].value;
-        measureDefintion = definitionFunction();
-        measureEquation = equationFunction({period: curPeriod});
-      } else if (measure.includes('phed') || measure.includes('ted')) {
-        const { definition: definitionFunction, equation: equationFunction } = measure_info['phed'];
-        //definition needs freeflow and trafficType
-        const curFreeflow = measureFilters['freeflow'].value ? 'the freeflow speed' : 'the posted speed limit';
-        const curTrafficType = measureFilters['trafficType'].value;
-        measureDefintion = definitionFunction({freeflow: curFreeflow, trafficType: curTrafficType});
-        measureEquation = equationFunction();
-      } else if (measure.includes('speed')) {
-        const { definition: definitionFunction, equation: equationFunction } = measure_info['speed'];
-        //definition needs period
-        // const curPeriod = measureFilters['peakSelector'].value;
-        const curPercentile = measureFilters['percentiles']?.value;
-        measureDefintion = definitionFunction({percentile: curPercentile});
-        measureEquation = equationFunction();
-      }
-
-      const displayInfo = measureDefintion.length > 0 || measureEquation.length;
-      return displayInfo && (
-        <div
-          className="flex flex-col pointer-events-auto drop-shadow-lg p-4 bg-white/75"
-          style={{
-            position: "absolute",
-            top: "94px",
-            right: "-168px",
-            color: "black",
-            width: "318px",
-            maxHeight: "325px",
-          }}
-        >
-          {measureDefintion.length > 0 && <div className="m-2  pb-2 px-1">
-            <div className="font-semibold text-lg">Measure Definition</div>
-            <div className="font-semibold text-sm">{measureDefintion}</div>
-          </div>}
-          {measureEquation.length > 0 && (
-            <div className="m-2  pb-2 px-1">
-              <div className="font-semibold text-lg">Equation</div>
-              <div className="font-semibold text-sm">{measureEquation}</div>
-            </div>
-          )}
-        </div>
-      );
-    },
+    comp: Comp,
     cleanup: (map, state, setState) => {
       map.off("click", MAP_CLICK);
     },
