@@ -167,7 +167,7 @@ const Comp = ({ state, setState }) => {
                       },
                   });
 
-              const createFinalEvent = await res.json();
+              await res.json();
               setModalState(INITIAL_MODAL_STATE);
           } catch (err) {
               console.log(err)
@@ -191,6 +191,18 @@ const Comp = ({ state, setState }) => {
     ]);
   }, [sourceId]);
 
+  useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "views",
+      "byId",
+      viewId,
+      "attributes",
+      ["metadata", "version"],
+    ]);
+  }, [viewId]);
+
   const sourceDataColumns = useMemo(() => {
       let sourceColumns = get(falcorCache, [
           "dama",
@@ -207,19 +219,6 @@ const Comp = ({ state, setState }) => {
       return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
       // return []
   }, [falcorCache, viewId]);
-
-  useEffect(() => {
-    falcor.get([
-      "dama",
-      pgEnv,
-      "views",
-      "byId",
-      viewId,
-      "attributes",
-      ["metadata", "version"],
-    ]);
-  }, [viewId]);
-
   /**
    * END MODAL STUFF
    */
@@ -327,7 +326,7 @@ const Comp = ({ state, setState }) => {
           setOpen={setModalOpen}
           themeOptions={{ overlay: 'none', size: "xlarge" }}
         >
-          <div className="flex items-center m-1 pt-[600px]">
+          <div className="flex items-center m-1 pt-[600px] w-[110%]">
             <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
               <i
                 className="fad fa-layer-group text-blue-600"
@@ -392,7 +391,7 @@ const DownloadModalCheckboxGroup = ({
   const hasCalcColumn =
     options.some((opt) => opt.includes(" ")) && title === "Columns";
   return (
-    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
+    <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
       <div className="flex w-full justify-between items-center w-1/2 text-md leading-6 text-gray-900">
         <div className="text-center h-fit">{title}:</div>
         <div>
@@ -445,7 +444,7 @@ const DownloadModalCheckbox = ({
   disabled = false,
 }) => {
   return (
-    <div className="mt-2 flex items-center">
+    <div className="mt-2 flex items-center text-sm">
       <input
         id={inputName}
         disabled={disabled}
@@ -455,7 +454,7 @@ const DownloadModalCheckbox = ({
         checked={checked}
         onChange={() => onChange(inputName)}
       />
-      <label htmlFor={inputName} className="ml-2 text-sm text-gray-900">
+      <label htmlFor={inputName} className="ml-2 text-xs text-gray-900">
         {inputName}
       </label>
     </div>
