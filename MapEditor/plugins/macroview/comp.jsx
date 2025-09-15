@@ -13,17 +13,35 @@ const INITIAL_MODAL_STATE = {
     open: false,
     loading: false,
     columns: [],
+    uniqueFileNameBase: ''
 }
 const INITIAL_DELETE_MODAL_STATE = {
   open: false,
   loading: false,
 }
 
+//creates a unique identifier regardless of how many columns the user selects
+async function hashString(inputString) {
+  // 1. Encode the string to a Uint8Array
+  const encoder = new TextEncoder();
+  const data = encoder.encode(inputString);
+
+  // 2. Hash the data with SHA-256
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+
+  // 3. Convert the ArrayBuffer to a 64-character hexadecimal string
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return hashHex;
+}
+
 const Comp = ({ state, setState }) => {
   /**
    * START MODAL STUFF
    */
-  console.log({state})
   const dctx = React.useContext(DamaContext);
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
@@ -50,14 +68,14 @@ const Comp = ({ state, setState }) => {
 
   const {viewId, sourceId, geography } = useMemo(() => {
     const pm3LayerId = get(state, `${pluginDataPath}['active-layers']['${PM3_LAYER_KEY}']`, null);
-    console.log({pm3LayerId})
+
     return {
       viewId: get(state, `${pluginDataPath}['viewId']`, null),
       sourceId: get(state, `${symbologyLayerPath}['${pm3LayerId}']['source_id']`, null),
       geography: get(state, `${pluginDataPath}['geography']`, null),
     }
   }, [state])
-  console.log({viewId, sourceId, geography})
+
 
   const setColumns = (columnName) => {
       let newColumns;
@@ -76,8 +94,54 @@ const Comp = ({ state, setState }) => {
   }
   const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
 
+  const view = useMemo(() => {
+    return get(
+      falcorCache,
+      [
+        "dama",
+        pgEnv,
+        "views",
+        "byId",
+        viewId,
+        "attributes",
+      ],
+      []
+    );
+  }, [falcorCache, viewId]);
+  const viewDownloads = useMemo(() => {
+    return get(view, ['metadata', 'value', 'download'])
+  }, [view]);
+
+  const fileNameBase = useMemo(() => {
+    let nameBase = "";
+    if(modalState.columns.length > 0) {
+      const joinedCols = modalState.columns.sort().join("_");
+      nameBase = `${view?.version ?? viewId}_${joinedCols}`;
+    }
+
+    if (geography) {
+      geography.forEach((geoFilt) => {
+        nameBase += `_${geoFilt.type}_${geoFilt.value}`;
+      });
+    }
+    return nameBase;
+  }, [modalState.columns, geography, view, viewId]) 
+  useEffect(() => {
+    const getUniqueFileNameBase = async () => {
+      const uniqueFileNameBase = await hashString(fileNameBase);
+      setModalState(({...modalState, uniqueFileNameBase}))
+    }
+
+    getUniqueFileNameBase()
+  }, [fileNameBase])
+
+  const downloadAlreadyExists = useMemo(() => {
+    return Object.keys(viewDownloads || {}).includes(modalState.uniqueFileNameBase);
+  }, [viewDownloads, modalState.uniqueFileNameBase])
+
   const createDownload = () => {
       const runCreate = async () => {
+      if(!downloadAlreadyExists) {
           try {
             //IF WE HAVE GEOMETRY SELECTED, PASS IT HERE
               const createData = {
@@ -109,7 +173,9 @@ const Comp = ({ state, setState }) => {
               console.log(err)
               setModalState({...modalState, loading: false, open: true});
           }
+        }
       }
+
       runCreate();
   }
 
@@ -141,6 +207,18 @@ const Comp = ({ state, setState }) => {
       return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
       // return []
   }, [falcorCache, viewId]);
+
+  useEffect(() => {
+    falcor.get([
+      "dama",
+      pgEnv,
+      "views",
+      "byId",
+      viewId,
+      "attributes",
+      ["metadata", "version"],
+    ]);
+  }, [viewId]);
 
   /**
    * END MODAL STUFF
@@ -204,8 +282,7 @@ const Comp = ({ state, setState }) => {
 
   const displayInfo = measureDefintion.length > 0 || measureEquation.length;
 
-  console.log({modalState})
-    console.log({sourceDataColumns})
+
   return (
     displayInfo && (
       <div
@@ -238,7 +315,6 @@ const Comp = ({ state, setState }) => {
             themeOptions={{ color: "transparent" }}
             //className='bg-white hover:bg-cool-gray-700 font-sans text-sm text-npmrds-100 font-medium'
             onClick={(e) => {
-              console.log("data download modal");
               setModalState({...modalState, open: true, columns:['tmc', measure]})
             }}
             style={{ width: "100%", marginTop: "10px" }}
@@ -249,9 +325,9 @@ const Comp = ({ state, setState }) => {
         <Modal
           open={modalState.open}
           setOpen={setModalOpen}
-          themeOptions={{ overlay: 'none', size: "large" }}
+          themeOptions={{ overlay: 'none', size: "xlarge" }}
         >
-          <div className="flex items-center m-1">
+          <div className="flex items-center m-1 pt-[600px]">
             <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
               <i
                 className="fad fa-layer-group text-blue-600"
@@ -264,7 +340,7 @@ const Comp = ({ state, setState }) => {
               </div>
             </div>
           </div>
-          <div className={"pl-10 grid grid-cols-3"}>
+          <div>
             <DownloadModalCheckboxGroup
               title={"Columns"}
               options={sourceDataColumns}
@@ -281,9 +357,13 @@ const Comp = ({ state, setState }) => {
                 modalState.columns.some((colName) => colName.includes(" "))
               }
               className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto m-1"
-              onClick={createDownload}
+              onClick={downloadAlreadyExists ?() => {} : createDownload}
             >
-              {modalState.loading
+              {downloadAlreadyExists ? <a
+                      href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
+                  >
+                      Download data
+                  </a> : modalState.loading
                 ? "Sending request..."
                 : "Start download creation"}
             </button>
