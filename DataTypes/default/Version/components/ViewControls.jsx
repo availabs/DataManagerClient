@@ -8,7 +8,7 @@ import { Input, Button, Modal } from "~/modules/avl-components/src"
 import { DAMA_HOST } from '~/config'
 import { SOURCE_AUTH_CONFIG } from "~/pages/DataManager/Source/attributes";
 
-const OUTPUT_FILE_TYPES = [
+export const OUTPUT_FILE_TYPES = [
     "CSV",
     "ESRI Shapefile",
     "GeoJSON",

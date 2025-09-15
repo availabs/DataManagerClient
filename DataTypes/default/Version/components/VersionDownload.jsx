@@ -3,9 +3,10 @@ import {ChevronDownIcon} from "@heroicons/react/20/solid/index.js";
 import React, {Fragment} from "react";
 import {classNames} from "../utils.js";
 import { DAMA_HOST } from '~/config'
+import { OUTPUT_FILE_TYPES } from './ViewControls.jsx';
 
 export function VersionDownload ({view}) {
-    if(!view?.metadata?.download) {
+    if(!view?.metadata?.download || !Object.keys(view.metadata.download).some(downloadKey => OUTPUT_FILE_TYPES.includes(downloadKey))) {
         return 'Download Not Available'
     }
 
@@ -33,7 +34,7 @@ export function VersionDownload ({view}) {
                 >
                     <Menu.Items  anchor={{ to: 'bottom start', gap: '4px' }} className="absolute z-20 right-0 -mr-1 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div className="py-1">
-                            {Object.keys(view.metadata.download).map((item,i) => (
+                            {Object.keys(view.metadata.download).filter(downloadKey => OUTPUT_FILE_TYPES.includes(downloadKey)).map((item,i) => (
                                 <Menu.Item key={i}>
                                     {({ active }) => (
                                         <a
