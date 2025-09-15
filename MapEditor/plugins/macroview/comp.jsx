@@ -333,10 +333,17 @@ const Comp = ({ state, setState }) => {
                 aria-hidden="true"
               />
             </div>
-            <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+            <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
               <div className="text-lg align-center font-semibold leading-6 text-gray-900">
                 Create Data Download
               </div>
+              <div>
+                <b>Year:</b> {view?.version ?? viewId}
+              </div>
+              {(geography && geography.length) ? 
+                <div className="capitalize">
+                  <b>Geography</b>: {geography.map(geo => geo.name).join(", ")}
+                </div> : <></>}
             </div>
           </div>
           <div>
