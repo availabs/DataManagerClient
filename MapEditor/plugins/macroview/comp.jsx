@@ -19,7 +19,18 @@ const INITIAL_DELETE_MODAL_STATE = {
   open: false,
   loading: false,
 }
-
+const metaColumns = [
+  "ogc_fid",
+  "tmc",
+  "urban_code",
+  "region_code",
+  "county",
+  "ua_name",
+  "mpo_code",
+  "mpo_name",
+  "wkb_geometry",
+  "year",
+];
 //creates a unique identifier regardless of how many columns the user selects
 async function hashString(inputString) {
   // 1. Encode the string to a Uint8Array
@@ -281,6 +292,22 @@ const Comp = ({ state, setState }) => {
 
   const displayInfo = measureDefintion.length > 0 || measureEquation.length;
 
+  const modalStyle = {
+    display: "none",
+    position: "fixed",
+    top: "0",
+    left: "-55vw",
+    width:"50vw",
+    backgroundColor: "white",
+    padding: "20px",
+    borderRadius: "5px",
+    boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
+    zIndex: 1001,
+  };
+
+  if(modalState.open) {
+    modalStyle.display="block"
+  }
 
   return (
     displayInfo && (
@@ -321,67 +348,72 @@ const Comp = ({ state, setState }) => {
             Open Data Downloader
           </Button>
         </div>
-        <Modal
-          open={modalState.open}
-          setOpen={setModalOpen}
-          themeOptions={{ overlay: 'none', size: "xlarge" }}
-        >
-          <div className="flex items-center m-1 pt-[600px] w-[110%]">
-            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-              <i
-                className="fad fa-layer-group text-blue-600"
-                aria-hidden="true"
+        <div style={modalStyle}>
+          <div>
+            <div className="flex items-center m-1">
+              <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                <i
+                  className="fad fa-layer-group text-blue-600"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
+                <div className="text-lg align-center font-semibold leading-6 text-gray-900">
+                  Create Data Download
+                </div>
+                <div>
+                  <b>Year:</b> {view?.version ?? viewId}
+                </div>
+                {(geography && geography.length) ? 
+                  <div className="capitalize">
+                    <b>Geography</b>: {geography.map(geo => geo.name).join(", ")}
+                  </div> : <></>}
+              </div>
+            </div>
+            <div className="flex">
+              <DownloadModalCheckboxGroup
+                options={sourceDataColumns}
+                modalState={modalState.columns}
+                onChange={setColumns}
               />
             </div>
-            <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
-              <div className="text-lg align-center font-semibold leading-6 text-gray-900">
-                Create Data Download
-              </div>
-              <div>
-                <b>Year:</b> {view?.version ?? viewId}
-              </div>
-              {(geography && geography.length) ? 
-                <div className="capitalize">
-                  <b>Geography</b>: {geography.map(geo => geo.name).join(", ")}
-                </div> : <></>}
+            <div className="flex mt-2 text-sm items-center flex-row-reverse">
+              One or more columns must be selected
+              {modalState.columns.length > 0 ? (
+                <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
+              ) : (
+                <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
+              )}
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                disabled={
+                  modalState.loading ||
+                  modalState.columns.length === 0 ||
+                  modalState.columns.some((colName) => colName.includes(" "))
+                }
+                className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                onClick={downloadAlreadyExists ?() => {} : createDownload}
+              >
+                {downloadAlreadyExists ? <a
+                        href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
+                    >
+                        Download data
+                    </a> : modalState.loading
+                  ? "Sending request..."
+                  : "Start download creation"}
+              </button>
+              <button
+                type="button"
+                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                onClick={() => setModalOpen(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-          <div>
-            <DownloadModalCheckboxGroup
-              title={"Columns"}
-              options={sourceDataColumns}
-              modalState={modalState.columns}
-              onChange={setColumns}
-            />
-          </div>
-          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              disabled={
-                modalState.loading ||
-                modalState.columns.length === 0 ||
-                modalState.columns.some((colName) => colName.includes(" "))
-              }
-              className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto m-1"
-              onClick={downloadAlreadyExists ?() => {} : createDownload}
-            >
-              {downloadAlreadyExists ? <a
-                      href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
-                  >
-                      Download data
-                  </a> : modalState.loading
-                ? "Sending request..."
-                : "Start download creation"}
-            </button>
-            <button
-              type="button"
-              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto m-1"
-              onClick={() => setModalOpen(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </Modal>
+        </div>
       </div>
     )
   );
@@ -397,10 +429,14 @@ const DownloadModalCheckboxGroup = ({
 }) => {
   const hasCalcColumn =
     options.some((opt) => opt.includes(" ")) && title === "Columns";
+
+  const metaOptions = options.filter(opt => metaColumns.includes(opt))
+  const performanceMeasureOptions = options.filter(opt => !metaColumns.includes(opt))
+
   return (
-    <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
-      <div className="flex w-full justify-between items-center w-1/2 text-md leading-6 text-gray-900">
-        <div className="text-center h-fit">{title}:</div>
+    <div className="flex  flex-col mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left max-h-[400px] overflow-y-auto">
+      <div className="flex text-md leading-6 text-gray-900">
+        <div className="text-center h-fit">{title ? title + ":" : ""}</div>
         <div>
           <Button
             themeOptions={{ size: "sm" }}
@@ -416,14 +452,6 @@ const DownloadModalCheckboxGroup = ({
           </Button>
         </div>
       </div>
-      <div className="flex mt-2 text-sm items-center">
-        One or more must be selected
-        {modalState.length > 0 ? (
-          <CheckCircleIcon className="ml-2 text-green-700 h-4 w-4" />
-        ) : (
-          <XCircleIcon className="ml-2 text-red-700 h-4 w-4" />
-        )}
-      </div>
       {hasCalcColumn ? (
         <div className="flex mt-1 text-xs items-center">
           (cannot include "Calculated Columns")
@@ -431,15 +459,39 @@ const DownloadModalCheckboxGroup = ({
       ) : (
         ""
       )}
-      {options?.map((option) => (
-        <DownloadModalCheckbox
-          key={`${option}_checkbox`}
-          inputName={option}
-          checked={modalState.includes(option)}
-          onChange={onChange}
-          disabled={hasCalcColumn && option.includes(" ")}
-        />
-      ))}
+      <div className="flex max-h-[350px] gap-4">
+        <div>
+          <div>Metadata</div>
+          <div className="flex flex-col flex-wrap max-h-[300px]">
+
+            {metaOptions?.map((option) => (
+              <DownloadModalCheckbox
+                key={`${option}_checkbox`}
+                inputName={option}
+                checked={modalState.includes(option)}
+                onChange={onChange}
+                disabled={hasCalcColumn && option.includes(" ")}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div>Performance Measures</div>
+          <div className="flex flex-col flex-wrap max-h-[300px]">
+
+            {performanceMeasureOptions?.map((option) => (
+              <DownloadModalCheckbox
+                key={`${option}_checkbox`}
+                inputName={option}
+                checked={modalState.includes(option)}
+                onChange={onChange}
+                disabled={hasCalcColumn && option.includes(" ")}
+              />
+            ))}
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 };
@@ -451,7 +503,7 @@ const DownloadModalCheckbox = ({
   disabled = false,
 }) => {
   return (
-    <div className="mt-2 flex items-center text-sm">
+    <div className="mt-2 flex items-center text-sm mr-8">
       <input
         id={inputName}
         disabled={disabled}
