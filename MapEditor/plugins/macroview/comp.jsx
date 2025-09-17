@@ -8,12 +8,14 @@ import { Button, Modal } from "~/modules/avl-components/src";
 import { DamaContext } from "../../../store";
 import { CMSContext } from "~/modules/dms/src";
 import { PM3_LAYER_KEY } from "./constants";
+import { MultiLevelSelect } from "~/modules/avl-map-2/src"
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 const INITIAL_MODAL_STATE = {
     open: false,
     loading: false,
     columns: [],
-    uniqueFileNameBase: ''
+    uniqueFileNameBase: '',
+    fileType:"CSV"
 }
 const INITIAL_DELETE_MODAL_STATE = {
   open: false,
@@ -165,7 +167,7 @@ const Comp = ({ state, setState }) => {
                     geographyFilter: geography,
                     measure,
                   },
-                  fileTypes:['CSV']
+                  fileTypes:[modalState.fileType]
               };
 
               setModalState({...modalState, loading: true});
@@ -298,11 +300,13 @@ const Comp = ({ state, setState }) => {
     top: "0",
     left: "-55vw",
     width:"50vw",
+    height:"60vh",
     backgroundColor: "white",
     padding: "20px",
     borderRadius: "5px",
     boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
     zIndex: 1001,
+    opacity:".9"
   };
 
   if(modalState.open) {
@@ -361,22 +365,113 @@ const Comp = ({ state, setState }) => {
                 <div className="text-lg align-center font-semibold leading-6 text-gray-900">
                   Create Data Download
                 </div>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex flex-col gap-4 w-[25%]">
                 <div>
-                  <b>Year:</b> {view?.version ?? viewId}
+                  <div className=" border-b-2 text-lg font-bold">Year:</div>
+                  {view?.version ?? viewId}
                 </div>
                 {(geography && geography.length) ? 
                   <div className="capitalize">
-                    <b>Geography</b>: {geography.map(geo => geo.name).join(", ")}
+                    <div className=" border-b-2 text-lg font-bold">Geography:</div>
+                    {geography.map(geo => geo.name).join(", ")}
                   </div> : <></>}
+                <div className="flex flex-col">
+                  <div className=" border-b-2 text-lg font-bold">File Type:</div>
+                  <div className="flex">
+                    <input 
+                      type="radio"
+                      value="CSV"
+                      id="CSV"
+                      name="CSV"
+                      checked={modalState.fileType === "CSV"}
+                      onChange={(e) => setModalState({...modalState, fileType: e.target.value})}
+                    />
+                    
+                    <label
+                      htmlFor={"CSV"}
+                      className="text-sm text-gray-900 mx-1"
+                    >
+                      CSV
+                    </label>
+                    <input
+                      type="radio"
+                      value="GPKG"
+                      id="GPKG"
+                      name="GPKG"
+                      checked={modalState.fileType === "GPKG"}
+                      onChange={(e) => setModalState({...modalState, fileType: e.target.value})}
+                    />
+                    <label
+                      htmlFor={"GPKG"}
+                      className="text-sm text-gray-900 mx-1"
+                    >
+                      GPKG
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 w-[37%]">
+                <div className="flex flex-col">
+                  <div className=" border-b-2 text-lg font-bold">Metadata</div>
+                  {modalState.columns.filter(opt => metaColumns.includes(opt)).map(col => {
+                    return <div className="flex justify-between px-1 border-2 border-transparent hover:border-black" key={`selected_col_${col}`}>
+                        <div>
+                          {col}
+                        </div>
+                        <div className="font-bold cursor-pointer" onClick={() => setColumns(col)}>
+                          X
+                        </div>
+                      </div>
+                  })}
+                </div>
+                <div className="flex flex-col">
+                  <div className=" border-b-2 text-lg font-bold">Performance Measures</div>
+                  {modalState.columns.filter(opt => !metaColumns.includes(opt)).map(col => {
+                    return <div className="flex justify-between px-1 border-2 border-transparent hover:border-black" key={`selected_col_${col}`}>
+                        <div>
+                          {col}
+                        </div>
+                        <div className="font-bold cursor-pointer" onClick={() => setColumns(col)}>
+                          X
+                        </div>
+                      </div>
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 w-[36%]">
+                <div>
+                  <div className=" border-b-2 text-lg font-bold">Add Metadata</div>
+                    <MultiLevelSelect
+                      searchable={true}
+                      placeholder={"Select a metadata..."}
+                      options={sourceDataColumns.filter(opt => metaColumns.includes(opt)).filter(opt => !modalState.columns.includes(opt))}
+                      value={""}
+                      onChange={(e) =>
+                        setColumns(e)
+                      }
+                    />
+                </div>
+                <div>
+                  <div className=" border-b-2 text-lg font-bold">Add Measures</div>
+                    <MultiLevelSelect
+                      searchable={true}
+                      placeholder={"Select a measure..."}
+                      options={sourceDataColumns.filter(opt => !metaColumns.includes(opt)).filter(opt => !modalState.columns.includes(opt))}
+                      value={""}
+                      onChange={(e) =>
+                        setColumns(e)
+                      }
+                    />
+                </div>
               </div>
             </div>
-            <div className="flex">
-              <DownloadModalCheckboxGroup
-                options={sourceDataColumns}
-                modalState={modalState.columns}
-                onChange={setColumns}
-              />
-            </div>
+
+
+
+
             <div className="flex mt-2 text-sm items-center flex-row-reverse">
               One or more columns must be selected
               {modalState.columns.length > 0 ? (
@@ -420,102 +515,3 @@ const Comp = ({ state, setState }) => {
 };
 
 export { Comp };
-
-const DownloadModalCheckboxGroup = ({
-  options,
-  modalState,
-  onChange,
-  title,
-}) => {
-  const hasCalcColumn =
-    options.some((opt) => opt.includes(" ")) && title === "Columns";
-
-  const metaOptions = options.filter(opt => metaColumns.includes(opt))
-  const performanceMeasureOptions = options.filter(opt => !metaColumns.includes(opt))
-
-  return (
-    <div className="flex  flex-col mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left max-h-[400px] overflow-y-auto">
-      <div className="flex text-md leading-6 text-gray-900">
-        <div className="text-center h-fit">{title ? title + ":" : ""}</div>
-        <div>
-          <Button
-            themeOptions={{ size: "sm" }}
-            onClick={() => {
-              if (modalState.length === options.length) {
-                onChange([]);
-              } else {
-                onChange([...options]);
-              }
-            }}
-          >
-            Toggle All
-          </Button>
-        </div>
-      </div>
-      {hasCalcColumn ? (
-        <div className="flex mt-1 text-xs items-center">
-          (cannot include "Calculated Columns")
-        </div>
-      ) : (
-        ""
-      )}
-      <div className="flex max-h-[350px] gap-4">
-        <div>
-          <div>Metadata</div>
-          <div className="flex flex-col flex-wrap max-h-[300px]">
-
-            {metaOptions?.map((option) => (
-              <DownloadModalCheckbox
-                key={`${option}_checkbox`}
-                inputName={option}
-                checked={modalState.includes(option)}
-                onChange={onChange}
-                disabled={hasCalcColumn && option.includes(" ")}
-              />
-            ))}
-          </div>
-        </div>
-        <div>
-          <div>Performance Measures</div>
-          <div className="flex flex-col flex-wrap max-h-[300px]">
-
-            {performanceMeasureOptions?.map((option) => (
-              <DownloadModalCheckbox
-                key={`${option}_checkbox`}
-                inputName={option}
-                checked={modalState.includes(option)}
-                onChange={onChange}
-                disabled={hasCalcColumn && option.includes(" ")}
-              />
-            ))}
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DownloadModalCheckbox = ({
-  inputName,
-  checked,
-  onChange,
-  disabled = false,
-}) => {
-  return (
-    <div className="mt-2 flex items-center text-sm mr-8">
-      <input
-        id={inputName}
-        disabled={disabled}
-        name={inputName}
-        type="checkbox"
-        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        checked={checked}
-        onChange={() => onChange(inputName)}
-      />
-      <label htmlFor={inputName} className="ml-2 text-xs text-gray-900">
-        {inputName}
-      </label>
-    </div>
-  );
-};
