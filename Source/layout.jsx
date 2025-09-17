@@ -4,10 +4,24 @@ import { getAttributes } from './attributes'
 import { DamaContext } from '../store'
 
 import { Dropdown } from '~/modules/avl-components/src'
-import { Item } from '~/pages/Auth/AuthMenu'
+//import { Item } from '~/pages/Auth/AuthMenu'
 
 import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
+
+
+const Item = (to, icon, span, condition) => (
+    condition === undefined || condition ?
+        <Link to={ to } >
+            <div className='px-6 py-2 bg-blue-500 text-white hover:text-blue-100'>
+                <div className='hover:translate-x-2 transition duration-100 ease-out hover:ease-in'>
+                    <i className={`${icon} `} />
+                    <span className='pl-2'>{span}</span>
+                </div>
+            </div>
+        </Link>
+    : null
+)
 
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
@@ -27,7 +41,7 @@ const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
 }
 
 export const Header = ({baseUrl=''}) => {
- 
+
   return (
     <div className='pt-[2px]'>
       <div className='h-full z-50'>
@@ -36,7 +50,7 @@ export const Header = ({baseUrl=''}) => {
             <div className=' font-medium text-gray-800'> Data Manager</div>
             <div className='fal fa-angle-down px-3 mt-[6px] '/>
           </div>}
-          className={`text-gray-800 group z-50`} 
+          className={`text-gray-800 group z-50`}
           openType='click'
         >
           <div className='p-1 bg-blue-500 text-base z-40'>
@@ -60,7 +74,7 @@ export const Header = ({baseUrl=''}) => {
       </div>
 
     </div>
-  ) 
+  )
 }
 
 export const DataManagerHeader = () => {
@@ -77,7 +91,7 @@ export const DataManagerHeader = () => {
               <div className='px-2 flex text-lg'>
                 <div className=' font-medium text-gray-800'> Data Manager</div>
                 <div className='fal fa-angle-down px-3 mt-[6px] '/>
-                
+
               </div>}
               className={`text-gray-800 group`} openType='click'
             >
@@ -107,7 +121,7 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
 
   // console.log('BreadCrumbs', baseUrl)
 
-  useEffect(() => { 
+  useEffect(() => {
     async function fetchData () {
       return sourceId ? await falcor.get(
         [
@@ -120,8 +134,8 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
   }, [falcor, sourceId, pgEnv])
 
   const pages = useMemo(() => {
-    let attr = getAttributes(get(falcorCache,["dama", pgEnv,'sources','byId', sourceId],{'attributes': {}})['attributes']) 
-    /*if(!get(attr, 'categories[0]', false)) { 
+    let attr = getAttributes(get(falcorCache,["dama", pgEnv,'sources','byId', sourceId],{'attributes': {}})['attributes'])
+    /*if(!get(attr, 'categories[0]', false)) {
       return [{name:'',to:''}]
     }*/
 
@@ -129,7 +143,7 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
 
     // console.log('BreadCrumbs', catList, cat1, cat2, get(attr ,'categories[0]', false))
 
-    let cats = typeof catList !== 'object' ? [] 
+    let cats = typeof catList !== 'object' ? []
       : catList.map((d,i) => {
         return {
           name: d,
@@ -164,7 +178,7 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
               >
                 <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
               </svg>
-              {page.href ? 
+              {page.href ?
                 <Link
                   to={page.href}
                   className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
@@ -177,7 +191,7 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
                   aria-current={page.current ? 'page' : undefined}
                 >
                   {page.name}
-                </div> 
+                </div>
               }
             </div>
           </li>
@@ -186,6 +200,3 @@ const Breadcrumbs =  ({fullWidth, isListAll}) => {
     </nav>
   )
 }
-
-
-
