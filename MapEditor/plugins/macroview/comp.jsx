@@ -137,6 +137,8 @@ const Comp = ({ state, setState }) => {
         nameBase += `_${geoFilt.type}_${geoFilt.value}`;
       });
     }
+
+    nameBase += modalState.fileType;
     return nameBase;
   }, [modalState.columns, geography, view, viewId]) 
   useEffect(() => {
