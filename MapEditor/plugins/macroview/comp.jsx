@@ -229,7 +229,7 @@ const Comp = ({ state, setState }) => {
       ],[]);
       // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
       sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
-      return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
+      return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name).filter(d => d !== "ogc_fid") : []
       // return []
   }, [falcorCache, viewId]);
   /**
@@ -306,7 +306,7 @@ const Comp = ({ state, setState }) => {
     borderRadius: "5px",
     boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
     zIndex: 1001,
-    opacity:".9"
+    opacity:".9",
   };
 
   if(modalState.open) {
@@ -353,7 +353,7 @@ const Comp = ({ state, setState }) => {
           </Button>
         </div>
         <div style={modalStyle}>
-          <div>
+          <div className="flex flex-col h-[100%]">
             <div className="flex items-center m-1">
               <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                 <i
@@ -367,7 +367,7 @@ const Comp = ({ state, setState }) => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 h-[100%]">
               <div className="flex flex-col gap-4 w-[25%]">
                 <div>
                   <div className=" border-b-2 text-lg font-bold">Year:</div>
@@ -414,35 +414,24 @@ const Comp = ({ state, setState }) => {
                 </div>
               </div>
               <div className="flex flex-col gap-4 w-[37%]">
-                <div className="flex flex-col">
-                  <div className=" border-b-2 text-lg font-bold">Metadata</div>
-                  {modalState.columns.filter(opt => metaColumns.includes(opt)).map(col => {
-                    return <div className="flex justify-between px-1 border-2 border-transparent hover:border-black" key={`selected_col_${col}`}>
-                        <div>
-                          {col}
-                        </div>
-                        <div className="font-bold cursor-pointer" onClick={() => setColumns(col)}>
-                          X
-                        </div>
-                      </div>
-                  })}
+                <div className="flex flex-col h-[50%]">
+                  <div className=" border-b-2 text-xl font-bold">Metadata</div>
+                  <DownloadColumnList 
+                    columns={modalState.columns.filter(opt => metaColumns.includes(opt))}
+                    setColumns={setColumns}
+                  />
                 </div>
-                <div className="flex flex-col">
-                  <div className=" border-b-2 text-lg font-bold">Performance Measures</div>
-                  {modalState.columns.filter(opt => !metaColumns.includes(opt)).map(col => {
-                    return <div className="flex justify-between px-1 border-2 border-transparent hover:border-black" key={`selected_col_${col}`}>
-                        <div>
-                          {col}
-                        </div>
-                        <div className="font-bold cursor-pointer" onClick={() => setColumns(col)}>
-                          X
-                        </div>
-                      </div>
-                  })}
+                <div className="flex flex-col h-[100%]">
+                  <div className=" border-b-2 text-xl font-bold">Performance Measures</div>
+                  <DownloadColumnList 
+                    columns={modalState.columns.filter(opt => !metaColumns.includes(opt))}
+                    setColumns={setColumns}
+                    maxHeight="50%"
+                  />
                 </div>
               </div>
               <div className="flex flex-col gap-4 w-[36%]">
-                <div>
+                <div className="h-[32.75%]">
                   <div className=" border-b-2 text-lg font-bold">Add Metadata</div>
                     <MultiLevelSelect
                       searchable={true}
@@ -468,49 +457,73 @@ const Comp = ({ state, setState }) => {
                 </div>
               </div>
             </div>
-
-
-
-
-            <div className="flex mt-2 text-sm items-center flex-row-reverse">
-              One or more columns must be selected
-              {modalState.columns.length > 0 ? (
-                <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
-              ) : (
-                <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
-              )}
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                disabled={
-                  modalState.loading ||
-                  modalState.columns.length === 0 ||
-                  modalState.columns.some((colName) => colName.includes(" "))
-                }
-                className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-                onClick={downloadAlreadyExists ?() => {} : createDownload}
-              >
-                {downloadAlreadyExists ? <a
-                        href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
-                    >
-                        Download data
-                    </a> : modalState.loading
-                  ? "Sending request..."
-                  : "Start download creation"}
-              </button>
-              <button
-                type="button"
-                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancel
-              </button>
+            <div className="absolute" style={{bottom:"20px", right:"20px"}}>
+              <div className="flex mt-2 text-sm items-center flex-row-reverse">
+                One or more columns must be selected
+                {modalState.columns.length > 0 ? (
+                  <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
+                ) : (
+                  <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
+                )}
+              </div>
+              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  disabled={
+                    modalState.loading ||
+                    modalState.columns.length === 0 ||
+                    modalState.columns.some((colName) => colName.includes(" "))
+                  }
+                  className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                  onClick={downloadAlreadyExists ?() => {} : createDownload}
+                >
+                  {downloadAlreadyExists ? <a
+                          href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
+                      >
+                          Download data
+                      </a> : modalState.loading
+                    ? "Sending request..."
+                    : "Start download creation"}
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     )
+  );
+};
+
+const DownloadColumnList = ({ columns, setColumns, maxHeight }) => {
+  return (
+    <div 
+      style={{ maxHeight, overflowY: 'auto', minHeight:"20%" }}
+      className="w-full"
+    >
+      {columns.map((col) => {
+        return (
+          <div
+            className="flex justify-between px-1 border-2 border-transparent hover:border-black font-semibold "
+            key={`selected_col_${col}`}
+          >
+            <div>{col}</div>
+            <div
+              className="font-bold cursor-pointer"
+              onClick={() => setColumns(col)}
+            >
+              X
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
