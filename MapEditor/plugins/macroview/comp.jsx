@@ -15,7 +15,8 @@ const INITIAL_MODAL_STATE = {
     loading: false,
     columns: [],
     uniqueFileNameBase: '',
-    fileType:"CSV"
+    fileType:"GPKG",
+    downloadContextId: ''
 }
 const INITIAL_DELETE_MODAL_STATE = {
   open: false,
@@ -59,6 +60,10 @@ const Comp = ({ state, setState }) => {
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
   let { falcor, falcorCache, pgEnv, baseUrl, user } = ctx;
+  const [polling, setPolling ] = React.useState(false);
+  const [pollingInterval, setPollingInterval] = React.useState(false);
+  const [downloadFileName, setDownloadFileName] = React.useState("");
+
   if (!falcorCache) {
     falcorCache = falcor.getCache();
   }
@@ -183,6 +188,8 @@ const Comp = ({ state, setState }) => {
                   });
 
               await res.json();
+
+              setDownloadFileName(modalState.uniqueFileNameBase);
               setModalState(INITIAL_MODAL_STATE);
           } catch (err) {
               console.log(err)
@@ -219,25 +226,92 @@ const Comp = ({ state, setState }) => {
   }, [viewId]);
 
   const sourceDataColumns = useMemo(() => {
-      let sourceColumns = get(falcorCache, [
-          "dama",
-          pgEnv,
-          "sources",
-          "byId",
-          sourceId,
-          "attributes",
-          "metadata",
-          "value",
-      ],[]);
-      // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
-      sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
-      return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name).filter(d => d !== "ogc_fid") : []
-      // return []
+    let sourceColumns = get(falcorCache, [
+        "dama",
+        pgEnv,
+        "sources",
+        "byId",
+        sourceId,
+        "attributes",
+        "metadata",
+        "value",
+    ],[]);
+    // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
+    sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
+    return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name).filter(d => d !== "ogc_fid") : []
+    // return []
   }, [falcorCache, viewId]);
   /**
    * END MODAL STUFF
    */
 
+
+  /**
+   * polling stuff for requested download
+   */
+  useEffect(() => {
+    if ((downloadFileName) && !viewDownloads[downloadFileName]) {
+      setPolling(true);
+    } else if ((downloadFileName) && viewDownloads[downloadFileName]){
+      const downloadFile = (url, filename) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+      const splitFilePath = viewDownloads[downloadFileName].split("/");
+      const fileName = splitFilePath[splitFilePath.length-1];
+
+      const downloadUrl = viewDownloads[downloadFileName].replace(
+        "$HOST",
+        `${DAMA_HOST}`
+      );
+
+      downloadFile(downloadUrl, fileName);
+      setPolling(false);
+      setDownloadFileName("")
+    } else {
+      setPolling(false);
+      setDownloadFileName("")
+    }
+  }, [downloadFileName, viewDownloads]);
+
+
+  const doPolling = async () => {
+    const fetchContextsPath = [
+      "dama",
+      pgEnv,
+      "views",
+      "byId",
+      viewId,
+      "attributes",
+      ["metadata", "version"],
+    ];
+    falcor.invalidate(["dama", pgEnv, "views", "byId"]);
+    falcor.invalidate(fetchContextsPath);
+    await falcor.get(fetchContextsPath);
+  };
+
+  useEffect(() => {
+    // -- start polling
+    if (polling && !pollingInterval) {
+      let id = setInterval(doPolling, 10000);
+      setPollingInterval(id);
+    }
+    // -- stop polling
+    else if (pollingInterval && !polling) {
+      clearInterval(pollingInterval);
+      // run polling one last time in case it never finished
+      doPolling();
+      setPolling(false);
+      setPollingInterval(null);
+    }
+  }, [polling, pollingInterval]); 
+  /**
+   * end polling
+   */
 
   let layerPluginDataPath = "";
   if (!state.symbologies) {
@@ -354,152 +428,198 @@ const Comp = ({ state, setState }) => {
             Open Data Downloader
           </Button>
         </div>
-        <div style={modalStyle}>
-          <div className="flex flex-col h-[100%]">
-            <div className="flex items-center m-1">
-              <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                <i
-                  className="fad fa-layer-group text-blue-600"
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
-                <div className="text-lg align-center font-semibold leading-6 text-gray-900">
-                  Create Data Download
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-4 h-[100%]">
-              <div className="flex flex-col gap-4 w-[25%]">
-                <div>
-                  <div className=" border-b-2 text-lg font-bold">Year:</div>
-                  {view?.version ?? viewId}
-                </div>
-                {(geography && geography.length) ? 
-                  <div className="capitalize">
-                    <div className=" border-b-2 text-lg font-bold">Geography:</div>
-                    {geography.map(geo => geo.name).join(", ")}
-                  </div> : <></>}
-                <div className="flex flex-col">
-                  <div className=" border-b-2 text-lg font-bold">File Type:</div>
-                  <div className="flex">
-                    <input 
-                      type="radio"
-                      value="CSV"
-                      id="CSV"
-                      name="CSV"
-                      checked={modalState.fileType === "CSV"}
-                      onChange={(e) => setModalState({...modalState, fileType: e.target.value})}
-                    />
-                    
-                    <label
-                      htmlFor={"CSV"}
-                      className="text-sm text-gray-900 mx-1"
-                    >
-                      CSV
-                    </label>
-                    <input
-                      type="radio"
-                      value="GPKG"
-                      id="GPKG"
-                      name="GPKG"
-                      checked={modalState.fileType === "GPKG"}
-                      onChange={(e) => setModalState({...modalState, fileType: e.target.value})}
-                    />
-                    <label
-                      htmlFor={"GPKG"}
-                      className="text-sm text-gray-900 mx-1"
-                    >
-                      GPKG
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-4 w-[37%]">
-                <div className="flex flex-col h-[50%]">
-                  <div className=" border-b-2 text-xl font-bold">Metadata</div>
-                  <DownloadColumnList 
-                    columns={modalState.columns.filter(opt => metaColumns.includes(opt))}
-                    setColumns={setColumns}
-                  />
-                </div>
-                <div className="flex flex-col h-[100%]">
-                  <div className=" border-b-2 text-xl font-bold">Performance Measures</div>
-                  <DownloadColumnList 
-                    columns={modalState.columns.filter(opt => !metaColumns.includes(opt))}
-                    setColumns={setColumns}
-                    maxHeight="50%"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-4 w-[36%]">
-                <div className="h-[32.75%]">
-                  <div className=" border-b-2 text-lg font-bold">Add Metadata</div>
-                    <MultiLevelSelect
-                      searchable={true}
-                      placeholder={"Select a metadata..."}
-                      options={sourceDataColumns.filter(opt => metaColumns.includes(opt)).filter(opt => !modalState.columns.includes(opt))}
-                      value={""}
-                      onChange={(e) =>
-                        setColumns(e)
-                      }
-                    />
-                </div>
-                <div>
-                  <div className=" border-b-2 text-lg font-bold">Add Measures</div>
-                    <MultiLevelSelect
-                      searchable={true}
-                      placeholder={"Select a measure..."}
-                      options={sourceDataColumns.filter(opt => !metaColumns.includes(opt)).filter(opt => !modalState.columns.includes(opt))}
-                      value={""}
-                      onChange={(e) =>
-                        setColumns(e)
-                      }
-                    />
-                </div>
-              </div>
-            </div>
-            <div className="absolute" style={{bottom:"20px", right:"20px"}}>
-              <div className="flex mt-2 text-sm items-center flex-row-reverse">
-                One or more columns must be selected
-                {modalState.columns.length > 0 ? (
-                  <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
-                ) : (
-                  <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
-                )}
-              </div>
-              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  disabled={
-                    modalState.loading ||
-                    modalState.columns.length === 0 ||
-                    modalState.columns.some((colName) => colName.includes(" "))
-                  }
-                  className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-                  onClick={downloadAlreadyExists ?() => {} : createDownload}
-                >
-                  {downloadAlreadyExists ? <a
-                          href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
-                      >
-                          Download data
-                      </a> : modalState.loading
-                    ? "Sending request..."
-                    : "Start download creation"}
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Cancel
-                </button>
-              </div>
+        <CreateDownloadModal 
+          view={view}
+          viewId={viewId}
+          geography={geography}
+          modalState={modalState}
+          modalStyle={modalStyle}
+          sourceDataColumns={sourceDataColumns}
+          downloadAlreadyExists={downloadAlreadyExists}
+          viewDownloads={viewDownloads}
+          createDownload={createDownload}
+          setModalState={setModalState}
+          setColumns={setColumns}
+          setModalOpen={setModalOpen}
+        />
+      </div>
+    )
+  );
+};
+
+const CreateDownloadModal = ({
+  view,
+  viewId,
+  geography,
+  modalState,
+  modalStyle,
+  setModalState,
+  setColumns,
+  setModalOpen,
+  sourceDataColumns,
+  downloadAlreadyExists,
+  createDownload,
+  viewDownloads
+}) => {
+  return (
+    <div style={modalStyle}>
+      <div className="flex flex-col h-[100%]">
+        <div className="flex items-center m-1">
+          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i
+              className="fad fa-layer-group text-blue-600"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
+            <div className="text-lg align-center font-semibold leading-6 text-gray-900">
+              Create Data Download
             </div>
           </div>
         </div>
+        <div className="flex gap-4 h-[100%]">
+          <div className="flex flex-col gap-4 w-[25%]">
+            <div>
+              <div className=" border-b-2 text-lg font-bold">Year:</div>
+              {view?.version ?? viewId}
+            </div>
+            {geography && geography.length ? (
+              <div className="capitalize">
+                <div className=" border-b-2 text-lg font-bold">Geography:</div>
+                {geography.map((geo) => geo.name).join(", ")}
+              </div>
+            ) : (
+              <></>
+            )}
+            <div className="flex flex-col">
+              <div className=" border-b-2 text-lg font-bold">File Type:</div>
+              <div className="flex">
+                <input
+                  type="radio"
+                  value="CSV"
+                  id="CSV"
+                  name="CSV"
+                  checked={modalState.fileType === "CSV"}
+                  onChange={(e) =>
+                    setModalState({ ...modalState, fileType: e.target.value })
+                  }
+                />
+
+                <label htmlFor={"CSV"} className="text-sm text-gray-900 mx-1">
+                  CSV
+                </label>
+                <input
+                  type="radio"
+                  value="GPKG"
+                  id="GPKG"
+                  name="GPKG"
+                  checked={modalState.fileType === "GPKG"}
+                  onChange={(e) =>
+                    setModalState({ ...modalState, fileType: e.target.value })
+                  }
+                />
+                <label htmlFor={"GPKG"} className="text-sm text-gray-900 mx-1">
+                  GPKG
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 w-[37%]">
+            <div className="flex flex-col h-[50%]">
+              <div className=" border-b-2 text-xl font-bold">Metadata</div>
+              <DownloadColumnList
+                columns={modalState.columns.filter((opt) =>
+                  metaColumns.includes(opt)
+                )}
+                setColumns={setColumns}
+              />
+            </div>
+            <div className="flex flex-col h-[100%]">
+              <div className=" border-b-2 text-xl font-bold">
+                Performance Measures
+              </div>
+              <DownloadColumnList
+                columns={modalState.columns.filter(
+                  (opt) => !metaColumns.includes(opt)
+                )}
+                setColumns={setColumns}
+                maxHeight="50%"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 w-[36%]">
+            <div className="h-[32.75%]">
+              <div className=" border-b-2 text-lg font-bold">Add Metadata</div>
+              <MultiLevelSelect
+                searchable={true}
+                placeholder={"Select a metadata..."}
+                options={sourceDataColumns
+                  .filter((opt) => metaColumns.includes(opt))
+                  .filter((opt) => !modalState.columns.includes(opt))}
+                value={""}
+                onChange={(e) => setColumns(e)}
+              />
+            </div>
+            <div>
+              <div className=" border-b-2 text-lg font-bold">Add Measures</div>
+              <MultiLevelSelect
+                searchable={true}
+                placeholder={"Select a measure..."}
+                options={sourceDataColumns
+                  .filter((opt) => !metaColumns.includes(opt))
+                  .filter((opt) => !modalState.columns.includes(opt))}
+                value={""}
+                onChange={(e) => setColumns(e)}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="absolute" style={{ bottom: "20px", right: "20px" }}>
+          <div className="flex mt-2 text-sm items-center flex-row-reverse">
+            One or more columns must be selected
+            {modalState.columns.length > 0 ? (
+              <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
+            ) : (
+              <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
+            )}
+          </div>
+          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              disabled={
+                modalState.loading ||
+                modalState.columns.length === 0 ||
+                modalState.columns.some((colName) => colName.includes(" "))
+              }
+              className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+              onClick={downloadAlreadyExists ? () => {} : createDownload}
+            >
+              {downloadAlreadyExists ? (
+                <a
+                  href={viewDownloads[modalState.uniqueFileNameBase].replace(
+                    "$HOST",
+                    `${DAMA_HOST}`
+                  )}
+                >
+                  Download data
+                </a>
+              ) : modalState.loading ? (
+                "Sending request..."
+              ) : (
+                "Start download creation"
+              )}
+            </button>
+            <button
+              type="button"
+              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+              onClick={() => setModalOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
-    )
+    </div>
   );
 };
 
