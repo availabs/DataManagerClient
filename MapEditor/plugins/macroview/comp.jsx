@@ -417,7 +417,9 @@ const Comp = ({ state, setState }) => {
           )}
         </div>
         <div>
+          
           <Button
+            disabled={(downloadFileName && !viewDownloads[downloadFileName])}
             themeOptions={{ color: "transparent" }}
             //className='bg-white hover:bg-cool-gray-700 font-sans text-sm text-npmrds-100 font-medium'
             onClick={(e) => {
@@ -425,8 +427,19 @@ const Comp = ({ state, setState }) => {
             }}
             style={{ width: "100%", marginTop: "10px" }}
           >
-            Open Data Downloader
+            {(downloadFileName && !viewDownloads[downloadFileName]) ? ( <span >
+                  <i
+                    className={"fa-solid fa-spin fa-spinner mr-2"}
+                    aria-hidden="true"
+                  ></i>
+                  Creating Download
+                </span>
+              ) : "Open Data Downloader"
+            }
+            
           </Button>
+          
+
         </div>
         <CreateDownloadModal 
           view={view}
