@@ -1,3 +1,4 @@
+import { uaCodeToUaName as UA_CODE_TO_NAME} from "./ua_code_to_name";
 const REGION_CODE_TO_NAME = {
   1: "Region 1 - Capital District",
   2: "Region 2 - Mohawk Valley",
@@ -16,14 +17,17 @@ const PM3_LAYER_KEY = "pm3";
 const MPO_LAYER_KEY = "mpo";
 const COUNTY_LAYER_KEY = "county";
 const REGION_LAYER_KEY = 'region'
+const UA_LAYER_KEY = 'ua'
 
 const BLANK_OPTION = { value: "", name: "" };
 
 export {
   REGION_CODE_TO_NAME,
+  UA_CODE_TO_NAME,
   PM3_LAYER_KEY,
   MPO_LAYER_KEY,
   COUNTY_LAYER_KEY,
   REGION_LAYER_KEY,
+  UA_LAYER_KEY,
   BLANK_OPTION
 };

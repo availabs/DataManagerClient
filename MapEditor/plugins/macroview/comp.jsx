@@ -22,7 +22,7 @@ const INITIAL_DELETE_MODAL_STATE = {
   open: false,
   loading: false,
 }
-const metaColumns = [
+const metaColumnNames = [
   "ogc_fid",
   "tmc",
   "urban_code",
@@ -178,14 +178,16 @@ const Comp = ({ state, setState }) => {
               };
 
               setModalState({...modalState, loading: true});
-              const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
-                  {
-                      method: "POST",
-                      body: JSON.stringify(createData),
-                      headers: {
-                          "Content-Type": "application/json",
-                      },
-                  });
+              const res = await fetch(
+                `${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
+                {
+                  method: "POST",
+                  body: JSON.stringify(createData),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
 
               await res.json();
 
@@ -238,7 +240,7 @@ const Comp = ({ state, setState }) => {
     ],[]);
     // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
     sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
-    return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name).filter(d => d !== "ogc_fid") : []
+    return Array.isArray(sourceColumns) ? sourceColumns.filter(d => d.name !== "ogc_fid") : []
     // return []
   }, [falcorCache, viewId]);
   /**
@@ -382,7 +384,7 @@ const Comp = ({ state, setState }) => {
     borderRadius: "5px",
     boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
     zIndex: 1001,
-    opacity:".9",
+    opacity: ".9"
   };
 
   if(modalState.open) {
@@ -539,22 +541,22 @@ const CreateDownloadModal = ({
           </div>
           <div className="flex flex-col gap-4 w-[37%]">
             <div className="flex flex-col h-[50%]">
-              <div className=" border-b-2 text-xl font-bold">Metadata</div>
+              <div className=" border-b-2 border-black text-xl font-bold">Metadata</div>
               <DownloadColumnList
                 columns={modalState.columns.filter((opt) =>
-                  metaColumns.includes(opt)
-                )}
+                  metaColumnNames.includes(opt)
+                ).map(opt => sourceDataColumns.find(col => col.name === opt))}
                 setColumns={setColumns}
               />
             </div>
             <div className="flex flex-col h-[100%]">
-              <div className=" border-b-2 text-xl font-bold">
+              <div className=" border-b-2 border-black text-xl font-bold">
                 Performance Measures
               </div>
               <DownloadColumnList
                 columns={modalState.columns.filter(
-                  (opt) => !metaColumns.includes(opt)
-                )}
+                  (opt) => !metaColumnNames.includes(opt)
+                ).map(opt => sourceDataColumns.find(col => col.name === opt))}
                 setColumns={setColumns}
                 maxHeight="50%"
               />
@@ -566,9 +568,11 @@ const CreateDownloadModal = ({
               <MultiLevelSelect
                 searchable={true}
                 placeholder={"Select a metadata..."}
+                displayAccessor={ t => t.display_name || t.name }
+                valueAccessor={ t => t.name }
                 options={sourceDataColumns
-                  .filter((opt) => metaColumns.includes(opt))
-                  .filter((opt) => !modalState.columns.includes(opt))}
+                  .filter((opt) => metaColumnNames.includes(opt.name))
+                  .filter((opt) => !modalState.columns.includes(opt.name))}
                 value={""}
                 onChange={(e) => setColumns(e)}
               />
@@ -578,9 +582,11 @@ const CreateDownloadModal = ({
               <MultiLevelSelect
                 searchable={true}
                 placeholder={"Select a measure..."}
+                displayAccessor={ t => t.display_name || t.name }
+                valueAccessor={ t => t.name }
                 options={sourceDataColumns
-                  .filter((opt) => !metaColumns.includes(opt))
-                  .filter((opt) => !modalState.columns.includes(opt))}
+                  .filter((opt) => !metaColumnNames.includes(opt.name))
+                  .filter((opt) => !modalState.columns.includes(opt.name))}
                 value={""}
                 onChange={(e) => setColumns(e)}
               />
@@ -646,12 +652,12 @@ const DownloadColumnList = ({ columns, setColumns, maxHeight }) => {
         return (
           <div
             className="flex justify-between px-1 border-2 border-transparent hover:border-black font-semibold "
-            key={`selected_col_${col}`}
+            key={`selected_col_${col.name}`}
           >
-            <div>{col}</div>
+            <div>{col.display_name || col.name}</div>
             <div
               className="font-bold cursor-pointer"
-              onClick={() => setColumns(col)}
+              onClick={() => setColumns(col.name)}
             >
               X
             </div>
