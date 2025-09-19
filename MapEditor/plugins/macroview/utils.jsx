@@ -34,7 +34,6 @@ const resetGeometryBorderFilter = ({ setState, layerId, layerBasePath }) => {
 
     const draftLayers = get(draft, `${layerBasePath}['${layerId}'].layers`);
     draftLayers?.forEach((d, i) => {
-      console.log(JSON.parse(JSON.stringify(d)));
       d.layout = { visibility: "none" };
     });
   });
