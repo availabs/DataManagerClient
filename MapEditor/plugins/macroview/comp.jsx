@@ -63,6 +63,7 @@ const Comp = ({ state, setState }) => {
   const [polling, setPolling ] = React.useState(false);
   const [pollingInterval, setPollingInterval] = React.useState(false);
   const [downloadFileName, setDownloadFileName] = React.useState("");
+  const [view, setView] = React.useState({});
 
   if (!falcorCache) {
     falcorCache = falcor.getCache();
@@ -112,22 +113,8 @@ const Comp = ({ state, setState }) => {
   }
   const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
 
-  const view = useMemo(() => {
-    return get(
-      falcorCache,
-      [
-        "dama",
-        pgEnv,
-        "views",
-        "byId",
-        viewId,
-        "attributes",
-      ],
-      []
-    );
-  }, [falcorCache, viewId]);
   const viewDownloads = useMemo(() => {
-    return get(view, ['metadata', 'value', 'download'])
+    return get(view, ['metadata',  'download'])
   }, [view]);
 
   const fileNameBase = useMemo(() => {
@@ -279,22 +266,53 @@ const Comp = ({ state, setState }) => {
       setDownloadFileName("")
     }
   }, [downloadFileName, viewDownloads]);
+  const fetchViewPath = [
+    "dama",
+    pgEnv,
+    "views",
+    "byId",
+    viewId,
+    "attributes",
+    ["metadata", "version"],
+  ];
 
-
+  //Gets the view so we can determine if our file is ready for download
   const doPolling = async () => {
-    const fetchContextsPath = [
-      "dama",
-      pgEnv,
-      "views",
-      "byId",
-      viewId,
-      "attributes",
-      ["metadata", "version"],
-    ];
     falcor.invalidate(["dama", pgEnv, "views", "byId"]);
-    falcor.invalidate(fetchContextsPath);
-    await falcor.get(fetchContextsPath);
+    falcor.invalidate(fetchViewPath);
+    falcor.get(fetchViewPath).then(resp => {
+      let out = get(
+          resp,
+          [
+            "json",
+            "dama", pgEnv, "views","byId", viewId, "attributes"
+          ],
+          {}
+        );
+      setView(out)
+    });
   };
+
+  //Gets the view for normal use cases (on load, map view changes, etc.)
+  useEffect(() => {
+    falcor.get(fetchViewPath).then((resp) => {
+      let out = get(
+        resp,
+        [
+          "json",
+          "dama",
+          pgEnv,
+          "views",
+          "byId",
+          viewId,
+          "attributes",
+        ],
+        {}
+      );
+      setView(out);
+    });
+  }, [pgEnv, viewId]);
+
 
   useEffect(() => {
     // -- start polling
