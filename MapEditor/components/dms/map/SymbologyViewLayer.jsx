@@ -96,12 +96,6 @@ const ViewLayerRender = ({
 
   const didFilterChange = layerProps?.filter !== prevLayerProps?.["filter"];
   const didDynamicFilterChange = layerProps?.['dynamic-filters'] !== prevLayerProps?.['dynamic-filters'];
-//if(layerProps.source_id === 1410) {
-//   //testing only pm3 layer for now
-//     console.log({layerProps, prevLayerProps})
-//     console.log({newDynamic:layerProps?.['dynamic-filters'], oldDynamic: prevLayerProps?.['dynamic-filters']})
-
-// }
 
   useEffect(() => {
     // ------------------------------------------------------
@@ -350,7 +344,7 @@ const ViewLayerRender = ({
   useEffect(() => {
     if (maplibreMap && layerProps && layerProps?.zoomToFilterBounds?.length > 0 &&  layerProps?.zoomToFilterBounds[0] !== null){
       maplibreMap.fitBounds(layerProps.zoomToFilterBounds, {
-        padding: { top: 50, bottom: 50, left: 50, right: 50 },
+        padding: { top: 200, bottom: 200, left: 200, right: 200 },
         duration: 400
       });
     }
@@ -474,10 +468,15 @@ export default ViewLayer;
 const HoverComp = ({ data, layer }) => {
   if(!layer.props.hover) return
   const { source_id, view_id } = layer;
-  const { pgEnv, falcor, falcorCache } = React.useContext(CMSContext);
+  const mctx = React.useContext(MapContext);
+  const cctx = React.useContext(CMSContext);
+  const ctx = mctx?.falcor ? mctx : cctx;
+
+  const { pgEnv, falcor } = ctx;
+  const falcorCache = falcor.getCache();
   const id = React.useMemo(() => get(data, "[0]", null), [data]);
   // console.log(source_id, view_id, id)
-
+  const [attrInfo, setAttrInfo] = React.useState({});
   const hoverColumns = React.useMemo(() => {
     return layer.props['hover-columns'];
   }, [layer]);
@@ -543,17 +542,26 @@ const HoverComp = ({ data, layer }) => {
       "databyId",
       id,
       getAttributes
-    ])
-    //.then(d => console.log('got attributes', d));
+    ]).then(d => {
+      let out = get(
+          d,
+          [
+            "json",
+            "dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id
+          ],
+          []
+        );
+      setAttrInfo(out)
+    });
   }, [falcor, pgEnv, view_id, id, attributes]);
 
-  const attrInfo = React.useMemo(() => {
-    return get(
-      falcorCache,
-      ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
-      {}
-    )
-  }, [id, falcorCache, view_id, pgEnv]);
+  // const attrInfo = React.useMemo(() => {
+  //   return get(
+  //     falcorCache,
+  //     ["dama", pgEnv, "viewsbyId", view_id, "databyId", ''+id],
+  //     {}
+  //   )
+  // }, [id, falcorCache, view_id, pgEnv]);
 
   return (
     <div className="bg-white p-4 max-h-64 max-w-lg min-w-[300px] scrollbar-xs overflow-y-scroll">

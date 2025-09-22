@@ -10,6 +10,7 @@ import {
   MPO_LAYER_KEY,
   COUNTY_LAYER_KEY,
   REGION_LAYER_KEY,
+  UA_LAYER_KEY,
   BLANK_OPTION
 } from "./constants";
 import {
@@ -34,6 +35,7 @@ const InternalPanel = ({ state, setState }) => {
     mpoLayerId,
     countyLayerId,
     regionLayerId,
+    uaLayerId,
   } = useMemo(() => {
     const pluginDataPath = `symbology.pluginData.macroview`;
     return {
@@ -53,6 +55,10 @@ const InternalPanel = ({ state, setState }) => {
       regionLayerId: get(
         state,
         `${pluginDataPath}['active-layers'][${REGION_LAYER_KEY}]`
+      ),
+      uaLayerId: get(
+        state,
+        `${pluginDataPath}['active-layers'][${UA_LAYER_KEY}]`
       ),
     };
   }, [state]);
@@ -103,6 +109,7 @@ const InternalPanel = ({ state, setState }) => {
   },[pm3LayerId])
 
   //Set initial styles for geometry borders
+  //also disables popovers
   useEffect(() => {
     if (mpoLayerId) {
       setInitialGeomStyle({
@@ -110,6 +117,10 @@ const InternalPanel = ({ state, setState }) => {
         layerId: mpoLayerId,
         layerBasePath: symbologyLayerPath,
       });
+
+      setState(draft => {
+        set(draft, `${symbologyLayerPath}['${mpoLayerId}'].hover`, "");
+      })
     }
   }, [mpoLayerId]);
   useEffect(() => {
@@ -119,6 +130,9 @@ const InternalPanel = ({ state, setState }) => {
         layerId: countyLayerId,
         layerBasePath: symbologyLayerPath,
       });
+      setState(draft => {
+        set(draft, `${symbologyLayerPath}['${countyLayerId}'].hover`, "");
+      })
     }
   }, [countyLayerId]);
   useEffect(() => {
@@ -128,8 +142,23 @@ const InternalPanel = ({ state, setState }) => {
         layerId: regionLayerId,
         layerBasePath: symbologyLayerPath,
       });
+      setState(draft => {
+        set(draft, `${symbologyLayerPath}['${regionLayerId}'].hover`, "");
+      })
     }
   }, [regionLayerId]);
+  useEffect(() => {
+    if (uaLayerId) {
+      setInitialGeomStyle({
+        setState,
+        layerId: uaLayerId,
+        layerBasePath: symbologyLayerPath,
+      });
+      setState(draft => {
+        set(draft, `${symbologyLayerPath}['${uaLayerId}'].hover`, "");
+      })
+    }
+  }, [uaLayerId]);
 
   const views = useMemo(() => {
     if (pm3LayerId) {
@@ -151,7 +180,7 @@ const InternalPanel = ({ state, setState }) => {
     }
   }, [falcorCache, pm3LayerId, pgEnv]);
 
-  const borderLayerIds = [mpoLayerId, countyLayerId, pm3LayerId, regionLayerId];
+  const borderLayerIds = [mpoLayerId, countyLayerId, pm3LayerId, regionLayerId, uaLayerId];
   return [
     {
       label: "PM3 Layer",
@@ -175,7 +204,7 @@ const InternalPanel = ({ state, setState }) => {
             ],
             default: "",
           },
-          //the layer the plugin controls MUST use the `activeLayer` path/field
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
           path: `['active-layers'][${PM3_LAYER_KEY}]`,
         },
       ],
@@ -201,7 +230,7 @@ const InternalPanel = ({ state, setState }) => {
             ],
             default: "",
           },
-          //the layer the plugin controls MUST use the `activeLayer` path/field
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
           path: `['active-layers'][${MPO_LAYER_KEY}]`,
         },
       ],
@@ -227,7 +256,7 @@ const InternalPanel = ({ state, setState }) => {
             ],
             default: "",
           },
-          //the layer the plugin controls MUST use the `activeLayer` path/field
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
           path: `['active-layers'][${COUNTY_LAYER_KEY}]`,
         },
       ],
@@ -253,8 +282,34 @@ const InternalPanel = ({ state, setState }) => {
             ],
             default: "",
           },
-          //the layer the plugin controls MUST use the `activeLayer` path/field
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
           path: `['active-layers'][${REGION_LAYER_KEY}]`,
+        },
+      ],
+    },
+    {
+      label: "UA Layer",
+      controls: [
+        {
+          type: "select",
+          params: {
+            options: [
+              BLANK_OPTION,
+              ...Object.keys(state.symbology.layers)
+                .filter(
+                  (layerKey) =>
+                    !borderLayerIds.includes(layerKey) ||
+                    layerKey === uaLayerId
+                )
+                .map((layerKey, i) => ({
+                  value: layerKey,
+                  name: state.symbology.layers[layerKey].name,
+                })),
+            ],
+            default: "",
+          },
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
+          path: `['active-layers'][${UA_LAYER_KEY}]`,
         },
       ],
     },
@@ -270,7 +325,7 @@ const InternalPanel = ({ state, setState }) => {
             ],
             default: "",
           },
-          //the layer the plugin controls MUST use the `activeLayer` path/field
+          //the layer the plugin controls MUST use the `'active-layers'` path/field
           path: `['hover']`,
         },
       ],
@@ -292,7 +347,7 @@ const InternalPanel = ({ state, setState }) => {
                 default: [],
                 placeholder: "Select views to include...",
               },
-              //the layer the plugin controls MUST use the `activeLayer` path/field
+              //the layer the plugin controls MUST use the `'active-layers'` path/field
               path: `['views']`,
             },
           ],

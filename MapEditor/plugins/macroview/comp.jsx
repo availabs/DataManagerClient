@@ -8,18 +8,21 @@ import { Button, Modal } from "~/modules/avl-components/src";
 import { DamaContext } from "../../../store";
 import { CMSContext } from "~/modules/dms/src";
 import { PM3_LAYER_KEY } from "./constants";
+import { MultiLevelSelect } from "~/modules/avl-map-2/src"
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 const INITIAL_MODAL_STATE = {
     open: false,
     loading: false,
     columns: [],
-    uniqueFileNameBase: ''
+    uniqueFileNameBase: '',
+    fileType:"GPKG",
+    downloadContextId: ''
 }
 const INITIAL_DELETE_MODAL_STATE = {
   open: false,
   loading: false,
 }
-const metaColumns = [
+const metaColumnNames = [
   "ogc_fid",
   "tmc",
   "urban_code",
@@ -57,6 +60,11 @@ const Comp = ({ state, setState }) => {
   const cctx = React.useContext(CMSContext);
   const ctx = dctx?.falcor ? dctx : cctx;
   let { falcor, falcorCache, pgEnv, baseUrl, user } = ctx;
+  const [polling, setPolling ] = React.useState(false);
+  const [pollingInterval, setPollingInterval] = React.useState(false);
+  const [downloadFileName, setDownloadFileName] = React.useState("");
+  const [view, setView] = React.useState({});
+
   if (!falcorCache) {
     falcorCache = falcor.getCache();
   }
@@ -105,22 +113,8 @@ const Comp = ({ state, setState }) => {
   }
   const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
 
-  const view = useMemo(() => {
-    return get(
-      falcorCache,
-      [
-        "dama",
-        pgEnv,
-        "views",
-        "byId",
-        viewId,
-        "attributes",
-      ],
-      []
-    );
-  }, [falcorCache, viewId]);
   const viewDownloads = useMemo(() => {
-    return get(view, ['metadata', 'value', 'download'])
+    return get(view, ['metadata',  'download'])
   }, [view]);
 
   const fileNameBase = useMemo(() => {
@@ -135,6 +129,8 @@ const Comp = ({ state, setState }) => {
         nameBase += `_${geoFilt.type}_${geoFilt.value}`;
       });
     }
+
+    nameBase += modalState.fileType;
     return nameBase;
   }, [modalState.columns, geography, view, viewId]) 
   useEffect(() => {
@@ -165,20 +161,24 @@ const Comp = ({ state, setState }) => {
                     geographyFilter: geography,
                     measure,
                   },
-                  fileTypes:['CSV']
+                  fileTypes:[modalState.fileType]
               };
 
               setModalState({...modalState, loading: true});
-              const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
-                  {
-                      method: "POST",
-                      body: JSON.stringify(createData),
-                      headers: {
-                          "Content-Type": "application/json",
-                      },
-                  });
+              const res = await fetch(
+                `${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/create-download`,
+                {
+                  method: "POST",
+                  body: JSON.stringify(createData),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
 
               await res.json();
+
+              setDownloadFileName(modalState.uniqueFileNameBase);
               setModalState(INITIAL_MODAL_STATE);
           } catch (err) {
               console.log(err)
@@ -215,25 +215,123 @@ const Comp = ({ state, setState }) => {
   }, [viewId]);
 
   const sourceDataColumns = useMemo(() => {
-      let sourceColumns = get(falcorCache, [
-          "dama",
-          pgEnv,
-          "sources",
-          "byId",
-          sourceId,
-          "attributes",
-          "metadata",
-          "value",
-      ],[]);
-      // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
-      sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
-      return Array.isArray(sourceColumns) ? sourceColumns.map(d => d.name) : []
-      // return []
+    let sourceColumns = get(falcorCache, [
+        "dama",
+        pgEnv,
+        "sources",
+        "byId",
+        sourceId,
+        "attributes",
+        "metadata",
+        "value",
+    ],[]);
+    // console.log('source columnns', sourceColumns, view.source_id, falcorCache)
+    sourceColumns = sourceColumns?.columns ? sourceColumns.columns : sourceColumns;
+    return Array.isArray(sourceColumns) ? sourceColumns.filter(d => d.name !== "ogc_fid") : []
+    // return []
   }, [falcorCache, viewId]);
   /**
    * END MODAL STUFF
    */
 
+
+  /**
+   * polling stuff for requested download
+   */
+  useEffect(() => {
+    if ((downloadFileName) && !viewDownloads[downloadFileName]) {
+      setPolling(true);
+    } else if ((downloadFileName) && viewDownloads[downloadFileName]){
+      const downloadFile = (url, filename) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+      const splitFilePath = viewDownloads[downloadFileName].split("/");
+      const fileName = splitFilePath[splitFilePath.length-1];
+
+      const downloadUrl = viewDownloads[downloadFileName].replace(
+        "$HOST",
+        `${DAMA_HOST}`
+      );
+
+      downloadFile(downloadUrl, fileName);
+      setPolling(false);
+      setDownloadFileName("")
+    } else {
+      setPolling(false);
+      setDownloadFileName("")
+    }
+  }, [downloadFileName, viewDownloads]);
+  const fetchViewPath = [
+    "dama",
+    pgEnv,
+    "views",
+    "byId",
+    viewId,
+    "attributes",
+    ["metadata", "version"],
+  ];
+
+  //Gets the view so we can determine if our file is ready for download
+  const doPolling = async () => {
+    falcor.invalidate(["dama", pgEnv, "views", "byId"]);
+    falcor.invalidate(fetchViewPath);
+    falcor.get(fetchViewPath).then(resp => {
+      let out = get(
+          resp,
+          [
+            "json",
+            "dama", pgEnv, "views","byId", viewId, "attributes"
+          ],
+          {}
+        );
+      setView(out)
+    });
+  };
+
+  //Gets the view for normal use cases (on load, map view changes, etc.)
+  useEffect(() => {
+    falcor.get(fetchViewPath).then((resp) => {
+      let out = get(
+        resp,
+        [
+          "json",
+          "dama",
+          pgEnv,
+          "views",
+          "byId",
+          viewId,
+          "attributes",
+        ],
+        {}
+      );
+      setView(out);
+    });
+  }, [pgEnv, viewId]);
+
+
+  useEffect(() => {
+    // -- start polling
+    if (polling && !pollingInterval) {
+      let id = setInterval(doPolling, 10000);
+      setPollingInterval(id);
+    }
+    // -- stop polling
+    else if (pollingInterval && !polling) {
+      clearInterval(pollingInterval);
+      // run polling one last time in case it never finished
+      doPolling();
+      setPolling(false);
+      setPollingInterval(null);
+    }
+  }, [polling, pollingInterval]); 
+  /**
+   * end polling
+   */
 
   let layerPluginDataPath = "";
   if (!state.symbologies) {
@@ -298,11 +396,13 @@ const Comp = ({ state, setState }) => {
     top: "0",
     left: "-55vw",
     width:"50vw",
+    height:"60vh",
     backgroundColor: "white",
     padding: "20px",
     borderRadius: "5px",
     boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
     zIndex: 1001,
+    opacity: ".9"
   };
 
   if(modalState.open) {
@@ -337,7 +437,9 @@ const Comp = ({ state, setState }) => {
           )}
         </div>
         <div>
+          
           <Button
+            disabled={(downloadFileName && !viewDownloads[downloadFileName])}
             themeOptions={{ color: "transparent" }}
             //className='bg-white hover:bg-cool-gray-700 font-sans text-sm text-npmrds-100 font-medium'
             onClick={(e) => {
@@ -345,177 +447,243 @@ const Comp = ({ state, setState }) => {
             }}
             style={{ width: "100%", marginTop: "10px" }}
           >
-            Open Data Downloader
+            {(downloadFileName && !viewDownloads[downloadFileName]) ? ( <span >
+                  <i
+                    className={"fa-solid fa-spin fa-spinner mr-2"}
+                    aria-hidden="true"
+                  ></i>
+                  Creating Download
+                </span>
+              ) : "Open Data Downloader"
+            }
+            
           </Button>
+          
+
         </div>
-        <div style={modalStyle}>
-          <div>
-            <div className="flex items-center m-1">
-              <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                <i
-                  className="fad fa-layer-group text-blue-600"
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
-                <div className="text-lg align-center font-semibold leading-6 text-gray-900">
-                  Create Data Download
-                </div>
-                <div>
-                  <b>Year:</b> {view?.version ?? viewId}
-                </div>
-                {(geography && geography.length) ? 
-                  <div className="capitalize">
-                    <b>Geography</b>: {geography.map(geo => geo.name).join(", ")}
-                  </div> : <></>}
-              </div>
-            </div>
-            <div className="flex">
-              <DownloadModalCheckboxGroup
-                options={sourceDataColumns}
-                modalState={modalState.columns}
-                onChange={setColumns}
-              />
-            </div>
-            <div className="flex mt-2 text-sm items-center flex-row-reverse">
-              One or more columns must be selected
-              {modalState.columns.length > 0 ? (
-                <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
-              ) : (
-                <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
-              )}
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                disabled={
-                  modalState.loading ||
-                  modalState.columns.length === 0 ||
-                  modalState.columns.some((colName) => colName.includes(" "))
-                }
-                className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-                onClick={downloadAlreadyExists ?() => {} : createDownload}
-              >
-                {downloadAlreadyExists ? <a
-                        href={viewDownloads[modalState.uniqueFileNameBase].replace('$HOST', `${DAMA_HOST}`)}
-                    >
-                        Download data
-                    </a> : modalState.loading
-                  ? "Sending request..."
-                  : "Start download creation"}
-              </button>
-              <button
-                type="button"
-                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <CreateDownloadModal 
+          view={view}
+          viewId={viewId}
+          geography={geography}
+          modalState={modalState}
+          modalStyle={modalStyle}
+          sourceDataColumns={sourceDataColumns}
+          downloadAlreadyExists={downloadAlreadyExists}
+          viewDownloads={viewDownloads}
+          createDownload={createDownload}
+          setModalState={setModalState}
+          setColumns={setColumns}
+          setModalOpen={setModalOpen}
+        />
       </div>
     )
   );
 };
 
-export { Comp };
-
-const DownloadModalCheckboxGroup = ({
-  options,
+const CreateDownloadModal = ({
+  view,
+  viewId,
+  geography,
   modalState,
-  onChange,
-  title,
+  modalStyle,
+  setModalState,
+  setColumns,
+  setModalOpen,
+  sourceDataColumns,
+  downloadAlreadyExists,
+  createDownload,
+  viewDownloads
 }) => {
-  const hasCalcColumn =
-    options.some((opt) => opt.includes(" ")) && title === "Columns";
-
-  const metaOptions = options.filter(opt => metaColumns.includes(opt))
-  const performanceMeasureOptions = options.filter(opt => !metaColumns.includes(opt))
-
   return (
-    <div className="flex  flex-col mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left max-h-[400px] overflow-y-auto">
-      <div className="flex text-md leading-6 text-gray-900">
-        <div className="text-center h-fit">{title ? title + ":" : ""}</div>
-        <div>
-          <Button
-            themeOptions={{ size: "sm" }}
-            onClick={() => {
-              if (modalState.length === options.length) {
-                onChange([]);
-              } else {
-                onChange([...options]);
+    <div style={modalStyle}>
+      <div className="flex flex-col h-[100%]">
+        <div className="flex items-center m-1">
+          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i
+              className="fad fa-layer-group text-blue-600"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="mt-3 text-center sm:ml-2 sm:mt-0 sm:text-left w-full">
+            <div className="text-lg align-center font-semibold leading-6 text-gray-900">
+              Create Data Download
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-4 h-[100%]">
+          <div className="flex flex-col gap-4 w-[25%]">
+            <div>
+              <div className=" border-b-2 text-lg font-bold">Year:</div>
+              {view?.version ?? viewId}
+            </div>
+            {geography && geography.length ? (
+              <div className="capitalize">
+                <div className=" border-b-2 text-lg font-bold">Geography:</div>
+                {geography.map((geo) => geo.name).join(", ")}
+              </div>
+            ) : (
+              <></>
+            )}
+            <div className="flex flex-col">
+              <div className=" border-b-2 text-lg font-bold">File Type:</div>
+              <div className="flex">
+                <input
+                  type="radio"
+                  value="CSV"
+                  id="CSV"
+                  name="CSV"
+                  checked={modalState.fileType === "CSV"}
+                  onChange={(e) =>
+                    setModalState({ ...modalState, fileType: e.target.value })
+                  }
+                />
+
+                <label htmlFor={"CSV"} className="text-sm text-gray-900 mx-1">
+                  CSV
+                </label>
+                <input
+                  type="radio"
+                  value="GPKG"
+                  id="GPKG"
+                  name="GPKG"
+                  checked={modalState.fileType === "GPKG"}
+                  onChange={(e) =>
+                    setModalState({ ...modalState, fileType: e.target.value })
+                  }
+                />
+                <label htmlFor={"GPKG"} className="text-sm text-gray-900 mx-1">
+                  GPKG
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 w-[37%]">
+            <div className="flex flex-col h-[50%]">
+              <div className=" border-b-2 border-black text-xl font-bold">Metadata</div>
+              <DownloadColumnList
+                columns={modalState.columns.filter((opt) =>
+                  metaColumnNames.includes(opt)
+                ).map(opt => sourceDataColumns.find(col => col.name === opt))}
+                setColumns={setColumns}
+              />
+            </div>
+            <div className="flex flex-col h-[100%]">
+              <div className=" border-b-2 border-black text-xl font-bold">
+                Performance Measures
+              </div>
+              <DownloadColumnList
+                columns={modalState.columns.filter(
+                  (opt) => !metaColumnNames.includes(opt)
+                ).map(opt => sourceDataColumns.find(col => col.name === opt))}
+                setColumns={setColumns}
+                maxHeight="50%"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 w-[36%]">
+            <div className="h-[32.75%]">
+              <div className=" border-b-2 text-lg font-bold">Add Metadata</div>
+              <MultiLevelSelect
+                searchable={true}
+                placeholder={"Select a metadata..."}
+                displayAccessor={ t => t.display_name || t.name }
+                valueAccessor={ t => t.name }
+                options={sourceDataColumns
+                  .filter((opt) => metaColumnNames.includes(opt.name))
+                  .filter((opt) => !modalState.columns.includes(opt.name))}
+                value={""}
+                onChange={(e) => setColumns(e)}
+              />
+            </div>
+            <div>
+              <div className=" border-b-2 text-lg font-bold">Add Measures</div>
+              <MultiLevelSelect
+                searchable={true}
+                placeholder={"Select a measure..."}
+                displayAccessor={ t => t.display_name || t.name }
+                valueAccessor={ t => t.name }
+                options={sourceDataColumns
+                  .filter((opt) => !metaColumnNames.includes(opt.name))
+                  .filter((opt) => !modalState.columns.includes(opt.name))}
+                value={""}
+                onChange={(e) => setColumns(e)}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="absolute" style={{ bottom: "20px", right: "20px" }}>
+          <div className="flex mt-2 text-sm items-center flex-row-reverse">
+            One or more columns must be selected
+            {modalState.columns.length > 0 ? (
+              <CheckCircleIcon className="mr-2 text-green-700 h-4 w-4" />
+            ) : (
+              <XCircleIcon className="mr-2 text-red-700 h-4 w-4" />
+            )}
+          </div>
+          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              disabled={
+                modalState.loading ||
+                modalState.columns.length === 0 ||
+                modalState.columns.some((colName) => colName.includes(" "))
               }
-            }}
-          >
-            Toggle All
-          </Button>
-        </div>
-      </div>
-      {hasCalcColumn ? (
-        <div className="flex mt-1 text-xs items-center">
-          (cannot include "Calculated Columns")
-        </div>
-      ) : (
-        ""
-      )}
-      <div className="flex max-h-[350px] gap-4">
-        <div>
-          <div>Metadata</div>
-          <div className="flex flex-col flex-wrap max-h-[300px]">
-
-            {metaOptions?.map((option) => (
-              <DownloadModalCheckbox
-                key={`${option}_checkbox`}
-                inputName={option}
-                checked={modalState.includes(option)}
-                onChange={onChange}
-                disabled={hasCalcColumn && option.includes(" ")}
-              />
-            ))}
+              className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+              onClick={downloadAlreadyExists ? () => {} : createDownload}
+            >
+              {downloadAlreadyExists ? (
+                <a
+                  href={viewDownloads[modalState.uniqueFileNameBase].replace(
+                    "$HOST",
+                    `${DAMA_HOST}`
+                  )}
+                >
+                  Download data
+                </a>
+              ) : modalState.loading ? (
+                "Sending request..."
+              ) : (
+                "Start download creation"
+              )}
+            </button>
+            <button
+              type="button"
+              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+              onClick={() => setModalOpen(false)}
+            >
+              Cancel
+            </button>
           </div>
-        </div>
-        <div>
-          <div>Performance Measures</div>
-          <div className="flex flex-col flex-wrap max-h-[300px]">
-
-            {performanceMeasureOptions?.map((option) => (
-              <DownloadModalCheckbox
-                key={`${option}_checkbox`}
-                inputName={option}
-                checked={modalState.includes(option)}
-                onChange={onChange}
-                disabled={hasCalcColumn && option.includes(" ")}
-              />
-            ))}
-          </div>
-
         </div>
       </div>
     </div>
   );
 };
 
-const DownloadModalCheckbox = ({
-  inputName,
-  checked,
-  onChange,
-  disabled = false,
-}) => {
+const DownloadColumnList = ({ columns, setColumns, maxHeight }) => {
   return (
-    <div className="mt-2 flex items-center text-sm mr-8">
-      <input
-        id={inputName}
-        disabled={disabled}
-        name={inputName}
-        type="checkbox"
-        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        checked={checked}
-        onChange={() => onChange(inputName)}
-      />
-      <label htmlFor={inputName} className="ml-2 text-xs text-gray-900">
-        {inputName}
-      </label>
+    <div 
+      style={{ maxHeight, overflowY: 'auto', minHeight:"20%" }}
+      className="w-full"
+    >
+      {columns.map((col) => {
+        return (
+          <div
+            className="flex justify-between px-1 border-2 border-transparent hover:border-black font-semibold "
+            key={`selected_col_${col.name}`}
+          >
+            <div>{col.display_name || col.name}</div>
+            <div
+              className="font-bold cursor-pointer"
+              onClick={() => setColumns(col.name)}
+            >
+              X
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
+
+export { Comp };

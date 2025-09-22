@@ -25,10 +25,12 @@ import { npmrdsPaint } from "./paint";
 
 import {
   REGION_CODE_TO_NAME,
+  UA_CODE_TO_NAME,
   PM3_LAYER_KEY,
   MPO_LAYER_KEY,
   COUNTY_LAYER_KEY,
   REGION_LAYER_KEY,
+  UA_LAYER_KEY,
   BLANK_OPTION,
 } from "./constants";
 
@@ -78,6 +80,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
     mpoLayerId,
     countyLayerId,
     regionLayerId,
+    uaLayerId
   } = useMemo(() => {
     return {
       views: get(state, `${pluginDataPath}['views']`, []),
@@ -103,6 +106,10 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
       regionLayerId: get(
         state,
         `${pluginDataPath}['active-layers'][${REGION_LAYER_KEY}]`
+      ),
+      uaLayerId: get(
+        state,
+        `${pluginDataPath}['active-layers'][${UA_LAYER_KEY}]`
       ),
     };
   }, [pluginData, pluginDataPath]);
@@ -204,6 +211,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
         });
       } else {
         if (countyLayerId) {
+          console.log("reserting filter for county::", countyLayerId)
           resetGeometryBorderFilter({
             layerId: countyLayerId,
             setState,
@@ -216,20 +224,61 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
         (geo) => geo.type === "region_code"
       );
       if (selectedRegion.length > 0 && regionLayerId) {
-        //SOURCE 1025
+        //SOURCE 1497 view 4135 nysdot_regions
+        console.log({selectedRegion})
         setGeometryBorderFilter({
           setState,
           layerId: regionLayerId,
-          geomDataKey: "redc_ed_attn_objectid",
+          geomDataKey: "region",
           values: selectedRegion.map((regionCode) =>
-            parseInt(regionCode.value)
+            regionCode.value
           ),
           layerBasePath: symbologyLayerPath,
         });
       } else {
         if (regionLayerId) {
+          console.log("reserting filter for region::", regionLayerId)
           resetGeometryBorderFilter({
-            layerId: selectedRegion,
+            layerId: regionLayerId,
+            setState,
+            layerBasePath: symbologyLayerPath,
+          });
+        }
+      }
+
+      const selectedUa = geography.filter(
+        (geo) => geo.type === "urban_code"
+      );
+      console.log({geography, selectedUa})
+      if (selectedUa.length > 0 && uaLayerId) {
+        console.log("inside setting border filter", selectedUa)
+        //SOURCE 1493 view 2663 ua_boundaries
+        setGeometryBorderFilter({
+          setState,
+          layerId: uaLayerId,
+          geomDataKey: "uace_20",
+          values: selectedUa.map((uaCode) =>
+            {
+              let paddedCode = uaCode.value;
+              const codeLength = uaCode.value.length;
+              const lengthDiff = 5 - codeLength;
+              if(lengthDiff !== 0) {
+                for(let i = 0; i < lengthDiff; i++) {
+                  paddedCode = "0" + paddedCode
+                }
+              }
+              console.log({paddedCode})
+              return paddedCode;
+            }
+          ),
+          layerBasePath: symbologyLayerPath,
+        });
+      } else {
+        console.log("trying to reset UA filter")
+        if (uaLayerId) {
+          console.log("reserting filter for UA::", uaLayerId)
+          resetGeometryBorderFilter({
+            layerId: uaLayerId,
             setState,
             layerBasePath: symbologyLayerPath,
           });
@@ -277,6 +326,13 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
             layerBasePath: symbologyLayerPath,
           });
         }
+        if (uaLayerId) {
+          resetGeometryBorderFilter({
+            layerId: uaLayerId,
+            setState,
+            layerBasePath: symbologyLayerPath,
+          });
+        }
       });
     }
   }, [geography]);
@@ -284,7 +340,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
   //geography selector
   //mpos/regions/counties/ua/state
   const geomOptions = JSON.stringify({
-    groupBy: ["ua_name", "region_code", "mpo_name", "county"],
+    groupBy: ["urban_code", "region_code", "mpo_name", "county"],
   });
   useEffect(() => {
     const getGeoms = async () => {
@@ -297,7 +353,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
         geomOptions,
         "databyIndex",
         { from: 0, to: 200 },
-        ["ua_name", "region_code", "mpo_name", "county"],
+        ["urban_code", "region_code", "mpo_name", "county"],
       ]);
     };
 
@@ -318,7 +374,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
     ]);
     if (geomData) {
       const geoms = {
-        ua_name: [],
+        urban_code: [],
         region_code: [],
         mpo_name: [],
         county: [],
@@ -326,7 +382,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
       };
 
       Object.values(geomData).forEach((da) => {
-        geoms.ua_name.push(da.ua_name);
+        geoms.urban_code.push(da.urban_code);
         geoms.region_code.push(da.region_code);
         geoms.mpo_name.push(da.mpo_name);
         geoms.county.push(da.county);
@@ -341,11 +397,15 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
       };
       const objectFilter = (da) => typeof da !== "object";
       const truthyFilter = (val) => !!val;
-      geoms.ua_name = geoms.ua_name
+      geoms.urban_code = geoms.urban_code
         .filter(onlyUnique)
         .filter(objectFilter)
         .filter(truthyFilter)
-        .map((da) => ({ name: da + " UA", value: da, type: "ua_name" }))
+        .map((da) => ({ 
+          name: UA_CODE_TO_NAME[da] + " UA",
+          value: da,
+          type: "urban_code" 
+        }))
         .sort(nameSort);
       geoms.region_code = geoms.region_code
         .filter(onlyUnique)
@@ -377,7 +437,7 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
       return [
         ...geoms.county,
         ...geoms.mpo_name,
-        ...geoms.ua_name,
+        ...geoms.urban_code,
         ...geoms.region_code,
       ];
     } else {
@@ -568,6 +628,20 @@ const ExternalPanel = ({ state, setState, pathBase = "" }) => {
           set(
             draft,
             `${symbologyLayerPath}['${countyLayerId}']['legend-orientation']`,
+            "none"
+          );
+        }
+        if (regionLayerId) {
+          set(
+            draft,
+            `${symbologyLayerPath}['${regionLayerId}']['legend-orientation']`,
+            "none"
+          );
+        }
+        if (uaLayerId) {
+          set(
+            draft,
+            `${symbologyLayerPath}['${uaLayerId}']['legend-orientation']`,
             "none"
           );
         }
