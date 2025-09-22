@@ -2,12 +2,12 @@ import { useContext, useState, useEffect, useMemo } from "react";
 import { ThemeContext, Input, Button } from "~/modules/avl-components/src";
 import Select from "~/modules/avl-components/src/components/Inputs/select";
 import { DamaContext } from "~/pages/DataManager/store";
-import { wrappers } from "~/modules/ams/src";
+//import { wrappers } from "~/modules/ams/src";
 import { Link } from "react-router";
 import TaskList from "~/pages/DataManager/Tasks/TaskList";
-const amsReduxWrapper = wrappers["ams-redux"];
+//const amsReduxWrapper = wrappers["ams-redux"];
 const PUBLIC_GROUP = 'Public';
-const ReduxedAdminPage = amsReduxWrapper((props) => {
+const ReduxedAdminPage = (props) => {
   const { user } = useContext(DamaContext);
   const { groups, source, users, getGroups, getUsers, getUsersPreferences } =
     props;
@@ -34,7 +34,7 @@ const ReduxedAdminPage = amsReduxWrapper((props) => {
       loggedInUser={user}
     />
   );
-});
+};
 
 const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const componentGroups = [...groups];
