@@ -154,7 +154,7 @@ const Edit = ({value, onChange, size}) => {
         ) {
             getFilterBounds();
         } else {
-        if(state?.symbologies[activeSym]?.symbology?.length > 0) { 
+        if(state?.symbologies[activeSym]?.symbology?.length > 0) {
             setState((draft) => {
                  draft.symbologies[activeSym].symbology.zoomToFilterBounds = [];
             });
@@ -182,19 +182,19 @@ const Edit = ({value, onChange, size}) => {
                             }
                             return layerOut
                         },{})
-                    let newPlugins = Object.keys(curr?.symbology?.plugins)
+                  let newPlugins = Object.keys(curr?.symbology?.plugins || {})
                         .reduce((pluginOut, pluginKey) => {
                             if( !ids.includes(pluginKey) ) {
                                 pluginOut[pluginKey] = curr?.symbology?.plugins?.[pluginKey]
                             }
                             return pluginOut
                         },{})
-                    
-                        
+
+
                     return [...out,  ...Object.values(newSymbLayers), ...Object.values(newPlugins)]
-                    
+
                 },[]))
- 
+
                 setMapLayers(draftMapLayers => {
                     let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => !!d)
                     let newLayers = allLayers
@@ -286,7 +286,7 @@ const Edit = ({value, onChange, size}) => {
                         "dynamic-filters": draftDynamicFilters,
                         selectedInteractiveFilterIndex: draftFilterIndex
                       };
-  
+
                       newSymbology.layers.forEach((d, i) => {
                         newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
                       });
@@ -373,7 +373,7 @@ Edit.settings = {
 export default {
     "name": 'Map',
     "type": 'Map',
-    "variables": 
+    "variables":
     [],
     getData,
 
