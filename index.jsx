@@ -33,12 +33,13 @@ const DAMA_Wrapper = (Component, DAMA_ARGS) => {
     baseUrl = "/datasources",
     defaultPgEnv = "pan",
     useFalcor,
-    useAuth
+    useAuth = () => { return false },
+    getUser = () => {}
   } = DAMA_ARGS;
 
   return () => {
     const { falcor, falcorCache } = useFalcor();
-    const user = useAuth();
+    const user = useAuth() || getUser();
     return (
       <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user } }>
         <Component />
@@ -76,7 +77,7 @@ const DamaRoutes = DAMA_ARGS => {
   // register custom dataTypes for project
   Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
 
-  
+
   return [
     /**
      * SOURCES
