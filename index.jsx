@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 
 import { DataManagerHeader, Header } from "./Source/layout";
 import SourceList from "./Source/list";
@@ -30,18 +30,31 @@ import MapEditor from './MapEditor';
 const DAMA_Wrapper = (Component, DAMA_ARGS) => {
 
   const {
-    baseUrl = "/datasources",
-    defaultPgEnv = "pan",
-    useFalcor,
-    useAuth = () => { return false },
-    getUser = () => {}
+
+      baseUrl = "/datasources",
+      defaultPgEnv = "pan",
+      useFalcor,
+      getUser,
+      getGroups,
+      getUsers,
+      useAuth = () => { return false }
   } = DAMA_ARGS;
 
   return () => {
     const { falcor, falcorCache } = useFalcor();
-    const user = useAuth() || getUser();
+    const [user, setUser] = useState({groups: []});
+
+    useEffect(() => {
+        async function initUser(){
+            const user = useAuth() || await getUser() || {groups: []};
+            setUser(user)
+        }
+
+        initUser();
+    }, []);
+
     return (
-      <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user } }>
+      <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user, getUsers, getGroups } }>
         <Component />
       </DamaContext.Provider>
     )

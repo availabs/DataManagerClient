@@ -4,8 +4,6 @@ import { getAttributes } from './attributes'
 import { DamaContext } from '../store'
 
 import { Dropdown } from '~/modules/avl-components/src'
-//import { Item } from '~/pages/Auth/AuthMenu'
-
 import { Link, useParams } from 'react-router'
 import get from 'lodash/get'
 
@@ -22,7 +20,6 @@ const Item = (to, icon, span, condition) => (
         </Link>
     : null
 )
-
 
 const SourcesLayout = ({children, fullWidth, hideBreadcrumbs, isListAll }) => {
   return (

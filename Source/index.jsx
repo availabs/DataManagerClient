@@ -14,7 +14,7 @@ import { NoMatch } from "../utils/404";
 
 const PUBLIC_GROUP = 'Public';
 
-const computeAuth = ({sourceAuth, user}) => {
+const computeAuth = ({sourceAuth, user={}}) => {
   const { authUsers, authGroups } = {
     authUsers: get(sourceAuth, ["users"], {}),
     authGroups: get(sourceAuth, ["groups"], {}),
@@ -22,7 +22,7 @@ const computeAuth = ({sourceAuth, user}) => {
   const userGroupAuth = Object.keys(authGroups).reduce((a, curGroupName) => {
     let max = a;
 
-    if(user.groups.includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
+    if((user.groups || []).includes(curGroupName) || curGroupName === PUBLIC_GROUP) {
       //user is a member. take this authLevel if it is higher
       if(parseInt(authGroups[curGroupName]) > max) {
         max = parseInt(authGroups[curGroupName]);
@@ -169,7 +169,7 @@ const Source = ({}) => {
   }
 
   return (
-     
+
         <SourcesLayout baseUrl={baseUrl}>
           <TopNav
             menuItems={Object.values(pages)
@@ -201,7 +201,7 @@ const Source = ({}) => {
             />
           </div>
         </SourcesLayout>
-      
+
     )
 };
 
