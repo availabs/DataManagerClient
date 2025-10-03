@@ -9,7 +9,9 @@ const noop = () => false;
 const ReduxedAdminPage = (props) => {
     const [users, setUsers] = useState(props?.users || []);
     const [groups, setGroups] = useState(props?.groups || []);
-    const { user, getUsers = noop, getGroups = noop } = useContext(DamaContext);
+    const { user, useAuth } = useContext(DamaContext);
+    const { AuthAPI } = useAuth()
+    const { getUsers = noop, getGroups = noop} = AuthAPI
     const {source, getUsersPreferences = noop } = props;
 
     useEffect(() => {
@@ -45,7 +47,8 @@ const ReduxedAdminPage = (props) => {
 const AdminPage = ({ source, users=[], groups=[], loggedInUser }) => {
   const componentGroups = [...groups];
   const myTheme = useContext(ThemeContext);
-  const { falcor, pgEnv, baseUrl, getUsers, getGroups } = useContext(DamaContext);
+  const { falcor, pgEnv, baseUrl } = useContext(DamaContext);
+
 
   const { auth: sourceAuth } = source?.statistics ?? {};
 

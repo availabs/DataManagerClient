@@ -30,31 +30,18 @@ import MapEditor from './MapEditor';
 const DAMA_Wrapper = (Component, DAMA_ARGS) => {
 
   const {
-
       baseUrl = "/datasources",
       defaultPgEnv = "pan",
       useFalcor,
-      getUser,
-      getGroups,
-      getUsers,
-      useAuth = () => { return false }
+      useAuth = () => { return {user:{}} }
   } = DAMA_ARGS;
 
   return () => {
     const { falcor, falcorCache } = useFalcor();
-    const [user, setUser] = useState({groups: []});
-
-    useEffect(() => {
-        async function initUser(){
-            const user = useAuth() || await getUser() || {groups: []};
-            setUser(user)
-        }
-
-        initUser();
-    }, []);
+    const { user } = useAuth()
 
     return (
-      <DamaContext.Provider value={ { pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user, getUsers, getGroups } }>
+      <DamaContext.Provider value={{ pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user, useAuth }}>
         <Component />
       </DamaContext.Provider>
     )
