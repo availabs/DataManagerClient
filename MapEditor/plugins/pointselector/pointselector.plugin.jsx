@@ -65,15 +65,17 @@ export const PointselectorPlugin = {
       setState((draft) => {
         set(draft, `${pluginDataPath}['new-point']`, null);
         const curPoints = get(draft, `${pluginDataPath}['points']`, []);
-        const curMarkers = get(
-          draft,
-          `${pluginDataPath}['points-markers']`,
-          []
-        );
         curPoints.push(newPoint);
-        curMarkers.push(marker);
+
+        // const curMarkers = get(
+        //   draft,
+        //   `${pluginDataPath}['points-markers']`,
+        //   []
+        // );
+        //curMarkers.push(marker);
+
         set(draft, `${pluginDataPath}['points']`, curPoints);
-        set(draft, `${pluginDataPath}['points-markers']`, curMarkers);
+        //set(draft, `${pluginDataPath}['points-markers']`, curMarkers);
       });
     }
   },
@@ -176,12 +178,12 @@ const precisionRound = (number, precision = 0) => {
 
 const resetPointsAndMarkers = ({ setState, pluginDataPath }) => {
   setState((draft) => {
-    const markers = get(draft, `${pluginDataPath}['points-markers']`, []);
+    //const markers = get(draft, `${pluginDataPath}['points-markers']`, []);
     set(draft, `${pluginDataPath}['points']`, []);
-    set(draft, `${pluginDataPath}['points-markers']`, []);
+    //set(draft, `${pluginDataPath}['points-markers']`, []);
 
-    markers.forEach((mark) => {
-      mark?.remove && mark?.remove();
-    });
+    // markers.forEach((mark) => {
+    //   mark?.remove && mark?.remove();
+    // });
   });
 };

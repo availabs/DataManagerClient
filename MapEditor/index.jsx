@@ -58,8 +58,9 @@ export const PLUGIN_TYPE = 'plugin'
  *      // can use hooks
  *    externalPanel : ({ state, setState }) => { returns array of json; }
  *      // json describes the `formControls` for end user in DMS
+ *      // panel position can be set within DMS
  *      // can use hooks
- *    cleanup: (map, state, setState) => { //returns null; }
+ *    cleanup: (map, state, setState) => { returns null; }
  *      // if plugin is removed, this should undo any changes made directly to the map (i.e. custom on-click)
  *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
  * }
