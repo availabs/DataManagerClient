@@ -94,7 +94,7 @@ export const PointselectorPlugin = {
       },
     ];
 
-    return controls;
+    return [];
   },
   externalPanel: ({ state, setState }) => {
     return [];
