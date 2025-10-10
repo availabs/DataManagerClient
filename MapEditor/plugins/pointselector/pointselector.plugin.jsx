@@ -16,7 +16,7 @@ import { Button } from "~/modules/avl-components/src";
  */
 
 const PLUGIN_ID = "pointselector";
-
+let MARKERS = [];
 export const PointselectorPlugin = {
   id: PLUGIN_ID,
   type: "plugin",
@@ -67,15 +67,8 @@ export const PointselectorPlugin = {
         const curPoints = get(draft, `${pluginDataPath}['points']`, []);
         curPoints.push(newPoint);
 
-        // const curMarkers = get(
-        //   draft,
-        //   `${pluginDataPath}['points-markers']`,
-        //   []
-        // );
-        //curMarkers.push(marker);
-
+        MARKERS.push(marker)
         set(draft, `${pluginDataPath}['points']`, curPoints);
-        //set(draft, `${pluginDataPath}['points-markers']`, curMarkers);
       });
     }
   },
@@ -178,12 +171,10 @@ const precisionRound = (number, precision = 0) => {
 
 const resetPointsAndMarkers = ({ setState, pluginDataPath }) => {
   setState((draft) => {
-    //const markers = get(draft, `${pluginDataPath}['points-markers']`, []);
+    MARKERS.forEach((mark) => {
+      mark?.remove && mark?.remove();
+    });
+    MARKERS = [];
     set(draft, `${pluginDataPath}['points']`, []);
-    //set(draft, `${pluginDataPath}['points-markers']`, []);
-
-    // markers.forEach((mark) => {
-    //   mark?.remove && mark?.remove();
-    // });
   });
 };
