@@ -31,6 +31,7 @@ import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 import { extractState, fetchBoundsForFilter } from './stateUtils';
 
 import { MacroviewPlugin } from "./plugins/macroview/macroview.plugin";
+import { PointselectorPlugin } from "./plugins/pointselector/pointselector.plugin";
 
 export const SymbologyContext = createContext(undefined);
 
@@ -38,9 +39,36 @@ export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
 
 export const PLUGIN_TYPE = 'plugin'
 
+/**
+ * PLUGIN STRUCTURE:
+ * JSON
+ * {
+ *    id: "pluginid",
+ *    type: "plugin",
+ *    mapRegister: (map, state, setState) => { returns null; }
+ *      // stuff to do when plugin is initialized. only runs once
+ *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
+ *    dataUpdate: (map, state, setState) => { returns null; }
+ *      // fires when symbology.pluginData['${pluginid}'] changes
+ *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
+ *    comp: ({ state, setState }) => { returns React component; }
+ *      // can use "position:absolute" to place anywhere, render anything, etc.
+ *      // can use hooks
+ *    internalPanel : ({ state, setState }) => { returns array of json; }
+ *      // json describes the `formControls` for use within MapEditor
+ *      // can use hooks
+ *    externalPanel : ({ state, setState }) => { returns array of json; }
+ *      // json describes the `formControls` for end user in DMS
+ *      // can use hooks
+ *    cleanup: (map, state, setState) => { //returns null; }
+ *      // if plugin is removed, this should undo any changes made directly to the map (i.e. custom on-click)
+ *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
+ * }
+ */
 //TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   macroview: MacroviewPlugin,
+  pointselector: PointselectorPlugin
 };
 
 export const RegisterPlugin = (name, plugin) => {
