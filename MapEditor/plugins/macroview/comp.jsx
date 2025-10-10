@@ -1,10 +1,10 @@
 import React, {useState, useMemo, useEffect} from "react";
 import get from "lodash/get";
 import set from "lodash/set";
-import { filters, updateSubMeasures, getMeasure } from "./updateFilters";
+import { filters, getMeasure } from "./updateFilters";
 import { DAMA_HOST } from '~/config'
 import { measure_info } from "./measures";
-import { Button, Modal } from "~/modules/avl-components/src";
+import { Button } from "~/modules/avl-components/src";
 import { DamaContext } from "../../../store";
 import { CMSContext } from "~/modules/dms/src";
 import { PM3_LAYER_KEY } from "./constants";

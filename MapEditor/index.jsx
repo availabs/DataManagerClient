@@ -41,7 +41,6 @@ export const PLUGIN_TYPE = 'plugin'
 
 /**
  * PLUGIN STRUCTURE:
- * JSON
  * {
  *    id: "pluginid",
  *    type: "plugin",
@@ -64,8 +63,13 @@ export const PLUGIN_TYPE = 'plugin'
  *      // if plugin is removed, this should undo any changes made directly to the map (i.e. custom on-click)
  *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
  * }
+ * NOTES:
+ *  All components (except for `internalPanel`) must work in both MapEditor and DMS
+ *    This generally means 2 things:
+ *      You need to dynamically determine the `symbology` and/or `pluginData` path
+ *      You need to dynamically determine which context to use (for falcor, mostly)
+ *    There are examples in the `macroview` plugin
  */
-//TODO -- eventually, this pulls from file directory, or something else dynamic
 export const PluginLibrary = {
   macroview: MacroviewPlugin,
   pointselector: PointselectorPlugin

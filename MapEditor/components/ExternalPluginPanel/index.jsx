@@ -35,6 +35,11 @@ function ExternalPluginPanel() {
     pathBase = `symbologies['${symbName}'].symbology.pluginData`;
   }
 
+  //filter tabs depending on if they have any controls
+  tabs = tabs.filter(pluginName => 
+     PluginLibrary[pluginName]?.externalPanel({state, setState, pathBase: `${pathBase}['${pluginName}']`})?.length
+  )
+
   return (
     <div className="p-4">
       <div className="bg-white/95 w-[340px] rounded-lg drop-shadow-lg pointer-events-auto max-h-[calc(100vh_-_111px)] scroll-xs">
