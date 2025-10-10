@@ -111,7 +111,7 @@ const Edit = ({value, onChange, size}) => {
             if(fI !== -1){
                 draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer].selectedInteractiveFilterIndex = fI;
             }
-
+            draft.symbologies[activeSym].symbology.pageFilters = pageFilters;
             if(dynamicFilterOptions?.length){
                 draft.symbologies[activeSym].symbology.layers[activeSymSymbology.activeLayer]['dynamic-filters']
                     .filter(f => searchParamValues[getSearchParamKey(f)])
