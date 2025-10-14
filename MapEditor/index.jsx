@@ -72,8 +72,8 @@ export const PLUGIN_TYPE = 'plugin'
  *    There are examples in the `macroview` plugin
  */
 export const PluginLibrary = {
-  macroview: MacroviewPlugin,
-  pointselector: PointselectorPlugin
+  // macroview: MacroviewPlugin,
+  // pointselector: PointselectorPlugin
 };
 
 export const RegisterPlugin = (name, plugin) => {
@@ -161,9 +161,9 @@ const MapEditor = () => {
   if (
     !!initialSymbology?.symbology?.layers &&
     Object.keys(initialSymbology?.symbology?.layers).length > 0 &&
-    (initialSymbology?.symbology?.activeLayer === "" || 
+    (initialSymbology?.symbology?.activeLayer === "" ||
       !initialSymbology?.symbology.layers[initialSymbology?.symbology?.activeLayer]
-    ) 
+    )
   ) {
     initialSymbology.symbology.activeLayer = Object.values(
       initialSymbology?.symbology?.layers
@@ -172,7 +172,7 @@ const MapEditor = () => {
   // --------------------------------------------------
   // Symbology Object
   // Single Source of truth for everything in this view
-  // once loaded this is mutable here 
+  // once loaded this is mutable here
   // and is written to db on change
   // ---------------------------------------------------
   const [state,setState] = useImmer(initialSymbology)
@@ -185,12 +185,12 @@ const MapEditor = () => {
     }
   },[initialSymbology]);
 
-  // Updates localStorage whenever state changes 
+  // Updates localStorage whenever state changes
   useEffect(() => {
     function updateData() {
       //TODO -- after adding about 8-10 interactive filters, localstorage got too full
       try {
-        if(window.localStorage) { 
+        if(window.localStorage) {
           window.localStorage.setItem(symbologyLocalStorageKey, JSON.stringify(state))
         }
       } catch(e) {
@@ -257,12 +257,12 @@ const MapEditor = () => {
                 Object.keys(state?.symbology?.layers || {}).includes(d.id) ||
                 Object.keys(state?.symbology?.plugins || {}).includes(d.id)
             );
-            
+
 
 
             const out = [
                 // keep existing layers & filter
-                ...oldLayers, 
+                ...oldLayers,
                 // add new layers
                 ...newLayers
             ]
@@ -275,7 +275,7 @@ const MapEditor = () => {
     }
     updateLayers()
   }, [state?.symbology?.layers, state?.symbology?.plugins, state?.symbology?.zoomToFit])
-  
+
   let {
     pathBase,
     activeLayerId,
@@ -377,7 +377,7 @@ const MapEditor = () => {
         .forEach(l => {
           const draftFilters =  get(l,`['interactive-filters']`);
           const draftFilterIndex = l.selectedInteractiveFilterIndex;
-          const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+          const draftInteractiveFilter = draftFilters[draftFilterIndex]
 
           if(draftInteractiveFilter) {
             draft.symbology.layers[l.id] = {
@@ -488,7 +488,7 @@ const MapEditor = () => {
           method
         }
 
-        let colorBreaks; 
+        let colorBreaks;
 
         let regenerateLegend = false;
         if(choroplethdata && Object.keys(choroplethdata).length === 2 && viewGroupId === prevViewGroupId) {
@@ -520,7 +520,7 @@ const MapEditor = () => {
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
         console.log({paint, legend})
         //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
-        //this will fix a problem with the custom scale 
+        //this will fix a problem with the custom scale
         if(!regenerateLegend && legendData.length > 0) {
           legend = cloneDeep(legendData)
         }
@@ -608,7 +608,7 @@ const MapEditor = () => {
     ) {
       getFilterBounds();
     } else {
-      if(state?.symbology?.zoomToFilterBounds?.length > 0) { 
+      if(state?.symbology?.zoomToFilterBounds?.length > 0) {
         setState((draft) => {
           draft.symbology.zoomToFilterBounds = [];
         });
@@ -665,7 +665,7 @@ const MapEditor = () => {
           set(draft, `${pathBase}['legend-data']`, legend)
         })
       }
-    }  
+    }
   }, [breaks, isActiveLayerPlugin])
 
   useEffect(() => {
@@ -720,7 +720,7 @@ const MapEditor = () => {
             legend.pop();
           }
         }
-    
+
         setState((draft) => {
           set(draft, `${pathBase}['legend-data']`, legend);
         });
@@ -779,7 +779,7 @@ const MapEditor = () => {
       })
       falcor.get([
         'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex',{ from: 0, to: 100},[baseDataColumn, 'count(1)::int as count']
-      ])      
+      ])
     }
   },[baseDataColumn, layerType, viewId, isActiveLayerPlugin])
 
@@ -813,7 +813,7 @@ const MapEditor = () => {
             zoom: 6,
             maxPitch: 60,
             protocols: [PMTilesProtocol],
-            
+
             styles: [
               { name: "Dark",
                 style: "https://api.maptiler.com/maps/dataviz-dark/style.json?key=mU28JQ6HchrQdneiq6k9"
@@ -828,7 +828,7 @@ const MapEditor = () => {
               { name: "Streets",
                 style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-             
+
               { name: "Light",
                 style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
               },

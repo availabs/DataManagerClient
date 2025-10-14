@@ -18,6 +18,7 @@ import SettingsComponent from "./Source/settings";
 import DmsList from "./Source/dmsList.jsx";
 
 import { registerDataType } from './DataTypes'
+import { RegisterPlugin } from "./MapEditor";
 
 import { DamaContext } from "./store"
 
@@ -56,6 +57,7 @@ const DamaRoutes = DAMA_ARGS => {
     authLevel = -1,             // old position 2 arg,
     components = {},
     dataTypes = {},
+    mapPlugins = {},
     navSettings = {},
     useFalcor,
     useAuth
@@ -76,6 +78,8 @@ const DamaRoutes = DAMA_ARGS => {
 
   // register custom dataTypes for project
   Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
+  Object.keys(mapPlugins).forEach(plugin => registerDataType(plugin, mapPlugins[plugin]));
+
 
 
   return [
