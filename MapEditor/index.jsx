@@ -30,9 +30,6 @@ import { getAttributes } from "~/pages/DataManager/Collection/attributes";
 
 import { extractState, fetchBoundsForFilter } from './stateUtils';
 
-import { MacroviewPlugin } from "./plugins/macroview/macroview.plugin";
-import { PointselectorPlugin } from "./plugins/pointselector/pointselector.plugin";
-
 export const SymbologyContext = createContext(undefined);
 
 export const LOCAL_STORAGE_KEY_BASE = 'mapeditor_symbology_'
