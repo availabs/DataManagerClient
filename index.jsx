@@ -78,7 +78,7 @@ const DamaRoutes = DAMA_ARGS => {
 
   // register custom dataTypes for project
   Object.keys(dataTypes).forEach(type => registerDataType(type, dataTypes[type]));
-  Object.keys(mapPlugins).forEach(plugin => registerDataType(plugin, mapPlugins[plugin]));
+  Object.keys(mapPlugins).forEach(plugin => RegisterPlugin(plugin, mapPlugins[plugin]));
 
 
 
