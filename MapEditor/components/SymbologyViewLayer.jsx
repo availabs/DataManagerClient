@@ -223,14 +223,24 @@ const ViewLayerRender = (props) => {
                 const filterValue = layerFilter[filterColumnName].value;
                 const filterColumnClause = ["get", filterColumnName];
 
+                let parseMapDataFunction = '';
+
                 if(filterOperator === 'between') {
+                  //between is only supported for numeric fields
+                  parseMapDataFunction = "to-number"
                   mapFilter = [
                     "all",
-                    [">=", ["to-string", filterColumnClause], ["to-string", filterValue?.[0]]],
-                    ["<=", ["to-string", filterColumnClause], ["to-string", filterValue?.[1]]],
+                    [">=", [parseMapDataFunction, filterColumnClause], [parseMapDataFunction, filterValue?.[0]]],
+                    ["<=", [parseMapDataFunction, filterColumnClause], [parseMapDataFunction, filterValue?.[1]]],
                   ];
                 }
                 else {
+                  //attempt to parseFloat the value from the user. If NaN, we are comparing strings
+                  if(isNaN(parseFloat(filterValue))){
+                    parseMapDataFunction = "to-string"
+                  } else {
+                    parseMapDataFunction = "to-number"
+                  }
                   if (["==", "!="].includes(filterOperator)) {
                     // "in"Allows for `or`, i.e. ogc_fid = 123 or 456
                     mapFilter = [
@@ -246,8 +256,8 @@ const ViewLayerRender = (props) => {
                   else {
                     mapFilter = [
                       filterOperator,
-                      ["to-string", filterColumnClause],
-                      ["to-string", filterValue]
+                      [parseMapDataFunction, filterColumnClause],
+                      [parseMapDataFunction, filterValue]
                     ];
                   }
                 }
