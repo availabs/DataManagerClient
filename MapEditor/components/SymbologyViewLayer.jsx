@@ -322,9 +322,16 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   
   const dynamicCols = layerProps?.["dynamic-filters"]
     ?.filter((dFilter) => dFilter?.values?.length > 0)
-    .map((dFilter) => dFilter.column_name); 
+    .map((dFilter) => dFilter.column_name);
   const colsToAppend = dataFilterCols.concat(dynamicCols).filter(onlyUnique).filter(col => !!col).join(",")
-
+  
+  /**
+   * colsToAppend contains all the data columns used for:
+   * filter groups and/or data-column (filter group allows user to change the data-column)
+   * dynamic columns
+   * 
+   * This conditional modifies `newTileUrl` to include those columns
+   */
   if (newTileUrl && (colsToAppend || layerHasFilter)) {
     if (!newTileUrl?.includes("?cols=")) {
       newTileUrl += `?cols=`;
@@ -341,11 +348,29 @@ const getLayerTileUrl = (tileBase, layerProps) => {
       newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
     }
 
-    if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
-      newTileUrl += ",";
-    }
+    //If we added a column already to the URL, and we still have to process the filter columns, add a comma
+    //This adds a trailing comma if we KNOW we are going to add another column after
+    //TODO 10/15 RYAN TEST THIS GOD PLEASE
+    //I COMMENTED OUT
+    // if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
+    //   console.log("inside this thicc conditional")
+    //   newTileUrl += ",";
+    // }
 
+    /**
+     * this conditional modifies `newTileUrl` with any columns used 
+     */
     if (layerHasFilter) {
+      const splitUrl = newTileUrl.split("?cols=");
+      //console.log("new split url::", splitUrl)
+      //If url already contains stuff after the `cols`, we need a comma before we add more columns
+      //TODO 10/15 RYAN TEST THIS GOD PLEASE
+      //major change
+      if (splitUrl[1].length !== 0) {
+        newTileUrl += ",";
+      }
+
+      //loop over filter columns. Append the column, then add a `comma` if it isn't the last one
       Object.keys(layerProps.filter).forEach((filterCol, i) => {
         //TODO actually handle calculated columns
         if(filterCol.includes("rpad(substring(prop_class, 1, 1), 3, '0')")){
