@@ -216,7 +216,7 @@ function SimpleControl({path, params={}}) {
   )
 }
 
-function ToggleControl({path, params={title:""}}) {
+function ToggleControl({path, params={title:"", default: false}}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   const pathBase =
@@ -226,9 +226,9 @@ function ToggleControl({path, params={title:""}}) {
 
   const { value } = useMemo(() => {
     return {
-      value: get(state, `${pathBase}.${path}`, {}),
+      value: get(state, `${pathBase}.${path}`, params.default),
     }
-  },[state])
+  },[state]);
 
   return (
     <label className='flex'>

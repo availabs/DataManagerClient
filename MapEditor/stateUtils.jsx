@@ -109,7 +109,8 @@ const extractState = (state) => {
       []
     ),
     filterMode: get(state, `${pathBase}['filterMode']`),
-    allPluginActiveLayerIds
+    allPluginActiveLayerIds,
+    hoverCasing: get(state, `${pathBase}['hover-casing']`, false),
   };
 };
 
