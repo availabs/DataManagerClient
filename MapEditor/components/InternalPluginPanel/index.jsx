@@ -18,8 +18,8 @@ function InternalPluginPanel() {
                 {({ selected }) => (
                   <button
                     className={`
-                      ${selected ? 
-                        'text-slate-600 border-b font-medium border-slate-600' : 
+                      ${selected ?
+                        'text-slate-600 border-b font-medium border-slate-600' :
                         'text-slate-400'} mx-1 text-sm p-2 cursor-pointer
                     `}
                   >
@@ -45,7 +45,6 @@ function InternalPluginPanel() {
                   },
                 ],
               }
-
               internalControls.unshift(displayDefaultLegendControl);
               return (
                 <Tab.Panel key={`plugin_settings_${pluginName}`}>

@@ -75,18 +75,14 @@ const PluginLayerRender = ({
   const RenderComp = plugin.comp || <></>;
 
   return (
-    <RenderComp state={state} setState={setState}/>
-  );
+     <RenderComp state={state} setState={setState} map={maplibreMap}/>
+   );
 }
 
 
 
-class PluginLayer extends AvlLayer { 
+class PluginLayer extends AvlLayer {
   RenderComponent = PluginLayerRender;
 }
 
 export default PluginLayer;
-
-
-
-
