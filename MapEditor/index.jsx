@@ -66,12 +66,27 @@ export const PLUGIN_TYPE = 'plugin'
  *    This generally means 2 things:
  *      You need to dynamically determine the `symbology` and/or `pluginData` path
  *      You need to dynamically determine which context to use (for falcor, mostly)
- *    There are examples in the `macroview` plugin
+ *    There are examples in the `macroview` plugin (TransportNY repo)
+ *  The layer(s) the plugin controls MUST use the `'active-layers'` path/field
+ *    Otherwise, a bunch of default functions from the vanilla `MapEditor` will still run, and that is probably not good
+ *    There are examples in `macroview.internalPanel` on how to create controls that the MapEditor user can use to select/set these layers
+ *    this is an (abbreviated/simplified) example of what each plugin's `InternalPanel` should return
+ *     [{
+ *       type: "select",
+ *       params: {
+ *         options: [
+ *           ...Object.keys(state.symbology.layers)
+ *             .map((layerKey, i) => ({
+ *               value: layerKey,
+ *               name: state.symbology.layers[layerKey].name,
+ *             })),
+ *         ],
+ *         default: "",
+ *       },
+ *       path: `['active-layers'][${PM3_LAYER_KEY}]`,
+ *     }]
  */
-export const PluginLibrary = {
-  // macroview: MacroviewPlugin,
-  // pointselector: PointselectorPlugin
-};
+export const PluginLibrary = {};
 
 export const RegisterPlugin = (name, plugin) => {
   PluginLibrary[name] = plugin
