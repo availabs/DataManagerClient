@@ -17,7 +17,7 @@ function VisibilityButton ({layer}) {
     setState(draft => {
       draft.symbology.layers[layer.id].isVisible = !draft.symbology.layers[layer.id].isVisible
       draft.symbology.layers[layer.id].layers.forEach((d,i) => {
-        let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'') 
+        let val = get(state, `symbology.layers[${layer.id}].layers[${i}].layout.visibility`,'')
         let update = val === 'visible' ? 'none' : 'visible'
         draft.symbology.layers[layer.id].layers[i].layout =  { "visibility": update }
       })
@@ -25,11 +25,11 @@ function VisibilityButton ({layer}) {
   }
   return (
     <>
-      {visible ? 
+      {visible ?
         <Eye
           onClick={onClick}
           className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
-        /> : 
+        /> :
         <EyeClosed
           onClick={onClick}
           className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
@@ -118,7 +118,7 @@ function CategoryLegend({ layer, toggleSymbology }) {
             <Symbol color={d.color} />
           </div>
           <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-        </div> 
+        </div>
       ))}
     </div>
   )
@@ -191,7 +191,7 @@ function StepLegend({ layer, toggleSymbology }) {
       <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
         <div className="flex w-full justify-center overflow-hidden pb-2" >
           Creating legend...
-          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/>
         </div>
       </div>
     )
@@ -208,7 +208,7 @@ function StepLegend({ layer, toggleSymbology }) {
             <Symbol color={d.color} />
           </div>
           <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-        </div> 
+        </div>
       ))}
     </div>
   )
@@ -230,7 +230,7 @@ function HorizontalLegend({ layer, toggleSymbology }) {
       <div className='w-full max-h-[250px] overflow-x-auto scrollbar-sm'>
         <div className="flex w-full justify-center overflow-hidden pb-2" >
           Creating legend...
-          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/> 
+          <span style={ { fontSize: "1.5rem" } } className={ `ml-2 fa-solid fa-spinner fa-spin` }/>
         </div>
       </div>
     )
@@ -269,7 +269,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
 
   let { layerType: type, legendOrientation,  selectedInteractiveFilterIndex, interactiveFilters, dataColumn, filterGroup, filterGroupLegendColumn,filterGroupName, viewGroup, viewGroupName, sourceId, dynamicFilters, isLayerControlledByPlugin } = useMemo(() => {
     const pluginData = get(state, `symbology.pluginData`, {});
-    const isLayerControlledByPlugin = (Object.keys(pluginData) || []).some(pluginName => Object.values(pluginData[pluginName]['active-layers']).includes(layer.id))
+    const isLayerControlledByPlugin = (Object.keys(pluginData) || []).some(pluginName => Object.values(pluginData[pluginName]['active-layers'] || {}).includes(layer.id))
 
     return {
       isLayerControlledByPlugin,
@@ -322,7 +322,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
           />
         </div>
         <div className='text-sm pt-1  flex items-center'>
-          <LayerMenu 
+          <LayerMenu
             layer={layer}
             button={<MenuDots className={` ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'} pb-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
           />
@@ -332,7 +332,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
             onRowMove(i, i-1)
           }}
           size={24}
-          className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+          className={`${i === 0 ? 'pointer-events-none' : ''} mr-[-6px] ${activeLayer == layer.id ? 'fill-pink-100' : 'fill-white'}  pt-[2px] cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
         />
         <CaretDownSolid
           onClick={ () => {
@@ -401,7 +401,7 @@ function LegendRow ({ layer, i, numLayers, onRowMove }) {
         </div>
       </div>
     )
-  } 
+  }
   if(layer.filterGroupEnabled && !isLayerControlledByPlugin) {
     groupSelectorElements.push(
       <div
@@ -566,7 +566,7 @@ function LegendPanel (props) {
       draft.symbology.layers = sections.reverse()
         .reduce((out,sec) => {
           out[sec.id] = sec;
-          return out 
+          return out
         },{})
     });
   }, []);
@@ -575,7 +575,7 @@ function LegendPanel (props) {
     return Object.values(layers).length;
   }, [layers]);
   return (
-    <>     
+    <>
       {/* ------ Legend Pane ----------- */}
       <div className='min-h-20 relative max-h-[calc(100vh_-_220px)] scrollbar-sm '>
         {Object.values(layers)
@@ -625,7 +625,7 @@ const DynamicFilter = ({layer}) => {
         })
         falcor.get([
           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 200},[colName, 'count(1)::int as count']
-        ]) 
+        ])
       })
     }
   },[selectedColumnNames, layerType, viewId]);
@@ -654,9 +654,9 @@ const DynamicFilter = ({layer}) => {
                 sampleData={sampleData}
                 button={
                   <div className='flex w-full p-1 pl-0 rounded items-center justify-between border-transparent border hover:border-gray-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
-                } 
+                }
               />
-            </div> 
+            </div>
           )
         })
       }
@@ -748,5 +748,5 @@ function DynamicFilterControl({button, layer, sampleData, filterIndex}) {
       </Transition>
     </Menu>
   );
-} 
+}
 export default LegendPanel
