@@ -72,7 +72,7 @@ const PluginLayerRender = ({
     }
   }, [layerPluginData]);
 
-  const RenderComp = plugin.comp || <></>;
+  const RenderComp = plugin?.comp || (() => {});
 
   return (
     <RenderComp state={state} setState={setState}/>
