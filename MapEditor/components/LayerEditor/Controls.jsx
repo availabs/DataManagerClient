@@ -216,7 +216,7 @@ function SimpleControl({path, params={}}) {
   )
 }
 
-function ToggleControl({path, params={title:""}}) {
+function ToggleControl({path, params={title:"", default: false}}) {
   const { state, setState } = React.useContext(SymbologyContext);
 
   const pathBase =
@@ -226,9 +226,9 @@ function ToggleControl({path, params={title:""}}) {
 
   const { value } = useMemo(() => {
     return {
-      value: get(state, `${pathBase}.${path}`, {}),
+      value: get(state, `${pathBase}.${path}`, params.default),
     }
-  },[state])
+  },[state]);
 
   return (
     <label className='flex'>
@@ -365,6 +365,15 @@ function SelectViewColumnControl({path, datapath, params={}}) {
               return true
             })
             .filter(d => !['wkb_geometry'].includes(d.name))
+            .sort((a,b) => {
+              const aLabel = a.display_name || a.name;
+              const bLabel = b.display_name || b.name;
+              if(aLabel < bLabel) {
+                return -1
+              } else {
+                return 1
+              }
+            })
             .map((col,i) => {
             return (
               <option key={i} value={col.name}>{col.display_name || col.name}</option>

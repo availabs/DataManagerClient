@@ -109,7 +109,8 @@ const extractState = (state) => {
       []
     ),
     filterMode: get(state, `${pathBase}['filterMode']`),
-    allPluginActiveLayerIds
+    allPluginActiveLayerIds,
+    hoverCasing: get(state, `${pathBase}['hover-casing']`, false),
   };
 };
 
@@ -120,8 +121,9 @@ const createFalcorFilterOptions = ({dynamicFilter, filterMode, dataFilter}) => {
     return acc;
   }, filterEqualOptions)
   
+  //TODO needs to be tested, this used tobe `dynamicFilter[filtKey]` which mustve been a typo?
   Object.keys(dataFilter)
-    .filter((filtKey) => dynamicFilter[filtKey]?.operator === "==")
+    .filter((filtKey) => dataFilter[filtKey]?.operator === "==")
     .reduce((acc, curr) => {
       acc[curr] = dataFilter[curr].value;
       return acc;

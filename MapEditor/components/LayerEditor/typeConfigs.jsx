@@ -899,6 +899,19 @@ const typeConfigs = {
       ],
     },
     {
+      label: 'Hover Casing',
+      type:'inline',
+      controls: [
+        {
+          type: "toggleControl",
+          path: `['hover-casing']`,
+          params: {
+            default: false
+          }
+        }
+      ]
+    },
+    {
       label: 'Casing',
       type: 'popover',
       controls: [

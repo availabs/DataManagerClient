@@ -47,7 +47,7 @@ export const PLUGIN_TYPE = 'plugin'
  *    dataUpdate: (map, state, setState) => { returns null; }
  *      // fires when symbology.pluginData['${pluginid}'] changes
  *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
- *    comp: ({ state, setState }) => { returns React component; }
+ *    comp: ({ state, setState, map }) => { returns React component; }
  *      // can use "position:absolute" to place anywhere, render anything, etc.
  *      // can use hooks
  *    internalPanel : ({ state, setState }) => { returns array of json; }
@@ -311,7 +311,8 @@ const MapEditor = () => {
     legendData,
     pluginData,
     isActiveLayerPlugin,
-    existingDynamicFilter
+    existingDynamicFilter,
+    hoverCasing
   } = useMemo(() => {
     return extractState(state)
   },[state]);
@@ -580,6 +581,27 @@ const MapEditor = () => {
       setPaint();
     }
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
+
+  useEffect(() => {
+    if(hoverCasing){
+      //invisible case, until user hover over the feature
+      const hoverCaseOpacity = [
+        "case",
+        ["boolean", ["feature-state", "hover"], false],
+        1,
+        0,
+      ];
+      setState((draft) => {
+        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, hoverCaseOpacity);
+      });
+    } else {
+      //reset hover case opacity style
+      setState((draft) => {
+        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, 1);
+      });
+    }
+  }, [hoverCasing]);
+
 
   useEffect(() => {
     const getFilterBounds = async () => {
