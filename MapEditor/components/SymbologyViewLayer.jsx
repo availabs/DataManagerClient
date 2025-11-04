@@ -4,7 +4,7 @@ import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
 import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
-import {DAMA_HOST} from '~/config'
+import { API_HOST } from '~/config'
 import { DamaContext } from "../../store"
 import { MapContext } from "./dms/MapComponent"
 import { CMSContext } from '~/modules/dms/src'
@@ -89,6 +89,8 @@ const ViewLayerRender = (props) => {
       if (newSource) {
         if (tileBase) {
           newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+        } else if(newSource?.source?.url) {
+          newSource.source.url = getLayerTileUrl(newSource.source.url, layerProps);
         }
         layerProps?.layers?.forEach((l) => {
           if (maplibreMap.getLayer(l?.id)) {
@@ -386,6 +388,16 @@ const getLayerTileUrl = (tileBase, layerProps) => {
       });
     }
   }
+
+  // if(newTileUrl && newTileUrl?.includes('.pmtiles')){
+  //   newTileUrl = newTileUrl
+  //     .replace("$HOST", `${API_HOST}/tiles`)
+  //     .replace('https://', 'pmtiles://')
+  //     .replace('http://', 'pmtiles://')
+
+  // } else {
+  //   newTileUrl = newTileUrl.replace("$HOST", API_HOST)
+  // }
 
   return newTileUrl;
 };

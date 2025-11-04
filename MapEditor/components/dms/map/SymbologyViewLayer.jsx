@@ -4,6 +4,7 @@ import isEqual from "lodash/isEqual"
 import cloneDeep from "lodash/cloneDeep"
 import { AvlLayer } from "~/modules/avl-map-2/src"
 import { usePrevious } from './utils.js'
+import { API_HOST } from '~/config'
 import { MapContext } from "./MapComponent.jsx"
 import { CMSContext } from '~/modules/dms/src'
 import bbox from '@turf/bbox';
@@ -117,6 +118,8 @@ const ViewLayerRender = ({
 
         if(tileBase){
           newSource.source.tiles = [getLayerTileUrl(tileBase, layerProps)];
+        } else if(newSource?.source?.url) {
+          newSource.source.url = getLayerTileUrl(newSource.source.url, layerProps);
         }
 
         layerProps?.layers?.forEach(l => {
@@ -298,14 +301,8 @@ const ViewLayerRender = ({
               return mapFilter;
             });
         }
-        const allLayersFilterMode = Object.values(allLayerProps).reduce((acc, oneLayerProp) => {
-          if(oneLayerProp.filterMode && oneLayerProp.filterMode.length > 0) {
-            acc.push(oneLayerProp.filterMode)
-          }
-          return acc;
-        }, []);
-
-        maplibreMap.setFilter(l.id, [allLayersFilterMode[0] || 'all', ...mapLayerFilter, ...dynamicMapLayerFilters]);
+        const curLayerFilterMode = allLayerProps[l.id]?.filterMode;
+        maplibreMap.setFilter(l.id, [curLayerFilterMode || 'all', ...mapLayerFilter, ...dynamicMapLayerFilters]);
       }
     });
 
@@ -384,11 +381,11 @@ const getLayerTileUrl = (tileBase, layerProps) => {
       newTileUrl = newTileUrl.replace(splitUrl[1], colsToAppend);
     }
 
-    if (colsToAppend && newTileUrl.includes(colsToAppend) && layerHasFilter) {
-      newTileUrl += ",";
-    }
-
     if (layerHasFilter) {
+      const splitUrl = newTileUrl.split("?cols=");
+      if (splitUrl[1].length !== 0) {
+        newTileUrl += ",";
+      }
       Object.keys(layerProps.filter).forEach((filterCol, i) => {
         //TODO actually handle calculated columns
         if(filterCol.includes("rpad(substring(prop_class, 1, 1), 3, '0')")){
@@ -405,6 +402,16 @@ const getLayerTileUrl = (tileBase, layerProps) => {
     }
   }
 
+  // if(newTileUrl && newTileUrl?.includes('.pmtiles')){
+  //   newTileUrl = newTileUrl
+  //     .replace("$HOST", `${API_HOST}/tiles`)
+  //     .replace('https://', 'pmtiles://')
+  //     .replace('http://', 'pmtiles://')
+
+  // } else {
+  //   newTileUrl = newTileUrl.replace("$HOST", API_HOST)
+  // }
+  
   return newTileUrl;
 };
 
