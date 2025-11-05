@@ -20,7 +20,7 @@ import {PluginLibrary} from "../"
 //"second" selection (percentile, amp/pmp) (External Panel) (Dev hard-code)
 
 
-
+const NO_PLUGIN = () => null;
 
 const PluginLayerRender = ({
   maplibreMap,
@@ -72,7 +72,7 @@ const PluginLayerRender = ({
     }
   }, [layerPluginData]);
 
-  const RenderComp = plugin?.comp || (() => {});
+  const RenderComp = plugin?.comp || NO_PLUGIN;
 
   return (
      <RenderComp state={state} setState={setState} map={maplibreMap}/>
