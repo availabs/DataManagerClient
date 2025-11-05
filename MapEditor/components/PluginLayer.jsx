@@ -49,6 +49,7 @@ const PluginLayerRender = ({
   const plugin = useMemo(() => {
     return PluginLibrary[layer.id]
   }, [layer.id]);
+   console.log('PluginLayer', PluginLibrary, layer.id)
   // ------------
   // On Load Unload
   // ---------------
@@ -71,6 +72,7 @@ const PluginLayerRender = ({
       plugin.dataUpdate(maplibreMap, state, setState);
     }
   }, [layerPluginData]);
+
 
   const RenderComp = plugin.comp || <></>;
 
