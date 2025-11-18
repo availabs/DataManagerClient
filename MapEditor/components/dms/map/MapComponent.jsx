@@ -32,7 +32,8 @@ export const PANEL_POSITION_OPTIONS = {
     'top-right':"top-0 right-0",
     'bottom-left':"bottom-0 left-0",
     'bottom':"left-[40%] bottom-0",
-    'bottom-right':"bottom-0 right-0"
+    'bottom-right':"bottom-0 right-0",
+    'hide':'hidden'
 }
 
 const isJson = (str)  => {
