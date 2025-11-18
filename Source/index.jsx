@@ -103,12 +103,18 @@ const Source = ({}) => {
 
   const source = useMemo(() => {
     let attributes = getAttributes(get(falcorCache, ["dama", pgEnv, "sources", "byId", sourceId], { "attributes": {} })["attributes"]);
-    if (damaDataTypes[attributes.type]) {
+    const primaryCategory = attributes.categories?.[0]?.[0];
+    const datasetType =
+      (primaryCategory && damaDataTypes[primaryCategory])
+        ? primaryCategory
+        : attributes.type;
+    
+    if (damaDataTypes[datasetType]) {
 
       // check for pages to add
-      let typePages = Object.keys(damaDataTypes[attributes.type]).reduce((a, c) => {
-        if (damaDataTypes[attributes.type][c].path || c === 'overview') {
-          a[c] = damaDataTypes[attributes.type][c];
+      let typePages = Object.keys(damaDataTypes[datasetType]).reduce((a, c) => {
+        if (damaDataTypes[datasetType][c].path || c === 'overview') {
+          a[c] = damaDataTypes[datasetType][c];
         }
         return a;
       }, {});

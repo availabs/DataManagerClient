@@ -31,7 +31,7 @@ function InternalPluginPanel() {
           </Tab.List>
           <Tab.Panels>
             {Object.keys(state.symbology.plugins).map((pluginName) => {
-              const internalControls = PluginLibrary[pluginName]?.internalPanel({state, setState});
+              const internalControls = PluginLibrary[pluginName]?.internalPanel({state, setState}) || [];
 
               const displayDefaultLegendControl = {
                 label: "Display default legend",

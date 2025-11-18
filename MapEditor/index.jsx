@@ -47,7 +47,7 @@ export const PLUGIN_TYPE = 'plugin'
  *    dataUpdate: (map, state, setState) => { returns null; }
  *      // fires when symbology.pluginData['${pluginid}'] changes
  *      // runs within a hook, so it CANNOT use hooks itself (i.e. no useMemo, useEffect, useState, etc.)
- *    comp: ({ state, setState }) => { returns React component; }
+ *    comp: ({ state, setState, map }) => { returns React component; }
  *      // can use "position:absolute" to place anywhere, render anything, etc.
  *      // can use hooks
  *    internalPanel : ({ state, setState }) => { returns array of json; }

@@ -5,7 +5,8 @@ import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../Source/attributes";
 import {CheckCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { DEFAULT_SOURCE } from "../SourceSelector";
-
+import { dmsColumnTypes } from "~/modules/dms/src"
+import { makeLexicalFormat } from "~/pages/DataManager/DataTypes/default/Overview.jsx";
 const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
   const activeViewId = selectedSource.viewId;
@@ -38,6 +39,8 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
     )).map(d => getAttributes(get(falcorCache, d.value, {})?.attributes))
     .sort((a,b) => new Date(b?._created_timestamp) - new Date(a?._created_timestamp));
   }, [falcorCache, source.source_id])
+
+  const Lexical = dmsColumnTypes.lexical.ViewComp;
 
   return (
     <div>
@@ -100,7 +103,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
             }
           </div>
           <div className='py-2 block'>
-            {source.description}
+            <Lexical value={makeLexicalFormat(source.description)}/>
           </div>
         </div>      
       </div>

@@ -7,10 +7,24 @@ const AddVersion = ({ source, views, user, baseUrl }) => {
   const [versionName, setVersionName] = useState(newVersion);
 
   const CreateComp = React.useMemo(() => {
-    //console.log(source)
-      let sourceTypeToFileNameMapping = get(source, 'type', '').substring(0, 3) === "tl_" ? "tiger_2017" : source.type;
-      return get(damaDataTypes, `[${sourceTypeToFileNameMapping}].sourceCreate.component`, () => <div> Cannot create new {source.type} version. </div>)
-    }, [source]);
+    const primaryCategory = get(source, "categories[0][0]");
+    const sourceType = get(source, "type", "");
+    const normalizedType =
+      sourceType.substring(0, 3) === "tl_" ? "tiger_2017" : sourceType;
+
+    const effectiveKey =
+      primaryCategory && damaDataTypes[primaryCategory]
+        ? primaryCategory
+        : normalizedType;
+
+    const component = get(
+      damaDataTypes,
+      `[${effectiveKey}].sourceCreate.component`,
+      () => <div> Cannot create new {sourceType} version. </div>
+    );
+
+    return component;
+  }, [source]);
 
   return <>
     <div className={`flex-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 text-sm font-medium text-gray-500 `}>

@@ -609,10 +609,9 @@ const DynamicFilter = ({layer}) => {
     return {
       viewId:get(layer,`view_id`),
       layerType : get(layer, `['layer-type']`),
-      dynamicFilters:get(layer, `['dynamic-filters']`, []),
+      dynamicFilters:get(layer, `['dynamic-filters']`, [])?.filter(dynamicF => !!dynamicF.column_name),
     }
   },[state, layer]);
-
   const selectedColumnNames = dynamicFilters?.map(dynamicF => dynamicF.column_name);
 
   React.useEffect(() => {

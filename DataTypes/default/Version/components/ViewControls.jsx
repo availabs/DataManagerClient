@@ -172,7 +172,6 @@ const DownloadModalCheckboxGroup = ({
 export function ViewControls ({view}) {
     const { viewId,sourceId } = useParams();
     const { pgEnv, baseUrl, user, falcor, falcorCache } = useContext(DamaContext);
-
     const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
     const [deleteModalState, setDeleteModalState] = useState(INITIAL_DELETE_MODAL_STATE)
 
@@ -366,7 +365,9 @@ export function ViewControls ({view}) {
           body: JSON.stringify({
             columns: [...pmTilesModalState.selectedColumns],
             view_id: viewId,
-            source_id: sourceId
+            source_id: sourceId,
+            user_id: user.id,
+            email: user.email,
           }),
           headers: {
             "Content-Type": "application/json",
