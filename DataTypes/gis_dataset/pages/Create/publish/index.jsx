@@ -81,7 +81,6 @@ export default function PublishButton({ state, dispatch }) {
           mbtilesOptions,
           useMbTiles
         };
-
         const sourceTypeURL = sourceType === "csv_dataset" ? "csv-dataset" : "gis-dataset";
 
         const res = await fetch(`${state.damaServerPath}/${ sourceTypeURL }/publish`,

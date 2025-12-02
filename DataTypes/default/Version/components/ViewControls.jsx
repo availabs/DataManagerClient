@@ -2,11 +2,13 @@ import {Link, useParams} from "react-router";
 import React, {useContext, useEffect, useMemo, useState} from "react";
 import {DamaContext} from "../../../../store/index.js";
 import get from "lodash/get.js";
+import { getData } from "../utils.js";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { Input, Button, Modal } from "~/modules/avl-components/src"
 import { DAMA_HOST } from '~/config'
+import { SOURCE_AUTH_CONFIG } from "~/pages/DataManager/Source/attributes";
 
-const OUTPUT_FILE_TYPES = [
+export const OUTPUT_FILE_TYPES = [
     "CSV",
     "ESRI Shapefile",
     "GeoJSON",
@@ -20,12 +22,17 @@ const INITIAL_MODAL_STATE = {
     enableGroupedBy: false,
     groupedByColumn: ""
 }
+const INITIAL_DELETE_MODAL_STATE = {
+  open: false,
+  loading: false,
+}
 
-const DownloadModalCheckbox = ({ inputName, checked, onChange }) => {
+const DownloadModalCheckbox = ({ inputName, checked, onChange, disabled=false }) => {
     return (
         <div className="mt-2 flex items-center">
             <input
                 id={inputName}
+                disabled={disabled}
                 name={inputName}
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -120,9 +127,10 @@ const DownloadModalCheckboxGroup = ({
                                         title,
                                     }) => {
 
+    const hasCalcColumn = options.some(opt => opt.includes(" ") ) && title === "Columns"
     return (
         <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left max-h-[700px] overflow-y-auto">
-            <div className="flex w-full justify-between items-center p-2 w-1/2 text-md leading-6 text-gray-900">
+            <div className="flex w-full justify-between items-center w-1/2 text-md leading-6 text-gray-900">
                 <div className="text-center h-fit">{title}:</div>
                 <div>
                     <Button
@@ -147,12 +155,14 @@ const DownloadModalCheckboxGroup = ({
                     <XCircleIcon className="ml-2 text-red-700 h-4 w-4" />
                 )}
             </div>
+            {hasCalcColumn ? <div className="flex mt-1 text-xs items-center">(cannot include "Calculated Columns")</div>: ""}
             {options?.map((option) => (
                 <DownloadModalCheckbox
                     key={`${option}_checkbox`}
                     inputName={option}
                     checked={modalState.includes(option)}
                     onChange={onChange}
+                    disabled={hasCalcColumn && option.includes(" ")}
                 />
             ))}
         </div>
@@ -162,8 +172,8 @@ const DownloadModalCheckboxGroup = ({
 export function ViewControls ({view}) {
     const { viewId,sourceId } = useParams();
     const { pgEnv, baseUrl, user, falcor, falcorCache } = useContext(DamaContext);
-
     const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
+    const [deleteModalState, setDeleteModalState] = useState(INITIAL_DELETE_MODAL_STATE)
 
     const setFileTypes = (fileType) => {
         let newFileTypes;
@@ -198,7 +208,7 @@ export function ViewControls ({view}) {
     const setModalOpen = (newModalOpenVal) => setModalState({...modalState, open: newModalOpenVal});
     const setEnableGroupedBy = (newEnableValue) => setModalState({...modalState, enableGroupedBy: newEnableValue});
     const setGroupedByColumn = (newGroupColumn) => setModalState({...modalState, groupedByColumn: newGroupColumn})
-
+    const setDeleteModalOpen = (newModalOpenVal) => setDeleteModalState({...deleteModalState, open: newModalOpenVal})
 
     const sourceDataColumns = useMemo(() => {
         let sourceColumns = get(falcorCache, [
@@ -230,9 +240,42 @@ export function ViewControls ({view}) {
     //Should only fire once, when we get the source metadata back from API
     useEffect(() => {
         if (sourceDataColumns) {
-            setModalState({ ...modalState, columns: sourceDataColumns });
+            setModalState({ ...modalState, columns: sourceDataColumns.filter(col => !col.includes(" ")) });
         }
     }, [sourceDataColumns]);
+
+    const deleteDownload = () => {
+      const runDelete = async () => {
+        try {
+          const deleteData = {
+              source_id: sourceId,
+              view_id: viewId,
+              user_id: user.id,
+              email: user.email,
+          };
+
+          setDeleteModalState({...deleteModalState, loading: true});
+          const res = await fetch(`${DAMA_HOST}/dama-admin/${pgEnv}/gis-dataset/delete-download`,
+            {
+                method: "DELETE",
+                body: JSON.stringify(deleteData),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+          await res.json();
+          await falcor.invalidate(["dama", pgEnv, "viewDependencySubgraphs", "byViewId", viewId]);
+          await falcor.invalidate(["dama", pgEnv, "views", "byId", viewId]);
+          getData({ falcor, pgEnv, viewId });
+          setDeleteModalState(INITIAL_DELETE_MODAL_STATE);
+        } catch (err) {
+          console.log(err)
+          setDeleteModalState({...deleteModalState, loading: false, open: true});
+        }
+      }
+      runDelete();
+    }
 
     const createDownload = () => {
         const runCreate = async () => {
@@ -309,7 +352,7 @@ export function ViewControls ({view}) {
       if (sourceDataColumns.length && !pmTilesModalState.columnsHaveBeenInitialized) {
         setPmTilesModalState(prev => ({
           ...prev,
-          selectedColumns: [...sourceDataColumns],
+          selectedColumns: [...sourceDataColumns.filter(col => col !== "wkb_geometry")],
           columnsHaveBeenInitialized: true
         }));
       }
@@ -322,7 +365,9 @@ export function ViewControls ({view}) {
           body: JSON.stringify({
             columns: [...pmTilesModalState.selectedColumns],
             view_id: viewId,
-            source_id: sourceId
+            source_id: sourceId,
+            user_id: user.id,
+            email: user.email,
           }),
           headers: {
             "Content-Type": "application/json",
@@ -344,10 +389,10 @@ export function ViewControls ({view}) {
     }, []);
 
     const linkClass = 'w-full flex-1 text-center border shadow p-2 font-medium rounded-md hover:text-white'
-
+    const doesViewHaveDownload = view?.metadata?.value?.download && Object.keys(view?.metadata?.value?.download).length > 0;
     return (
         <div className="w-72 px-5">
-            {user.authLevel >= 10 ? (
+            {user.authLevel >= SOURCE_AUTH_CONFIG['SUPER'] ? (
                 <div className="w-full flex flex-col p-1">
                     <button
                         className={`${linkClass} bg-blue-300 hover:bg-blue-600 mb-1`}
@@ -357,6 +402,14 @@ export function ViewControls ({view}) {
                     >
                         <i className={'fa fa-download'}/> Create Download
                     </button>
+                    {doesViewHaveDownload && <button
+                        className={`${linkClass}  bg-red-300 border-red-200 hover:bg-red-600 mb-1`}
+                        onClick={() => {
+                            setDeleteModalState({...deleteModalState, open: true});
+                        }}
+                    >
+                      <i className="fad fa-trash"/> Delete Download
+                    </button>}
                     <button
                         className={`${linkClass} bg-green-300 hover:bg-green-600 mb-1`}
                         onClick={ openPmTilesModal }
@@ -388,7 +441,7 @@ export function ViewControls ({view}) {
                 setOpen={setModalOpen}
                 themeOptions={{size:"large"}}
             >
-                <div className="flex items-center">
+                <div className="flex items-center m-1">
                     <div
                         className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                         <i
@@ -435,9 +488,10 @@ export function ViewControls ({view}) {
                         disabled={
                             modalState.loading ||
                             modalState.fileTypes.length === 0 ||
-                            modalState.columns.length === 0
+                            modalState.columns.length === 0 ||
+                            modalState.columns.some(colName => colName.includes(" "))
                         }
-                        className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                        className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto m-1"
                         onClick={createDownload}
                     >
                         {modalState.loading
@@ -446,8 +500,54 @@ export function ViewControls ({view}) {
                     </button>
                     <button
                         type="button"
-                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto m-1"
                         onClick={() => setModalOpen(false)}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
+
+{ /*DELETE DOWNLOAD MODAL*/ }
+            <Modal
+                open={deleteModalState.open}
+                setOpen={setDeleteModalOpen}
+            >
+                <div className="flex items-center m-1">
+                    <div
+                        className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i
+                            className="fad fa-layer-group text-blue-600"
+                            aria-hidden="true"
+                        />
+                    </div>
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                        <div className="text-lg align-center font-semibold leading-6 text-gray-900">
+                            Delete Data Download
+                        </div>
+                    </div>
+                </div>
+                <div></div>
+                <div className={"flex m-2"}>
+                  Are you sure you want to delete the downloadable file for this view? The underlying source and view will NOT be affected.
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button
+                        type="button"
+                        disabled={
+                            deleteModalState.loading
+                        }
+                        className="disabled:bg-slate-300 disabled:cursor-warning inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-white shadow-sm bg-red-300 border-red-200 hover:bg-red-600 mb-1 sm:ml-3 sm:w-auto mr-1"
+                        onClick={deleteDownload}
+                    >
+                        {deleteModalState.loading
+                            ? "Sending request..."
+                            : "Delete Download"}
+                    </button>
+                    <button
+                        type="button"
+                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 mb-1 sm:w-auto"
+                        onClick={() => setDeleteModalOpen(false)}
                     >
                         Cancel
                     </button>

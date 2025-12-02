@@ -52,7 +52,8 @@ export const SOURCE_AUTH_CONFIG = {
   "VIEW": 1,
   "DOWNLOAD": 2,
   "EDIT": 3,
-  "ADMIN" : 5
+  "ADMIN" : 5,
+  "SUPER": 10
 };
 
 // export const getName = (source) => {
