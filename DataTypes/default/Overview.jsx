@@ -121,7 +121,8 @@ const OverviewEdit = ({source, views, activeViewId}) => {
     }, []);
 
     const {pgEnv, baseUrl, user} = React.useContext(DamaContext);
-    const activeView = activeViewId || views[0]?.view_id;
+    let activeView = activeViewId || views[0]?.view_id;
+    activeView = parseInt(activeView);
     const latestView = views[views?.length - 1]?.view_id;
     const dateOptions = {year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric"}
     const createdTimeStamp = new Date(views.filter(d => d.view_id === activeView)?.[0]?.['_created_timestamp'] || '').toLocaleDateString(undefined, dateOptions);
