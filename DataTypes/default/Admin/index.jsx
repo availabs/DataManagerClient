@@ -138,6 +138,8 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   const otherUsers = users.filter(
     (allUser) => !currentSourceUserIds.includes(JSON.stringify(allUser.id))
   );
+  const test = users.find(u => u.id === 175);
+  console.log({test})
   const currentGroupNames = sourceAuth?.groups ? Object.keys(sourceAuth?.groups) : [];
   const otherGroups = groups.filter(
     (allGroup) => !currentGroupNames.includes(JSON.stringify(allGroup.name))
@@ -148,7 +150,7 @@ const AdminPage = ({ source, users, groups, loggedInUser }) => {
   } else {
     componentGroups.push({"name": PUBLIC_GROUP })
   }
-
+  console.log({currentSourceUserIds})
   return (
     <div
       className={`${
@@ -283,7 +285,7 @@ const AuthRow = (props) => {
   const [authLevel, setAuthLevel] = useState(initialAuthLevel);
   const displayName =
     user.name ?? user?.preferences?.display_name ?? user.email;
-
+  console.log({user})
   //users have ids
   //groups have names
   const rowKey = user.id ? "id" : "name";
