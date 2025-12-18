@@ -327,12 +327,13 @@ const MapEditor = () => {
     pluginData,
     isActiveLayerPlugin,
     existingDynamicFilter,
-    hoverCasing
+    hoverCasing,
+    polygonLayerType
   } = useMemo(() => {
     return extractState(state)
   },[state]);
 
-  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit, zoomToFilterBounds: state.symbology?.zoomToFilterBounds } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit, state.symbology?.zoomToFilterBounds]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit, zoomToFilterBounds: state?.symbology?.zoomToFilterBounds } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit, state?.symbology?.zoomToFilterBounds]);
 
   const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
     const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`, 0);
@@ -590,7 +591,6 @@ const MapEditor = () => {
         })
       }
     }
-    //console.log("checking to see if current active layer is being modified by a plugin::", Object.values(state.symbology.pluginData).some(plugData => plugData.activeLayer === activeLayer.id))
     //TODO -- plugData.activeLayer should be an array
     if(!isActiveLayerPlugin) {
       setPaint();
@@ -598,7 +598,7 @@ const MapEditor = () => {
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
 
   useEffect(() => {
-    if(!pathBase.includes("undefined")){
+    if(!pathBase.includes("undefined") && pathBase.length > 18 && polygonLayerType && polygonLayerType !== "circle"){
       if(hoverCasing){
         //invisible case, until user hover over the feature
         const hoverCaseOpacity = [
@@ -617,7 +617,7 @@ const MapEditor = () => {
         });
       }
     }
-  }, [hoverCasing, pathBase]);
+  }, [hoverCasing, pathBase, polygonLayerType]);
 
   useEffect(() => {
     const getFilterBounds = async () => {
