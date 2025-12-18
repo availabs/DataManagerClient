@@ -598,25 +598,26 @@ const MapEditor = () => {
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
 
   useEffect(() => {
-    if(hoverCasing){
-      //invisible case, until user hover over the feature
-      const hoverCaseOpacity = [
-        "case",
-        ["boolean", ["feature-state", "hover"], false],
-        1,
-        0,
-      ];
-      setState((draft) => {
-        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, hoverCaseOpacity);
-      });
-    } else {
-      //reset hover case opacity style
-      setState((draft) => {
-        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, 1);
-      });
+    if(!pathBase.includes("undefined")){
+      if(hoverCasing){
+        //invisible case, until user hover over the feature
+        const hoverCaseOpacity = [
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          1,
+          0,
+        ];
+        setState((draft) => {
+          set(draft, `${pathBase}.layers[0].paint['line-opacity']`, hoverCaseOpacity);
+        });
+      } else {
+        //reset hover case opacity style
+        setState((draft) => {
+          set(draft, `${pathBase}.layers[0].paint['line-opacity']`, 1);
+        });
+      }
     }
-  }, [hoverCasing]);
-
+  }, [hoverCasing, pathBase]);
 
   useEffect(() => {
     const getFilterBounds = async () => {
