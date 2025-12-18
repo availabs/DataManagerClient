@@ -532,7 +532,6 @@ const MapEditor = () => {
         }
         //console.log("colorBreaks['breaks']",colorBreaks['breaks'])
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
-        console.log({paint, legend})
         //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
         //this will fix a problem with the custom scale
         if(!regenerateLegend && legendData.length > 0) {
