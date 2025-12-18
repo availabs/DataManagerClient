@@ -34,13 +34,13 @@ export const RenderDeps = ({ dependencies = {}, viewId, srcMeta, viewMeta, baseU
                                     <div key={`${i}_0`} className="py-4 sm:py-5 sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6">
                                         <div key={`${i}_1`} className="mt-1 text-sm text-gray-900 sm:mt-0 align-midivle">
                                             <Link to={`${baseUrl}/source/${d.source_id}/overview`}>
-                                                {get(srcMeta, [d.source_id, "attributes", "name"])}
+                                                {typeof get(srcMeta, [d.source_id, "attributes", "name"]) === 'string' ? get(srcMeta, [d.source_id, "attributes", "name"]) : ""}
                                             </Link>
                                         </div>
 
                                         <div key={`${i}_2`} className="mt-1 text-sm text-gray-900 sm:mt-0 align-midivle">
                                             <Link to={`${baseUrl}/source/${d.source_id}/overview`}>
-                                                {get(srcMeta, [d.source_id, "attributes", "type"])}
+                                                {typeof get(srcMeta, [d.source_id, "attributes", "type"]) === 'string' ?  get(srcMeta, [d.source_id, "attributes", "type"]) : ""}
                                             </Link>
                                         </div>
 
