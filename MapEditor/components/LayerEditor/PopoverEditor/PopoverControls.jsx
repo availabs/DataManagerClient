@@ -62,14 +62,13 @@ export function ColumnSelectControl({path, params={}}) {
     }
 
     return columns;
-  }, [sourceId, falcorCache]); 
-  
+  }, [sourceId, falcorCache]);
+
   const attributeNames = useMemo(
-    () =>
-      attributes
-        .map((attr) => attr.name),
-    [attributes]
-  );
+    () => {
+      console.log('what are attributes', attributes)
+      return (attributes || []).map((attr) => attr.name)
+    },[attributes]);
 
   useEffect(() => {
     if(selectedColumns === undefined) {
@@ -114,7 +113,7 @@ export function ColumnSelectControl({path, params={}}) {
         ? getDiffColumns(attributeNames, selectedColumnNames)
         : attributeNames
     ).filter((d) => !["wkb_geometry"].includes(d));
-  }, [selectedColumnNames, attributeNames]); 
+  }, [selectedColumnNames, attributeNames]);
 
   React.useEffect(() => {
     falcor.get([
@@ -156,11 +155,11 @@ export function ColumnSelectControl({path, params={}}) {
               }
             });
           }}
-          availableColumnNames = { 
+          availableColumnNames = {
             availableColumnNames.map(colName => {
               const newAttr = attributes.find(attr => attr.name === colName);
               return { value: colName, label: newAttr?.display_name || colName };
-            }) 
+            })
           }
         />
       </div>
@@ -212,7 +211,7 @@ export function ColumnSelectControl({path, params={}}) {
           const sections = [...selectedColumns];
           const [item] = sections.splice(start, 1);
           sections.splice(end, 0, item);
-          
+
           setState((draft) => {
             set(
               draft,
@@ -263,7 +262,7 @@ const ExistingColumnList = ({selectedColumns, sampleData, path, reorderAttrs, re
             className="group/title w-full text-sm grid grid-cols-9 cursor-grab"
           >
             <div className="truncate border-t border-r border-slate-200 col-span-4 px-2 py-1">
-              <input 
+              <input
                   type="text"
                   className='w-full px-2  border text-sm border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent text-slate-700 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
                   value={selectedCol.display_name}
