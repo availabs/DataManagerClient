@@ -61,7 +61,6 @@ export default function UploadGisDataset({ state, dispatch }) {
       })
     }
   }
-
   // --- Poll Upload Progress  
   useEffect(() => {
     const doPolling = async () => {
@@ -69,7 +68,20 @@ export default function UploadGisDataset({ state, dispatch }) {
       const url = `${damaServerPath}/events/query?etl_context_id=${etlContextId}&event_id=-1`
       const res = await fetch(url);
       const pollingData = await res.json()
-      dispatch({type: 'update', payload: {fileUploadStatus: pollingData[pollingData.length -1] }})
+
+      const mostRecentEvent = pollingData[pollingData.length - 1];
+
+      if (mostRecentEvent.error) {
+        console.error("Error with layer upload processing::", mostRecentEvent)
+        const errMsg = mostRecentEvent?.payload?.message
+          dispatch({
+          type: 'update', 
+          payload: {polling: false, processPolling: false, uploadErrMsg: errMsg, uploadedFile: null}
+        })
+      } else {
+        dispatch({type: 'update', payload: {fileUploadStatus: pollingData[pollingData.length -1] }})
+      }
+
     }
     // -- start polling
     if(polling && !pollingInterval) {

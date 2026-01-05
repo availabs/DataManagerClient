@@ -66,12 +66,27 @@ export const PLUGIN_TYPE = 'plugin'
  *    This generally means 2 things:
  *      You need to dynamically determine the `symbology` and/or `pluginData` path
  *      You need to dynamically determine which context to use (for falcor, mostly)
- *    There are examples in the `macroview` plugin
+ *    There are examples in the `macroview` plugin (TransportNY repo)
+ *  The layer(s) the plugin controls MUST use the `'active-layers'` path/field
+ *    Otherwise, a bunch of default functions from the vanilla `MapEditor` will still run, and that is probably not good
+ *    There are examples in `macroview.internalPanel` on how to create controls that the MapEditor user can use to select/set these layers
+ *    this is an (abbreviated/simplified) example of what each plugin's `InternalPanel` should return
+ *     [{
+ *       type: "select",
+ *       params: {
+ *         options: [
+ *           ...Object.keys(state.symbology.layers)
+ *             .map((layerKey, i) => ({
+ *               value: layerKey,
+ *               name: state.symbology.layers[layerKey].name,
+ *             })),
+ *         ],
+ *         default: "",
+ *       },
+ *       path: `['active-layers'][${PM3_LAYER_KEY}]`,
+ *     }]
  */
-export const PluginLibrary = {
-  // macroview: MacroviewPlugin,
-  // pointselector: PointselectorPlugin
-};
+export const PluginLibrary = {};
 
 export const RegisterPlugin = (name, plugin) => {
   PluginLibrary[name] = plugin
@@ -312,12 +327,13 @@ const MapEditor = () => {
     pluginData,
     isActiveLayerPlugin,
     existingDynamicFilter,
-    hoverCasing
+    hoverCasing,
+    polygonLayerType
   } = useMemo(() => {
     return extractState(state)
   },[state]);
 
-  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit, zoomToFilterBounds: state.symbology?.zoomToFilterBounds } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit, state.symbology?.zoomToFilterBounds]);
+  const layerProps = useMemo(() =>  ({ ...state?.symbology?.layers, ...state?.symbology?.plugins, zoomToFit: state?.symbology?.zoomToFit, zoomToFilterBounds: state?.symbology?.zoomToFilterBounds } || {}), [state?.symbology?.layers, state?.symbology?.zoomToFit, state?.symbology?.zoomToFilterBounds]);
 
   const { activeLayerType, selectedInteractiveFilterIndex, currentInteractiveFilter } = useMemo(() => {
     const selectedInteractiveFilterIndex = get(state,`symbology.layers[${state?.symbology?.activeLayer}]['selectedInteractiveFilterIndex']`, 0);
@@ -516,7 +532,6 @@ const MapEditor = () => {
         }
         //console.log("colorBreaks['breaks']",colorBreaks['breaks'])
         let {paint, legend} = choroplethPaint(baseDataColumn, colorBreaks['max'], colorrange, numbins, method, colorBreaks['breaks'], showOther, legendOrientation);
-        console.log({paint, legend})
         //TODO -- detect if the `colorBreaks` changed, to determine whether or not to regenerate legend
         //this will fix a problem with the custom scale
         if(!regenerateLegend && legendData.length > 0) {
@@ -575,7 +590,6 @@ const MapEditor = () => {
         })
       }
     }
-    //console.log("checking to see if current active layer is being modified by a plugin::", Object.values(state.symbology.pluginData).some(plugData => plugData.activeLayer === activeLayer.id))
     //TODO -- plugData.activeLayer should be an array
     if(!isActiveLayerPlugin) {
       setPaint();
@@ -583,25 +597,26 @@ const MapEditor = () => {
   }, [categories, layerType, baseDataColumn, categorydata, colors, numCategories, showOther, numbins, method, choroplethdata, viewGroupId, filterGroupLegendColumn, isActiveLayerPlugin])
 
   useEffect(() => {
-    if(hoverCasing){
-      //invisible case, until user hover over the feature
-      const hoverCaseOpacity = [
-        "case",
-        ["boolean", ["feature-state", "hover"], false],
-        1,
-        0,
-      ];
-      setState((draft) => {
-        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, hoverCaseOpacity);
-      });
-    } else {
-      //reset hover case opacity style
-      setState((draft) => {
-        set(draft, `${pathBase}.layers[0].paint['line-opacity']`, 1);
-      });
+    if(!pathBase.includes("undefined") && pathBase.length > 18 && polygonLayerType && polygonLayerType !== "circle"){
+      if(hoverCasing){
+        //invisible case, until user hover over the feature
+        const hoverCaseOpacity = [
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          1,
+          0,
+        ];
+        setState((draft) => {
+          set(draft, `${pathBase}.layers[0].paint['line-opacity']`, hoverCaseOpacity);
+        });
+      } else {
+        //reset hover case opacity style
+        setState((draft) => {
+          set(draft, `${pathBase}.layers[0].paint['line-opacity']`, 1);
+        });
+      }
     }
-  }, [hoverCasing]);
-
+  }, [hoverCasing, pathBase, polygonLayerType]);
 
   useEffect(() => {
     const getFilterBounds = async () => {
