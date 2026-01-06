@@ -90,7 +90,7 @@ export default function SelectLayer({state, dispatch}) {
       if (!finalEvent) {
         const errorEvent = pollingData.find(
           (pEvent) =>
-            (pEvent.type.includes("upload") && pEvent.error)
+            (pEvent.type.includes("analysis") && pEvent.error)
         );
 
         if (errorEvent) {

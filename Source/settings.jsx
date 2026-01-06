@@ -89,8 +89,8 @@ const Settings = () => {
             />
             <div className={'flex flex-wrap'}>
                 <div className={'w-full sm:w-1/2 border-2 p-1 my-1 bg-slate-200 rounded-md'}>
-                    <label className={'text-gray-800 text-sm'}>Available Categories<span
-                        className={'text-xs italic mx-1'}>(click to filter...)</span></label>
+                    <label className={'text-gray-800 text-sm'}>Categories Hidden<span
+                        className={'text-xs italic mx-1'}>(click to show...)</span></label>
                     <div className={'flex flex-row'}>
                         <div className={'w-full flex flex-wrap p-1 max-h-[80dvh] overflow-auto scrollbar-sm'}>
                             {(categories || [])
@@ -112,9 +112,9 @@ const Settings = () => {
                     </div>
                 </div>
                 <div className={'w-full sm:w-1/2 border-2 p-1 my-1 bg-slate-200 rounded-md'}>
-                    <label className={'text-gray-800 text-sm'}>Filtered Categories <span
-                        className={'text-xs italic mx-1'}>(click to un-filter...)</span></label>
-                    <div className={'w-full flex flex-wrap items-center p-1 max-h-[20dvh] overflow-auto scrollbar-sm'}>
+                    <label className={'text-gray-800 text-sm'}>Categories Shown<span
+                        className={'text-xs italic mx-1'}>(click to hide...)</span></label>
+                    <div className={'w-full flex flex-wrap items-center p-1 max-h-[80dvh] overflow-auto scrollbar-sm'}>
                         {filteredCategories?.length ?
                             filteredCategories
                                 .filter(cat => !search || cat.toLowerCase().includes(search.toLowerCase()))
