@@ -12,8 +12,8 @@ const sortFn = (a, b) => {
 }
 const MetadataTable = ({ source, ...props }) => {
 
-  const { pgEnv, falcor, user } = React.useContext(DamaContext);
-  const { authLevel } = user;
+  const { pgEnv, falcor, user = {authLevel: 0} } = React.useContext(DamaContext);
+  const { authLevel  } = user;
   const gridCols = "grid-cols-2" ;
 
   const sourceId = source.source_id;
