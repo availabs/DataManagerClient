@@ -31,7 +31,7 @@ export const RenderAttribute = ({attr, editing, setEditing, user, val, view, dis
                 }
             </dd>
         </div>
-        {user.authLevel > 5 && setEditing ?
+        {user?.authLevel > 5 && setEditing ?
             <div className={`hidden group-hover:block text-blue-500 cursor-pointer p-2`}
                  onClick={e => editing === attr ? setEditing(null) : setEditing(attr)}>
                 <i className="fad fa-pencil absolute p-2 -ml-4 rounded hover:bg-blue-500 hover:text-white "/>
