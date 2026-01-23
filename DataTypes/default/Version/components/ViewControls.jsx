@@ -250,8 +250,8 @@ export function ViewControls ({view}) {
           const deleteData = {
               source_id: sourceId,
               view_id: viewId,
-              user_id: user.id,
-              email: user.email,
+              user_id: user?.id,
+              email: user?.email,
           };
 
           setDeleteModalState({...deleteModalState, loading: true});
@@ -392,7 +392,7 @@ export function ViewControls ({view}) {
     const doesViewHaveDownload = view?.metadata?.value?.download && Object.keys(view?.metadata?.value?.download).length > 0;
     return (
         <div className="w-72 px-5">
-            {user.authLevel >= SOURCE_AUTH_CONFIG['SUPER'] ? (
+            {user?.authLevel >= SOURCE_AUTH_CONFIG['SUPER'] ? (
                 <div className="w-full flex flex-col p-1">
                     <button
                         className={`${linkClass} bg-blue-300 hover:bg-blue-600 mb-1`}
