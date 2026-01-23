@@ -245,7 +245,7 @@ function ListSchedules({
                                         className="py-2 px-4 border-b"
                                     >
                                         <button
-                                            className="relative align-middle select-none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs bg-red-500 text-white shadow-md shadow-red-900/10 hover:shadow-lg hover:shadow-red-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none"
+                                            className="cursor-pointer relative align-middle select-none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs bg-red-500 text-white shadow-md shadow-red-900/10 hover:shadow-lg hover:shadow-red-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none"
                                             type="button"
                                             onClick={() => {
                                                 setRemoveDamaQueueName(item?.name);
@@ -308,14 +308,14 @@ function ListSchedules({
                             <div className="">
                                 <button
                                     type="button"
-                                    className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
+                                    className="cursor-pointer inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
                                     onClick={() => setShowDeleteModal(false)}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="button"
-                                    className="ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
+                                    className="cursor-pointer ml-3 inline-flex justify-center px-4 py-2 text-sm text-green-900 bg-green-100 border border-transparent rounded-md hover:bg-green-200 duration-300"
                                     onClick={async () => {
                                         await removeSchedule(removeDamaQueueName, pgEnv);
                                         setShowDeleteModal(false);
