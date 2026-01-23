@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { get } from "lodash";
 import {
     Dialog,
@@ -123,7 +123,7 @@ function ListSchedules({
         setSchedules(derivedSchedules);
     }, [falcorCache, pgEnv]);
 
-    const headers = ['name', 'type', 'cron', 'timezone', 'options', 'created_on', " "];
+    const headers = ['name', 'label', 'type', 'cron', 'timezone', 'options', 'created_on', " "];
 
     const removeSchedule = async (removeDamaQueueName, pgEnv) => {
         const publishData = {
@@ -154,6 +154,14 @@ function ListSchedules({
         }
     };
 
+    const removeQueueLabel = useMemo(() => {
+      const schedToRemove = schedules.find(
+        (sched) => sched.name === removeDamaQueueName
+      );
+      return (
+        schedToRemove?.data?.initial_event?.payload?.name || removeDamaQueueName
+      );
+    }, [removeDamaQueueName]);
     return (
         <div className="w-full p-5">
             <div className="flex m-3">
@@ -184,13 +192,21 @@ function ListSchedules({
                         </thead>
                         <tbody>
 
-                            {schedules.map((item, index) => (
+                            {schedules.map((item, index) => {
+                                const itemLabel = item?.data?.initial_event?.payload?.name || "N/A";
+                                return (
                                 <tr key={index}>
                                     <td
                                         key={`${item?.name}`}
                                         className="py-2 px-4 border-b"
                                     >
                                         {item?.name && item?.name.split(':')[1]}
+                                    </td>
+                                    <td
+                                        key={`item_label_${index}`}
+                                        className="py-2 px-4 border-b"
+                                    >
+                                        {itemLabel}
                                     </td>
                                     <td
                                         key={`${item?.data?.type}_${index}`}
@@ -245,7 +261,7 @@ function ListSchedules({
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                         </tbody>
                     </table>
                 </div>
@@ -285,7 +301,7 @@ function ListSchedules({
                             <div className="relative p-2 flex-auto">
                                 <div className="p-4 text-sm" role="alert">
                                     <span className="font-medium">
-                                        Are you sure you want to remove Schedule?
+                                        Are you sure you want to remove {removeQueueLabel}?
                                     </span>
                                 </div>
                             </div>
@@ -295,7 +311,7 @@ function ListSchedules({
                                     className="inline-flex justify-center px-4 py-2 text-sm text-red-900 bg-red-100 border border-transparent rounded-md hover:bg-red-200 duration-300"
                                     onClick={() => setShowDeleteModal(false)}
                                 >
-                                    Close
+                                    Cancel
                                 </button>
                                 <button
                                     type="button"
