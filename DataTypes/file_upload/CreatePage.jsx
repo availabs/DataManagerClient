@@ -24,7 +24,7 @@ const CreatePage = ({ source }) => {
 	}, [ref]);
 
 	return (
-		<div className="max-w-xl grid grid-cols-1 gap-2">
+		<div className="max-w-xl grid grid-cols-1 gap-2 relative p-2 mt-2">
 			<input type="file"
 				ref={ setRef }
 				className="hidden"
@@ -63,7 +63,11 @@ const File = ({ file, userName }) => {
   	setDescription(e.target.value);
   }, []);
 
+  const [uploading, setUploading] = React.useState(false);
+
   const uploadFile = React.useCallback(e => {
+
+  	setUploading(true);
 
     const formData = new FormData();
 
@@ -83,11 +87,22 @@ const File = ({ file, userName }) => {
         // const { source_id, etl_context_id } = json;
         // navigate(`${ baseUrl }/source/${ source_id }/uploads/${ etl_context_id }`);
       })
+      .finally(e => setUploading(false))
 
   }, [pgEnv, baseUrl, file, fileName, description]);
 
 	return !file ? null : (
 		<div>
+			{ !uploading ? null :
+				<div className={ `
+						bg-black/75 absolute inset-0 rounded
+						text-white text-5xl font-extrabold
+						flex items-center justify-center
+					` }
+				>
+					UPLOADING FILE...
+				</div>
+			}
 			<div className="text-xl font-extrabold border-b-3">
 				{ fileName }
 			</div>
@@ -109,13 +124,16 @@ const File = ({ file, userName }) => {
 					</div>
 				</div>
 			</div>
-			<div className="font-bold border-b-2 mb-1">
-				Enter a description
+			<div className="grid grid-cols-5">
+				<div className="font-bold col-span-2 whitespace-nowrap">
+					Description:
+				</div>
+				<textarea value={ description }
+					onChange={ doSetDescription }
+					placeholder="Start typing to enter a description..."
+					className="px-2 py-1 bg-white border rounded block w-full col-span-3"
+					rows="5"/>
 			</div>
-			<textarea value={ description }
-				onChange={ doSetDescription }
-				className="px-2 py-1 bg-white border rounded block w-full"
-				rows="5"/>
 			<div className="flex justify-end">
 				<button onClick={ uploadFile }
 					className={ `
