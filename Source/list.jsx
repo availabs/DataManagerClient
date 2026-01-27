@@ -56,10 +56,9 @@ const SourceThumb = ({ source }) => {
 
 const SourcesList = () => {
   const [layerSearch, setLayerSearch] = useState("");
-  const { cat1, cat2, ...rest } = useParams();
+  const { cat1, cat2 } = useParams();
   const {pgEnv, baseUrl, falcor, falcorCache, user} = React.useContext(DamaContext);
   const [sort, setSort] = useState('asc');
-  const sourceDataCat = 'Unknown'
   const isListAll = window.location.pathname.replace(`${baseUrl}/`, '')?.split('/')?.[0] === 'listall';
 
   useEffect(() => {
@@ -86,21 +85,17 @@ const SourcesList = () => {
     return get(falcorCache, ["dama-info", pgEnv, "settings", "value", "filtered_categories"], []);
   }, [falcorCache, pgEnv]);
 
-  const categories = [...new Set(
-      sources
-          .filter(source => {
-            return isListAll || (
-                // we're not listing all sources
-                !isListAll &&
-                !source.categories?.find(cat =>
-                    // find if current category $cat includes any of filtered categories
-                    filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
-          })
-          .reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))].sort()
+  const categories = (
+      isListAll ?
+          [...new Set(sources.reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))] :
+          [...new Set(sources.filter(s => s.categories?.find(c => c.some(c1 => filteredCategories.includes(c1)))).reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))]
+  ).sort()
 
   const categoriesCount = categories.reduce((acc, cat) => {
     acc[cat] = sources.filter(source => {
-      return source.categories?.find(category => category.includes(cat))
+      const sourceHasFilteredCategory = source.categories?.find(c => c.some(c1 => filteredCategories.includes(c1)));
+      const sourceHasCategory = source.categories?.find(category => category.includes(cat));
+      return isListAll ? sourceHasCategory : (sourceHasFilteredCategory && sourceHasCategory);
     })?.length
     return acc;
   }, {})
@@ -161,12 +156,11 @@ const SourcesList = () => {
           {
             sources
                 .filter(source => {
-                  return isListAll || (
-                      // we're not listing all sources
-                      !isListAll &&
-                      !source.categories?.find(cat =>
-                          // find if current category $cat includes any of filtered categories
-                          filteredCategories.find(filteredCategory => cat.includes(filteredCategory))))
+                  // don't filter cats if listing all sources or searching for a source
+                  return isListAll || layerSearch.length > 2 ||
+                      // there's at least one category group in this source that matches at least one FC
+                      source.categories?.some(cat =>
+                          filteredCategories.some(filteredCategory => cat.includes(filteredCategory)))
                 })
                 .filter(source => {
                   let output = true;

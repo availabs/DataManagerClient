@@ -32,7 +32,8 @@ export const PANEL_POSITION_OPTIONS = {
     'top-right':"top-0 right-0",
     'bottom-left':"bottom-0 left-0",
     'bottom':"left-[40%] bottom-0",
-    'bottom-right':"bottom-0 right-0"
+    'bottom-right':"bottom-0 right-0",
+    'hide':'hidden'
 }
 
 const isJson = (str)  => {
@@ -82,51 +83,58 @@ const Edit = ({value, onChange, size}) => {
         return Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
     }, [state.symbologies])
     const activeSymSymbology = useMemo(()=> {
-        return state.symbologies[activeSym]?.symbology;
+        return state.symbologies[activeSym]?.symbology || {};
     }, [state.symbologies[activeSym]])
     const activeLayer = useMemo(() => {
         return activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
     },[activeSymSymbology])
-    const dynamicFilterOptions = useMemo(() => {
-        return (activeLayer?.['dynamic-filters'] || []);
-    },[activeLayer]);
     const pageFilters = useMemo(() => {
         return pageState.filters
     },[pageState])
     useEffect(() => {
-        const usePageFilters = activeLayer?.usePageFilters;
-        const searchParamKey = activeLayer?.searchParamKey;
-
-        const interactiveFilterOptions = (activeLayer?.['interactive-filters'] || []);
+        const usePageFilters = Object.values(activeSymSymbology.layers || {}).some(layer => layer['dynamic-filters']?.length);
         if(!usePageFilters) return;
 
+        // get interactive filters for active layer
+        const interactiveFilterOptions = (activeLayer?.['interactive-filters'] || []);
+        const searchParamKey = activeLayer?.searchParamKey;
         const searchParamFilterKey = (pageFilters || []).find(f => f.searchKey === searchParamKey)?.values;
-
         const fI = interactiveFilterOptions.findIndex(f => f.searchParamValue === searchParamFilterKey || f.label === searchParamFilterKey)
 
+        // dynamic filters update for all layers
         const getSearchParamKey = f => f.searchParamKey || f.column_name;
-        const searchParamValues = dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: (pageFilters || []).find(f => f.searchKey === getSearchParamKey(curr))?.values}), {});
+        const searchParamValues = dynamicFilterOptions =>
+            dynamicFilterOptions.reduce((acc, curr) => ({...acc, [getSearchParamKey(curr)]: (pageFilters || []).find(f => f.searchKey === getSearchParamKey(curr))?.values}), {});
 
         setState(draft => {
             if(fI !== -1){
                 draft.symbologies[activeSym].symbology.layers[activeSymSymbology?.activeLayer].selectedInteractiveFilterIndex = fI;
             }
             draft.symbologies[activeSym].symbology.pageFilters = pageFilters;
-            if(dynamicFilterOptions?.length){
-                draft.symbologies[activeSym].symbology.layers[activeSymSymbology.activeLayer]['dynamic-filters']
-                    .filter(f => searchParamValues[getSearchParamKey(f)])
-                    .forEach(filter => {
-                        const isNumeric = filter.dataType === 'numeric';
-                        const newValues = searchParamValues[getSearchParamKey(filter)];
 
-                        filter.values =
-                            Array.isArray(newValues) && newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
-                                typeof newValues === 'string' ? [isNumeric ? +newValues : newValues] :
-                                filter.defaultValue?.length ? [isNumeric ? +filter.defaultValue : filter.defaultValue] : []
-                    })
-            }
+            Object.values(draft.symbologies[activeSym].symbology.layers)
+                .filter(l => l['dynamic-filters'])
+                .forEach(layer => {
+                    layer['dynamic-filters']
+                        .filter(dynamicFilterOptions => {
+                            return searchParamValues([dynamicFilterOptions])[getSearchParamKey(dynamicFilterOptions)]
+                        })
+                        .forEach(filter => {
+                            const isNumeric = filter.dataType === 'numeric';
+                            const newValues = searchParamValues(layer['dynamic-filters'])[getSearchParamKey(filter)];
+
+                            filter.values =
+                                Array.isArray(newValues) && newValues?.length ? newValues.map(v => isNumeric ? +v : v) :
+                                    typeof newValues === 'string' ? [isNumeric ? +newValues : newValues] :
+                                        filter.defaultValue?.length ? [isNumeric ? +filter.defaultValue : filter.defaultValue] : []
+                        })
+                })
         })
     }, [pageFilters])
+
+    const dynamicFilterOptions = useMemo(() => {
+        return (activeLayer?.['dynamic-filters'] || []);
+    },[activeLayer]);
 
     useEffect(() => {
         const getFilterBounds = async () => {

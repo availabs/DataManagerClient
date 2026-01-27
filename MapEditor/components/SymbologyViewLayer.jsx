@@ -280,9 +280,21 @@ const ViewLayerRender = (props) => {
               let mapFilter = [];
 
               const filterValue = dFilter.values;
+              let parsedFilterValues; 
+
+              let parseMapDataFunction = '';
+              //Determine if this is a numeric or string field
+              if(isNaN(parseFloat(filterValue))){
+                parseMapDataFunction = "to-string"
+                parsedFilterValues = dFilter.values.map(val => val.toString());
+              } else {
+                parseMapDataFunction = "to-number"
+                parsedFilterValues = dFilter.values.map(val => parseFloat(val));
+              }
+
               const filterColumnClause = ["get", dFilter.column_name];
               //"in" Allows for `or`, i.e. ogc_fid = 123 or 456
-              mapFilter = ["in", filterColumnClause, ["literal", filterValue]];
+              mapFilter = ["in", [parseMapDataFunction, filterColumnClause], ["literal", parsedFilterValues]];
               return mapFilter;
             });
         }
