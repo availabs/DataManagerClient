@@ -9,8 +9,6 @@ const intFormat = d3format(",d");
 
 const CreatePage = ({ source }) => {
 
-	console.log("SOURCE:", source)
-
   const { name: userName } = source;
 
 	const [ref, setRef] = React.useState(null);
@@ -50,12 +48,12 @@ const File = ({ file, userName }) => {
 
   const { pgEnv, baseUrl } = React.useContext(DamaContext);
 
-  const fileName = React.useMemo(() => {
+  const filename = React.useMemo(() => {
   	const fName = file?.name || "";
   	const split = fName.split(".");
-  	const fileName = split.slice(0, -1).join(".");
-  	const fileExt = split.at(-1);
-  	return (userName.replace(/\s+/g, "_") || fileName) + (fileName ? ("." + fileExt) : "");
+  	const filename = split.length > 1 ? split.slice(0, -1).join(".") : split[0];
+  	const fileExt = split.length > 1 ? split.at(-1) : "";
+  	return (userName.replace(/\s+/g, "_") || filename) + (fileExt ? ("." + fileExt) : "");
   }, [file, userName]);
 
   const [description, setDescription] = React.useState("");
@@ -71,7 +69,7 @@ const File = ({ file, userName }) => {
 
     const formData = new FormData();
 
-    formData.append("name", fileName);
+    formData.append("name", filename);
     formData.append("description", description);
     formData.append("type", "file_upload");
     formData.append("mime", file.type || "application/octet-stream");
@@ -89,7 +87,7 @@ const File = ({ file, userName }) => {
       })
       .finally(e => setUploading(false))
 
-  }, [pgEnv, baseUrl, file, fileName, description]);
+  }, [pgEnv, baseUrl, file, filename, description]);
 
 	return !file ? null : (
 		<div>
@@ -104,7 +102,7 @@ const File = ({ file, userName }) => {
 				</div>
 			}
 			<div className="text-xl font-extrabold border-b-3">
-				{ fileName }
+				{ filename }
 			</div>
 			<div>
 				<div className="grid grid-cols-5">
