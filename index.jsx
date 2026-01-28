@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useContext, useMemo} from "react";
 
 import { DataManagerHeader, Header } from "./Source/layout";
 import SourceList from "./Source/list";
@@ -40,9 +40,21 @@ const DAMA_Wrapper = (Component, DAMA_ARGS) => {
   return () => {
     const { falcor, falcorCache } = useFalcor();
     const { user } = useAuth()
+    const hookUser = useAuth();
+
+    const nullCheckedUser = useMemo(() => {
+      // Put your userObjects in order of priority
+      const userObjs = [user, hookUser];
+
+      // Find the first object that isn't null/undefined AND has at least one key
+      const foundUser = userObjs.find(u => u && Object.keys(u).length > 0);
+
+      // Return the found object, or a default empty one
+      return foundUser || {};
+    }, [user, hookUser]);
 
     return (
-      <DamaContext.Provider value={{ pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user, useAuth }}>
+      <DamaContext.Provider value={{ pgEnv: defaultPgEnv, baseUrl, falcor, falcorCache, user:nullCheckedUser, useAuth }}>
         <Component />
       </DamaContext.Provider>
     )
