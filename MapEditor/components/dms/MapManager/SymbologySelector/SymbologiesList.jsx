@@ -1,14 +1,14 @@
 import { useEffect, useState, useMemo, useContext } from 'react'
 import SourcesLayout from "../../../../../Source/layout";
 import get from 'lodash/get'
-import { CMSContext } from '~/modules/dms/src'
+import { CMSContext } from '~/modules/dms/packages/dms/src'
 const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, cat1, setCat1 }) => {
   const isActiveSymbology = selectedSymbologyId === symbology.symbology_id;
   const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []
   return (
     <div>
-      <div 
-        className={`w-full p-4 ${isActiveSymbology ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`} 
+      <div
+        className={`w-full p-4 ${isActiveSymbology ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} block border shadow flex`}
         onClick={() => {
           if (isActiveSymbology) {
             setSelectedSymbologyId(null);
@@ -38,7 +38,7 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
                 }
 
                 return (
-                  <div 
+                  <div
                     key={i}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -48,7 +48,7 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
                       else {
                         setCat1(s)
                       }
-                    }} 
+                    }}
                     className={`inline hover:cursor-pointer text-xs p-1 px-2 ${colorClass}  mr-2`}
                   >
                     {s}
@@ -59,7 +59,7 @@ const SourceThumb = ({ symbology, selectedSymbologyId, setSelectedSymbologyId, c
           <div className='py-2 block'>
             {symbology.description}
           </div>
-        </div>      
+        </div>
       </div>
     </div>
 
@@ -85,8 +85,8 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId, sy
     symbologies
         .filter(symbology => {
           const symCats = Array.isArray(symbology?.categories) ? symbology?.categories : []//JSON.parse(symbology?.categories)
-          //console.log('symbology ', symbology.categories,) 
-          
+          //console.log('symbology ', symbology.categories,)
+
           return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
         })
         .reduce((acc, s) => {
@@ -139,7 +139,7 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId, sy
             symbologies
                 .filter(source => {
                   const symCats = Array.isArray(source?.categories) ? source?.categories : []//JSON.parse(symbology?.categories)
-          
+
                   return isListAll || (!isListAll && !symCats?.find(cat => cat.includes(sourceDataCat)))
                 })
                 .filter(source => {
@@ -183,6 +183,6 @@ export const SymbologiesList = ({selectedSymbologyId, setSelectedSymbologyId, sy
       </div>
     </SourcesLayout>
 
-    
+
   )
 }

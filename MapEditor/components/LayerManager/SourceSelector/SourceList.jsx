@@ -5,7 +5,7 @@ import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "../../../../Source/attributes";
 import {CheckCircleIcon} from "@heroicons/react/20/solid/index.js";
 import { DEFAULT_SOURCE } from "../SourceSelector";
-import { dmsColumnTypes } from "~/modules/dms/src"
+import { dmsColumnTypes } from "~/modules/dms/packages/dms/src"
 import { makeLexicalFormat } from "~/pages/DataManager/DataTypes/default/Overview.jsx";
 const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
@@ -44,8 +44,8 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
 
   return (
     <div>
-      <div 
-        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} overflow-hidden block border shadow flex`} 
+      <div
+        className={`w-full p-4 ${isActiveSource ? 'bg-blue-100 hover:bg-blue-200' : 'bg-white hover:bg-blue-50'} overflow-hidden block border shadow flex`}
         onClick={() => {
           if (selectedSource.sourceId !== source.source_id) {
 
@@ -84,7 +84,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
                 }
 
                 return (
-                  <div 
+                  <div
                     key={i}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -94,7 +94,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
                       else {
                         setCat1(s)
                       }
-                    }} 
+                    }}
                     className={`inline hover:cursor-pointer text-xs p-1 px-2 ${colorClass}  mr-2`}
                   >
                     {s}
@@ -105,7 +105,7 @@ const SourceThumb = ({ source, selectedSource, setSource, cat1, setCat1 }) => {
           <div className='py-2 block'>
             <Lexical value={makeLexicalFormat(source.description)}/>
           </div>
-        </div>      
+        </div>
       </div>
       {
         isActiveSource && <>
@@ -249,7 +249,7 @@ const SourcesList = ({selectedSource, setSource}) => {
                     }
                   }}
               >
-                <i className={'fa fa-category'} /> 
+                <i className={'fa fa-category'} />
                 {cat}
                 <div className={'bg-blue-200 text-blue-600 text-xs w-5 h-5 ml-2 shrink-0 grow-0 rounded-lg flex items-center justify-center border border-blue-300'}>
                   {categoriesCount[cat]}

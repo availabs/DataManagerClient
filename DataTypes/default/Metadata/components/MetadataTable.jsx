@@ -8,7 +8,7 @@ import {AddCalculatedColumn} from "./AddCalculatedColumn.jsx";
 import {RemoveCalculatedColumn} from "./RemoveCalculatedColumn.jsx";
 import {FnSelector} from "./FnSelector.jsx";
 import {TypeSelector} from "./TypeSelector.jsx";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 import {IsCurrencySwitch} from "./IsCurrencySwitch.jsx";
 
 

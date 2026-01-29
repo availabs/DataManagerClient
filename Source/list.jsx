@@ -6,7 +6,7 @@ import { useParams } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
@@ -48,7 +48,7 @@ const SourceThumb = ({ source }) => {
         </Link>
       </div>
 
-      
+
     </div>
   );
 };

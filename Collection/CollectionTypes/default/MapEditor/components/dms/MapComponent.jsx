@@ -8,7 +8,7 @@ import MapManager from './MapManager/MapManager'
 import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
 
-import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
+import { CMSContext } from "~/modules/dms/packages/dms/src/patterns/page/siteConfig";
 
 const isJson = (str)  => {
     try {
@@ -57,7 +57,7 @@ const Edit = ({value, onChange, size}) => {
         // console.log('symbology layers effect')
         const updateLayers = async () => {
             if(mounted.current) {
-                
+
                 let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                     let ids = out.map(d => d.id)
                     let newValues = Object.keys(curr?.symbology?.layers)
@@ -67,16 +67,16 @@ const Edit = ({value, onChange, size}) => {
                             }
                             return layerOut
                         },{})
-                        
+
                     return [...out,  ...Object.values(newValues)]
-                    
+
                 },[]))
                 // console.log('allLayers', allLayers.length, mapLayers.length)
                 //if(mapLayers.length === 0) {
                     setMapLayers(draftMapLayers => {
 
                         let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-                  
+
                         // let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                         //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
                         // },[]))
@@ -96,10 +96,10 @@ const Edit = ({value, onChange, size}) => {
                             //console.log(d.id)
                             return oldIds.includes(d.id)
                         })
-                        
+
                         const out = [
                             // keep existing layers & filter
-                            ...oldLayers, 
+                            ...oldLayers,
                             // add new layers
                             ...newLayers
                         ].sort((a,b) => b.order - a.order)
@@ -115,10 +115,10 @@ const Edit = ({value, onChange, size}) => {
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
             return {...out, ...(curr?.symbology?.layers || {})}
-        },{}) 
+        },{})
     }, [state?.symbologies]);
 
-  
+
 
     return (
         <MapContext.Provider value={{state, setState, falcor, falcorCache, pgEnv}}>
@@ -174,7 +174,7 @@ const View = ({value, size}) => {
         // -----------------------
         const updateLayers = async () => {
             if(mounted.current) {
-                
+
                 let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                     let ids = out.map(d => d.id)
                     let newValues = Object.keys(curr?.symbology?.layers)
@@ -184,15 +184,15 @@ const View = ({value, size}) => {
                             }
                             return layerOut
                         },{})
-                        
+
                     return [...out,  ...Object.values(newValues)]
-                    
+
                 },[]))
                 //if(mapLayers.length === 0) {
                     setMapLayers(draftMapLayers => {
 
                         let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-                  
+
                         // let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                         //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
                         // },[]))
@@ -212,10 +212,10 @@ const View = ({value, size}) => {
                             //console.log(d.id)
                             return oldIds.includes(d.id)
                         })
-                        
+
                         const out = [
                             // keep existing layers & filter
-                            ...oldLayers, 
+                            ...oldLayers,
                             // add new layers
                             ...newLayers
                         ].sort((a,b) => b.order - a.order)
@@ -231,7 +231,7 @@ const View = ({value, size}) => {
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
             return {...out, ...(curr?.symbology?.layers || {})}
-        },{}) 
+        },{})
     }, [state?.symbologies]);
 
     /*
@@ -295,8 +295,8 @@ const View = ({value, size}) => {
 export default {
     "name": 'Map: Dama',
     "type": 'Map',
-    "variables": 
-    [       
+    "variables":
+    [
         {
             name: 'geoid',
             default: '36'
@@ -319,7 +319,7 @@ const defaultStyles =  [
               { name: "Streets",
                 style: "https://api.maptiler.com/maps/streets-v2/style.json?key=mU28JQ6HchrQdneiq6k9",
               },
-             
+
               { name: "Light",
                 style: "https://api.maptiler.com/maps/dataviz-light/style.json?key=mU28JQ6HchrQdneiq6k9"
               },

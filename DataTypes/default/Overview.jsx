@@ -8,7 +8,7 @@ import {VersionEditor} from './Version/components/VersionEditor.jsx'
 import SourceCategories from "./SourceCategories"
 import Metadata from './Metadata/basic.jsx'
 import {RenderLexical, RenderTextArea, RenderTextBox} from "./Metadata/components/Edit.jsx";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 import {isJson} from "../../utils/macros.jsx";
 
 export const Edit = ({

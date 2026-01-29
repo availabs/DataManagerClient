@@ -6,7 +6,7 @@ import { AvlLayer } from "~/modules/avl-map-2/src"
 import { usePrevious } from './utils.js'
 import { API_HOST } from '~/config'
 import { MapContext } from "./MapComponent.jsx"
-import { CMSContext } from '~/modules/dms/src'
+import { CMSContext } from '~/modules/dms/packages/dms/src'
 import bbox from '@turf/bbox';
 import { featureCollection } from '@turf/helpers';
 function onlyUnique(value, index, array) {
@@ -47,8 +47,8 @@ const ViewLayerRender = ({
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
   // ---------------
-  useEffect(() => {  
-    return () => { 
+  useEffect(() => {
+    return () => {
       //console.log('unmount', layer.id, layerProps.name, layer)
       layer.layers.forEach(l => {
         try {
@@ -124,7 +124,7 @@ const ViewLayerRender = ({
 
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
-            maplibreMap.removeLayer(l?.id) 
+            maplibreMap.removeLayer(l?.id)
           }
         })
 
@@ -138,9 +138,9 @@ const ViewLayerRender = ({
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(beneathLayer?.id)){
-            maplibreMap.addLayer(l, beneathLayer?.id) 
+            maplibreMap.addLayer(l, beneathLayer?.id)
           } else {
-            maplibreMap.addLayer(l) 
+            maplibreMap.addLayer(l)
           }
         })
       }
@@ -158,7 +158,7 @@ const ViewLayerRender = ({
 
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
-            maplibreMap.removeLayer(l?.id) 
+            maplibreMap.removeLayer(l?.id)
           }
         })
 
@@ -172,9 +172,9 @@ const ViewLayerRender = ({
         let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(beneathLayer?.id)){
-            maplibreMap.addLayer(l, beneathLayer?.id) 
+            maplibreMap.addLayer(l, beneathLayer?.id)
           } else {
-            maplibreMap.addLayer(l) 
+            maplibreMap.addLayer(l)
           }
         })
       }
@@ -184,7 +184,7 @@ const ViewLayerRender = ({
       let beneathLayer = Object.values(allLayerProps).find(l => l?.order === (layerProps?.order+1))
       layerProps?.layers?.forEach(l => {
         if(maplibreMap.getLayer(l?.id)){
-          maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
+          maplibreMap.moveLayer(l?.id, beneathLayer?.id)
         }
       })
     }
@@ -216,7 +216,7 @@ const ViewLayerRender = ({
         })
       }
     })
-    
+
 
     // -------------------------------
     // Apply filters
@@ -275,7 +275,7 @@ const ViewLayerRender = ({
                       filterColumnClause,
                       ["literal", filterValue]
                     ];
-  
+
                     if(filterOperator === "!="){
                       mapFilter = ["!", mapFilter];
                     }
@@ -305,7 +305,7 @@ const ViewLayerRender = ({
               let mapFilter = [];
 
               const filterValue = dFilter.values;
-              let parsedFilterValues; 
+              let parsedFilterValues;
 
               let parseMapDataFunction = '';
               //Determine if this is a numeric or string field
@@ -374,17 +374,17 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   let newTileUrl = `${tileBase}`;
 
 
-  const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0) 
+  const layerHasFilter = (layerProps?.filter && Object.keys(layerProps?.filter)?.length > 0)
 
   const dataFilterCols =
     layerProps?.filterGroupEnabled && layerProps?.["filter-group"]?.length > 0
       ? layerProps?.["filter-group"]
           ?.map((filterObj) => filterObj.column_name)
       : [layerProps?.["data-column"]];
-  
+
   const dynamicCols = layerProps?.["dynamic-filters"]
     ?.filter((dFilter) => dFilter?.values?.length > 0)
-    .map((dFilter) => dFilter.column_name); 
+    .map((dFilter) => dFilter.column_name);
   const colsToAppend = dataFilterCols.concat(dynamicCols).filter(onlyUnique).filter(col => !!col).join(",")
 
   if (newTileUrl && (colsToAppend || layerHasFilter)) {
@@ -433,13 +433,13 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   // } else {
   //   newTileUrl = newTileUrl.replace("$HOST", API_HOST)
   // }
-  
+
   return newTileUrl;
 };
 
-class ViewLayer extends AvlLayer { 
+class ViewLayer extends AvlLayer {
   // constructor makes onHover not work??
-  // constructor(layer, view) { 
+  // constructor(layer, view) {
   //   super();
 
   //   this.id = layer.id;
@@ -457,7 +457,7 @@ class ViewLayer extends AvlLayer {
   //     newLayer.source = `${layer.id}_${l.source}`
   //     return newLayer
   //   })
-    
+
   // }
 
   onHover = {
@@ -475,7 +475,7 @@ class ViewLayer extends AvlLayer {
       return data;
     },
     Component: HoverComp,
-    // Component: ({ data, layer }) => { 
+    // Component: ({ data, layer }) => {
     //   if(!layer.props.hover) return
     //   return (
     //     <div className='p-2 bg-white'>
@@ -485,7 +485,7 @@ class ViewLayer extends AvlLayer {
     // },
     isPinnable: this.isPinnable || true
   };
-  
+
   RenderComponent = ViewLayerRender;
 }
 
@@ -516,7 +516,7 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
-    
+
   }, [source_id, hoverColumns]);
 
 

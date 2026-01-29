@@ -1,7 +1,7 @@
 import React from 'react';
 import get from 'lodash/get';
 import { DamaContext } from "~/pages/DataManager/store";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 import { Table } from "~/modules/avl-components/src";
 
 

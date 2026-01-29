@@ -6,7 +6,7 @@ import { AvlLayer, hasValue } from "~/modules/avl-map-2/src"
 import { usePrevious, getValidSources } from './LayerManager/utils'
 import {DAMA_HOST} from '~/config'
 import { DamaContext } from "../../../../../store"
-import { CMSContext } from '~/modules/dms/src'
+import { CMSContext } from '~/modules/dms/packages/dms/src'
 
 const ViewLayerRender = ({
   maplibreMap,
@@ -14,13 +14,13 @@ const ViewLayerRender = ({
   layerProps,
   allLayerProps
 }) => {
-  
+
   // ------------
   // avl-map doesn't always automatically remove layers on unmount
   // so do it here
   // ---------------
-  useEffect(() => {  
-    return () => { 
+  useEffect(() => {
+    return () => {
       //console.log('unmount', layer.id, layerProps.name, layer)
       layer.layers.forEach(l => {
         try {
@@ -33,16 +33,16 @@ const ViewLayerRender = ({
       })
     }
   }, [])
-  
+
   // to detect changes in layerprops
   const prevLayerProps = usePrevious(layerProps);
-  
+
   // - On layerProps change
   useEffect(() => {
     // console.log('update layer props', layerProps)
-    
 
-   
+
+
     // ------------------------------------------------------
     // Change Source to Update feature properties dynamically
     // ------------------------------------------------------
@@ -58,7 +58,7 @@ const ViewLayerRender = ({
 
         layerProps?.layers?.forEach(l => {
           if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
-            maplibreMap.removeLayer(l?.id) 
+            maplibreMap.removeLayer(l?.id)
           }
         })
         // consol
@@ -72,9 +72,9 @@ const ViewLayerRender = ({
         let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
         layerProps?.layers?.forEach(l => {
             if(maplibreMap.getLayer(beneathLayer?.id)){
-              maplibreMap.addLayer(l, beneathLayer?.id) 
+              maplibreMap.addLayer(l, beneathLayer?.id)
             } else {
-              maplibreMap.addLayer(l) 
+              maplibreMap.addLayer(l)
             }
         })
       }
@@ -88,7 +88,7 @@ const ViewLayerRender = ({
       let beneathLayer = Object.values(allLayerProps).find(l => l.order === (layerProps.order+1))
       layerProps?.layers?.forEach(l => {
         if(maplibreMap.getLayer(l?.id) && maplibreMap.getLayer(l?.id)){
-          maplibreMap.moveLayer(l?.id, beneathLayer?.id) 
+          maplibreMap.moveLayer(l?.id, beneathLayer?.id)
         }
       })
     }
@@ -120,7 +120,7 @@ const ViewLayerRender = ({
         })
       }
     })
-    
+
 
     // -------------------------------
     // Apply filters
@@ -207,9 +207,9 @@ const getLayerTileUrl = (tileBase, layerProps) => {
   return newTileUrl;
 };
 
-class ViewLayer extends AvlLayer { 
+class ViewLayer extends AvlLayer {
   // constructor makes onHover not work??
-  // constructor(layer, view) { 
+  // constructor(layer, view) {
   //   super();
 
   //   this.id = layer.id;
@@ -227,7 +227,7 @@ class ViewLayer extends AvlLayer {
   //     newLayer.source = `${layer.id}_${l.source}`
   //     return newLayer
   //   })
-    
+
   // }
 
   onHover = {
@@ -245,7 +245,7 @@ class ViewLayer extends AvlLayer {
       return data;
     },
     Component: HoverComp,
-    // Component: ({ data, layer }) => { 
+    // Component: ({ data, layer }) => {
     //   if(!layer.props.hover) return
     //   return (
     //     <div className='p-2 bg-white'>
@@ -255,7 +255,7 @@ class ViewLayer extends AvlLayer {
     // },
     isPinnable: this.isPinnable || true
   };
-  
+
   RenderComponent = ViewLayerRender;
 }
 
@@ -284,7 +284,7 @@ const HoverComp = ({ data, layer }) => {
           "dama", pgEnv, "sources", "byId", source_id, "attributes", "metadata"
       ]);
     }
-    
+
   }, [source_id, hoverColumns]);
 
   // useEffect(() => {

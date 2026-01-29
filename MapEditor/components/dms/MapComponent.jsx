@@ -9,8 +9,7 @@ import LegendPanel from './LegendPanel/LegendPanel'
 import SymbologyViewLayer from '../SymbologyViewLayer'
 import { usePrevious } from '../../components/LayerManager/utils'
 
-import { CMSContext } from "~/modules/dms/src/patterns/page/context";
-// import { CMSContext } from "~/modules/dms/src/patterns/page/siteConfig";
+import { CMSContext } from "~/modules/dms/packages/dms/src/patterns/page/context";
 
 import { HEIGHT_OPTIONS } from "./MapManager/MapManager";
 
@@ -67,7 +66,7 @@ const Edit = ({value, onChange, size}) => {
         // console.log('symbology layers effect')
         const updateLayers = async () => {
             if(mounted.current) {
-                
+
                 let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                     let ids = out.map(d => d.id)
                     let newValues = Object.keys(curr?.symbology?.layers)
@@ -77,16 +76,16 @@ const Edit = ({value, onChange, size}) => {
                             }
                             return layerOut
                         },{})
-                        
+
                     return [...out,  ...Object.values(newValues)]
-                    
+
                 },[]))
                 // console.log('allLayers', allLayers.length, mapLayers.length)
                 //if(mapLayers.length === 0) {
                     setMapLayers(draftMapLayers => {
 
                         let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-                  
+
                         // let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                         //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
                         // },[]))
@@ -106,10 +105,10 @@ const Edit = ({value, onChange, size}) => {
                             //console.log(d.id)
                             return oldIds.includes(d.id)
                         })
-                        
+
                         const out = [
                             // keep existing layers & filter
-                            ...oldLayers, 
+                            ...oldLayers,
                             // add new layers
                             ...newLayers
                         ].sort((a,b) => b.order - a.order)
@@ -125,7 +124,7 @@ const Edit = ({value, onChange, size}) => {
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
           return {...out, ...(curr?.symbology?.layers || {}), zoomToFilterBounds: curr?.symbology.zoomToFilterBounds }
-        },{}) 
+        },{})
     }, [state?.symbologies]);
 
     const isHorizontalLegendActive = Object.values(state?.symbologies)
@@ -147,7 +146,7 @@ const Edit = ({value, onChange, size}) => {
         [state.symbologies]
       );
       const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
-    
+
       useEffect(() => {
         setState((draft) => {
           Object.keys(draft.symbologies)
@@ -161,7 +160,7 @@ const Edit = ({value, onChange, size}) => {
                     const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
                     const draftFilters = layer['interactive-filters'];
                     const draftFilterIndex = layer.selectedInteractiveFilterIndex;
-                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex]
 
                     if(draftInteractiveFilter) {
                       const newSymbology = {
@@ -172,7 +171,7 @@ const Edit = ({value, onChange, size}) => {
                         "interactive-filters": draftFilters,
                         selectedInteractiveFilterIndex: draftFilterIndex
                       };
-  
+
                       newSymbology.layers.forEach((d, i) => {
                         newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
                       });
@@ -247,7 +246,7 @@ const View = ({value, size}) => {
         // -----------------------
         const updateLayers = async () => {
             if(mounted.current) {
-                
+
                 let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                     let ids = out.map(d => d.id)
                     let newValues = Object.keys(curr?.symbology?.layers)
@@ -257,15 +256,15 @@ const View = ({value, size}) => {
                             }
                             return layerOut
                         },{})
-                        
+
                     return [...out,  ...Object.values(newValues)]
-                    
+
                 },[]))
                 //if(mapLayers.length === 0) {
                     setMapLayers(draftMapLayers => {
 
                         let currentLayerIds = draftMapLayers.map(d => d.id).filter(d => d)
-                  
+
                         // let allLayers = (Object.values(state.symbologies).reduce((out,curr) => {
                         //     return [...out, ...Object.values(curr?.symbology?.layers || {})]
                         // },[]))
@@ -285,10 +284,10 @@ const View = ({value, size}) => {
                             //console.log(d.id)
                             return oldIds.includes(d.id)
                         })
-                        
+
                         const out = [
                             // keep existing layers & filter
-                            ...oldLayers, 
+                            ...oldLayers,
                             // add new layers
                             ...newLayers
                         ].sort((a,b) => b.order - a.order)
@@ -304,7 +303,7 @@ const View = ({value, size}) => {
     const layerProps = useMemo(() =>  {
         return Object.values(state.symbologies).reduce((out,curr) => {
             return {...out, ...(curr?.symbology?.layers || {})}
-        },{}) 
+        },{})
     }, [state?.symbologies]);
 
     const isHorizontalLegendActive = Object.values(state?.symbologies)
@@ -325,23 +324,23 @@ const View = ({value, size}) => {
         [state.symbologies]
       );
       const prevInteractiveIndicies = usePrevious(interactiveFilterIndicies);
-    
+
       useEffect(() => {
         setState((draft) => {
           Object.keys(draft.symbologies)
             .forEach(topSymbKey => {
                 const curTopSymb = draft.symbologies[topSymbKey];
-  
+
                 Object.keys(curTopSymb.symbology.layers)
                   .filter((lKey) => {
                     return curTopSymb.symbology.layers[lKey]["layer-type"] === "interactive"
                   })
                   .forEach((lKey) => {
                     const layer = draft.symbologies[topSymbKey].symbology.layers[lKey];
-                
+
                     const draftFilters = layer['interactive-filters'];
                     const draftFilterIndex = layer.selectedInteractiveFilterIndex;
-                    const draftInteractiveFilter = draftFilters[draftFilterIndex] 
+                    const draftInteractiveFilter = draftFilters[draftFilterIndex]
                     if(draftInteractiveFilter) {
                       const newSymbology = {
                         ...layer,
@@ -351,7 +350,7 @@ const View = ({value, size}) => {
                         "interactive-filters": draftFilters,
                         selectedInteractiveFilterIndex: draftFilterIndex
                       };
-  
+
                       newSymbology.layers.forEach((d, i) => {
                         newSymbology.layers[i].layout.visibility = curTopSymb.isVisible ? 'visible' :  "none";
                       });
@@ -367,7 +366,7 @@ const View = ({value, size}) => {
     -73.77114629819935,
           42.653137397916566
     */
-        
+
     const { center, zoom } = state.initialBounds ? state.initialBounds : {
         center: [-75.17, 42.85],
         zoom: 6.6
@@ -406,8 +405,8 @@ const View = ({value, size}) => {
 export default {
     "name": 'Map: Dama',
     "type": 'Map',
-    "variables": 
-    [       
+    "variables":
+    [
         {
             name: 'geoid',
             default: '36'
