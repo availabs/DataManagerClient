@@ -7,7 +7,7 @@ import set from "lodash/set"
 import omit from "lodash/omit"
 import isEqual from "lodash/isEqual"
 //import throttle from "lodash/throttle"
-import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
+import { SymbologyAttributes } from "~/pages/DataManager/MapEditor/attributes";
 import { usePrevious } from './components/LayerManager/utils'
 import {PMTilesProtocol} from '../utils/pmtiles/index.ts'
 import { AvlMap as AvlMap2 } from "~/modules/avl-map-2/src"
@@ -26,7 +26,7 @@ import ExternalPluginPanel from './components/ExternalPluginPanel'
 
 import SymbologyViewLayer from './components/SymbologyViewLayer'
 import PluginLayer from './components/PluginLayer'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
+import { getAttributes } from "~/pages/DataManager/MapEditor/attributes";
 
 import { extractState, fetchBoundsForFilter } from './stateUtils';
 

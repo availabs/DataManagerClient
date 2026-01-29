@@ -7,7 +7,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { SymbologiesList } from './SymbologiesList';
 import { Modal, INITIAL_NEW_MAP_MODAL_STATE } from '~/pages/DataManager/MapEditor/components/LayerManager/SymbologyControl';
 import { MapContext } from '../../MapComponent'
-import { SymbologyAttributes, getAttributes } from "../../../../../Collection/attributes"
+import { SymbologyAttributes, getAttributes } from "../../../../attributes"
 
 export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
   const { state, setState, falcor, pgEnv } = useContext(MapContext);

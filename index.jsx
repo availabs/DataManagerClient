@@ -6,11 +6,6 @@ import SourceView from "./Source";
 import SourceCreate from "./Source/create";
 import SourceDelete from "./Source/delete";
 
-import CollectionList from "./Collection/list";
-import CollectionView from "./Collection";
-import CollectionCreate from "./Collection/create";
-import CollectionDelete from "./Collection/delete";
-
 import SchedulesComponent from "./Schedules";
 import TasksComponent from "./Tasks";
 import TaskPageComponent from "./Tasks/TaskPage";
@@ -267,112 +262,6 @@ const DamaRoutes = DAMA_ARGS => {
       sideNav,
       topNav,
       element: DAMA_Wrapper(MapEditor, DAMA_ARGS)
-    },
-    /**
-     * COLLECTIONS
-     */
-    // Collection List
-    {
-      name: "Data Collections",
-      path: `${baseUrl}/collections`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
-    },
-    {
-      name: "Data Collections",
-      path: `${baseUrl}/collections/cat/:cat1`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
-    },
-    {
-      name: "Data Collections",
-      path: `${baseUrl}/collections/cat/:cat1/:cat2`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionList, DAMA_ARGS)
-    },
-    // -- Collection View
-    {
-      name: "View Collection",
-      path: `${baseUrl}/collection/:collectionId`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
-    },
-    {
-      name: "View Collection",
-      path: `${baseUrl}/collection/:collectionId/:page`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
-    },
-    {
-      name: "View Symbology",
-      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
-    },
-    {
-      name: "View Symbology",
-      path: `${baseUrl}/collection/:collectionId/:page/:symbologyId/:sPage`,
-      exact: true,
-      authLevel,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionView, DAMA_ARGS)
-    },
-    // Collection Create
-    {
-      name: "Create Collection",
-      path: `${baseUrl}/create/collection`,
-      exact: true,
-      authLevel: false,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionCreate, DAMA_ARGS)
-    },
-    // Collection Delete
-    {
-      name: "Delete Collection",
-      path: `${baseUrl}/delete/collection/:collectionId`,
-      exact: true,
-      authLevel: true,
-      mainNav: false,
-      Title: () => <Header baseUrl={baseUrl}/>,
-      sideNav,
-      topNav,
-      element: DAMA_Wrapper(CollectionDelete, DAMA_ARGS)
     },
     { name: "Tasks",
       path: `${ baseUrl }/tasks`,
