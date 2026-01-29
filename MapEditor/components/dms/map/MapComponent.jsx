@@ -83,7 +83,7 @@ const Edit = ({value, onChange, size}) => {
         return Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
     }, [state.symbologies])
     const activeSymSymbology = useMemo(()=> {
-        return state.symbologies[activeSym]?.symbology;
+        return state.symbologies[activeSym]?.symbology || {};
     }, [state.symbologies[activeSym]])
     const activeLayer = useMemo(() => {
         return activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
