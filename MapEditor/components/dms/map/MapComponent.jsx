@@ -19,7 +19,7 @@ import ExternalPluginPanel from "../../ExternalPluginPanel";
 import {fetchBoundsForFilter} from '../../../stateUtils';
 
 export const HEIGHT_OPTIONS = {
-    "full": 'calc(95vh)',
+    "full": 'calc(100vh)',
     1: "900px",
     "2/3": "600px",
     "1/3": "300px",

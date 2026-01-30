@@ -70,7 +70,7 @@ function arraymove(arr, fromIndex, toIndex) {
 
 
 function SymbologyMenu({button, location='left-0', width='w-36', children}) {
-  
+
 
   return (
       <Menu as="div" className="relative inline-block text-left">
@@ -133,7 +133,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
       Object.keys(draft.symbologies[symbology.symbology_id].symbology.layers).forEach(layerId => {
         const curLayer = draft.symbologies[symbology.symbology_id].symbology.layers[layerId];
         curLayer.layers.forEach((d,i) => {
-          let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'') 
+          let val = get(state, `symbologies[${symbology.symbology_id}].symbology.layers[${layerId}].layers[${i}].layout.visibility`,'')
           let update = val === 'visible' ? 'none' : 'visible'
           draft.symbologies[symbology.symbology_id].symbology.layers[layerId].layers[i].layout =  { "visibility": update }
         })
@@ -278,7 +278,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                 //draft.symbology.layers[layer.id].layers[0].source-layer
                 //draft.symbology.layers[layer.id].layers[1].source
                 //draft.symbology.layers[layer.id].layers[1].source-layer
-                
+
                 const newLayer = JSON.parse(
                   JSON.stringify(draft.symbologies[row.symbologyId].symbology.layers[layer.id].layers).replaceAll(
                     layer.view_id,
@@ -324,7 +324,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           'circle':"layers[0].paint['circle-color']",
           'line':"layers[1].paint['line-color']"
         }
-    
+
         const layerPaintPath = paintPaths[polygonLayerType];
         const {
           choroplethdata = {},
@@ -334,9 +334,9 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           ["category-show-other"]: showOther = "#ccc",
         } = layer;
         const { breaks, max } = choroplethdata;
-    
+
         let { paint } = choroplethPaint(dataColumn, max, colorrange, numbins, method, breaks, showOther);
-        if(isValidCategoryPaint(paint)) {    
+        if(isValidCategoryPaint(paint)) {
           set(draft, `symbologies[${[row.symbologyId]}].symbology.layers[${layer.id}].${layerPaintPath}`, paint)
         }
       }))
@@ -364,7 +364,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
     ) {
       getFilterBounds();
     } else {
-      if(state?.symbologies?.[row.symbologyId]?.symbology?.zoomToFilterBounds?.length > 0) { 
+      if(state?.symbologies?.[row.symbologyId]?.symbology?.zoomToFilterBounds?.length > 0) {
         setState((draft) => {
           draft.symbologies[row.symbologyId].symbology.zoomToFilterBounds = [];
         });
@@ -374,13 +374,13 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
   return (
     <div className='border-white/85 border hover:border-pink-500 group'>
       <div className={`w-full  px-2 flex  items-center`}>
-        <div className='pr-2 flex items-center'><input 
+        <div className='pr-2 flex items-center'><input
           type='checkbox'
           checked={visible}
           className='h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-600'
           onChange={toggleVisibility}
         /></div>
-        <div 
+        <div
           onClick={state.isEdit ? () => {}: toggleVisibility}
           className='text-[13px] cursor-pointer font-regular hover:text-slate-900 text-slate-600 truncate flex items-center flex-1'
         >
@@ -403,7 +403,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                   })
                 }}
               />
-            ) : 
+            ) :
               symbology?.name || ' no name'
           }
         </div>
@@ -418,7 +418,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
               }}
             >
               <CaretUpSolid
-                className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`} 
+                className={`pt-[2px] fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}
                 size={20}
               />
             </div>
@@ -438,13 +438,13 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
           </>
         }
         {state.isEdit && (<div className='text-sm pt-1 px-0.5 flex items-center'>
-          <SymbologyMenu 
+          <SymbologyMenu
             button={<MenuDots className={ `fill-white cursor-pointer group-hover:fill-gray-400 group-hover:hover:fill-pink-700`}/>}
           >
             {dynamicFilters && dynamicFilters.length > 0 && <div className="px-1 py-1 ">
               <Menu.Item >
                 {({ active }) => (
-                  <div 
+                  <div
                     className={`${
                       active ? 'bg-pink-50 ' : ''
                     } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -467,7 +467,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             <div className="px-1 py-1 ">
                 <Menu.Item >
                   {({ active }) => (
-                    <div 
+                    <div
                       className={`${
                         active ? 'bg-pink-50 ' : ''
                       } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
@@ -484,7 +484,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
             <div className="px-1 py-1 ">
               <Menu.Item >
                 {({ active }) => (
-                  <div 
+                  <div
                     className={`${
                       active ? 'bg-pink-50 ' : ''
                     } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -498,7 +498,7 @@ function SymbologyRow ({tabIndex, row, rowIndex}) {
                             newSymbology.symbology.layers[layerId].layers[i].layout =  { "visibility": val }
                           })
                         })
-                  
+
                         draft.symbologies[''+row.symbologyId] = newSymbology;
                         draft.symbologies[symbology.symbology_id].isVisible = visible;
                       })
@@ -546,13 +546,13 @@ function TabPanel ({tabIndex, tab}) {
       {/* --- Header --- */}
       <div className='flex'>
         <div className='flex-1 items-center'>
-         {state.isEdit && <input 
+         {state.isEdit && <input
             type="text"
             className='border w-[180px] font-medium border-transparent hover:border-slate-200 outline-2 outline-transparent rounded-md bg-transparent py-1 px-2 text-slate-800 placeholder:text-gray-400 focus:outline-pink-300 sm:leading-6'
             value={tab.name}
-            onChange={(e) => setState(draft => { 
-               
-                draft.tabs[tabIndex].name = e.target.value                           
+            onChange={(e) => setState(draft => {
+
+                draft.tabs[tabIndex].name = e.target.value
             })}
           />}
           {
@@ -565,15 +565,15 @@ function TabPanel ({tabIndex, tab}) {
               setAddSymbologyModalState({...addSymbologyModalState, open: true})}
             }
           >
-            <Plus className='fill-slate-500 hover:fill-pink-300 hover:cursor-pointer' 
+            <Plus className='fill-slate-500 hover:fill-pink-300 hover:cursor-pointer'
           />
           </div>
         )}
         {state.isEdit && (<>
-          <SymbologyMenu 
+          <SymbologyMenu
             button={
-              <div 
-                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+              <div
+                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center'
               >
                 <MenuDots className='fill-slate-500 hover:fill-pink-300' />
               </div>
@@ -582,7 +582,7 @@ function TabPanel ({tabIndex, tab}) {
             <div className="px-1 py-1 ">
                 <Menu.Item >
                   {({ active }) => (
-                    <div 
+                    <div
                       className={`${
                         active ? 'bg-pink-50 ' : ''
                       } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
@@ -599,7 +599,7 @@ function TabPanel ({tabIndex, tab}) {
               {tabIndex !== 0 && <div className="px-1 py-1 ">
                 <Menu.Item >
                   {({ active }) => (
-                    <div 
+                    <div
                       className={`${
                         active ? 'bg-pink-50 ' : ''
                       } group flex w-full items-center  rounded-md p-1 text-sm`}
@@ -615,7 +615,7 @@ function TabPanel ({tabIndex, tab}) {
               {tabIndex !== numTabs-1 && <div className="px-1 py-1 ">
                 <Menu.Item >
                   {({ active }) => (
-                    <div  
+                    <div
                       className={`${
                         active ? 'bg-pink-50 ' : ''
                       } group flex w-full items-center  rounded-md p-1 text-sm`}
@@ -629,10 +629,10 @@ function TabPanel ({tabIndex, tab}) {
                 </Menu.Item>
               </div>}
           </SymbologyMenu>
-          <SymbologyMenu 
+          <SymbologyMenu
             button={
-              <div 
-                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+              <div
+                className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center'
               >
                   <i className={`text-lg text-slate-400 hover:text-pink-300 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
               </div>
@@ -644,7 +644,7 @@ function TabPanel ({tabIndex, tab}) {
                   return (
                     <Menu.Item key={icon}>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } rounded-md p-1 text-lg`}
@@ -657,7 +657,7 @@ function TabPanel ({tabIndex, tab}) {
                           }}
                         >
                           <div className={` cursor-pointer w-[28px] h-[28px] justify-center rounded hover:bg-slate-100 flex items-center ${icon}`} />
-                          
+
                         </div>
                       )}
                     </Menu.Item>
@@ -692,7 +692,7 @@ function TabPanel ({tabIndex, tab}) {
 }
 
 export const HEIGHT_OPTIONS = {
-  "full": 'calc(95vh)',
+  "full": 'calc(100vh)',
   1: "900px",
   "2/3": "600px",
   "1/3": "300px",
@@ -701,8 +701,8 @@ export const HEIGHT_OPTIONS = {
 
 function MapManager () {
   const { state, setState } = React.useContext(MapContext);
-  
-  const { blankBaseMap, isEdit, hideControls, initialBounds, tabs, height, zoomPan } = useMemo(() => {  
+
+  const { blankBaseMap, isEdit, hideControls, initialBounds, tabs, height, zoomPan } = useMemo(() => {
     return {
       isEdit: get(state, ['isEdit'], false),
       blankBaseMap: get(state, ['blankBaseMap'], false),
@@ -725,15 +725,15 @@ function MapManager () {
                   {({ selected }) => (
                     <div
                       className={`
-                        ${selected ? 
-                          'text-blue-500 border-r-2 border-blue-600' : 
+                        ${selected ?
+                          'text-blue-500 border-r-2 border-blue-600' :
                           'text-slate-400'} text-sm cursor-pointer
                       `}
                     >
                       <div className='w-full flex items-center'>
                         <i className={`text-lg hover:text-blue-500 ${tab?.icon || 'fad fa-layer-group'} fa-fw mx-auto`} />
                       </div>
-                      
+
                     </div>
                   )}
                 </Tab>
@@ -742,10 +742,10 @@ function MapManager () {
             {
               isEdit && (
               <>
-                <SymbologyMenu 
+                <SymbologyMenu
                   button={
-                    <div 
-                      className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center' 
+                    <div
+                      className='w-[28px] h-[28px] justify-center m-1 rounded hover:bg-slate-100 flex items-center'
                     >
                       <MenuDots className='fill-slate-500 hover:fill-pink-300' />
                     </div>
@@ -754,7 +754,7 @@ function MapManager () {
                   <div className="px-1 py-1">
                     <Menu.Item>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -785,7 +785,7 @@ function MapManager () {
                   <div className="px-1 py-1">
                     <Menu.Item>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -806,12 +806,12 @@ function MapManager () {
                   <div className="px-1 py-1">
                     <Menu.Item>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md p-1 text-sm`}
                         >
-                          <button 
+                          <button
                             onClick={() => {
                             setState(draft => {
                               draft.zoomPan = !zoomPan;
@@ -826,7 +826,7 @@ function MapManager () {
                   <div className="px-1 py-1">
                     <Menu.Item>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -845,11 +845,11 @@ function MapManager () {
                     </Menu.Item>
                   </div>
                   {
-                    initialBounds && (                  
+                    initialBounds && (
                       <div className="px-1 py-1">
                         <Menu.Item>
                           {({ active }) => (
-                            <div 
+                            <div
                               className={`${
                                 active ? 'bg-pink-50 ' : ''
                               } group flex w-full items-center text-red-400 rounded-md p-1 text-sm`}
@@ -873,7 +873,7 @@ function MapManager () {
                   <div className="px-1 py-1">
                     <Menu.Item>
                       {({ active }) => (
-                        <div 
+                        <div
                           className={`${
                             active ? 'bg-pink-50 ' : ''
                           } group flex w-full items-center rounded-md p-1 text-sm`}
@@ -892,8 +892,8 @@ function MapManager () {
                     </Menu.Item>
                   </div>
                 </SymbologyMenu>
-                <div 
-                  className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer' 
+                <div
+                  className='p-1 rounded hover:bg-slate-100 m-1 cursor-pointer'
                   onClick={() => setState(draft => {
                     draft.tabs.push({name: `Layers ${tabs.length - 1}`, icon: 'fad fa-layer-group' ,rows:[]})
                   })}
@@ -901,7 +901,7 @@ function MapManager () {
                   <Plus className='fill-slate-500 hover:fill-pink-700' />
                 </div>
               </>
-          )}  
+          )}
           </div>
 
           <Tab.Panels className='flex-1 w-[220px] '>
@@ -940,7 +940,7 @@ const DynamicFilter = ({layer, symbology_id}) => {
         })
         falcor.get([
           'dama',pgEnv,'viewsbyId', viewId, 'options', options, 'databyIndex', { from: 0, to: 200},[colName, 'count(1)::int as count']
-        ]) 
+        ])
       })
     }
   },[selectedColumnNames, layerType, viewId]);
@@ -970,9 +970,9 @@ const DynamicFilter = ({layer, symbology_id}) => {
                 sampleData={sampleData}
                 button={
                   <div className='text-black rounded-md h-[36px] pl-1 pr-1 flex w-full items-center border border-transparent cursor-pointer hover:border-slate-300'>{dFilter.display_name} <CaretDown  className=''/> </div>
-                } 
+                }
               />
-            </div> 
+            </div>
           )
         })
       }
@@ -991,7 +991,7 @@ function DynamicFilterControl({button, layer, sampleData, filterIndex, symbology
       filterValues:get(layer, `['dynamic-filters'][${filterIndex}].values`, []),
     }
   }, [state, filterIndex]);
-  
+
   return (
     <Menu as="div" className="relative inline-block text-left w-full">
       <Menu.Button as="div">{button}</Menu.Button>
@@ -1059,6 +1059,6 @@ function DynamicFilterControl({button, layer, sampleData, filterIndex, symbology
       </Transition>
     </Menu>
   );
-} 
+}
 
 export default MapManager
