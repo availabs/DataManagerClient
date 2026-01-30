@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {editMetadata} from "../utils/editMetadata.js";
 import {Button} from "~/modules/avl-components/src";
 import {DamaContext} from "../../../../store/index.js";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 
 export const RenderTextArea = ({value, setValue, save, cancel}) => {
     return (

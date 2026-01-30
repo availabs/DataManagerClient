@@ -12,7 +12,7 @@ import {categoryPaint, isValidCategoryPaint ,choroplethPaint} from '../../LayerE
 import colorbrewer from '../../LayerManager/colors'
 // import LegendPanel from './LegendPanel'
 import cloneDeep from 'lodash/cloneDeep'
-import { SymbologyAttributes } from "~/pages/DataManager/Collection/attributes";
+import { SymbologyAttributes } from "~/pages/DataManager/MapEditor/attributes";
 const getAttributes = (data) => {
   return Object.entries(data || {}).reduce((out, attr) => {
     const [k, v] = attr;

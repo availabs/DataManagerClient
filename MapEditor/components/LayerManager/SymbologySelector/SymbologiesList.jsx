@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react'
 import SourcesLayout from "../../../../Source/layout";
 import { DamaContext } from "../../../../store"
 import get from 'lodash/get'
-import { getAttributes } from "~/pages/DataManager/Collection/attributes";
-
 import SourceCategories from "~/pages/DataManager/DataTypes/default/SourceCategories";
 import { SymbologyContext } from '~/pages/DataManager/MapEditor';
 

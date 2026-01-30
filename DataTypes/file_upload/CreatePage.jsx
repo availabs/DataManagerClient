@@ -1,0 +1,147 @@
+import React from "react"
+
+import { format as d3format } from "d3-format"
+
+import { DAMA_HOST } from "~/config";
+import { DamaContext } from "~/pages/DataManager/store";
+
+const intFormat = d3format(",d");
+
+const CreatePage = ({ source }) => {
+
+  const { name: userName } = source;
+
+	const [ref, setRef] = React.useState(null);
+
+	const [file, setFile] = React.useState(null);
+	const doSetFile = React.useCallback(e => {
+		setFile(e.target.files[0]);
+	}, []);
+	const clickFileInput = React.useCallback(e => {
+		ref.click();
+	}, [ref]);
+
+	return (
+		<div className="max-w-xl grid grid-cols-1 gap-2 relative p-2 mt-2">
+			<input type="file"
+				ref={ setRef }
+				className="hidden"
+				onChange={ doSetFile }/>
+			<div className="flex">
+				<button onClick={ clickFileInput }
+					className={ `
+						bg-gray-200 hover:bg-gray-300
+						w-60 py-2 rounded cursor-pointer
+					` }
+				>
+					Select a File
+				</button>
+			</div>
+			<File file={ file }
+				userName={ userName }/>
+		</div>
+	)
+}
+export default CreatePage;
+
+const File = ({ file, userName }) => {
+
+  const { pgEnv, baseUrl } = React.useContext(DamaContext);
+
+  const filename = React.useMemo(() => {
+  	const fName = file?.name || "";
+  	const split = fName.split(".");
+  	const filename = split.length > 1 ? split.slice(0, -1).join(".") : split[0];
+  	const fileExt = split.length > 1 ? split.at(-1) : "";
+  	return (userName.replace(/\s+/g, "_") || filename) + (fileExt ? ("." + fileExt) : "");
+  }, [file, userName]);
+
+  const [description, setDescription] = React.useState("");
+  const doSetDescription = React.useCallback(e => {
+  	setDescription(e.target.value);
+  }, []);
+
+  const [uploading, setUploading] = React.useState(false);
+
+  const uploadFile = React.useCallback(e => {
+
+  	setUploading(true);
+
+    const formData = new FormData();
+
+    formData.append("name", filename);
+    formData.append("description", description);
+    formData.append("type", "file_upload");
+    formData.append("mime", file.type || "application/octet-stream");
+    formData.append("categories", JSON.stringify([["Uploaded File"]]));
+    formData.append("file", file);
+
+    fetch(
+      `${ DAMA_HOST }/dama-admin/${ pgEnv }/file_upload`,
+      { method: "POST", body: formData }
+    ).then(res => res.json())
+      .then(json => {
+        console.log("FILE UPLOAD RESPONSE:", json);
+        // const { source_id, etl_context_id } = json;
+        // navigate(`${ baseUrl }/source/${ source_id }/uploads/${ etl_context_id }`);
+      })
+      .finally(e => setUploading(false))
+
+  }, [pgEnv, baseUrl, file, filename, description]);
+
+	return !file ? null : (
+		<div>
+			{ !uploading ? null :
+				<div className={ `
+						bg-black/75 absolute inset-0 rounded
+						text-white text-5xl font-extrabold
+						flex items-center justify-center
+					` }
+				>
+					UPLOADING FILE...
+				</div>
+			}
+			<div className="text-xl font-extrabold border-b-3">
+				{ filename }
+			</div>
+			<div>
+				<div className="grid grid-cols-5">
+					<div className="col-span-2 font-bold">File Size:</div>
+					<div className="col-span-3">{ intFormat(file.size) } bytes</div>
+				</div>
+				<div className="grid grid-cols-5">
+					<div className="col-span-2 font-bold">File Type:</div>
+					<div className="col-span-3">
+						{ file.type || "application/octet-stream" }
+					</div>
+				</div>
+				<div className="grid grid-cols-5">
+					<div className="col-span-2 font-bold">Last Modified:</div>
+					<div className="col-span-3">
+						{ (new Date(file.lastModified)).toLocaleString() }
+					</div>
+				</div>
+			</div>
+			<div className="grid grid-cols-5">
+				<div className="font-bold col-span-2 whitespace-nowrap">
+					Description:
+				</div>
+				<textarea value={ description }
+					onChange={ doSetDescription }
+					placeholder="Start typing to enter a description..."
+					className="px-2 py-1 bg-white border rounded block w-full col-span-3"
+					rows="5"/>
+			</div>
+			<div className="flex justify-end">
+				<button onClick={ uploadFile }
+					className={ `
+						bg-green-200 hover:bg-green-300 mt-2
+						w-60 py-2 rounded cursor-pointer
+					` }
+				>
+					Upload File
+				</button>
+			</div>
+		</div>
+	)
+}

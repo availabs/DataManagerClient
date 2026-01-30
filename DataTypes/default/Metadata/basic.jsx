@@ -1,7 +1,7 @@
 import React from 'react';
 import get from 'lodash/get';
 import { DamaContext } from "~/pages/DataManager/store";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 import { Table } from "~/modules/avl-components/src";
 
 
@@ -12,8 +12,8 @@ const sortFn = (a, b) => {
 }
 const MetadataTable = ({ source, ...props }) => {
 
-  const { pgEnv, falcor, user } = React.useContext(DamaContext);
-  const { authLevel } = user;
+  const { pgEnv, falcor, user = {authLevel: 0} } = React.useContext(DamaContext);
+  const { authLevel  } = user;
   const gridCols = "grid-cols-2" ;
 
   const sourceId = source.source_id;

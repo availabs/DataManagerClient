@@ -2,7 +2,7 @@ import React, { useMemo, Fragment } from 'react'
 import { MapContext } from '../MapComponent.jsx'
 import { useNavigate } from 'react-router'
 import get from 'lodash/get'
-import { CMSContext } from '~/modules/dms/src'
+import { CMSContext } from '~/modules/dms/packages/dms/src'
 export const fnumIndex = (d, fractions = 2, currency = false) => {
   if(isNaN(d)) return '0'
   if(typeof d === 'number' && d < 1) return `${currency ? '$' : ``} ${d?.toFixed(fractions)}`
@@ -54,7 +54,7 @@ const typePaint = {
   },
   'circle': (layer) => {
     return  get(layer, `layers[0].paint['circle-color']`, '#ccc')
-      
+
   },
   'line': (layer) => {
     return get(layer, `layers[1].paint['line-color']`, '#ccc')
@@ -74,7 +74,7 @@ function CategoryLegend({layer}) {
       return null
     })
     .filter(d => d)
-  
+
   return (
     <div className='w-full max-h-[250px] overflow-auto'>
         {categories.map((d,i) => (
@@ -84,7 +84,7 @@ function CategoryLegend({layer}) {
               <Symbol color={d.color} />
             </div>
             <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-          </div> 
+          </div>
         ))}
     </div>
   )
@@ -95,7 +95,7 @@ function StepLegend({layer}) {
   const { state, setState  } = React.useContext(MapContext);
   const { choroplethdata, legenddata } = useMemo(() => {
     return {
-      choroplethdata: get(layer, `['choropleth-data']`, []), 
+      choroplethdata: get(layer, `['choropleth-data']`, []),
       legenddata: layer?.['legend-data'] || []
     }
   },[state])
@@ -107,7 +107,7 @@ function StepLegend({layer}) {
   const categories = legenddata || [
     ...(paintValue || []).filter((d,i) => i > 2 )
     .map((d,i) => {
-    
+
       if(i%2 === 1) {
         //console.log('test 123', d, i)
         return {color: paintValue[i+1], label: `${paintValue[i+2]} - ${paintValue[i+4] || max}`}
@@ -126,7 +126,7 @@ function StepLegend({layer}) {
               <Symbol color={d.color} />
             </div>
             <div className='flex items-center text-center flex-1 px-4 text-slate-500 h-6 text-sm truncate'>{d.label}</div>
-          </div> 
+          </div>
         ))}
     </div>
   )
@@ -227,7 +227,7 @@ function LegendRow ({ index, layer, i, symbology_id, baseUrl }) {
         {(type === 'simple' || !type) && <div className='px-1'><Symbol layer={layer} color={paintValue}/></div>}
         <div className='w-full text-sm text-slate-600 font-medium truncate flex justify-between flex-wrap'>
           {layerName}
-          <div 
+          <div
             className="cursor-pointer text-white group-hover/title:text-black group/icon "
             onClick={(e) => {
               if (e.ctrlKey) {

@@ -6,7 +6,7 @@ import { useParams } from "react-router";
 import { DamaContext } from "~/pages/DataManager/store";
 import { SourceAttributes, ViewAttributes, getAttributes } from "./attributes";
 import {makeLexicalFormat} from "../DataTypes/default/Overview.jsx";
-import {dmsColumnTypes} from "~/modules/dms/src"
+import {dmsColumnTypes} from "~/modules/dms/packages/dms/src"
 
 const SourceThumb = ({ source }) => {
   const {pgEnv, baseUrl, falcor, falcorCache} = React.useContext(DamaContext)
@@ -48,7 +48,7 @@ const SourceThumb = ({ source }) => {
         </Link>
       </div>
 
-      
+
     </div>
   );
 };
@@ -88,12 +88,14 @@ const SourcesList = () => {
   const categories = (
       isListAll ?
           [...new Set(sources.reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))] :
-          filteredCategories
+          [...new Set(sources.filter(s => s.categories?.find(c => c.some(c1 => filteredCategories.includes(c1)))).reduce((acc, s) => [...acc, ...(s.categories?.map(s1 => s1[0]) || [])], []))]
   ).sort()
 
   const categoriesCount = categories.reduce((acc, cat) => {
     acc[cat] = sources.filter(source => {
-      return source.categories?.find(category => category.includes(cat))
+      const sourceHasFilteredCategory = source.categories?.find(c => c.some(c1 => filteredCategories.includes(c1)));
+      const sourceHasCategory = source.categories?.find(category => category.includes(cat));
+      return isListAll ? sourceHasCategory : (sourceHasFilteredCategory && sourceHasCategory);
     })?.length
     return acc;
   }, {})

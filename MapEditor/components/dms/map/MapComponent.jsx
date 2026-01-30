@@ -7,7 +7,7 @@ import { PMTilesProtocol } from './pmtiles/index'
 import { useImmer } from 'use-immer';
 import LegendPanel from './LegendPanel/LegendPanel.jsx'
 import SymbologyViewLayer from './SymbologyViewLayer.jsx'
-import { PageContext, CMSContext } from "~/modules/dms/src/patterns/page/context.js";
+import { PageContext, CMSContext } from "~/modules/dms/packages/dms/src/patterns/page/context.js";
 import {SymbologySelector} from "./SymbologySelector.jsx";
 import {useSearchParams} from "react-router";
 import FilterControls from "./controls/FilterControls.jsx";
@@ -83,7 +83,7 @@ const Edit = ({value, onChange, size}) => {
         return Object.keys(state.symbologies || {}).find(sym => state.symbologies[sym].isVisible);
     }, [state.symbologies])
     const activeSymSymbology = useMemo(()=> {
-        return state.symbologies[activeSym]?.symbology;
+        return state.symbologies[activeSym]?.symbology || {};
     }, [state.symbologies[activeSym]])
     const activeLayer = useMemo(() => {
         return activeSymSymbology?.layers?.[activeSymSymbology?.activeLayer];
