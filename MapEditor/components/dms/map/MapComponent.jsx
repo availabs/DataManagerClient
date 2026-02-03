@@ -51,7 +51,7 @@ const getData = async () => {
     return {}
 }
 
-const Edit = ({value, onChange, size}) => {
+const Edit = ({value, onChange}) => {
     // const {falcor, falcorCache} = useFalcor();
     // controls: symbology, more, filters: lists all interactive and dynamic filters and allows for searchParams match.
     const isEdit = Boolean(onChange);
@@ -385,6 +385,6 @@ export default {
     [],
     getData,
 
-    "EditComp": Edit,
-    "ViewComp": Edit
+    "EditComp": ({value, onChange}) => <Edit value={value} onChange={onChange} />,
+    "ViewComp": ({value}) => <Edit value={value} />
 }
