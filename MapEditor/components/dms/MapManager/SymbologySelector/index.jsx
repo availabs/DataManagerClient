@@ -8,13 +8,18 @@ import { SymbologiesList } from './SymbologiesList';
 import { Modal, INITIAL_NEW_MAP_MODAL_STATE } from '~/pages/DataManager/MapEditor/components/LayerManager/SymbologyControl';
 import { MapContext } from '../../MapComponent'
 import { SymbologyAttributes, getAttributes } from "../../../../attributes"
+import { getExternalEnv } from "~/modules/dms/packages/dms/src/patterns/datasets/utils/datasources";
+import { useFalcor } from "@availabs/avl-falcor";
+import { CMSContext } from '~/modules/dms/packages/dms/src'
 
 export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
-  const { state, setState, falcor, pgEnv } = useContext(MapContext);
+  const { state, setState } = useContext(MapContext);
+  const { datasources } = useContext(CMSContext);
+  const pgEnv = getExternalEnv(datasources);
+  const { falcor, falcorCache } = useFalcor();
   // ---------------------------------
   // -- get Symbologies to list
   // ---------------------------------
-  const [falcorCache, setFalcorCache] = useState(falcor.getCache());
   useEffect(() => {
     async function fetchData() {
       const lengthPath = ["dama", pgEnv, "symbologies", "length"];
@@ -25,7 +30,6 @@ export const SelectSymbology = ({ modalState, setModalState, tabIndex }) => {
         { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
         "attributes", Object.values(SymbologyAttributes)
       ]);
-      setFalcorCache(falcor.getCache());
     }
     fetchData();
   }, [falcor, pgEnv]);
