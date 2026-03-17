@@ -3,10 +3,15 @@ import {get} from "lodash-es";
 import {getAttributes, SymbologyAttributes} from "./utils.js";
 import FilterableSearch from "./tmp-cache-files/FilterableSearch.jsx";
 import {MapContext} from "./MapComponent.jsx";
-
+import { CMSContext } from '~/modules/dms/packages/dms/src'
+import { getExternalEnv } from "~/modules/dms/packages/dms/src/patterns/datasets/utils/datasources";
+import { useFalcor } from "@availabs/avl-falcor";
 export const SymbologySelector = () => {
-    const { state, setState, falcor, pgEnv } = useContext(MapContext);
-    const [falcorCache, setFalcorCache] = useState(falcor.getCache());
+    const { state, setState } = useContext(MapContext);
+    const { datasources } = useContext(CMSContext);
+    const pgEnv = getExternalEnv(datasources);
+    const { falcor, falcorCache } = useFalcor();
+
     useEffect(() => {
         async function fetchData() {
             const lengthPath = ["dama", pgEnv, "symbologies", "length"];
@@ -17,7 +22,6 @@ export const SymbologySelector = () => {
                 { from: 0, to: get(resp.json, lengthPath, 0) - 1 },
                 "attributes", Object.values(SymbologyAttributes)
             ]);
-            setFalcorCache(falcor.getCache());
         }
         fetchData();
     }, [falcor, pgEnv]);
@@ -28,16 +32,6 @@ export const SymbologySelector = () => {
     }, [falcorCache?.dama, pgEnv]);
 
     const activeSym = Object.values(state?.symbologies)[0]?.symbology_id;
-    // useEffect(() => {
-    //     const activeSymbology = state.symbologies?.[activeSym];
-    //     const existingSym = symbologies.find(d => +d.symbology_id === +activeSym);
-    //     console.log('?????????????????/', activeSymbology, existingSym)
-    //     if(existingSym && !isEqual(activeSymbology, existingSym)){
-    //         setState(draft => {
-    //             draft.symbologies = {[activeSym.symbology_id]: {...existingSym, isVisible: true}}
-    //         })
-    //     }
-    // }, [symbologies]);
 
     const symOptions = symbologies.map(sym => ({label: sym.name, key: sym.symbology_id}));
     const layerOptions = Object.values(state.symbologies?.[activeSym]?.symbology?.layers || {}).map((layer, i) => ({label: layer.name?.length && layer.name !== ' ' ? layer.name : `layer - ${i+1}`, key: layer.id}));

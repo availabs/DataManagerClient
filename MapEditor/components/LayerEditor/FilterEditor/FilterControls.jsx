@@ -16,9 +16,9 @@ const getDiffColumns = (baseArray, subArray) => {
 
 
 const FILTER_OPERATORS = {
-  string: ["!=", "==" ],
-  integer: ["!=", "<", "<=", "==", ">=", ">", "between" ],
-  number: ["!=", "<", "<=", "==", ">=", ">", "between" ]
+  string: ["!=", "==", "is not null" ],
+  integer: ["!=", "<", "<=", "==", ">=", ">", "between", "is not null" ],
+  number: ["!=", "<", "<=", "==", ">=", ">", "between", "is not null" ]
 };
 
 export const ExistingFilterList = ({removeFilter, activeColumn, setActiveColumn}) => {
@@ -172,8 +172,9 @@ export function FilterBuilder({ path, params = {} }) {
   const valuePath = `${path}.${activeColumnName}.value`;
   const isBetweenOperator = existingFilter?.[activeColumnName]?.operator === "between";
   const isEqualityOperator = activeAttr?.type === "string" && ["!=", "=="].includes(existingFilter?.[activeColumnName]?.operator);
+  const isNotNullOperator = existingFilter?.[activeColumnName]?.operator === "is not null";
 
-  const valueInputComponent = isEqualityOperator ? (
+  const valueInputComponent = isNotNullOperator ? null : (isEqualityOperator ? (
     <StyledControl>
       <label className='flex'>
         <div className='flex items-center'>
@@ -190,10 +191,10 @@ export function FilterBuilder({ path, params = {} }) {
     <StyledControl>
       <SimpleControl path={valuePath + (isBetweenOperator ? "[0]" : "")} params={{default:''}}/>
     </StyledControl>
-  );
+  ));
 
   const valueLabel = isEqualityOperator ? "Search:" : "Value:";
-  const valueLabelComponent = isBetweenOperator ? null : (
+  const valueLabelComponent = (isBetweenOperator || isNotNullOperator ) ? null : (
     <div className="p-1">{valueLabel}</div>
   );
 

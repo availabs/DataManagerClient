@@ -236,6 +236,9 @@ const ViewLayerRender = (props) => {
                     ["<=", [parseMapDataFunction, filterColumnClause], [parseMapDataFunction, filterValue?.[1]]],
                   ];
                 }
+                else if(filterOperator === 'is not null') {
+                   mapFilter = ["has", filterColumnName];        
+                }
                 else {
                   //attempt to parseFloat the value from the user. If NaN, we are comparing strings
                   if(isNaN(parseFloat(filterValue))){

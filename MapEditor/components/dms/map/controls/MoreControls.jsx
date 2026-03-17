@@ -8,7 +8,6 @@ import { HEIGHT_OPTIONS, PANEL_POSITION_OPTIONS } from '../MapComponent.jsx'
 export default function MoreControls() {
     const {state, setState} = useContext(MapContext);
     const arePluginsLoaded = Object.values((state.symbologies || {})).some(symb => Object.keys((symb?.symbology?.plugins || {})).length > 0);
-    console.log("morecontrol state, are plugs loaded::", state, arePluginsLoaded)
     const menuRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
     const menuBtnId = 'menu-btn-more-controls'
