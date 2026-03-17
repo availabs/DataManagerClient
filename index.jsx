@@ -307,7 +307,7 @@ const DamaRoutes = DAMA_ARGS => {
       path: `${ baseUrl }/schedules`,
       exact: true,
       authLevel,
-      mainNav: true,
+      mainNav: false,
       Title: () => <Header baseUrl={baseUrl}/>,
       sideNav,
       topNav,
